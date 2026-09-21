@@ -4,6 +4,7 @@ import { chromium } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
 import http from 'node:http';
+import crypto from 'node:crypto';
 
 const OUT = path.join('ci', 'out');
 fs.mkdirSync(OUT, { recursive: true });
@@ -60,12 +61,30 @@ const STEPS = [
 ];
 
 const shots = [];
+// 【2026-09-21 实测修】原实现只调 `open*` 就截图 → **前一个弹窗仍开着**时后续"打开"调用被守卫忽略，
+//   结果 13 张里有 9 张与上一张**字节完全相同**（03/04/05 同、06~10 同、11/12/13 同），
+//   工具却照样打印"完成" —— 属"假成功"，9 个界面**从未真正被巡检过**。
+//   两条修法：① 每屏前先复位到大厅 + 关掉可能开着的面板；② 截图后算哈希，与上一张重复即标记 dup。
+let prevHash = '';
 for (const s of STEPS) {
   if (!available.includes(s.call)) { shots.push({ name: s.name, skipped: 'no hook ' + s.call }); continue; }
   try {
+    // ① 复位：goHome 回大厅，closeGear 关面板（不存在时静默）
+    await page.evaluate(() => {
+      const D = window.MENGSHOU_DEBUG || {};
+      try { if (D.closeGear) D.closeGear(); } catch (e) { void e; }
+      try { if (D.goHome) D.goHome(); } catch (e) { void e; }
+    });
+    await page.waitForTimeout(450);
     await page.evaluate((c) => { try { window.MENGSHOU_DEBUG[c](); } catch (e) { return String(e); } }, s.call);
     await page.waitForTimeout(1400);
-    await page.screenshot({ path: path.join(OUT, s.name + '.png') });
+    const shotPath = path.join(OUT, s.name + '.png');
+    await page.screenshot({ path: shotPath });
+    // ② 重复检测：与上一张同哈希 = 这一屏根本没打开
+    const h = crypto.createHash('sha1').update(fs.readFileSync(shotPath)).digest('hex').slice(0, 12);
+    const dup = (h === prevHash);
+    prevHash = h;
+    if (dup) console.log('  ⚠ ' + s.name + ' 与上一屏截图完全相同 → 该界面未真正打开');
     // 顺手量一下这一屏的「有效内容占比」：非背景色像素比例（越低越空）
     const dens = await page.evaluate(() => {
       const c = document.querySelector('canvas');
@@ -84,13 +103,32 @@ for (const s of STEPS) {
         return { w: c.width, h: c.height, distinct: buckets.size, dominantPct: +(top / n * 100).toFixed(1) };
       } catch (e) { return { err: String(e).slice(0, 80) }; }
     });
-    shots.push({ name: s.name, hook: s.call, dens });
+    shots.push({ name: s.name, hook: s.call, dens, dup, hash: h });
   } catch (e) {
     shots.push({ name: s.name, error: String(e).slice(0, 150) });
   }
 }
 
-// 战斗内：升级三选一 + 暂停
+/** 依次尝试多个钩子，直到画面真的变化；返回 {name, hook, dup} —— 避免"钩子没生效"被当成成功 */
+async function tryShoot(outName, candidates) {
+  const p = path.join(OUT, outName + '.png');
+  let base = prevHash;
+  for (const c of candidates) {
+    if (!available.includes(c)) continue;
+    await page.evaluate((k) => { try { window.MENGSHOU_DEBUG[k](); } catch (e) { void e; } }, c);
+    await page.waitForTimeout(1300);
+    await page.screenshot({ path: p });
+    const h = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 12);
+    if (h !== base) { prevHash = h; shots.push({ name: outName, hook: c, hash: h }); return; }
+  }
+  await page.screenshot({ path: p });
+  const h = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 12);
+  prevHash = h;
+  console.log('  ⚠ ' + outName + ' 试过 [' + candidates.join(', ') + '] 画面均未变化 → 该界面可能无法用钩子打开');
+  shots.push({ name: outName, hook: candidates.join('/'), dup: true, hash: h });
+}
+
+// 战斗内：升级三选一 + 暂停（每个都试多个钩子，画面没变就如实标记，不当成成功）
 try {
   await page.evaluate(() => { if (window.MENGSHOU_DEBUG.hall) window.MENGSHOU_DEBUG.hall(); });
   await page.waitForTimeout(800);
@@ -98,19 +136,10 @@ try {
   await page.mouse.click(geom.l + (316 / geom.cw) * geom.w, geom.t + (617 / geom.ch) * geom.h);
   await page.waitForTimeout(7000);
   await page.screenshot({ path: path.join(OUT, '11-battle.png') });
-  shots.push({ name: '11-battle' });
-  if (available.includes('levelup')) {
-    await page.evaluate(() => { try { window.MENGSHOU_DEBUG.levelup(); } catch (e) {} });
-    await page.waitForTimeout(1200);
-    await page.screenshot({ path: path.join(OUT, '12-levelup.png') });
-    shots.push({ name: '12-levelup' });
-  }
-  if (available.includes('pause')) {
-    await page.evaluate(() => { try { window.MENGSHOU_DEBUG.pause(); } catch (e) {} });
-    await page.waitForTimeout(1200);
-    await page.screenshot({ path: path.join(OUT, '13-pause.png') });
-    shots.push({ name: '13-pause' });
-  }
+  prevHash = crypto.createHash('sha1').update(fs.readFileSync(path.join(OUT, '11-battle.png'))).digest('hex').slice(0, 12);
+  shots.push({ name: '11-battle', hook: 'mouse', hash: prevHash });
+  await tryShoot('12-levelup', ['levelup', 'upgradeView', 'showGearPick']);
+  await tryShoot('13-pause', ['pause', 'resultBuild']);
 } catch (e) { shots.push({ name: 'battle-series', error: String(e).slice(0, 150) }); }
 
 const md = [
@@ -124,9 +153,12 @@ const md = [
   ...shots.map((s) => '| ' + s.name + ' | ' + (s.hook || '-') + ' | ' +
     (s.dens && s.dens.w ? s.dens.w + '×' + s.dens.h : '-') + ' | ' + (s.dens && s.dens.distinct || '-') + ' | ' +
     (s.dens && s.dens.dominantPct !== undefined ? s.dens.dominantPct + '%' : '-') + ' | ' +
-    (s.skipped || s.error || '') + ' |'),
+    (s.dup ? '⚠ **与上一屏完全相同（未真正打开）**' : (s.skipped || s.error || '')) + ' |'),
   '',
   '> 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。',
+  '',
+  '> ⚠ 备注列标 `与上一屏完全相同` 的，表示**该界面没有被真正打开**（截图与上一屏字节相同）。',
+  '> 这类条目**不能当作"已巡检"** —— 修法：先复位到大厅，或换一个能生效的钩子。',
   '',
   '## 未捕获异常',
   '',
@@ -134,9 +166,17 @@ const md = [
   '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'screens.md'), md);
-fs.writeFileSync(path.join(OUT, 'screens.json'), JSON.stringify({ available, shots, errs }, null, 2));
+const dupList = shots.filter((s) => s.dup).map((s) => s.name);
+fs.writeFileSync(path.join(OUT, 'screens.json'),
+  JSON.stringify({ available, shots, errs, distinctScreens: shots.length - dupList.length, dups: dupList }, null, 2));
 console.log(md);
 
 await browser.close();
 server.close();
+// 【2026-09-21】有"重复截图"就以非零退出 —— 让"没真正巡检"无法被当成成功（原实现静默通过，
+//   导致 9 个界面长期未被巡检却一直显示"完成"）。修好后应回到 0。
+if (dupList.length) {
+  console.error('\n❌ 有 ' + dupList.length + ' 屏未真正打开（截图与上一屏相同）: ' + dupList.join(', '));
+  process.exit(2);
+}
 process.exit(0);
