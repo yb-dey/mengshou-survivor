@@ -61,6 +61,19 @@ jobs:
         run: |
           node ci/desc-num-cross.mjs --selftest
           node ci/desc-num-cross.mjs
+      # 成档（被动协同）文案一致性：一个成档的效果被写在 5 处（a 侧 desc / b 侧 desc /
+      #   图鉴卡面 effect / 升级提示 complete / active），互相之间此前无任何门禁。
+      # 【v1.189】实测抓出真缺陷：聚宝成档(hoard) 的 智慧果.desc 丢了 a 侧的
+      #   "拾珠爆金环/珠越大环越狠"，读作"只有大珠才爆环"，与 v1.46 设计注释及
+      #   tryHoardBurst(g) 拾取调用点不符；同句还被升级提示 complete 分支抄走。
+      #   ⚠ B 判据必须**单向**（a ⊆ b）：设计上 b 侧 = a 侧 + 递进细节，要求双向相等
+      #     会制造 6/7 假阳性。C/D 判据（effect/提示里的自铸短标签）**只报不拦** ——
+      #     区分"压缩改写标签"与"凭空发明的机制"需语义判断，不可穷举，不配当门禁。
+      #   解析器断言 DATA_PASSIVE=14 / DATA_CODEX_PAIR=7，退化即抛错。**硬门禁**。
+      - name: 成档文案三侧一致性（GATE）
+        run: |
+          node ci/pair-text-cross.mjs --selftest
+          node ci/pair-text-cross.mjs
       # 界面控件不得出屏：返回/关闭类控件是**唯一出口**，被裁即有真实可用性代价。
       # 【v1.185】图鉴配方 tab 的「返回」按钮实测底部出屏 32px（closeY 1248 + 64 = 1312 > 1280）。
       #   面板几何体检（screen-profile / card-band）测不到它 —— 那些量的是"面板内空带"，
