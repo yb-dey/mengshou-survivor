@@ -38,6 +38,7 @@ jobs:
       - name: 场景响度连续性（同档 peer / 切换链）
         run: |
           set -o pipefail
+          python ci/_diag-lane.py
           python ci/bgm-lane-loudness.py --selftest
           python ci/bgm-lane-loudness.py 2>&1 | tee bgm-lane-loudness.md
 
