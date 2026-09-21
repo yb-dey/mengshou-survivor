@@ -14,13 +14,18 @@ const APPLY = process.argv.includes('--apply');
 const SR = 44100;
 const TWO_PI = Math.PI * 2;
 
-// 与游戏 CONFIG.audio.gains 对齐的总线增益（见游戏 1413 行附近）
-const GAINS = {
-  SFX_FIRE: 0.32, SFX_HIT: 0.55, SFX_GEM: 0.46, SFX_LEVELUP: 0.74,
-  SFX_CARD: 0.62, SFX_HURT: 0.62, SFX_BOSS_WARN: 0.66, SFX_BOSS_DIE: 0.7,
-  SFX_WIN: 0.68, SFX_LOSE: 0.66, SFX_EVO: 0.7, SFX_BOMB: 0.68,
-  SFX_KILL: 0.6, SFX_UI: 0.5, SFX_START: 0.62, SFX_CHEST: 0.64, SFX_EVENT: 0.6, SFX_REVIVE: 0.62, SFX_CARDSHOW: 0.62,
-};
+// 【v1.170】**已删除 GAINS 表** —— 它是一张"手抄的 CONFIG.audio.gains 副本", 实测 19 条里
+//   有 12 条与真身漂移（CARD 0.62↔0.70 / HURT 0.62↔0.72 / BOSS_DIE 0.70↔0.80 / WIN 0.68↔0.80 …）。
+//   危害不止"抄错"：这张表的值被**烘焙进文件的峰值**，而运行时第 12593 行**又乘一次**
+//   `CONFIG.audio.gains[sid]` → **同一个 gain 被应用两次**，且两次取的是**不同版本的值**，
+//   误差非线性叠加 → 19 条里 21 组"声明更响、实测更轻"的反向对（rho=0.491）。
+//
+//   正确做法（与游戏内合成器一致）：
+//     · 游戏 `_renderAll`(12173 行) 对外采/合成 buffer **一律平峰值归一** `CONFIG.audio.peakNorm`,
+//       **不按 id 缩放**；响度层级**只由运行时的 gains 决定**（单一权威）。
+//     · 因此这里也**只做平峰值归一**，让"外采文件"与"程序合成"两条通路行为完全一致。
+//   ⚠ 不要在主流程里重新引入任何 per-id 增益表 —— 那是下一次静默降级的温床。
+const PEAK_NORM = 0.7;   // 必须与游戏 CONFIG.audio.peakNorm 一致（-3dBFS）
 
 // ---- 逐字复刻游戏 _tone ----
 function tone(out, o) {
@@ -115,10 +120,16 @@ function renderOne(id) {
     tone(out, { wave: "sine", f0: 523.25, t0: 0.24, dur: 0.32, a: 0.022, d: 0.12, s: 0.18, r: 0.16, gain: 0.8 });
     tone(out, { wave: "triangle", f0: 659.26, t0: 0.32, dur: 0.26, a: 0.018, d: 0.1, s: 0.1, r: 0.14, gain: 0.5 });
   } else if (id === "SFX_EVO") { out = alloc(0.46);
-    tone(out, { wave: "triangle", f0: 523.25, t0: 0, dur: 0.18, a: 0.004, d: 0.08, s: 0.12, r: 0.08, gain: 0.85 });
-    tone(out, { wave: "sine", f0: 659.26, t0: 0.08, dur: 0.22, a: 0.004, d: 0.1, s: 0.18, r: 0.1, gain: 1 });
-    tone(out, { wave: "sine", f0: 783.99, t0: 0.18, dur: 0.26, a: 0.005, d: 0.1, s: 0.12, r: 0.12, gain: 0.72 });
-    tone(out, { wave: "triangle", f0: 1046.5, t0: 0.26, dur: 0.2, a: 0.004, d: 0.08, s: 0, r: 0.12, gain: 0.38 });
+    // 【v1.169】原先 4 层**依次错开**(t0: 0 / 0.08 / 0.18 / 0.26) → 各层几乎不重叠,
+    //   能量被摊薄 → 实测相对响度 -21.0dB, 比**同长度**的 SFX_LEVELUP(-15.8) **低 5.2dB**,
+    //   在 INFREQ 档内是离群偏轻 -3.8dB。但 evo 的声明 gain 是 0.78(全表最高档之一)、
+    //   埋点注释写明"进化专属, 不复用升级音" → 它是**里程碑高光**, 不该比日常升级还轻。
+    //   → 改为**同头重叠**(t0: 0 / 0.04 / 0.09 / 0.16), 让 4 层在 0.1~0.2s 处叠加,
+    //     与 LEVELUP 的"三音齐鸣"同型, 但音更高(523→1047 上行)、层更多 → 既亮又厚。
+    tone(out, { wave: "triangle", f0: 523.25, t0: 0, dur: 0.20, a: 0.004, d: 0.08, s: 0.12, r: 0.08, gain: 0.85 });
+    tone(out, { wave: "sine", f0: 659.26, t0: 0.04, dur: 0.24, a: 0.004, d: 0.1, s: 0.18, r: 0.1, gain: 1 });
+    tone(out, { wave: "sine", f0: 783.99, t0: 0.09, dur: 0.26, a: 0.005, d: 0.1, s: 0.16, r: 0.12, gain: 0.78 });
+    tone(out, { wave: "triangle", f0: 1046.5, t0: 0.16, dur: 0.22, a: 0.004, d: 0.08, s: 0.08, r: 0.12, gain: 0.46 });
   } else if (id === "SFX_BOMB") { out = alloc(0.42);
     noise(out, { t0: 0, dur: 0.12, a: 0.005, r: 0.08, gain: 0.55, seed: 44 });
     tone(out, { wave: "sine", f0: 110, f1: 48, t0: 0, dur: 0.28, a: 0.007, d: 0.12, s: 0, r: 0.12, gain: 0.9 });
@@ -141,8 +152,13 @@ function renderOne(id) {
     tone(out, { wave: "triangle", f0: 523, t0: 0.30, dur: 0.10, a: 0.013, d: 0.08, s: 0, r: 0.03, gain: 0.8 });
     tone(out, { wave: "triangle", f0: 330, t0: 0.45, dur: 0.32, a: 0.013, d: 0.12, s: 0, r: 0.08, gain: 0.9 });
   } else if (id === "SFX_BOSS_DIE") { out = alloc(0.7);
-    tone(out, { wave: "triangle", f0: 880, f1: 220, t0: 0, dur: 0.7, a: 0.002, d: 0.5, s: 0, r: 0.2, gain: 1 });
+    // 【v1.169】原 2 层都是 s:0(无延音) + 长衰减 → 0.7s 窗口里后段近乎静音,
+    //   能量被稀释 → 实测 -20.6dB, 在 INFREQ 档内离群偏轻 -3.5dB。
+    //   保留"高→低坠落下扫"的设计(那是毙命感), 但补一层**低音延音床**承住后段能量,
+    //   让它在 0.7s 里持续有声, 而不是"响一下就空"。
+    tone(out, { wave: "triangle", f0: 880, f1: 220, t0: 0, dur: 0.7, a: 0.002, d: 0.5, s: 0.06, r: 0.2, gain: 1 });
     tone(out, { wave: "sine", f0: 2200, f1: 440, t0: 0.1, dur: 0.5, a: 0.002, d: 0.35, s: 0, r: 0.15, gain: 0.4 });
+    tone(out, { wave: "sine", f0: 130, f1: 62, t0: 0.12, dur: 0.55, a: 0.01, d: 0.2, s: 0.12, r: 0.2, gain: 0.5 });
   } else if (id === "SFX_WIN") { out = alloc(0.9);
     const wf = [523, 659, 784, 1046];
     for (let i = 0; i < 4; i++) tone(out, { wave: "triangle", f0: wf[i], t0: i * 0.15, dur: 0.45, a: 0.024, d: 0.28, s: 0.16, r: 0.2, gain: 0.84 });
@@ -191,21 +207,30 @@ const ALL = ['SFX_FIRE', 'SFX_HIT', 'SFX_GEM', 'SFX_LEVELUP', 'SFX_CARD', 'SFX_H
              // 【2026-09-21】补齐 4 个"有合成器、无映射"的节点音
              'SFX_CARDSHOW', 'SFX_CHEST', 'SFX_EVENT', 'SFX_REVIVE'];
 const outDir = path.join('game', 'audio');
-console.log(`模式: ${APPLY ? 'APPLY' : 'DRY-RUN'}  →  ${outDir}`);
+// 【v1.170】`--force` 重渲全部；默认仍跳过已存在文件（保护手工资产）。
+//   ⚠ 但"跳过"**必须打印出来**：旧版静默 skip 让 sfx_fire.wav 在 gains 从 0.50 改到 0.32 后
+//     一直是旧标度（实测峰值/gain = 2.168，全场唯一离群），且**零提示**。
+const FORCE = process.argv.includes('--force');
+console.log(`模式: ${APPLY ? 'APPLY' : 'DRY-RUN'}${FORCE ? ' [FORCE 重渲全部]' : ''}  →  ${outDir}`);
 console.log('| id | 时长ms | 峰值 | RMS | 文件 |');
 console.log('|---|---|---|---|---|');
 let made = 0, skipped = 0;
+const skippedFiles = [];
 for (const id of ALL) {
   const file = 'sfx_' + id.replace(/^SFX_/, '').toLowerCase() + '.wav';
   const dest = path.join(outDir, file);
-  if (fs.existsSync(dest)) { skipped++; continue; }   // 已存在（fire/levelup）不覆盖用户资产
+  if (!FORCE && fs.existsSync(dest)) { skipped++; skippedFiles.push(file); continue; }
   const raw = renderOne(id);
-  const gain = GAINS[id] || 0.6;
-  normalize(raw, 0.708 * gain / 0.708);   // 归一后按总线增益缩放（保相对关系）
+  normalize(raw, PEAK_NORM);   // 【v1.170】平峰值归一，与游戏 _renderAll 同口径；
+                               //   **不再**乘 per-id gain（否则运行时再乘一次 = 双重缩放）
   let rms = 0; for (let i = 0; i < raw.length; i++) rms += raw[i] * raw[i];
   rms = Math.sqrt(rms / raw.length);
   if (APPLY) fs.writeFileSync(dest, toWav(raw));
-  console.log(`| ${id} | ${(raw.length / SR * 1000).toFixed(0)} | ${(gain).toFixed(2)} | ${rms.toFixed(4)} | ${file}${APPLY ? '' : '（待写）'} |`);
+  console.log(`| ${id} | ${(raw.length / SR * 1000).toFixed(0)} | ${PEAK_NORM.toFixed(2)} | ${rms.toFixed(4)} | ${file}${APPLY ? '' : '（待写）'} |`);
   made++;
 }
 console.log(`\n${APPLY ? `已写 ${made} 个` : `待写 ${made} 个`}（跳过已存在 ${skipped} 个）`);
+if (skippedFiles.length) {
+  console.log(`\n⚠ 跳过（沿用磁盘现有文件，**未重渲**）：\n  ${skippedFiles.join('\n  ')}`);
+  console.log(`  这些文件的标度可能与当前 gains 口径不符 → 需要校准请加 --force 重渲。`);
+}
