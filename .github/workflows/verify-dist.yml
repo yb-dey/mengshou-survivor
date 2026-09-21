@@ -28,7 +28,7 @@ jobs:
       #   vs 磁盘文件，三者必须严格一致。实测抓到 4 个键（CARDSHOW/CHEST/EVENT/REVIVE）
       #   只有合成器、没有映射 → 永远拿不到外采文件，**覆盖 10 个埋点**且无任何报错。
       #   两张表各自自洽、只有交叉比才看得出来的缺口 = 静默降级的温床。
-      - name: 音频映射断言自测（阴性对照：七种错法都要报）
+      - name: 音频映射断言自测（阴性对照：九种错法都要报）
         run: node ci/assert-audio-map.mjs --selftest
       - name: 音频映射一致性断言（GATE：不一致即失败）
         run: node ci/assert-audio-map.mjs
@@ -65,6 +65,16 @@ jobs:
         run: python ci/sfx-loudness.py --selftest
       - name: SFX 响度层级体检（仅提示，不作门禁）
         run: mkdir -p ci/out && python ci/sfx-loudness.py game/audio ci/out/sfx-loudness.md
+
+      # 【v1.170】SFX 意图-实响一致性：设计注释(1420 行)写的是**按事件频率分层**
+      #   (受击/复活 > BOSS > 升级/选卡/结算 > 击杀/宝石 > 开火/命中)，
+      #   所以判据必须比**档均值**，不能逐对比较 gain 与文件响度（二者不同尺度，
+      #   第一版就栽在这：把合法的"短闷响 vs 长上扬"报成 21 组反向对）。
+      #   先自测（层级正确必须 PASS / 层级塌陷必须 FAIL）再体检。
+      - name: SFX 意图-实响判据自测（阴性对照）
+        run: python ci/sfx-intent-vs-real.py --selftest
+      - name: SFX 意图-实响一致性体检（GATE：档位层级塌陷即失败）
+        run: mkdir -p ci/out && python ci/sfx-intent-vs-real.py . ci/out/sfx-intent-vs-real.md
 
       - name: 安装 Playwright
         run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
