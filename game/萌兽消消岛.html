@@ -30288,10 +30288,31 @@ function drawCodexBeastPlate(ctx, x, y, w, h, tint) {
   strokeRoundRect(ctx, x, y, w, h, 12);
   ctx.lineWidth = 1;
 }
+// 【v1.167】图鉴"内容底" —— 页脚不再写死绝对偏移，而是跟着当前页签的真实条目数走
+function codexContentBottom() {
+  var tab = codexTabId();
+  var bodyY = CONFIG.codexBodyY || 168;
+  if (tab === "pet") return bodyY + DATA_BEAST.length * ((CONFIG.codexPetRowH || 118) + (CONFIG.codexPetGap || 6));
+  if (tab === "fork") return bodyY + Math.ceil(DATA_CODEX_FORK.length / 2) * ((CONFIG.codexForkH || 132) + (CONFIG.codexForkGapY || 8));
+  var gH = CONFIG.codexGroupH || 52, eH = CONFIG.codexEnemyRowH || 108, eG = CONFIG.codexEnemyGap || 6;
+  var lst = enemiesInCodexGroup(GAME.codexEnemyGroup || "trash");
+  return bodyY + gH + 10 + lst.length * (eH + eG);
+}
+function syncCodexFit() {
+  var cb = codexContentBottom();
+  GAME.codexMsgY = cb + 40;
+  GAME.codexKnifeY = cb + 64;
+  GAME.codexFootYFit = cb + 104;
+  GAME.codexCloseY = cb + 154;
+  GAME.codexFitH = Math.min(CONFIG.viewH, GAME.codexCloseY + 64 + 40);
+  if (uiBeastClose) uiBeastClose.rect.y = GAME.codexCloseY;
+}
 function drawBeastPanel(ctx, m) {
+  syncCodexFit();
+  if (GAME.codexFitH) m.panelH = GAME.codexFitH;      // 【v1.167】底板跟随内容底
   var py = (CONFIG.viewH - m.panelH) / 2;
   var tab = codexTabId();
-  var footY = py + (CONFIG.codexFootY || 1148);
+  var footY = GAME.codexFootYFit || (py + (CONFIG.codexFootY || 1148));
   var msg, msgCol, nPet, nEn, nFk, nPair, nEvo, pd, en;
   ctx.fillStyle = CONFIG.colors.cardTitle;
   ctx.textAlign = "center";
@@ -30355,12 +30376,12 @@ function drawCodexEnemyDetail(ctx, py) {
   ctx.fillStyle = grp.tint;
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText((def ? def.name : entry.id) + " · " + entry.tell + " · " + entry.hint,
-    CONFIG.viewW / 2, py + 1004);
+    CONFIG.viewW / 2, GAME.codexMsgY || (py + 1004));
   if (entry.knife) {
     // 【v1.155】碎刀子浅金改深墨金, 苔纸上才读得清
     ctx.fillStyle = "#8a5a10";
     ctx.font = "bold 15px " + FONT_STACK;
-    ctx.fillText(entry.knife, CONFIG.viewW / 2, py + 1028);
+    ctx.fillText(entry.knife, CONFIG.viewW / 2, GAME.codexKnifeY || (py + 1028));
   }
 }
 function makeCodexTab(idx, x, y, w, h) {
@@ -30701,7 +30722,7 @@ function syncCodexUi() {
   if (uiCodexEvos) {
     for (i = 0; i < uiCodexEvos.length; i++) uiCodexEvos[i].visible = open && tab === "fork";
   }
-  if (uiBeastClose) uiBeastClose.visible = open;
+  if (uiBeastClose) { syncCodexFit(); uiBeastClose.visible = open; }
 }
 function closeBeastUi() {
   if (uiBeastModal) uiBeastModal.visible = false;
