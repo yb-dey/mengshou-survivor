@@ -116,23 +116,65 @@ document.title = JSON.stringify(R.map(r => ({
 const tmpHtml = path.join(tmpDir, "p.html");
 fs.writeFileSync(tmpHtml, probe, "utf8");
 
-const EDGE_CANDS = [
+// 浏览器候选（跨平台）：Windows 是本机验证；Linux CI 走 Playwright 装好的 chromium。
+// ⚠ 历史坑：首版只找系统 Edge → 在 ubuntu-latest 上必然 SKIP，门禁进了 CI 等于没进。
+//   永远 SKIP 的门禁比没有门禁更危险：它给出"已检查"的假象。
+const HOME = os.homedir();
+const BROWSER_CANDS = [
+  // Windows 本机
   "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
   "C:/Program Files/Microsoft/Edge/Application/msedge.exe",
+  "C:/Program Files/Google/Chrome/Application/chrome.exe",
+  "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+  // Linux CI（Playwright 缓存路径，版本号取目录名）
+  ...(() => {
+    const base = path.join(HOME, ".cache/ms-playwright");
+    if (!fs.existsSync(base)) return [];
+    const out = [];
+    for (const d of fs.readdirSync(base)) {
+      for (const rel of ["chrome-linux/chrome", "chrome-linux64/chrome", "chrome-linux/headless_shell"]) {
+        const p = path.join(base, d, rel);
+        if (fs.existsSync(p)) out.push(p);
+      }
+    }
+    return out;
+  })(),
+  // Linux 系统
+  "/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser",
+  "/usr/bin/microsoft-edge",
 ];
-const EDGE = EDGE_CANDS.find(p => fs.existsSync(p));
-if (!EDGE) { console.log("SKIP 未找到系统 Edge，无法度量字体宽度"); process.exit(0); }
+const BROWSER = BROWSER_CANDS.find(p => { try { return fs.existsSync(p); } catch { return false; } });
+if (!BROWSER) {
+  console.log("SKIP 未找到可用浏览器（Edge/Chrome/Playwright chromium），无法度量字体宽度");
+  process.exit(0);
+}
+console.log("度量浏览器: " + BROWSER);
 let dom = "";
+const args = ["--headless=new", "--disable-gpu", "--no-sandbox", "--no-first-run",
+  "--no-default-browser-check", "--hide-scrollbars", "--force-device-scale-factor=1",
+  "--user-data-dir=" + path.join(tmpDir, "prof"),
+  "--dump-dom", "file:///" + tmpHtml.replace(/\\/g, "/")];
 try {
-  dom = execFileSync(EDGE, ["--headless=new", "--disable-gpu", "--no-first-run",
-    "--no-default-browser-check", "--user-data-dir=" + path.join(tmpDir, "prof"),
-    "--dump-dom", "file:///" + tmpHtml.replace(/\\/g, "/")],
-    { encoding: "utf8", timeout: 60000, stdio: ["ignore", "pipe", "ignore"] });
+  dom = execFileSync(BROWSER, args, { encoding: "utf8", timeout: 90000, stdio: ["ignore", "pipe", "ignore"] });
 } catch (e) { dom = (e.stdout || "").toString(); }
-const mt = dom.match(/<title>([\s\S]*?)<\/title>/);
+let mt = dom.match(/<title>([\s\S]*?)<\/title>/);
+if (!mt) {
+  // 重试一次（headless 偶发启动慢）
+  try {
+    dom = execFileSync(BROWSER, args, { encoding: "utf8", timeout: 90000, stdio: ["ignore", "pipe", "ignore"] });
+  } catch (e) { dom = (e.stdout || "").toString(); }
+  mt = dom.match(/<title>([\s\S]*?)<\/title>/);
+}
 if (!mt) { console.log("SKIP 取不到字体度量（headless 不可用）"); process.exit(0); }
 const W = JSON.parse(mt[1].replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">"));
 const wid = Object.fromEntries(W.map(x => [x.id, x]));
+// 度量到的中文字宽（用于判断字体是否可用：Linux 无中文字体时宽度会异常小/等宽）
+const sample = W[0] && W[0].name;   // "疾风成档" 4 字，18px
+console.log("字体自检: name「" + (rows[0] && rows[0].name) + "」 18px 宽 = " + sample);
+if (!(sample > 40)) {
+  console.log("SKIP 度量异常（疑似无中文字体，宽度不可信）");
+  process.exit(0);
+}
 
 // ---- 4. 判定 ----
 const widths = layoutWidths(PAIRS.length);
