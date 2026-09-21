@@ -26486,7 +26486,7 @@ function makeButton(id, x, y, w, h, label, onTap) {
           : (tone === "poor" ? "#ffd0c4"
             : (tone === "arm" ? "#ffe9b0"
               : (tone === "idle" ? "#cfe8b0"
-                : (tone === "done" ? "#5c6844" : "#d8c898"))));
+                : (tone === "done" ? "#55603c" : "#d8c898"))));
         ctx.fillText(this.sub, r.x + r.w / 2, faceY + 14);
       } else {
         ctx.fillText(this.label, r.x + r.w / 2, faceY);
@@ -26551,7 +26551,7 @@ function drawBuildChip(ctx, r, row, hot) {
   ctx.fillStyle = "#2e3c1c";
   ctx.font = "bold 12px " + FONT_STACK;
   ctx.fillText(hudFitText(ctx, row.name || "", tw), textX, r.y + 12);
-  ctx.fillStyle = "#5c6844";
+  ctx.fillStyle = "#55603c";
   ctx.font = "bold 12px " + FONT_STACK;
   ctx.fillText(hudFitText(ctx, row.sub || "", tw), textX, r.y + r.h - 12);
   ctx.globalAlpha = 1;
@@ -28809,7 +28809,7 @@ function drawSpendGainDuo(ctx, x, y, w, h, deal) {
       ctx.fillText(col.title + " " + (col.line.length > 16 ? col.line.slice(0, 14) + "…" : col.line),
         cx0 + colW / 2, y + (col.sub ? h / 2 - 6 : h / 2));
       if (col.sub) {
-        ctx.fillStyle = "#5c6844";
+        ctx.fillStyle = "#55603c";
         ctx.font = "bold 11px " + FONT_STACK;
         ctx.fillText(col.sub.length > 20 ? col.sub.slice(0, 18) + "…" : col.sub, cx0 + colW / 2, y + h - 10);
       }
@@ -28827,7 +28827,7 @@ function drawSpendGainDuo(ctx, x, y, w, h, deal) {
       lineY = col.sub ? y + h / 2 : y + h / 2 + 6;
       ctx.fillText(col.line.length > 22 ? col.line.slice(0, 20) + "…" : col.line, cx0 + colW / 2, lineY);
       if (col.sub) {
-        ctx.fillStyle = "#5c6844";
+        ctx.fillStyle = "#55603c";
         ctx.font = "bold 12px " + FONT_STACK;
         subY = y + h - 12;
         ctx.fillText(col.sub.length > 24 ? col.sub.slice(0, 22) + "…" : col.sub, cx0 + colW / 2, subY);
@@ -30322,7 +30322,7 @@ function makeCodexTab(idx, x, y, w, h) {
       ctx.fillStyle = "#2e3c1c";
       ctx.font = "bold 22px " + FONT_STACK;
       ctx.fillText(d.name + " " + count, r.x + r.w / 2, r.y + 20);
-      ctx.fillStyle = on ? "#3a5a20" : "#5c6844";
+      ctx.fillStyle = on ? "#3a5a20" : "#55603c";
       ctx.font = "bold 13px " + FONT_STACK;
       ctx.fillText(d.sub, r.x + r.w / 2, r.y + 40);
     }
@@ -30407,7 +30407,7 @@ function makeCodexEnemyGroup(idx, x, y, w, h) {
       ctx.fillStyle = "#2e3c1c";
       ctx.font = "bold 20px " + FONT_STACK;
       ctx.fillText(g.name, r.x + r.w / 2, r.y + 18);
-      ctx.fillStyle = on ? g.tint : "#5c6844";
+      ctx.fillStyle = on ? g.tint : "#55603c";
       ctx.font = "bold 13px " + FONT_STACK;
       ctx.fillText(n + " 种", r.x + r.w / 2, r.y + 38);
     }
@@ -30912,7 +30912,7 @@ function makeHallBoardCell(i, x, y, w, h) {
       ctx.fillStyle = "#2e3c1c";
       ctx.font = "bold 18px " + FONT_STACK;
       ctx.fillText(title + " " + val, r.x + 16, r.y + 16);
-      ctx.fillStyle = "#5c6844";
+      ctx.fillStyle = "#55603c";
       ctx.font = "bold 12px " + FONT_STACK;
       ctx.fillText(hint, r.x + 16, r.y + 34);
       ctx.fillStyle = "rgba(42,58,24,0.55)";
@@ -31290,7 +31290,7 @@ function drawSettingsPanel(ctx, m) {
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText("局内 WASD / 方向键走位 · Esc 暂停 · 空格咆哮(过场则跳过)", CONFIG.viewW / 2, py + 106);
   ctx.textAlign = "left";
-  ctx.fillStyle = "#5c6844";
+  ctx.fillStyle = "#55603c";
   ctx.font = "bold 14px " + FONT_STACK;
   ctx.fillText("音频三档", px + 30, py + 148);
   ctx.textAlign = "center";
@@ -31417,7 +31417,7 @@ function drawGuidePanel(ctx, m) {
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillStyle = c.cardDesc;
   ctx.fillText("点出击就能玩, 不必先看完本页", CONFIG.viewW / 2, py + 128);
-  ctx.fillStyle = "#5c6844";
+  ctx.fillStyle = "#55603c";
   ctx.font = "bold 14px " + FONT_STACK;
   ctx.fillText("上手四步", CONFIG.viewW / 2, py + 178);
   ctx.fillStyle = "#3a4626";
@@ -31524,7 +31524,7 @@ function drawAboutPanel(ctx, m) {
       ly += 8;
     }
     ctx.textAlign = "center";
-    ctx.fillStyle = "#5c6844";
+    ctx.fillStyle = "#55603c";
     ctx.font = "bold 14px " + FONT_STACK;
     ctx.fillText(loreSkipHint(), CONFIG.viewW / 2, cardY + cardH - 18);
     GAME.loreSkipBtn = uiAboutLoreToggle ? {
@@ -31541,7 +31541,7 @@ function drawAboutPanel(ctx, m) {
       ly += 26;
     }
     ctx.textAlign = "center";
-    ctx.fillStyle = "#5c6844";
+    ctx.fillStyle = "#55603c";
     ctx.font = "bold 14px " + FONT_STACK;
     ctx.fillText("展开可读完 · " + loreSkipHint(), CONFIG.viewW / 2, cardY + cardH - 22);
   }
