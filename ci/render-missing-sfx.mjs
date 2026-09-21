@@ -99,11 +99,18 @@ function renderOne(id) {
     tone(out, { wave: "sine", f0: 148, f1: 82, t0: 0, dur: 0.16, a: 0.010, d: 0.11, s: 0, r: 0.08, gain: 0.70 });
     tone(out, { wave: "triangle", f0: 196, f1: 98, t0: 0, dur: 0.12, a: 0.008, d: 0.08, s: 0, r: 0.06, gain: 0.26 });
     noise(out, { t0: 0, dur: 0.05, a: 0.004, r: 0.04, gain: 0.06, seed: 33 });
-  } else if (id === "SFX_CARDSHOW") { out = alloc(0.36);
-    tone(out, { wave: "triangle", f0: 523.25, t0: 0, dur: 0.14, a: 0.009, d: 0.08, s: 0, r: 0.05, gain: 0.78 });
-    tone(out, { wave: "triangle", f0: 659.26, t0: 0.07, dur: 0.14, a: 0.009, d: 0.08, s: 0, r: 0.05, gain: 0.82 });
-    tone(out, { wave: "triangle", f0: 783.99, t0: 0.14, dur: 0.18, a: 0.009, d: 0.08, s: 0.12, r: 0.08, gain: 0.9 });
-    tone(out, { wave: "sine", f0: 1046.5, t0: 0.2, dur: 0.16, a: 0.009, d: 0.08, s: 0, r: 0.1, gain: 0.36 });
+  } else if (id === "SFX_CARDSHOW") { out = alloc(0.30);
+    // 【v1.176】与 SFX_START 结构去同构（详见母版同名分支的注释）：
+    //   旧 = 4 音级进上行琶音 523·659·784·1046（0.36s，重心 638Hz，与 start 仅差 5.9 半音，
+    //        且两者在 beginRun 里**同一 tick 相继播放** → 叠在一起听是"同一段音换调"）
+    //   新 = 2 音大跳 784·1046（G5→C6）+ 1568Hz 亮钉 = "叮-咚"两下、利落落定
+    //        → 重心 ≈1180Hz（与 start 差 ~16.5 半音，跨八度）；时长 0.36→0.30s（差 21%）
+    //   ⚠ 只做平峰值归一（下方 normalize），响度档位仍只由运行时 gains(0.56) 决定。
+    const cf = [784.0, 1046.5];
+    for (let ci = 0; ci < 2; ci++) {
+      tone(out, { wave: "triangle", f0: cf[ci], f1: cf[ci] * 1.012, t0: ci * 0.10, dur: 0.10, a: 0.004, d: 0.05, s: 0, r: 0.045, gain: 0.9 });
+    }
+    tone(out, { wave: "sine", f0: 1568.0, t0: 0.10, dur: 0.09, a: 0.002, d: 0.03, s: 0, r: 0.05, gain: 0.30 });
   } else if (id === "SFX_CHEST") { out = alloc(0.36);
     noise(out, { t0: 0, dur: 0.08, a: 0.004, r: 0.05, gain: 0.42, seed: 77 });
     tone(out, { wave: "sine", f0: 140, f1: 88, t0: 0, dur: 0.16, a: 0.006, d: 0.1, s: 0, r: 0.06, gain: 0.88 });
