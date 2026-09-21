@@ -43,6 +43,14 @@ TRACK_LANE = {
 # 同一局内会互相切换的曲目链（desiredBgm() 的走向）
 CHAIN = [("bgm_march", "bgm_horde"), ("bgm_horde", "bgm_abyss"), ("bgm_march", "bgm_abyss")]
 
+# 【v1.180】逐曲响度配平（源码 CONFIG.audio.bgmTrim；烘焙期在峰值归一**之后**施加）
+#   口径: 有效响度 = 内容响度 + 20log10(laneGain) + 20log10(trim)
+TRACK_TRIM = {
+    "bgm_march": 0.8300,
+    "bgm_horde": 0.6597,
+    "bgm_abyss": 1.1872,
+}
+
 JUMP_DB = 3.0
 CHAIN_DB = 2.0
 
@@ -111,8 +119,9 @@ def analyze(audio_dir, lane_gain=None):
             continue
         content = k_loudness_db(sig, sr)
         g = lg[lane]
-        rows.append(dict(name=tid, lane=lane, gain=g, content=content,
-                         eff=content + 20 * math.log10(g),
+        trim = TRACK_TRIM.get(tid, 1.0)
+        rows.append(dict(name=tid, lane=lane, gain=g, content=content, trim=trim,
+                         eff=content + 20 * math.log10(g) + 20 * math.log10(trim),
                          dur=len(sig) / float(sr)))
     return rows, lg
 
@@ -225,7 +234,7 @@ def selftest(audio_dir):
     for r in rowsA:
         if r["name"] == "bgm_horde":
             r["content"] -= 5.0
-            r["eff"] = r["content"] + 20 * math.log10(r["gain"])
+            r["eff"] = r["content"] + 20 * math.log10(r["gain"]) + 20 * math.log10(r.get("trim", 1.0))
     aA = [x for x in judge(rowsA)[0] if "battle" in x]
     print("  [A'] 把 bgm_horde 压 -5dB（注入已知缺陷）→ battle 报跳档? %s（应 True）" % bool(aA))
     tot += 1
@@ -246,7 +255,7 @@ def selftest(audio_dir):
     for r in rows1:
         if r["name"] == lo["name"]:
             r["content"] += delta
-            r["eff"] = r["content"] + 20 * math.log10(r["gain"])
+            r["eff"] = r["content"] + 20 * math.log10(r["gain"]) + 20 * math.log10(r.get("trim", 1.0))
     a2 = [x for x in judge(rows1)[0] if "battle" in x]
     print("  [B] 把 %s 内容响度抬高 %.2f dB（模拟重烘修齐）→ battle 仍报跳档? %s（应 False）" % (
         lo["name"], delta, bool(a2)))
@@ -263,7 +272,7 @@ def selftest(audio_dir):
     for r in rows3:
         if r["name"] == "bgm_meadow":
             r["content"] -= 4.0
-            r["eff"] = r["content"] + 20 * math.log10(r["gain"])
+            r["eff"] = r["content"] + 20 * math.log10(r["gain"]) + 20 * math.log10(r.get("trim", 1.0))
     a3 = judge(rows3)[0]
     got = any("home" in x for x in a3)
     print("  [C] bgm_meadow 单曲压 -4dB → 报 home 跳档? %s（应 True，且必须突破豁免）" % got)
@@ -281,12 +290,33 @@ def selftest(audio_dir):
     for r in rows4:
         if r["name"] == hi["name"]:
             r["content"] += 6.0
-            r["eff"] = r["content"] + 20 * math.log10(r["gain"])
+            r["eff"] = r["content"] + 20 * math.log10(r["gain"]) + 20 * math.log10(r.get("trim", 1.0))
     a4 = [x for x in judge(rows4)[0] if "battle" in x]
     print("  [D] 把最响的 %s 内容再抬 +6dB → battle 报跳档? %s（应 True）" % (hi["name"], bool(a4)))
     tot += 1
     if a4:
         ok += 1
+
+    # E. 【v1.180】新机制 TRACK_TRIM 的**孤儿开关**阴性对照。
+    #    风险: 若 trim 表写了但代码从不施加(拼错字段名/施加在归一之前被抵消),
+    #          门禁会因为自己也读了同一张表而"两边一起错"→ 双双看起来正常。
+    #    对照: 把某曲 trim 从"已配平值"改回 1.0 → 该档**必须**恢复报跳档。
+    #      (若改回 1.0 后仍不报 → 说明 trim 对判据无效 = 孤儿开关)
+    rows5, _ = analyze(audio_dir)
+    victim = "bgm_horde"
+    before = [r["eff"] for r in rows5 if r["name"] == victim][0]
+    for r in rows5:
+        if r["name"] == victim:
+            r["trim"] = 1.0
+            r["eff"] = r["content"] + 20 * math.log10(r["gain"])
+    a5 = [x for x in judge(rows5)[0] if "battle" in x]
+    print("  [E] 把 %s 的 trim 改回 1.0（撤销配平）→ battle 报跳档? %s（应 True）＊孤儿开关对照" % (
+        victim, bool(a5)))
+    tot += 1
+    if a5:
+        ok += 1
+    else:
+        print("       → trim 对该判据无效 = 孤儿开关 ❌")
 
     print("  --- %d/%d 通过" % (ok, tot))
     return 0 if ok == tot else 1
