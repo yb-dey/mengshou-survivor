@@ -123,6 +123,7 @@ const TABLE_EXPECT = {
   DATA_PASSIVE: 14,
   DATA_COMBAT_EVO: 9,
   DATA_HALL_UNLOCK: 6,
+  DATA_RUNES: 5,
 };
 function parseTable(src, name) {
   const { body } = cutBody(src, name);
@@ -243,6 +244,33 @@ function checkAchieve(src) {
   }
 }
 
+// ---------- 判据 A3: DATA_RUNES.desc 的 "×N" × 表内数值键 ----------
+// desc 形如 "敌HP×1.3 币×1.5" —— 出现几个 "×N"，表内就该有对应的几个数值键。
+function checkRunes(src) {
+  const items = parseTable(src, 'DATA_RUNES');
+  for (const it of items) {
+    const id = idField(it.text);
+    const desc = strField(it.text, 'desc');
+    if (!id || !desc) { if (id) note('A3', `${id}: desc 缺失，跳过`); continue; }
+    const shown = [...new Set((desc.match(/×\s*(\d+(?:\.\d+)?)/g) || []).map((s) => parseFloat(s.replace(/[×\s]/g, ''))))];
+    // 兼容 "词缀概率100%" 形态（不是 ×N，但同样是数值宣称）
+    const pctShown = [...new Set((desc.match(/(\d+(?:\.\d+)?)\s*%/g) || []).map((s) => parseFloat(s)))];
+    if (!shown.length && !pctShown.length) { note('A3', `${id}: desc 无 ×N / N%`); continue; }
+    const vals = [];
+    const reKV = /([A-Za-z][A-Za-z0-9_]*)\s*:\s*(-?\d+(?:\.\d+)?)/g;
+    let m;
+    while ((m = reKV.exec(it.text)) !== null) vals.push(parseFloat(m[2]));
+    for (const n of shown) {
+      const ok = vals.some((v) => Math.abs(v - n) < 1e-6 || Math.abs(v * 100 - n) < 1e-6);
+      if (!ok) fail('A3', id, `desc 宣称 "×${n}"，但表内数值键 [${vals.join(', ')}] 无对应值`);
+    }
+    for (const n of pctShown) {
+      const ok = vals.some((v) => Math.abs(v * 100 - n) < 1e-6 || Math.abs(v - n) < 1e-6);
+      if (!ok) fail('A3', id, `desc 宣称 "${n}%"，但表内数值键 [${vals.join(', ')}] 无对应值`);
+    }
+  }
+}
+
 // ---------- 判据 C: 文案「点名兄弟」的反引号（『』「」）包裹才是精确引用 ----------
 // 教训：初版用 /与([^成,，;；]{1,10})成档/ 抓裸文本，会把
 //   "与暖绒絮+巢枝光环" 的「暖绒絮+巢枝光环」整串当成一个名字，也会把
@@ -293,6 +321,7 @@ function run(src) {
   FAILS.length = 0; NOTES.length = 0;
   checkTalent(src);
   checkPassive(src);
+  checkRunes(src);
   checkAchieve(src);
   checkCrossNames(src);
   return { fails: FAILS.slice(), notes: NOTES.slice() };
@@ -372,6 +401,16 @@ if (process.argv.includes('--selftest')) {
   report('阴性对照 6: DATA_PASSIVE.dewcap regen 0.25→0.40（desc 仍写 0.25/s）', r6);
   const ok6 = inj6 && r6.fails.some((f) => f.cat === 'A2' && f.id === 'dewcap');
 
+  // 阴性对照 7：DATA_RUNES 的数值键漂移，desc 的 ×N 不动 → 必须报错
+  const mut7 = src.replace(
+    'rune_berserk: { id: "rune_berserk", name: "狂暴符文", desc: "敌HP×1.3 币×1.5", hpMul: 1.3, coinMul: 1.5 }',
+    'rune_berserk: { id: "rune_berserk", name: "狂暴符文", desc: "敌HP×1.3 币×1.5", hpMul: 1.9, coinMul: 1.5 }'
+  );
+  const inj7 = mut7 !== src;
+  const r7 = run(mut7);
+  report('阴性对照 7: DATA_RUNES.rune_berserk hpMul 1.3→1.9（desc 仍写 ×1.3）', r7);
+  const ok7 = inj7 && r7.fails.some((f) => f.cat === 'A3' && f.id === 'rune_berserk');
+
   const all = ok1 && ok2 && ok3;
   console.log('\n--- selftest ---');
   console.log(`  阴性对照 A(per 漂移): ${ok1 ? '检出 ✅' : '漏检 ❌'}`);
@@ -389,10 +428,11 @@ if (process.argv.includes('--selftest')) {
   console.log(`  阴性对照 D(解析器退化必报错): ${ok4 ? '检出 ✅' : '漏检 ❌'}`);
   console.log(`  阴性对照 E(DATA_PASSIVE 对象型 per 漂移): ${ok5 ? '检出 ✅' : '漏检 ❌'}`);
   console.log(`  阴性对照 F(DATA_PASSIVE 数值型 desc 漂移): ${ok6 ? '检出 ✅' : '漏检 ❌'}`);
+  console.log(`  阴性对照 G(DATA_RUNES ×N 漂移): ${ok7 ? '检出 ✅' : '漏检 ❌'}`);
 
-  const n = (ok1 ? 1 : 0) + (ok2 ? 1 : 0) + (ok3 ? 1 : 0) + (ok4 ? 1 : 0) + (ok5 ? 1 : 0) + (ok6 ? 1 : 0);
-  console.log(`  selftest ${n}/6 ${n === 6 ? '✅' : '❌'}`);
-  process.exit(n === 6 ? 0 : 1);
+  const n = (ok1 ? 1 : 0) + (ok2 ? 1 : 0) + (ok3 ? 1 : 0) + (ok4 ? 1 : 0) + (ok5 ? 1 : 0) + (ok6 ? 1 : 0) + (ok7 ? 1 : 0);
+  console.log(`  selftest ${n}/7 ${n === 7 ? '✅' : '❌'}`);
+  process.exit(n === 7 ? 0 : 1);
 }
 
 const real = run(src);
