@@ -78,7 +78,19 @@ await page.addInitScript(() => {
                 n++;
               }
               const rms = Math.sqrt(sum / Math.max(1, n));
-              const rec = { dur: +b.duration.toFixed(3), peak: +peak.toFixed(4), rms: +rms.toFixed(4) };
+              // 【v1.167】接缝检查：长缓冲(≈BGM 循环)首尾若"断崖"，循环点会有"咔哒"。
+              //   取尾部与头部各 512 样本的最大差值 / 峰值 → 相对跳变。
+              let seam = -1;
+              if (b.duration > 3 && d.length > 48000) {
+                let mx = 0;
+                const W = Math.min(512, d.length >> 2);
+                for (let k = 0; k < W; k++) {
+                  const delta = Math.abs(d[d.length - 1 - k] - d[k]);
+                  if (delta > mx) mx = delta;
+                }
+                seam = +(mx / Math.max(1e-4, peak)).toFixed(3);
+              }
+              const rec = { dur: +b.duration.toFixed(3), peak: +peak.toFixed(4), rms: +rms.toFixed(4), seam: seam };
               window.__ac.stats.push(rec);
               if (peak >= 0.999) window.__ac.clips.push(rec);
             }
@@ -152,6 +164,7 @@ const q = await page.evaluate(() => {
   const pk = srt(st.map((r) => r.peak));
   const rm = srt(st.map((r) => r.rms));
   const du = srt(st.map((r) => r.dur));
+  const seamArr = srt(st.filter((r) => r.seam >= 0).map((r) => r.seam));
   const med = (arr) => (arr.length ? arr[(arr.length / 2) | 0] : 0);
   return {
     n: st.length,
@@ -160,10 +173,12 @@ const q = await page.evaluate(() => {
     rmsMed: +(med(rm) || 0).toFixed(4), rmsMin: +(rm.length ? rm[0] : 0).toFixed(4),
     durMed: +(med(du) || 0).toFixed(3), durMax: +(du.length ? du[du.length - 1] : 0).toFixed(3),
     quiet: st.filter((r) => r.rms < 0.005).length,
+    seamMax: +(seamArr.length ? seamArr[seamArr.length - 1] : 0).toFixed(3),
   };
 });
 const okClip = q.clips === 0;                 // 有削波 → 可能刺耳
 const okLoud = q.n > 0 && q.rmsMed >= 0.01;   // 整体太轻 → 可能听不见
+const okSeam = q.seamMax < 0.15;              // 循环点断崖 < 峰值 15% → 无"咔哒"（实测咔哒通常 >0.3）
 
 const rows = [
   { name: '大厅静置(BGM)', ...bgm },
@@ -198,21 +213,23 @@ const md = [
   `- 时长 中位 **${q.durMed}s** / 最长 **${q.durMax}s**`,
   `- ④ 无削波（峰值≥0.999 的缓冲 = 0）: **${okClip ? '✅' : '❌ 有 ' + q.clips + ' 个'}**`,
   `- ⑤ 整体不偏轻（RMS 中位 ≥0.01）: **${okLoud ? '✅' : '❌'}**（RMS<0.005 的 ${q.quiet} 个）`,
+  `- ⑥ 循环接缝连续（首尾最大跳变 ${q.seamMax} < 0.15×峰值）: **${okSeam ? '✅' : '❌ 循环点可能有咔哒'}**`,
   '',
   '> 方法：挂钩 `createBufferSource` 返回的节点，在其 `start()` 时读 `node.buffer` 的通道数据算指标。',
   '> ⚠ 这是**静态内容**指标（不含实时混音/限幅），但足以抓"削波刺耳"与"轻到听不见"。',
+  '> ⑥ 接缝：对时长>3s 的缓冲取尾/头各 512 样本的最大差值 ÷ 峰值；循环点"断崖"会 >0.3。',
   '',
   '> 计数钩子挂在 `AudioContext.prototype.createOscillator/createBufferSource` 上，在游戏脚本执行前注入。',
   '> ⚠ BGM 是"开机建一次 + loop"的形态 → **窗口增量会为 0，属正常**，故 BGM 用累计量判定。',
   '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'audio-report.md'), md);
-fs.writeFileSync(path.join(OUT, 'audio-report.json'), JSON.stringify({ bgm, battle, muted, ctxMade: t1.ctxMade, quality: q, errs, ok: { okBgm, okBattle, okMute, okClip, okLoud } }, null, 2));
+fs.writeFileSync(path.join(OUT, 'audio-report.json'), JSON.stringify({ bgm, battle, muted, ctxMade: t1.ctxMade, quality: q, errs, ok: { okBgm, okBattle, okMute, okClip, okLoud, okSeam } }, null, 2));
 console.log(md);
 
 await browser.close();
 server.close();
 if (errs.length) { console.error('❌ 有未捕获异常'); process.exit(3); }
 if (!(okBgm && okBattle && okMute)) { console.error('❌ 音频体检未通过（BGM/SFX/静音）'); process.exit(2); }
-if (!(okClip && okLoud)) { console.error('❌ 音质体检未通过（削波/偏轻）'); process.exit(4); }
+if (!(okClip && okLoud && okSeam)) { console.error('❌ 音质体检未通过（削波/偏轻/循环接缝）'); process.exit(4); }
 process.exit(0);
