@@ -21,6 +21,13 @@ jobs:
       - name: 屏幕分析（CI 端产出文本报告）
         if: always()
         run: python ci/screen-analyze.py ci/out ci/out/analysis.md
+      # 【v1.178】卡内死区双带扫描（范式 32）：同时扫 ①容器顶→首内容 ②末内容→容器底。
+      #   只看一个会漏"底部大空档"——上一版分析器只有"面板内最长无内容带"这一个口径，
+      #   面板级修完后同类缺陷下沉到**卡片内部**就再也测不出来（每日加菜卡 49px 死区即此漏网）。
+      #   本步骤只出**候选清单**（文本），缺陷判定仍需同屏/同族对照。
+      - name: 卡内死区双带扫描（候选清单）
+        if: always()
+        run: python ci/card-band.py ci/out ci/out/card-band.md
       # 【2026-09-21】判据自测先行：文字级可读性判据必须**先证明自己有效**（能区分深字/浅字、
       #   平坦图不误报），才允许用它的输出去下结论。曾因单位混用导致判据全灭 → 无自测就发现不了。
       #   ⚠ 但自测通过≠判据可用：该判据随后在**真实截图**上被证伪（合成自测有盲区，见文件头横幅）。
@@ -51,6 +58,7 @@ jobs:
           name: screen-analysis
           path: |
             ci/out/analysis.md
+            ci/out/card-band.md
             ci/out/legibility-text.md
             ci/out/overview.png
           retention-days: 30
