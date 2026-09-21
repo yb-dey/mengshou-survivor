@@ -31287,6 +31287,18 @@ function drawSettingsPanel(ctx, m) {
   m.panelH = setBoxOn ? 1060 : 880;
   var py = (CONFIG.viewH - m.panelH) / 2;
   var px = (CONFIG.viewW - m.panelW) / 2;
+  // 【v1.167b】⚠ 修我自己引入的重叠：面板改矮后 py 由 110 变 200，而音频行/4 个按钮仍锚在
+  //   **旧的静态 sPy=110** → 标题下的提示字(py+106=306)正好压在音频行(278..362)上（实测肉眼可见）。
+  //   修法：把这些控件按 **dSet = py − 原 sPy** 整体平移 → 恢复原始相对布局，且空白带再收一截。
+  var setD = py - (CONFIG.viewH - 1060) / 2;
+  var setAudio = settingsAudioLayout();
+  if (uiSetBgmOn) uiSetBgmOn.rect.y = setAudio.bgm.y + setD;
+  if (uiSetNodeSfx) uiSetNodeSfx.rect.y = setAudio.sfx.y + setD;
+  if (uiSetMute) uiSetMute.rect.y = setAudio.mute.y + setD;
+  if (uiSetTheme) uiSetTheme.rect.y = 378 + setD;
+  if (uiSetBgm) uiSetBgm.rect.y = 454 + setD;
+  if (uiSetExport) uiSetExport.rect.y = 530 + setD;
+  if (uiSetImport) uiSetImport.rect.y = 606 + setD;
   if (uiSetClose) uiSetClose.rect.y = py + (setBoxOn ? 970 : 754);
   var setFootY = py + (setBoxOn ? 890 : 674);
   // 【v1.155】设置页字阶对齐暂停/结算: 标题 40→34 + 细墨分隔线 + 音频分区小签, 导出码落苔纸盘
