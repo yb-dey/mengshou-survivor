@@ -130,8 +130,13 @@ while (Date.now() - tWait0 < 55000) {
   await page.waitForTimeout(500);
 }
 
-// —— 量帧时间（重载窗口 5s）——
-const gaps = await page.evaluate(new Function('return ' + FRAME_PROBE)(), 5000);
+// —— 量帧时间（重载窗口）——
+// 【v1.174】窗口 5s → 10s：**5s 太短，p95 方差大到把哨兵变成掷骰子**。
+//   实测（同代码、同怪数 ~45-46）：五次 run 的 p95 = 18.3 / 21.1 / 29.9 / 50.6 / (v1.173 21.1)
+//   —— 极差 2.8×，而预算刚好卡在观测带上沿 → **随机 FAIL**（run 35618553577 就是这么红的）。
+//   加长窗口是最直接的降方差手段（p95 是尾部统计量，样本越多越稳），代价只是多跑 5 秒。
+const FRAME_WINDOW_MS = +(process.env.FRAME_WINDOW || 10000);
+const gaps = await page.evaluate(new Function('return ' + FRAME_PROBE)(), FRAME_WINDOW_MS);
 const stat = { p50: pct(gaps, 0.5), p95: pct(gaps, 0.95), max: +(Math.max.apply(null, gaps.length ? gaps : [0])).toFixed(2), n: gaps.length };
 const fps = gaps.length ? +(1000 / (gaps.reduce((a, b) => a + b, 0) / gaps.length)).toFixed(1) : 0;
 
@@ -155,10 +160,19 @@ server.close();
 
 // —— 判定 ——
 // p95 预算：60fps=16.7ms。CI 跑的是 **swiftshader 软件渲染**（无 GPU 加速），
-//   逐帧光栅化比真机慢得多（实测重载 p95 ≈ 29–45ms）→ 预算按"软件渲染下的可接受尾部"取 50ms，
-//   **别拿它当真机标准**。真机有 GPU，同一场景会快数倍；此处的价值是**回归哨兵**
-//   （改动若让重载帧时明显恶化 → 掉出预算 → 报警），不是"达到 60fps 的证明"。
-const P95_BUDGET_MS = +(process.env.P95_BUDGET || 50);
+//   逐帧光栅化比真机慢得多 → 预算按"软件渲染下的可接受尾部"取，**别拿它当真机标准**。
+//   真机有 GPU，同一场景会快数倍；此处的价值是**回归哨兵**（改动若让重载帧时明显恶化 → 报警），
+//   不是"达到 60fps 的证明"。
+//
+// 【v1.174】预算 50 → 80，因为 50 是**假警报源**（实测把一次正常 run 判红）：
+//   五次 run 的 p95（同代码、同怪数 45-46）：
+//     18.3 / 21.1 / 29.9 / 50.6(FAIL) / 21.1(v1.173 基线)
+//   → 观测极差 2.8×，而 50 正好卡在带上沿 → 约 1/5 概率随机 FAIL。
+//   **"偶尔红"的哨兵比没有哨兵更糟**：真回归来了会被当成又一次抖动而忽略。
+//   取 80 ≈ 观测最大值(50.6)的 1.6 倍 —— 只用来抓**数量级恶化**（如光栅化泄漏、O(n²) 渲染），
+//   这类问题的 p95 会直接翻倍到 100ms+，80 足够拦；而 30–50ms 的正常抖动不再误报。
+//   配合窗口 5s→10s（降方差），两者一起把"假警报"压掉。
+const P95_BUDGET_MS = +(process.env.P95_BUDGET || 80);
 const LOAD_MIN = +(process.env.LOAD_TARGET || 45);   // "这确实是重载"的最低同屏怪数
 //   ⚠ 45 的来历：ch1 怪潮声明 countMin:72/countMax:90，但**同屏**存活数低于灌入总数
 //   （怪会被击杀、且软件渲染下帧长导致灌入节奏被拉长）→ CI 实测峰值 53。
@@ -191,8 +205,12 @@ md.push('| 帧时间 p50 | ' + stat.p50 + ' ms |');
 md.push('| 帧时间 p95 | ' + stat.p95 + ' ms（预算 ≤' + P95_BUDGET_MS + '） |');
 md.push('| 帧时间 max | ' + stat.max + ' ms |');
 md.push('| 平均 fps | ' + fps + ' |');
-md.push('| 采样帧数 | ' + stat.n + ' |');
+md.push('| 采样帧数 | ' + stat.n + '（窗口 ' + (FRAME_WINDOW_MS / 1000) + 's） |');
 md.push('| 未捕获异常 | ' + pageErrors.length + ' |');
+md.push('');
+md.push('> 预算 80ms 的来历（v1.174）：50ms 曾把一次**正常** run 判红 —— 五次同代码 run 的 p95');
+md.push('> 为 18.3 / 21.1 / 29.9 / **50.6(FAIL)** / 21.1，极差 2.8×。80 ≈ 观测最大值的 1.6 倍，');
+md.push('> 只抓**数量级恶化**（真回归的 p95 会翻到 100ms+），不再对正常抖动误报。');
 md.push('');
 md.push('## 阴性对照（注入 250ms×3 主线程阻塞）');
 md.push('- max = ' + negStat.max + ' ms（须 ≥ ' + NEG_MIN_MAX + '，否则判据量不到卡顿）');
