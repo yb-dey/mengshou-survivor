@@ -95,7 +95,14 @@ if (!audioBlock) {
     const dst2 = path.join(AUDIO_DST, f);
     if (!fs.existsSync(src2)) { audioMissing.push(f); continue; }
     const sz = fs.statSync(src2).size;
-    if (fs.existsSync(dst2) && fs.statSync(dst2).size === sz) { audioBytes += sz; continue; }
+    // 【v1.170】**不能用"文件大小相同"判定已同步** —— 这是本轮抓到的"陈旧检测看不见内容变化"坑：
+    //   重渲 SFX 后时长/格式不变 → **字节数完全一样**，于是 size 判等成立 → 拷贝被静默跳过，
+    //   dist/audio 永远留着旧内容，而构建打印"新拷 0 个"看起来一切正常。
+    //   → 改为**逐字节比较**（音频总量 ~7MB，一次比较的开销可忽略）。
+    //   铁证：本次 19 个 SFX 全部同尺寸重渲，size 判等 18 个被误判为"已最新"。
+    if (fs.existsSync(dst2) && fs.readFileSync(dst2).equals(fs.readFileSync(src2))) {
+      audioBytes += sz; continue;
+    }
     fs.copyFileSync(src2, dst2);
     audioCopied++;
     audioBytes += sz;
