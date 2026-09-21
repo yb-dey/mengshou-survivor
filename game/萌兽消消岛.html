@@ -26923,6 +26923,10 @@ function bindResultBuildChips() {
 }
 function drawPausePanel(ctx, m) {
   var c = CONFIG.colors;
+  // 【v1.167b】⚠ 必须让底板用**和内部布局同一个高度**，否则两者原点不一致：
+  //   内层按 756 排、底板还是 1120 → 顶部留大空档、底部挂一条（实测踩过）。
+  var pauseFrameFit = GAME.pausePanelFitH || m.panelH;
+  if (pauseFrameFit) m.panelH = pauseFrameFit;
   var py = (CONFIG.viewH - m.panelH) / 2;
   var px = (CONFIG.viewW - m.panelW) / 2;
   var i, sec, lay, hint;
