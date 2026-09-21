@@ -193,6 +193,9 @@ def report(rows, lg, out=None):
     txt = "\n".join(lines)
     print(txt)
     if out:
+        d = os.path.dirname(out)
+        if d:
+            os.makedirs(d, exist_ok=True)     # ⚠ CI 干净检出里 ci/out/ 不存在；本地因已有该目录而掩盖过此缺陷
         with open(out, "w", encoding="utf-8") as fh:
             fh.write(txt)
         print("\n→ 已写 " + out)
