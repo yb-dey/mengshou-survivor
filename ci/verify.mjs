@@ -14,7 +14,9 @@ import http from 'node:http';
 const OUT = path.join('ci', 'out');
 fs.mkdirSync(OUT, { recursive: true });
 
-const gameDir = path.resolve('game');
+// 验证目标目录可配：VERIFY_DIR=dist 即可验证**外链分发版**（线上发布的就是它）。
+// 此前只验过内联母版 → 分发版（assets 外链）从未进过云端门禁，属真缺口。
+const gameDir = path.resolve(process.env.VERIFY_DIR || 'game');
 const htmlFiles = fs.readdirSync(gameDir).filter((f) => f.toLowerCase().endsWith('.html'));
 if (!htmlFiles.length) { console.error('FAIL: game/ 下找不到 .html'); process.exit(1); }
 const entryName = htmlFiles[0];
