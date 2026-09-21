@@ -20,15 +20,18 @@ from pathlib import Path
 from PIL import Image
 
 TOL = int(os.environ.get("CUTOUT_TOL", "30"))
-SIZE = int(os.environ.get("DEAD_SIZE", "96"))
-RAW_DIR = Path("ci/dead-frames")
+SIZE = int(os.environ.get("ART_SIZE", os.environ.get("DEAD_SIZE", "96")))
+SUFFIX = os.environ.get("ART_SUFFIX", "_dead")          # "_dead" 或 "_hit"，驱动同一套流程
+RAW_DIR = Path(os.environ.get("ART_RAW_DIR", "ci/dead-frames"))
 GAME = Path("game")
 OUT = Path("ci/out")
 OUT.mkdir(parents=True, exist_ok=True)
 
-IDS = ["rabbit", "mouse", "bear", "fox", "badger", "boar", "monkey", "boss1", "boss2", "boss3",
-       "leaptoad", "raven", "orbitcrab", "boomfruit", "sporecap", "burrowmole",
-       "hedgehog", "chargerhino", "shieldbug", "honeypot", "rollshell"]   # 21 个敌人全覆盖
+DEFAULT_IDS = ["rabbit", "mouse", "bear", "fox", "badger", "boar", "monkey", "boss1", "boss2", "boss3",
+               "leaptoad", "raven", "orbitcrab", "boomfruit", "sporecap", "burrowmole",
+               "hedgehog", "chargerhino", "shieldbug", "honeypot", "rollshell"]
+IDS = [x.strip() for x in os.environ.get("ART_IDS", ",".join(DEFAULT_IDS)).split(",") if x.strip()]
+print("后缀 %s ｜ 尺寸 %d ｜ 素材目录 %s ｜ 目标 %d 个" % (SUFFIX, SIZE, RAW_DIR, len(IDS)))
 
 
 def cutout(im, tol=TOL):
@@ -96,7 +99,7 @@ total_after = 0
 preview = []
 
 for eid in IDS:
-    raw = RAW_DIR / f"{eid}_dead_raw.jpg"
+    raw = RAW_DIR / (eid + SUFFIX + "_raw.jpg")
     if not raw.exists():
         entries.append({"id": eid, "error": "原始素材缺失"})
         continue
@@ -108,7 +111,7 @@ for eid in IDS:
     small.save(buf, "WEBP", quality=86, method=6)
     out = buf.getvalue()
     b64 = base64.b64encode(out).decode("ascii")
-    key = eid + "_dead"
+    key = eid + SUFFIX
     entries.append({"id": eid, "key": key, "cutPct": round(cleared * 100.0 / tot, 1),
                     "size": SIZE, "bytes": len(out), "kb": round(len(out) / 1024, 1)})
     total_after += len(out)
