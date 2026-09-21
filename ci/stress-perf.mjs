@@ -27,7 +27,8 @@ const OUT = path.join('ci', 'out');
 fs.mkdirSync(OUT, { recursive: true });
 
 const gameDir = path.resolve(process.env.VERIFY_DIR || 'dist');
-const htmlFiles = fs.readdirSync(gameDir).filter((f) => f.toLowerCase().endsWith('.html'));
+// PICK_ENTRY_FILTERED: 排除 _ 前缀（_ = 临时/备份），防审计到备份文件（v1.187 实测）
+const htmlFiles = fs.readdirSync(gameDir).filter((f) => f.toLowerCase().endsWith('.html') && !f.startsWith('_'));
 if (!htmlFiles.length) { console.error('FAIL: ' + gameDir + ' 下找不到 .html'); process.exit(1); }
 const entryName = htmlFiles[0];
 
