@@ -202,9 +202,54 @@ try {
     const dHome = sigDiff(await screenSig(), homeSig);
     shots.push({ name: '11-battle', hook: 'mouse', hash: prevHash, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
   }
-  // ⚠ 已知坑：`levelup` 是**快照查询**（真动作 `levelupTap`）；`pause` 必须带参数 `pause(true)`。
-  await tryShoot('12-levelup', ['levelupTap', 'upgradeView', 'showGearPick']);
-  await tryShoot('13-pause', [{ n: 'pause', a: true }, 'pauseBuildChip', 'resultBuild']);
+  // ⚠ 已知坑：
+  //  · `levelup` 是**快照查询**（返回 {ready,armed,state,cards}）→ 不能用来"打开升级"，
+  //    但**正好可以当探针轮询**"升级是否已出现"，出现再截图；
+  //  · `pause` 只在 `GAME.state === PLAYING` 时生效 → 若此刻升级卡还开着，调用等于空操作。
+  //    → 先点掉升级卡回到战斗，再轮询重试 pause(true)。
+  let lu = null;
+  for (let t = 0; t < 70; t++) {
+    lu = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.levelup(); } catch (e) { return null; } });
+    if (lu && (lu.ready || lu.armed)) break;
+    await page.waitForTimeout(500);
+  }
+  if (lu && (lu.ready || lu.armed)) {
+    // 卡片弹出动画需要一点时间，等到 pop 基本归位再拍
+    await page.waitForTimeout(900);
+    await page.screenshot({ path: path.join(OUT, '12-levelup.png') });
+    const h = crypto.createHash('sha1').update(fs.readFileSync(path.join(OUT, '12-levelup.png'))).digest('hex').slice(0, 12);
+    prevHash = h;
+    const dHome = sigDiff(await screenSig(), homeSig);
+    shots.push({ name: '12-levelup', hook: '轮询 levelup() 就绪', hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
+  } else {
+    console.log('  ⚠ 12-levelup 等待超时：35s 内没有出现升级三选一（战斗可能未进入/时间不够）');
+    shots.push({ name: '12-levelup', hook: '轮询 levelup() 超时', dup: true });
+  }
+  // 点掉升级卡 + 清助力卡，回到可暂停的战斗态
+  await page.evaluate(() => {
+    const D = window.MENGSHOU_DEBUG || {};
+    try { if (D.levelupTap) D.levelupTap(); } catch (e) { void e; }
+    try { if (D.closeCards) D.closeCards(); } catch (e) { void e; }
+  });
+  let paused = false;
+  for (let t = 0; t < 24 && !paused; t++) {
+    const before = prevHash;
+    await page.evaluate(() => { try { window.MENGSHOU_DEBUG.pause(true); } catch (e) { void e; } });
+    await page.waitForTimeout(700);
+    const p = path.join(OUT, '13-pause.png');
+    await page.screenshot({ path: p });
+    const h = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 12);
+    if (h !== before) {
+      prevHash = h;
+      const dHome = sigDiff(await screenSig(), homeSig);
+      shots.push({ name: '13-pause', hook: 'pause(true) 轮询成功', hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
+      paused = true;
+    }
+  }
+  if (!paused) {
+    console.log('  ⚠ 13-pause 轮询 17s 仍未进入暂停态');
+    shots.push({ name: '13-pause', hook: 'pause(true) 轮询超时', dup: true });
+  }
 } catch (e) { shots.push({ name: 'battle-series', error: String(e).slice(0, 150) }); }
 
 const md = [
