@@ -1403,7 +1403,18 @@ var CONFIG = {
     bgmTrim: {
       march: 0.8300,               // -1.62 dB: 配平到档内目标 -40.5
       horde: 0.6597,               // -3.61 dB: 原为档内最响(-36.89), 是跳档主因
-      abyss: 1.1872                // +1.49 dB: BOSS 段本应更突出, 从最静端抬到档内
+      abyss: 1.1872,               // +1.49 dB: BOSS 段本应更突出, 从最静端抬到档内
+      // 【v1.181】home 档(世界主题曲)配平。玩家可在首页**主动切换主题**,
+      //   切换即换曲 → 档内 5 首必须听感等响。判据口径见 ci/bgm-perceptual-cross.py:
+      //   全曲均方极差会被"稀疏度"稀释(frost P50 比 city 低 9.95dB 是编配意图),
+      //   所以按**P95(有声音时多响)**配平 —— 这才是"切主题时会听到的音量"。
+      //   实测 P95 极差 4.97dB → 2.24dB(阈 3.5)。
+      //   ⚠ **只抬不压**(city 是默认主题, 不能变轻), 且设峰值上限 0.985 防削波:
+      //     meadow/frost 抬到上限即止 → 2.24dB 是峰值约束下的最优, 不是 0。
+      meadow: 1.3703,              // +2.74 dB(被 0.985 峰值上限卡住)
+      frost: 1.3706,               // +2.74 dB(同上)
+      dune: 1.2368,                // +1.85 dB
+      harbor: 1.1080               // +0.89 dB
     },
     gemComboMax: 24,               // 宝石连击升调上限级(R3: 24=全音阶两八度)【R3】
     gemComboStep: 1.0594631,       // 连击每级 playbackRate 倍率(R3: 2^(1/12) 全音阶半音)【R3】
@@ -2177,22 +2188,22 @@ function roomChapterShort(ch) {
 // 核实: 弹壳公开章有街道/公园/地库/金融/桥梁/郊外/农场/沙漠等地图换皮, 不是单一底色罩染。
 // 本表独立于章节难度, 玩家在首页点选; 不改波次数值。
 var DATA_WORLD_THEME = [
-  { id: "meadow", name: "芽野晨光", homeTrack: "meadow", battleTrack: "meadow",
+  { id: "meadow", name: "芽野晨光", homeTrack: "meadow",
     bgColor: "#c8e86a", wash: "#7bc43a", hudFg: "#2a4a18", hudWash: "rgba(80,140,40,0.22)",
     homeTop: "#9fd36a", homeBot: "#e8f4c8", accent: "#3faf5a",
     hallMoss: "#6a8a52", hallWood: "#c8d6a4", tag: "花瓣",
     ambient: { color: "#ffb7c5", rate: 3.2, vx: 6, vy: 28, size: 4, kind: "petal" } },
-  { id: "city", name: "灯笼港湾", homeTrack: "city", battleTrack: "city",
+  { id: "city", name: "灯笼港湾", homeTrack: "city",
     bgColor: "#163040", wash: "#2a2818", hudFg: "#f0e8d0", hudWash: "rgba(40,30,12,0.32)",
     homeTop: "#1a3040", homeBot: "#0c1c24", accent: "#e0a040",
     hallMoss: "#5a7a6a", hallWood: "#d4c4a0", tag: "灯笼",
     ambient: { color: "#e0a040", rate: 3.4, vx: -8, vy: 12, size: 3, kind: "lantern" } },
-  { id: "dune", name: "沙原黄昏", homeTrack: "dune", battleTrack: "dune",
+  { id: "dune", name: "沙原黄昏", homeTrack: "dune",
     bgColor: "#e8b86a", wash: "#d4893a", hudFg: "#4a2a10", hudWash: "rgba(180,90,20,0.22)",
     homeTop: "#f0a040", homeBot: "#f6d8a0", accent: "#c06020",
     hallMoss: "#c4a06a", hallWood: "#e8d0a0", tag: "沙尘",
     ambient: { color: "#f3d39a", rate: 3.6, vx: 28, vy: 8, size: 3, kind: "dust" } },
-  { id: "frost", name: "霜原极光", homeTrack: "frost", battleTrack: "frost",
+  { id: "frost", name: "霜原极光", homeTrack: "frost",
     bgColor: "#d8eef6", wash: "#7ec8e0", hudFg: "#123040", hudWash: "rgba(40,90,130,0.22)",
     homeTop: "#8fd0e8", homeBot: "#eef7fb", accent: "#3aa0c8",
     hallMoss: "#6a8a96", hallWood: "#d0e4ec", tag: "雪晶",
@@ -8386,13 +8397,13 @@ var STAR_DMG = [1, 1.25, 1.5625, 1.953125, 2.44140625];
 // ①②③ 数值 [来源]; ④⑤⑥ 方案只给名与归属, 数值按同系首发超武标定【假设】(主理人裁决 2)。
 // 【v1.23】超武不写 tag 字段, 协同按 from 源武继承(weaponTagOf), 避免进化散档。
 var DATA_SUPER = {
-  acornstorm:   { id: "acornstorm",   name: "狂风橡果暴雨", from: "pinecone",    req: "nectar",   dmg: 30, interval: 0.4, bulletSpd: 520, bulletR: 6, pierce: 3, bulletCount: 6, kind: "straight", color: "#8a5a2b", desc: "松果连弩+花蜜: 6 连发穿透暴雨 [来源]" },
-  megaboom:     { id: "megaboom",     name: "巨木崩裂",     from: "bombnut",     req: "nutshell", dmg: 60, interval: 1.8, bulletSpd: 0, bulletR: 10, pierce: 0, bulletCount: 1, kind: "arc", aoeDmg: 0, aoeR: 140, arcT: 0.9, burnDmg: 8, burnDur: 3, color: "#7a4a1a", desc: "爆爆橡果+坚果壳: 半径140 巨木砸地+余燃 8x3s [来源]" },
-  beesguard:    { id: "beesguard",    name: "蜂后亲卫队",   from: "beeswarm",    req: "windbell", dmg: 15, interval: 0, bulletSpd: 0, bulletR: 15, pierce: 0, bulletCount: 8, kind: "orbit", orbitR: 110, orbitSpd: 240, hitCd: 0.5, orbitSizeMul: 1.5, color: "#e8b420", desc: "蜂群+风之铃: 8 只亲卫蜂(体型 x1.5) [来源]" },
-  bladestorm:   { id: "bladestorm",   name: "刃风回旋阵",   from: "bladeleaf",   req: "moss",     dmg: 30, interval: 0.8, bulletSpd: 300, bulletR: 9, pierce: 999, bulletCount: 3, kind: "boomerang", range: 380, color: "#4faf3f", desc: "回旋飞叶+苔藓护甲: 三叶回旋阵 【假设】" },
-  thunderstorm: { id: "thunderstorm", name: "雷云风暴",     from: "thunder",     req: "magnet",   dmg: 40, interval: 1.2, bulletSpd: 0, bulletR: 0, pierce: 0, bulletCount: 1, kind: "strike", chain: 3, chainR: 180, color: "#8a5ae2", desc: "雷蘑菇+磁石蘑菇: 连锁 3 雷云 【假设】" },
-  solarflare:   { id: "solarflare",   name: "日冕射线",     from: "laserflower", req: "wisdom",   dmg: 15, interval: 3, bulletSpd: 0, bulletR: 0, pierce: 0, bulletCount: 1, kind: "laser", sweepDeg: 120, laserW: 40, laserDur: 3, laserTick: 0.25, laserRange: 480, color: "#f2a030", desc: "激光花+智慧果: 日冕宽束慢扫(与花蜜瞬斩分叉, 宽扫不是快刺) 【假设】" },
-  mapletornado: { id: "mapletornado", name: "绯枫龙卷",     from: "mapledart",   req: "moss",     dmg: 28, interval: 0.9, bulletSpd: 320, bulletR: 8, pierce: 999, bulletCount: 6, kind: "boomerang", range: 430, color: "#c03a2a", desc: "枫叶双镖+苔藓护甲: 六镖远距龙卷(与胡椒对穿枫月分叉, 铺远不是对穿) 【假设】" },   // 【R16】第 7 超武: 回旋流双超武闭环(boomerang 同源升格零新机制, 22px·枚错拍沿用 r16a 范式)
+  acornstorm:   { id: "acornstorm",   name: "狂风橡果暴雨", from: "pinecone",    req: "nectar",   dmg: 30, interval: 0.4, bulletSpd: 520, bulletR: 6, pierce: 3, bulletCount: 6, kind: "straight", color: "#8a5a2b", desc: "松果连弩+花蜜: 6 连发穿透暴雨" },   // 数值 [来源]
+  megaboom:     { id: "megaboom",     name: "巨木崩裂",     from: "bombnut",     req: "nutshell", dmg: 60, interval: 1.8, bulletSpd: 0, bulletR: 10, pierce: 0, bulletCount: 1, kind: "arc", aoeDmg: 0, aoeR: 140, arcT: 0.9, burnDmg: 8, burnDur: 3, color: "#7a4a1a", desc: "爆爆橡果+坚果壳: 半径140 巨木砸地+余燃 8x3s" },   // 数值 [来源]
+  beesguard:    { id: "beesguard",    name: "蜂后亲卫队",   from: "beeswarm",    req: "windbell", dmg: 15, interval: 0, bulletSpd: 0, bulletR: 15, pierce: 0, bulletCount: 8, kind: "orbit", orbitR: 110, orbitSpd: 240, hitCd: 0.5, orbitSizeMul: 1.5, color: "#e8b420", desc: "蜂群+风之铃: 8 只亲卫蜂(体型 x1.5)" },   // 数值 [来源]
+  bladestorm:   { id: "bladestorm",   name: "刃风回旋阵",   from: "bladeleaf",   req: "moss",     dmg: 30, interval: 0.8, bulletSpd: 300, bulletR: 9, pierce: 999, bulletCount: 3, kind: "boomerang", range: 380, color: "#4faf3f", desc: "回旋飞叶+苔藓护甲: 三叶回旋阵" },   // 数值为自定初值待调参 【假设】
+  thunderstorm: { id: "thunderstorm", name: "雷云风暴",     from: "thunder",     req: "magnet",   dmg: 40, interval: 1.2, bulletSpd: 0, bulletR: 0, pierce: 0, bulletCount: 1, kind: "strike", chain: 3, chainR: 180, color: "#8a5ae2", desc: "雷蘑菇+磁石蘑菇: 连锁 3 雷云" },   // 数值为自定初值待调参 【假设】
+  solarflare:   { id: "solarflare",   name: "日冕射线",     from: "laserflower", req: "wisdom",   dmg: 15, interval: 3, bulletSpd: 0, bulletR: 0, pierce: 0, bulletCount: 1, kind: "laser", sweepDeg: 120, laserW: 40, laserDur: 3, laserTick: 0.25, laserRange: 480, color: "#f2a030", desc: "激光花+智慧果: 日冕宽束慢扫(与花蜜瞬斩分叉, 宽扫不是快刺)" },   // 数值为自定初值待调参 【假设】
+  mapletornado: { id: "mapletornado", name: "绯枫龙卷",     from: "mapledart",   req: "moss",     dmg: 28, interval: 0.9, bulletSpd: 320, bulletR: 8, pierce: 999, bulletCount: 6, kind: "boomerang", range: 430, color: "#c03a2a", desc: "枫叶双镖+苔藓护甲: 六镖远距龙卷(与胡椒对穿枫月分叉, 铺远不是对穿)" },   // 数值为自定初值待调参 【假设】；【R16】第 7 超武: 回旋流双超武闭环(boomerang 同源升格零新机制, 22px·枚错拍沿用 r16a 范式)
   gurumeteor:   { id: "gurumeteor",   name: "碎岩咕噜阵",   from: "gurustone",   req: "windbell", dmg: 45, interval: 0, bulletSpd: 0, bulletR: 22, pierce: 0, bulletCount: 4, kind: "orbit", orbitR: 130, orbitSpd: 170, hitCd: 0.8, color: "#5a5d65", desc: "咕噜石+风之铃: 四巨岩远环重砸(与磁石磁砾密环分叉, 远环不是贴身快转)" },   // 【R29】第 8 超武: 环绕流双超武闭环(orbit 同源升格零新机制; 数值按同系首发 beesguard 口径标定【假设】: dmg 15→45/体型 16→22/4 石)
   seedcannon:   { id: "seedcannon",   name: "疾风种雨",     from: "seedvolley",  req: "spinachseed", dmg: 18, interval: 0.45, bulletSpd: 480, bulletR: 6, pierce: 2, bulletCount: 7, kind: "straight", color: "#5a8a22", desc: "种子散射+风车草籽: 七向疾风种雨(与花蜜蜜种贯珠分叉, 扇铺不是叠穿)" },   // 【v1.13】直射第二超武: 直线弹扇形升格, 零新机制
   tideshield:   { id: "tideshield",   name: "潮汐花环",     from: "dewpulse",    req: "dewcap",     dmg: 0,  interval: 0.95, bulletSpd: 0, bulletR: 0, pierce: 0, bulletCount: 1, kind: "nova", aoeDmg: 28, aoeR: 132, color: "#2a88b8", desc: "露珠脉冲+晨露菇: 身周大潮汐环, 站桩清场" },   // 【v1.14】脉冲环超武: 仍走 nova, 半径/频率升格
