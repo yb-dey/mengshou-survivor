@@ -191,6 +191,18 @@ async function tryShoot(outName, candidates) {
 
 // 战斗内：升级三选一 + 暂停（每个都试多个钩子，画面没变就如实标记，不当成成功）
 try {
+  // ⚠ 实测坑：第 10 步的"每日挑战"弹窗**不会**被 hall() 关掉 → 点击落在弹窗上，
+  //   拍出的 11-battle 其实是"每日挑战面板"（Δ 与大厅不同，所以旧检测拦不住）。
+  //   → 进战斗前先做一次完整复位（关掉所有可能开着的面板 + 回大厅）。
+  await page.evaluate(() => {
+    const D = window.MENGSHOU_DEBUG || {};
+    try { if (D.closeGear) D.closeGear(); } catch (e) { void e; }
+    try { if (D.closeSettings) D.closeSettings(); } catch (e) { void e; }
+    try { if (D.closeBeast) D.closeBeast(); } catch (e) { void e; }
+    try { if (D.closeVault) D.closeVault(); } catch (e) { void e; }
+    try { if (D.goHome) D.goHome(); } catch (e) { void e; }
+  });
+  await page.waitForTimeout(700);
   await page.evaluate(() => { if (window.MENGSHOU_DEBUG.hall) window.MENGSHOU_DEBUG.hall(); });
   await page.waitForTimeout(800);
   const geom = await page.evaluate(() => { const c = document.querySelector('canvas'); const r = c.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, cw: c.width, ch: c.height }; });
