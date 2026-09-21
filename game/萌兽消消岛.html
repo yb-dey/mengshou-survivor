@@ -1046,7 +1046,8 @@ var CONFIG = {
   homeDailyHitPad: -8,             // 【v1.89】热区再收一圈, 难误点
   hallToastY: 860,                 // 【v1.142】出战地面/选角横幅(仓库下 +16, 不盖出击)
   dailyPickPanelW: 680,            // 【v1.75】加菜选关面板宽
-  dailyPickPanelH: 1040,           // 【v1.75】加菜选关面板高(3 张规则卡+返回)
+  dailyPickPanelH: 870,            // 【v1.167】1040→870: 实测内容只到 ~840, 原高在中下部留 191px 死区。
+                                    //   标题/卡片/返回大厅/页脚全部锚在 dPy 或 panelH 上 → 等比收紧, 相对间距不变
   dailyPickCardH: 188,             // 【v1.75】单种挑战卡高
   enterSkipW: 228,                 // 【v1.83】过场跳过钮宽(适中, 不再整屏可跳)
   enterSkipH: 60,                  // 【v1.83】过场跳过钮高(≥44pt, 不盖咆哮/炸弹)
@@ -31470,9 +31471,14 @@ function onTapGuideReplay() {
 // ---- 关于页(步骤14b / v1.74): 版本号 CONFIG.version 唯一来源; 薄设定可展开可跳过; 适龄 8+ 与 AI 生成标注 ----
 function drawAboutPanel(ctx, m) {
   var c = CONFIG.colors;
+  var open = !!GAME.aboutLoreOpen;
+  // 【v1.167】面板高度自适应 —— 原固定 900: 收起态内容只到 py+570, 而"展开设定"钮固定在 py+736
+  //   → 中下部留 **156px 死区**(实测)。那套偏移是按**展开态**调的(展开内容到 682, 只差 54)。
+  //   收起 py+788 / 展开 py+900; 两个钮的 y 由 syncAboutLoreBtn 同步(setPanelFit)。
+  var setPanelFit = open ? 900 : 788;
+  m.panelH = setPanelFit;
   var py = (CONFIG.viewH - m.panelH) / 2;
   var px = (CONFIG.viewW - m.panelW) / 2;
-  var open = !!GAME.aboutLoreOpen;
   var cardY = py + 228;
   var cardH = open ? 220 : 108;
   var innerW = m.panelW - 64;
@@ -31560,10 +31566,12 @@ function syncAboutLoreBtn() {
   uiAboutLoreToggle.skin = GAME.aboutLoreOpen ? "cta" : "sec";
   loreW = CONFIG.loreSkipW || 240;
   loreH = CONFIG.loreSkipH || 64;
-  aPy = (CONFIG.viewH - 900) / 2;
+  // 【v1.167】与 drawAboutPanel 同一套自适应: 收起态内容短, 两个钮随之上移, 消掉 156px 死区
+  aPy = (CONFIG.viewH - (GAME.aboutLoreOpen ? 900 : 788)) / 2;
   loreX = (CONFIG.viewW - loreW) / 2;
   uiAboutLoreToggle.rect.x = loreX;
-  uiAboutLoreToggle.rect.y = aPy + 736;
+  uiAboutLoreToggle.rect.y = aPy + (GAME.aboutLoreOpen ? 722 : 610);
+  if (uiAboutClose) uiAboutClose.rect.y = uiAboutLoreToggle.rect.y + 74;   // 保持原 74px 间距
   uiAboutLoreToggle.rect.w = loreW;
   uiAboutLoreToggle.rect.h = loreH;
   uiAboutLoreToggle.visible = GAME.state === GAME.flow.ABOUT;
