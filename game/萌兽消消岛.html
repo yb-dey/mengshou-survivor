@@ -594,7 +594,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.168",                   // 【v1.168】音频映射补齐: sfxFiles 15→19 键(补 CARDSHOW/CHEST/EVENT/REVIVE 四个节点音离线渲染), 修"有合成器无映射→外采文件永远加载不到"的静默降级(覆盖10个埋点); 碰撞/数值/掉落/进化/10分钟轴不动
+  version: "1.169",                   // 【v1.169】再修一层同类静默降级: tryLoadLocalFiles() 原硬编码 localBgm 6/localSfx 7 键, 而 AUDIO_ASSET 声明 10/19 键 → 12 个 SFX + 4 个 BGM(bgm_horde/abyss/win/lose) 永远不会被 fetch; 改为直接遍历声明表(结构上不可能再漂移); 音频映射断言加第⑤条"消费方口径"(DATA_SFX 66 事件落回 19 buffer); 碰撞/数值/掉落/进化/10分钟轴不动
   gameName: "萌兽幸存者",              // 玩家可见主标题; 历史别名「萌兽消消岛」
 
   // 新手引导(步骤14b, 文案包): 4 步事件触发/消失条件, guideFlags 入档防重放
@@ -11797,11 +11797,16 @@ var Audio = {
         }, function () { /* 解码失败回程序化 */ });
       }).catch(function () { /* file:// / 缺文件静默 */ });
     }
+    // 【v1.169】原先这里**硬编码**了 localBgm 6 键 / localSfx 7 键 —— 而 AUDIO_ASSET
+    //   声明的是 bgmFiles **10** 键 / sfxFiles **19** 键 → 多出的（BGM: horde/abyss/win/lose;
+    //   SFX: 12 个，含 BOSS_DIE/WIN/LOSE/EVO/BOMB/KILL/UI/START/CARDSHOW/CHEST/EVENT/REVIVE）
+    //   **永远不会被 fetch**，静默走程序化兜底、零报错。这与 v1.168 修的是同一类坑，
+    //   只是更深一层：v1.168 补的是"声明表漏键"，这里补的是"加载清单漏键"。
+    //   → 改为**遍历声明表本身**，让加载集合与声明表**结构上不可能再漂移**。
+    //   ⚠ 不要退回硬编码清单：任何"手抄的副本"都是下一次静默降级的温床。
     var id;
-    var localBgm = { harbor: 1, march: 1, meadow: 1, city: 1, dune: 1, frost: 1 };
-    var localSfx = { SFX_FIRE: 1, SFX_HIT: 1, SFX_GEM: 1, SFX_LEVELUP: 1, SFX_CARD: 1, SFX_HURT: 1, SFX_BOSS_WARN: 1 };
-    for (id in localBgm) loadOne("bgm", id);
-    for (id in localSfx) loadOne("sfx", id);
+    for (id in AUDIO_ASSET.bgmFiles) loadOne("bgm", id);
+    for (id in AUDIO_ASSET.sfxFiles) loadOne("sfx", id);
   },
 
   applyAudioPack: function (pack) {
