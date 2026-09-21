@@ -1,0 +1,24 @@
+name: fx-audit
+# 特效/反馈专项体检（第⑥部分）—— 逐个触发项目自带的特效演示钩子，
+# 并与"不触发特效时的帧间差"做对照，判定每个特效是否真的在画面上可见。
+on:
+  workflow_dispatch:
+jobs:
+  fx:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
+      - name: 特效专项体检
+        run: node ci/fx-audit.mjs
+      - name: 上传产物
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fx-audit
+          path: ci/out/
+          retention-days: 14
