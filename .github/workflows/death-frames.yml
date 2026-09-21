@@ -1,0 +1,55 @@
+name: death-frames
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装 Pillow
+        run: pip install --quiet pillow
+
+      - name: ① 抠图 + 缩 96×96 + 注入 AI_ART_TABLE
+        run: python ci/build-dead-frames.py
+
+      - name: 用注入版替换原 HTML（保证目录里只有一个）
+        run: |
+          cd game
+          for f in *.dead.html; do
+            [ -e "$f" ] || continue
+            mv -f "$f" "${f%.dead.html}.html"
+          done
+          ls -la
+
+      - name: ② 死亡帧接线（4 处纯增量插入）
+        run: node ci/patch-death-wiring.mjs
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 安装 Playwright
+        run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
+
+      - name: ③ 云端双通道验证（门禁）
+        id: verify
+        continue-on-error: true
+        run: node ci/verify.mjs
+
+      - name: 上传结果与验证产物
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: death-frames-result
+          path: |
+            ci/out/
+            game/
+          retention-days: 14
