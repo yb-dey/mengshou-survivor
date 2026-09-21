@@ -36,13 +36,53 @@ LOW_CUT = 100.0        # 高通截止 Hz（简化 K 加权）
 HIGH_CUT = 8000.0      # 低通截止 Hz（简化 K 加权）
 
 # 事件频率档：INFREQ=每局几次（应最响）/ MID=每波几次 / FREQ=每秒数次（应最轻）
+# 【v1.169】分档表：按"事件发生频率"分三档，层级要求 INFREQ > MID > FREQ。
+#   ⚠ 本表是**手抄副本**，必须与 CONFIG.audio.gains 的键集一致 ——
+#   2026-09-21 实测：本表只有 15 条，而 gains/sfxFiles 已有 19 键
+#   → 4 个节点音（CARDSHOW/CHEST/EVENT/REVIVE）落进 "?" 档、**被层级检查完全跳过**，
+#     体检报"✅ 层级成立"却没覆盖它们（口径被污染：漏掉的正好是新增的）。
+#   → 已补齐 19 条；分档依据 = 项目自己的 prios 注释
+#     "受击/复活 > BOSS > 升级/选卡/结算 > 击杀/宝石 > 开火/命中"。
+#   ⚠ 新增 SFX 键时**必须同步加进本表**，否则它会被静默排除在层级体检之外。
 LANE = {
     "sfx_win": "INFREQ", "sfx_lose": "INFREQ", "sfx_levelup": "INFREQ",
     "sfx_evo": "INFREQ", "sfx_boss_die": "INFREQ", "sfx_boss_warn": "MID",
     "sfx_card": "MID", "sfx_start": "MID", "sfx_hurt": "MID", "sfx_bomb": "MID",
     "sfx_kill": "MID", "sfx_gem": "MID",
     "sfx_fire": "FREQ", "sfx_hit": "FREQ", "sfx_ui": "FREQ",
+    # 【v1.169】补齐 4 个节点音（prio 3~5，属"节点专属槽"，按角色归 MID；
+    #   REVIVE prio=5 与 hurt 同级、是"倒下再战"的高光时刻 → 归 INFREQ 与结算音同档）
+    "sfx_revive": "INFREQ", "sfx_cardshow": "MID", "sfx_chest": "MID",
+    "sfx_event": "MID",
 }
+
+
+def load_gains(html):
+    """从内联母版抽出 `CONFIG.audio.gains` 的 {SFX_KEY: float}。
+
+    【v1.170】抽到本文件是为了让"读 gains 表"只有一个实现 —— 原先
+    sfx-intent-vs-real.py 自己抄了一份平衡括号解析，两份实现迟早漂移。
+    锚点用 `gains:` 并**从 `audio:` 起找**，避免命中同名注释（本项目踩过多次）。
+    """
+    import re
+    ai = html.find("audio:")
+    i = html.find("gains:", ai if ai >= 0 else 0)
+    if i < 0:
+        return {}
+    j = html.find("{", i)
+    d = 0
+    blk = None
+    for k in range(j, len(html)):
+        if html[k] == "{":
+            d += 1
+        elif html[k] == "}":
+            d -= 1
+            if d == 0:
+                blk = html[j:k + 1]
+                break
+    if blk is None:
+        return {}
+    return dict((m[0], float(m[1])) for m in re.findall(r"(SFX_[A-Z_]+):\s*([0-9.]+)", blk))
 
 
 def read_mono(path):
@@ -160,6 +200,21 @@ def selftest():
     print("  [D] 纯静音        响度=%s → %s" % (rg["loud"], "✅ 安全返回 -inf" if d_ok else "❌ 未安全处理"))
     ok = ok and d_ok
 
+    # E. 【v1.169】分档表必须覆盖磁盘上每个真实 sfx —— 否则它被层级体检静默跳过。
+    #    这是本文件最容易复发的一类错：新增音效忘了补 LANE。
+    adir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "game", "audio")
+    files = [os.path.splitext(os.path.basename(f))[0]
+             for f in sorted(glob.glob(os.path.join(adir, "sfx_*.wav")))]
+    if not files:
+        print("  [E] 分档覆盖度    磁盘无 sfx_*.wav → SKIP（不判）")
+    else:
+        miss = [n for n in files if n not in LANE]
+        e_ok = not miss
+        print("  [E] 分档覆盖度    %d 个文件 / LANE %d 条 → %s" % (
+            len(files), len(LANE),
+            "✅ 全覆盖" if e_ok else "❌ 漏 %d 个: %s（会被静默跳过）" % (len(miss), ", ".join(miss))))
+        ok = ok and e_ok
+
     for f in os.listdir(d):
         try: os.remove(os.path.join(d, f))
         except OSError: pass
@@ -180,6 +235,7 @@ def main():
         if r:
             r["lane"] = LANE.get(os.path.splitext(r["name"])[0].replace(".wav", ""), "?")
             rows.append(r)
+    unclassified = [r["name"] for r in rows if r["lane"] == "?"]
     lines = ["# SFX 响度层级体检（纯标准库，CI 端）", "",
              "> ⚠ 数值是**本项目内部可横向比较的相对响度**（简化 K 加权：100Hz 高通 + 8kHz 低通 + 均值平方），",
              "> **不是标准 LUFS，不可对外这样称呼**。用途仅限：本套音效之间的层级排序。", "",
@@ -193,6 +249,15 @@ def main():
         lanes = {}
         for r in rows:
             lanes.setdefault(r["lane"], []).append(r)
+        # 【v1.169】GATE: 任何 sfx 文件没被分档 → 它会被层级体检**静默跳过**。
+        #   实测教训：分档表曾只列 15 条而实际有 19 个文件 → 4 个节点音进 "?" 档，
+        #   体检照样打"✅ 层级成立"，但根本没量过它们（漏掉的正好是新增的）。
+        if unclassified:
+            lines += ["", "## ⛔ GATE: 存在未分档音效（会被层级体检静默跳过）", ""]
+            for n in unclassified:
+                lines.append("- `%s` 不在 LANE 表里 → 请在 ci/sfx-loudness.py 的 LANE 中补档" % n)
+            lines.append("")
+            lines.append("> 未分档 = **检查漏掉它**，而不是「它没问题」。必须补档后再看结论。")
         # 组内离群
         outl = []
         for ln, rs in lanes.items():
@@ -234,13 +299,21 @@ def main():
             lines.append("- ⚠ 组内离群（值得试听，未必是缺陷）：%s" % "、".join(outl))
         else:
             lines.append("- 各组内无离群音效")
+        if unclassified:
+            lines.append("- ⛔ **未分档 %d 个 → 层级体检不完整，本次结论不可信**" % len(unclassified))
     txt = "\n".join(lines)
     print(txt)
     if out:
         with open(out, "w", encoding="utf-8") as fh:
             fh.write(txt)
         print("\n→ 已写 " + out)
-    return 0        # 层级只提示，不作门禁（音效风格是主观取舍）
+    # 【v1.169】层级数值本身只提示（音效风格是主观取舍），
+    #   但"有音效未分档"是**检查完整性问题**，必须算门禁 —— 否则漏掉的那几个
+    #   会一直假装"没问题"。可用 --no-gate 降级为提示。
+    if unclassified and "--no-gate" not in sys.argv:
+        print("\n## ⛔ GATE FAIL: %d 个音效未分档（层级体检漏检）" % len(unclassified))
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
