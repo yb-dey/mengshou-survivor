@@ -23411,14 +23411,20 @@ function paintChapterGround(c2, w, h, mt) {
     c2.globalAlpha = 0.28;
     c2.fillRect(0, h * 0.42 + pathH * 0.62, w, pathH * 0.38);
     c2.globalAlpha = 1;
-    c2.strokeStyle = "#1c1810";
-    c2.lineWidth = 20;
-    c2.beginPath();
-    c2.moveTo(0, h * 0.42);
-    c2.lineTo(w, h * 0.42);
-    c2.moveTo(0, h * 0.42 + pathH);
-    c2.lineTo(w, h * 0.42 + pathH);
-    c2.stroke();
+    // 【v1.167d】roadSoft：20px 硬墨线读作"UI 横条"（把场地切成三段），改为软边——
+    //   路上下各 ~30px 由路面色渐变回场地底色(a)，读作"土路"而不是"条"。
+    //   原硬墨线（可回退）：strokeStyle #1c1810 / lineWidth 20 / 上下两条横线。
+    var edge = Math.min(30, pathH * 0.32);
+    var gTop = c2.createLinearGradient(0, h * 0.42 - edge, 0, h * 0.42 + edge * 0.8);
+    gTop.addColorStop(0, a);
+    gTop.addColorStop(1, "rgba(0,0,0,0)");
+    c2.fillStyle = gTop;
+    c2.fillRect(0, h * 0.42 - edge, w, edge * 1.8);
+    var gBot = c2.createLinearGradient(0, h * 0.42 + pathH - edge * 0.8, 0, h * 0.42 + pathH + edge);
+    gBot.addColorStop(0, "rgba(0,0,0,0)");
+    gBot.addColorStop(1, a);
+    c2.fillStyle = gBot;
+    c2.fillRect(0, h * 0.42 + pathH - edge * 0.8, w, edge * 1.8);
   } else if (kind === "mist") {
     // 【v1.153】雾泽苇簇 8→5 且整体 0.8 alpha, 路径像星巅一样干净(石章不动)
     // 【v1.160】再静半档: 苇簇 5→4 + alpha 0.8→0.72, 向星巅留白看齐, 苇簇身份保留
