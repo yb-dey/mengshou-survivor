@@ -39,8 +39,17 @@ jobs:
         run: python ci/bgm-lane-loudness.py game/audio ci/out/bgm-lane-loudness.md
       - name: ③ 音频完整性（无削波 / 接缝）
         run: |
+          mkdir -p ci/out
           node ci/audio-local-check.mjs
-          node ci/fix-bgm-lane-loudness.mjs --apply
+      - name: ④ 修复器幂等性断言（**不落盘**：CI 只验证，不做修复动作）
+        run: |
+          node ci/fix-bgm-lane-loudness.mjs | tee ci/out/fixer-dryrun.txt
+          # 已修齐时 dry-run 不应有"待修"项 —— 有则说明仓库里的音频与整形器结论不一致
+          if grep -q "待修" ci/out/fixer-dryrun.txt; then
+            echo "::error::修复器检出「待修」项，说明音频未同步或标记丢失"
+            exit 1
+          fi
+          echo "✅ dry-run 无待修项"
       - name: 上传产物
         if: always()
         uses: actions/upload-artifact@v4
