@@ -71,6 +71,23 @@ if (!hasPort) {
 const snap = await page.evaluate(() => window.MENGSHOU_DEBUG.save());
 // 备份原始存档（CI 里是干净默认档，但保持"绝不破坏玩家存档"的纪律）
 await page.evaluate(() => { try { window.__saveBackup = Platform.Storage.load(SAVE_KEY); } catch (e) {} });
+// A 的阴性对照：**证明 roundTrip 判据真的会报 FAIL**（不是永远 true 的空判据）。
+//   造一个"必然不等价"的往返：把验证体故意改一位再喂给同一个判据 —— 它必须 false。
+const rtNeg = await page.evaluate(() => {
+  try {
+    const good = exportSaveText();
+    const pw = JSON.parse(Platform.Coding.decode(good));
+    const norm = (o) => {
+      const c = JSON.parse(JSON.stringify(o)); delete c.chk;
+      c.schemaVersion = SAVE_SCHEMA.schemaVersion;
+      return JSON.stringify(validateSave(c));
+    };
+    const base = norm(pw.d);
+    const bad = JSON.parse(JSON.stringify(pw.d)); bad.coins = (bad.coins | 0) + 999;
+    return { detected: norm(bad) !== base };
+  } catch (e) { return { detected: false, err: String((e && e.message) || e) }; }
+});
+
 const struct = {
   schemaVersion: snap.schemaVersion,
   fieldCount: snap.fieldCount,
@@ -80,12 +97,15 @@ const struct = {
   migrateLinks: snap.migrateLinks,
   roundTrip: snap.roundTrip,
 };
+// ⚠ keysN 用 >= 而非 ===：钳制会把 PATH_NODE_DEFS 天赋节点键并入 upgrades 白名单，
+//   运行时键数可略多于 SAVE_SCHEMA 顶层字段数（正常，不是缺陷）。只断言"没被删少"。
 const structOk = struct.schemaVersion === 7
   && struct.missing.length === 0
   && struct.extra.length === 0
-  && struct.keysN === struct.fieldCount
+  && struct.keysN >= struct.fieldCount
   && struct.roundTrip && struct.roundTrip.ok === true
-  && struct.migrateLinks >= 6;
+  && struct.migrateLinks >= 6
+  && rtNeg.detected === true;   // ← 阴性对照：判据必须能检出不等价
 
 // ===== B. chk 篡改拒绝（阴性对照 + 正对照）=====
 //   ⚠ 关键：必须**同时**证明"未篡改的能过"（正对照）。只证明"篡改的不过"是不够的 ——
@@ -234,11 +254,12 @@ md.push('');
 md.push('| 指标 | 值 | 期望 |');
 md.push('|---|---|---|');
 md.push('| schemaVersion | ' + struct.schemaVersion + ' | 7 |');
-md.push('| 字段数（运行时/Schema） | ' + struct.keysN + ' / ' + struct.fieldCount + ' | 相等 |');
+md.push('| 字段数（运行时/Schema） | ' + struct.keysN + ' / ' + struct.fieldCount + ' | 运行时 ≥ Schema |');
 md.push('| 缺失键 missing | ' + (struct.missing.length ? struct.missing.join(',') : '（无）') + ' | 空 |');
 md.push('| 多余键 extra | ' + (struct.extra.length ? struct.extra.join(',') : '（无）') + ' | 空 |');
 md.push('| 迁移链节点数 | ' + struct.migrateLinks + ' | ≥6 |');
 md.push('| 往返自检 roundTrip | ' + (struct.roundTrip ? (struct.roundTrip.ok ? 'ok' : 'FAIL(' + struct.roundTrip.err + ')') : 'n/a') + ' | true |');
+md.push('| ↳ 阴性对照：判据能检出不等价 | ' + (rtNeg.detected === true ? '✅ 能检出' : '❌ 判据失效') + ' | true |');
 md.push('');
 md.push('## B. chk 篡改拒绝（阴性对照 + 正对照）');
 md.push('');
