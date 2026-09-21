@@ -233,66 +233,81 @@ function selftest() {
   const set = (s) => { SRC = s; };
   const reset = () => { SRC = clean; };
 
+  // ⚠⚠ 教训（v1.189 第一次云端跑就栽在这）：
+  //   阴性对照用**硬编码字符串**当锚点 → 一旦该字符串被修掉（本补丁正是修它），
+  //   锚点失配 → "变异未施加" → selftest 挂。这不是门禁坏了，是**对照样本腐化了**。
+  //   对策：锚点一律**从活文件里正则取**，取不到就显式抛错（而不是静默算过）。
+  const live = (re, what) => {
+    const m = re.exec(clean);
+    if (!m) throw new Error(`selftest 锚点取不到（${what}）—— 对照样本已腐化，请更新正则`);
+    return m[0];
+  };
+
   // 负 A：把 hoard.a 改成不存在的 id
   {
     reset();
-    const anchor = 'a: "magnet", b: "wisdom"';
+    const anchor = live(/a: "magnet", b: "wisdom"/, '不硬用 hoard a/b');
     const mut = clean.replace(anchor, 'a: "magnetZZ", b: "wisdom"');
     cases.push({ name: '负A: 成档 a 指向不存在的被动', mut, expect: '[A] hoard' });
   }
-  // 负 B：把 wisdom.desc 的 =效果 改到与 magnet 不同（复刻真实缺陷）
+
+  // 负 B：让 **a 侧** 声明一个 b 侧没有的效果（a ⊄ b → 硬拦）
+  //   ⚠ 不能靠"给 b 追加字符"来制造缺陷 —— a ⊆ b 是单向判据，b 变长永远不会破坏它。
+  //     第一次写错就是这里：变异 += "ZZZZ" 后 a 仍 ⊆ b，判据正确地没有报错。
   {
     reset();
-    const anchor = 'desc: "XP+8%/级, 宝石合并值+2%/级; 与磁石蘑菇成档=大珠爆大环刮伤吸珠"';
-    const mut = clean.replace(anchor, 'desc: "XP+8%/级, 宝石合并值+2%/级; 与磁石蘑菇成档=大珠爆大环刮伤吸ZZZZ"');
-    cases.push({ name: '负B: 同成档 a/b 两侧效果不一致', mut, expect: '[B] hoard' });
+    const anchor = live(/desc: "拾取半径\+10%\/级[^"]*与智慧果成档=[^"]*"/, '不硬用 magnet.desc');
+    const mut = clean.replace(anchor, anchor.replace(/"$/, '、额外爆金币雨"'));
+    cases.push({ name: '负B: a 侧多出一个 b 没有的效果', mut, expect: '[B] hoard' });
   }
   // 负 B2：b 侧完全没有"成档="声明
   {
     reset();
-    const anchor = 'desc: "拾取半径+6%/级; 与花蜜成档=击杀或拾取喷清雾, 清弹吸珠"';
+    const anchor = live(/desc: "拾取半径\+6%\/级[^"]*与花蜜成档=[^"]*"/, '不硬用 mistleaf.desc');
     const mut = clean.replace(anchor, 'desc: "拾取半径+6%/级; 与花蜜互相加成"');
     cases.push({ name: '负B2: b 侧 desc 缺 "成档=效果"', mut, expect: '[B] mist' });
   }
   // 负 C（只报不拦）：effect 自铸新标签 → 必须出现在 advisories
   {
     reset();
-    const anchor = 'effect: "站住生绒田·满田刮"';
+    const anchor = live(/effect: "站住生绒田·满田刮"/, '不硬用 root.effect');
     const mut = clean.replace(anchor, 'effect: "站住生绒田·满田刮·附赠闪电链"');
     cases.push({ name: '负C(advisory): effect 自铸新标签', mut, expect: '[C] root', where: 'advisories' });
   }
   // 负 C2（硬拦）：b 侧把 a 的基础效果丢掉（真缺陷形态）→ [B]
   {
     reset();
-    const anchor = '与坚果壳成档=击杀掉尸爆, 连杀变大';
-    const mut = clean.replace(anchor, '与坚果壳成档=连杀变大');   // b 侧丢了"击杀掉尸爆"
+    const anchor = live(/与坚果壳成档=[^"]*"/, '不硬用 peppercorn.desc');
+    const mut = clean.replace(anchor, '与坚果壳成档=连杀变大"');
     cases.push({ name: '负C2(硬拦): b 侧丢掉 a 的基础效果', mut, expect: '[B] spice' });
   }
   // 负 D（只报不拦）：complete 提示自铸新标签
+  //   ⚠ 变异要用**分隔符**接出新片段（"拾珠爆金环·附赠陨石"）。
+  //     直接粘成 "拾珠爆金环附赠陨石" 会变成一个**包含**原片段的整段 → 判据正确地放行。
   {
     reset();
-    const anchor = 'text: "成档 聚宝 · 大珠爆大环"';
-    const mut = clean.replace(anchor, 'text: "成档 聚宝 · 大珠爆大环附赠陨石"');
+    const anchor = live(/text: "成档 聚宝 · [^"]*"/, '不硬用 hoard complete 提示');
+    const mut = clean.replace(anchor, anchor.replace(/"$/, '· 附赠陨石"'));
     cases.push({ name: '负D(advisory): complete 提示自铸新标签', mut, expect: '[D] hoard', where: 'advisories' });
   }
   // 负 D2（硬拦）：删掉 complete 分支
   {
     reset();
-    const anchor = 'tone: "complete", text: "成档 疾风 · 冲刺留铃浪"';
-    const mut = clean.replace(anchor, 'tone: "completeXYZ", text: "成档 疾风 · 冲刺留铃浪"');
+    const anchor = live(/tone: "complete", text: "成档 疾风 · [^"]*"/, '不硬用 gale complete 提示');
+    const mut = clean.replace(anchor, anchor.replace('tone: "complete"', 'tone: "completeXYZ"'));
     cases.push({ name: '负D2(硬拦): 缺 complete 分支', mut, expect: '[D] gale' });
   }
   // 负 F（硬拦）：破坏消费侧（图鉴卡不再读 view.effect）
   {
     reset();
-    const mut = clean.replace('fillText(hudFitText(ctx, view.effect, r.w - 20), r.x + 10, r.y + 68)', 'fillText(hudFitText(ctx, "x", r.w - 20), r.x + 10, r.y + 68)');
+    const anchor = live(/fillText\(hudFitText\(ctx,\s*view\.effect,\s*r\.w - 20\),\s*r\.x \+ 10,\s*r\.y \+ 68\)/, '不硬用图鉴卡 draw 行');
+    const mut = clean.replace(anchor, anchor.replace('view.effect', '"x"'));
     cases.push({ name: '负F(硬拦): 图鉴卡不再读 view.effect', mut, expect: '[F]' });
   }
   // 负 G（解析器退化）：把 DATA_CODEX_PAIR 改成只 1 条
   {
     reset();
     globalThis.__DIAG_INJECT_TOL__ = 0;
-    const anchor = 'function petCodexStars(def) {';
     const i = clean.indexOf('var DATA_CODEX_PAIR = [');
     const j = clean.indexOf('\n];', i);
     const mut = clean.slice(0, i) + 'var DATA_CODEX_PAIR = [\n  { id: "gale", name: "疾风成档", a: "windbell", b: "spinachseed", tag: "机动", effect: "x", contrast: "y" }\n' + clean.slice(j);
@@ -301,14 +316,14 @@ function selftest() {
   // 负H：把 gale 的 b 从"风车草籽"改成"晨露菇"（存在，但 desc 声明是"与风之铃成档"→ 与 a 侧不同事）
   {
     reset();
-    const anchor = '{ id: "gale", name: "疾风成档", a: "windbell", b: "spinachseed"';
-    const mut = clean.replace(anchor, '{ id: "gale", name: "疾风成档", a: "windbell", b: "dewcap"');
+    const anchor = live(/\{ id: "gale", name: "疾风成档", a: "windbell", b: "[a-z]+"/, '不硬用 gale a/b');
+    const mut = clean.replace(anchor, anchor.replace(/b: "[a-z]+"$/, 'b: "dewcap"'));
     cases.push({ name: '负H: 成档 b 被换成另一件（跨接线）', mut, expect: '[B] gale' });
   }
   // 负 I：a 侧 desc 缺 "成档=效果"
   {
     reset();
-    const anchor = 'desc: "受击减伤 4%/级, 回血+0.1/s/级; 与晨露菇成档=受击绽露甲"';
+    const anchor = live(/desc: "受击减伤 4%\/级[^"]*与晨露菇成档=[^"]*"/, '不硬用 moss.desc');
     const mut = clean.replace(anchor, 'desc: "受击减伤 4%/级, 回血+0.1/s/级; 与晨露菇相互加成"');
     cases.push({ name: '负I: a 侧 desc 缺 "成档=效果"', mut, expect: '[B] dew' });
   }
