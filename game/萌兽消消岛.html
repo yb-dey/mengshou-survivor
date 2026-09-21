@@ -594,7 +594,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.170",                   // 【v1.170】修"双重缩放": ci/render-missing-sfx.mjs 里抄了一份 GAINS 表(19 条中 12 条与 CONFIG.audio.gains 漂移), 其值被烘焙进**文件峰值**, 而运行时(12593 行)又乘一次 gains → 同一增益应用两次且取不同版本值; sfx_fire.wav 峰值/gain=2.168 全场唯一离群; 改为与游戏 _renderAll 同口径"只做平峰值归一 peakNorm=0.7"(单一权威), 并删掉那张手抄表; 19 个 SFX 全部重渲; 新增检查⑦+阴性对照H/I(共9项); 碰撞/数值/掉落/进化/10分钟轴不动
+  version: "1.171",                   // 【v1.171】新增 MENGSHOU_DEBUG.stress() 只读性能证据口(enemyCount/pool/潮窗状态): 补上"重载帧时"盲区 —— 此前 verify.mjs 只量开局 8s 轻载 fps, 高负载(怪潮 200 怪)下帧时从未被量化; 纯新增读取口, 不动任何游戏逻辑/数值/渲染
   gameName: "萌兽幸存者",              // 玩家可见主标题; 历史别名「萌兽消消岛」
 
   // 新手引导(步骤14b, 文案包): 4 步事件触发/消失条件, guideFlags 入档防重放
@@ -34637,6 +34637,22 @@ function init() {
     deathMarks: function () {
       return { live: deathMarks.length, spawned: deathMarksSpawned, drawn: deathMarksDrawn,
                sprites: (function () { var n = 0, k; for (k in SPRITES) if (k.slice(-5) === "_dead") n++; return n; })() };
+    },
+    // 【v1.171】重载性能证据口：enemyCount/enemyTotal 与 hordeState 都在闭包里探不到（同类坑已踩过），
+    //   必须经此接口读取。供云端脚本断言"这确实是高负载帧"（enemyCount 接近 maxEnemy），
+    //   并区分"帧率低是因为卡"还是"帧率低是因为根本没怪"（后者是假阴性）。
+    stress: function () {
+      var live = 0, i;
+      for (i = 0; i < enemyTotal; i++) if (enemyPool[i].active) live++;
+      var ch = chapterOf();
+      return {
+        enemyCount: enemyCount, specialCount: specialCount,
+        activeTotal: live, poolTotal: enemyTotal,
+        maxEnemy: CONFIG.maxEnemy, maxSpecial: CONFIG.maxSpecial,
+        hordeActive: !!hordeState.active, hordeIdx: hordeState.idx | 0,
+        hordeTimes: ch ? ch.hordeTimes.slice() : [],
+        runTime: +GAME.runTime.toFixed(2)
+      };
     },
     version: CONFIG.version,
     gameName: CONFIG.gameName,
