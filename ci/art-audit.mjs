@@ -90,6 +90,53 @@ if (flat.length) console.log('  疑似程序化清单: ' + flat.join(', '));
 
 // 离群检测（上次靠这招找到"乌鸦在暗场上看不见"）
 const ENEMY = /^(leaptoad|rabbit|bear|mouse|fox|raven|orbitcrab|boomfruit|sporecap|burrowmole|hedgehog|chargerhino|shieldbug|honeypot|boss1|rollshell|boss2|boss3|badger|boar|monkey)_?(dead|hit|enraged)?$/;
+
+// ===== 2026-09-21 扩展：原来只体检 ENEMY，其余类别（跟宠/图标/子弹/宝石/主角）从未体检 =====
+// 家族归类：先按已知前缀，再按剥离状态后缀的基名 —— 这样新类别会自动成组，不需要维护清单
+const FAMILY_PREFIX = /^(blt|bs|gear|tal|field|pas|evo|gem|pet|beastsil|beast|hero|coin|item|fx|ui)_/;
+function familyOf(k) {
+  if (ENEMY.test(k)) return 'ENEMY';
+  const m = FAMILY_PREFIX.exec(k);
+  return m ? m[1].toUpperCase() : ('OTHER_' + k.replace(/_(dead|hit|enraged|m)$/, ''));
+}
+const byFam = {};
+for (const [k, v] of Object.entries(info.stats)) {
+  if (typeof v.lum !== 'number') continue;
+  const f = familyOf(k);
+  (byFam[f] = byFam[f] || []).push([k, v]);
+}
+const statOf = (rows, f) => {
+  const a = rows.map(([, v]) => v[f]);
+  const m = a.reduce((x, y) => x + y, 0) / a.length;
+  return { m, sd: Math.sqrt(a.reduce((s, x) => s + (x - m) ** 2, 0) / a.length) };
+};
+
+// 绝对底线：家族若整体偏暗/偏灰，±2σ 什么也抓不到 —— 必须另设与家族无关的硬阈值
+const ABS_DARK = 55, ABS_GRAY = 0.12, MIN_FILL = 15;
+const famReport = [];
+for (const [fam, rows] of Object.entries(byFam).sort((a, b) => b[1].length - a[1].length)) {
+  const L = statOf(rows, 'lum'), Sa = statOf(rows, 'sat');
+  const rec = { fam, n: rows.length, lum: +L.m.toFixed(1), lumSd: +L.sd.toFixed(1),
+                sat: +Sa.m.toFixed(3), satSd: +Sa.sd.toFixed(3) };
+  if (rows.length >= 4) {
+    rec.darkOut = rows.filter(([, v]) => L.sd > 0 && v.lum < L.m - 2 * L.sd).map(([k, v]) => k + '(' + v.lum + ')');
+    rec.grayOut = rows.filter(([, v]) => Sa.sd > 0 && v.sat < Sa.m - 2 * Sa.sd).map(([k, v]) => k + '(' + v.sat + ')');
+    rec.tooDark = rows.filter(([, v]) => v.lum < ABS_DARK && v.fillPct > MIN_FILL).map(([k, v]) => k + '(' + v.lum + ')');
+    rec.washed = rows.filter(([, v]) => v.sat < ABS_GRAY && v.fillPct > MIN_FILL).map(([k, v]) => k + '(' + v.sat + ')');
+  }
+  famReport.push(rec);
+}
+console.log('\n===== 分类体检（家族 n≥4 才有统计意义）=====');
+for (const r of famReport) {
+  console.log('  ' + r.fam.padEnd(12) + 'n=' + String(r.n).padStart(3)
+    + '  亮度 ' + String(r.lum).padStart(6) + ' ±' + String(r.lumSd).padStart(5)
+    + '  饱和 ' + String(r.sat).padStart(6) + ' ±' + String(r.satSd).padStart(6));
+  if (r.darkOut && r.darkOut.length) console.log('       暗离群(<-2σ): ' + r.darkOut.join(', '));
+  if (r.grayOut && r.grayOut.length) console.log('       灰离群(<-2σ): ' + r.grayOut.join(', '));
+  if (r.tooDark && r.tooDark.length) console.log('       ⚠ 绝对过暗(<' + ABS_DARK + '): ' + r.tooDark.join(', '));
+  if (r.washed && r.washed.length) console.log('       ⚠ 绝对过灰(<' + ABS_GRAY + '): ' + r.washed.join(', '));
+}
+// 老结论（保持兼容）：敌人亮度离群
 const eRows = Object.entries(info.stats).filter(([k, v]) => ENEMY.test(k) && typeof v.lum === 'number');
 const lums = eRows.map(([, v]) => v.lum);
 const eMean = lums.reduce((a, b) => a + b, 0) / Math.max(1, lums.length);
@@ -180,7 +227,7 @@ fs.writeFileSync(path.join(OUT, 'sprites-zoom-x8.png'), Buffer.from(zoom.split('
 
 await page.screenshot({ path: path.join(OUT, 'battle.png') });
 
-const report = { info, enemySample: enemyIds, ranAt: new Date().toISOString() };
+const report = { info, enemySample: enemyIds, famReport, ranAt: new Date().toISOString() };
 fs.writeFileSync(path.join(OUT, 'art-audit.json'), JSON.stringify(report, null, 2));
 
 const md = [
