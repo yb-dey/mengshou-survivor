@@ -74,24 +74,62 @@ function diff(a, b) {
   for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]);
   return s / a.length;
 }
+// ⚠ 只取平均差会漏判"平移类"特效（震屏只移动几个像素，32×32 平均后被抹平）→ 同时取**最大格差**
+function diffMax(a, b) {
+  if (!a || !b) return -1;
+  let m = 0;
+  for (let i = 0; i < a.length; i++) { const d = Math.abs(a[i] - b[i]); if (d > m) m = d; }
+  return m;
+}
+
+async function enterBattle() {
+  await page.evaluate(() => {
+    const D = window.MENGSHOU_DEBUG || {};
+    try { if (D.pause) D.pause(false); } catch (e) { void e; }
+    try { if (D.closeSettings) D.closeSettings(); } catch (e) { void e; }
+    try { if (D.closeBeast) D.closeBeast(); } catch (e) { void e; }
+    try { if (D.closeGear) D.closeGear(); } catch (e) { void e; }
+    try { if (D.goHome) D.goHome(); } catch (e) { void e; }
+  });
+  await page.waitForTimeout(800);
+  await page.evaluate(() => { if (window.MENGSHOU_DEBUG.hall) window.MENGSHOU_DEBUG.hall(); });
+  await page.waitForTimeout(600);
+  const g = await page.evaluate(() => { const c = document.querySelector('canvas'); const r = c.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, cw: c.width, ch: c.height }; });
+  await page.mouse.click(g.l + (316 / g.cw) * g.w, g.t + (617 / g.ch) * g.h);
+  await page.waitForTimeout(7000);
+}
+/** ⚠ 存活检测：连拍两帧若几乎完全一致 → 画面已冻结（暂停/结算/弹窗），必须先恢复，
+ *  否则后续所有特效都会量到 0（实测踩过：第一次 killDemo 后状态漂移，后面三项全是 0.00）。 */
+async function ensureLive(label) {
+  for (let t = 0; t < 3; t++) {
+    const a = await sig();
+    await page.waitForTimeout(150);
+    const b = await sig();
+    if (diff(a, b) > 0.03) return true;
+    console.log('  ⚠ ' + label + ' 前检测到画面冻结（第 ' + (t + 1) + ' 次），尝试恢复…');
+    await page.evaluate(() => { const D = window.MENGSHOU_DEBUG || {}; try { if (D.pause) D.pause(false); } catch (e) { void e; } });
+    await page.waitForTimeout(500);
+  }
+  await enterBattle();
+  return true;
+}
 
 // ---- 进入战斗 ----
-await page.evaluate(() => { if (window.MENGSHOU_DEBUG.hall) window.MENGSHOU_DEBUG.hall(); });
-await page.waitForTimeout(700);
-const geom = await page.evaluate(() => { const c = document.querySelector('canvas'); const r = c.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, cw: c.width, ch: c.height }; });
-await page.mouse.click(geom.l + (316 / geom.cw) * geom.w, geom.t + (617 / geom.ch) * geom.h);
-await page.waitForTimeout(7000);
+await enterBattle();
 
 // ---- 阴性对照：不触发任何特效，连拍 6 帧求平均帧间差 ----
 const ctrlSamples = [];
+const ctrlMaxSamples = [];
 let prev = await sig();
 for (let i = 0; i < 5; i++) {
   await page.waitForTimeout(110);
   const cur = await sig();
   ctrlSamples.push(diff(prev, cur));
+  ctrlMaxSamples.push(diffMax(prev, cur));
   prev = cur;
 }
 const ctrl = ctrlSamples.reduce((a, b) => a + b, 0) / ctrlSamples.length;
+const ctrlMax = ctrlMaxSamples.reduce((a, b) => a + b, 0) / ctrlMaxSamples.length;
 
 // ---- 逐个特效 ----
 const FX = [
@@ -103,34 +141,38 @@ const FX = [
 ];
 const rows = [];
 for (const fx of FX) {
+  await ensureLive(fx.name);
   const before = await sig();
   let ret = null;
   if (fx.hook) {
     ret = await page.evaluate((h) => { try { return window.MENGSHOU_DEBUG[h](); } catch (e) { return 'ERR ' + e; } }, fx.hook);
   }
-  await page.waitForTimeout(fx.hook ? 110 : 110);
+  await page.waitForTimeout(110);
   const after = await sig();
   const d = diff(before, after);
+  const dm = diffMax(before, after);
   const shotP = path.join(OUT, 'fx-' + fx.name + '.png');
   await page.screenshot({ path: shotP });
   const h = crypto.createHash('sha1').update(fs.readFileSync(shotP)).digest('hex').slice(0, 10);
-  rows.push({ name: fx.name, hook: fx.hook || '-', note: fx.note, delta: +d.toFixed(2), hash: h, ret: ret === null ? '' : JSON.stringify(ret).slice(0, 90) });
+  rows.push({ name: fx.name, hook: fx.hook || '-', note: fx.note, delta: +d.toFixed(2), dmax: +dm.toFixed(1), hash: h, ret: ret === null ? '' : JSON.stringify(ret).slice(0, 90) });
 }
 
 const THRESH = +(process.env.FX_THRESH || 1.4);
-const bad = rows.filter((r) => r.hook !== '-' && r.delta <= ctrl * THRESH);
+// 判定看**平均差高于对照** 或 **最大格差显著**（后者覆盖平移类特效如震屏）
+const bad = rows.filter((r) => r.hook !== '-' && r.delta <= ctrl * THRESH && r.dmax < ctrlMax * 2);
 const md = [
   '# 特效/反馈专项体检（fx-audit）',
   '',
-  `- 阴性对照 ctrl（不触发特效时的平均帧间差）: **${ctrl.toFixed(2)}**`,
-  `- 判定: 特效帧差需 > ctrl × ${THRESH} = **${(ctrl * THRESH).toFixed(2)}**`,
+  `- 阴性对照 ctrl: 平均差 **${ctrl.toFixed(2)}** ／ 最大格差 **${ctrlMax.toFixed(1)}**`,
+  `- 判定: 平均差 > ctrl × ${THRESH} = **${(ctrl * THRESH).toFixed(2)}**，或最大格差 ≥ ctrlMax×2 = **${(ctrlMax * 2).toFixed(1)}** 即算"可见"`,
   `- 未捕获异常: ${errs.length}`,
   '',
-  '| 项 | 钩子 | 说明 | 帧差 | vs ctrl | 判定 |',
-  '|---|---|---|---|---|---|',
-  ...rows.map((r) => `| ${r.name} | ${r.hook} | ${r.note} | ${r.delta} | ${ctrl ? (r.delta / ctrl).toFixed(1) + '×' : '-'} | ${r.hook === '-' ? '基线' : (r.delta > ctrl * THRESH ? '✅ 可见' : '❌ 未见效')} |`),
+  '| 项 | 钩子 | 说明 | 平均差 | 最大格差 | vs ctrl | 判定 |',
+  '|---|---|---|---|---|---|---|',
+  ...rows.map((r) => `| ${r.name} | ${r.hook} | ${r.note} | ${r.delta} | ${r.dmax} | ${ctrl ? (r.delta / ctrl).toFixed(1) + '×' : '-'} | ${r.hook === '-' ? '基线' : ((r.delta > ctrl * THRESH || r.dmax >= ctrlMax * 2) ? '✅ 可见' : '❌ 未见效')} |`),
   '',
-  '> 「帧差」= 触发前后 32×32 灰度指纹的平均绝对差。游戏一直在动，**必须与 ctrl 比**，不能只看"有差异"。',
+  '> 「平均差/最大格差」= 触发前后 32×32 灰度指纹。游戏一直在动，**必须与 ctrl 比**；',
+  '> 只取平均会漏判平移类特效（震屏），故并列最大格差。',
   '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'fx-report.md'), md);
