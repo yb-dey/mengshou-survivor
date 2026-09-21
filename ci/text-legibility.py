@@ -201,6 +201,9 @@ if "--selftest" in sys.argv:
 SHOTS = sys.argv[1] if len(sys.argv) > 1 else "ci/out"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "ci/out/legibility-text.md"
 
+# ⚠ 同上：体检脚本必须自己建输出目录，不能赌调用方已经建过。
+Path(OUT).parent.mkdir(parents=True, exist_ok=True)
+
 THRESH = 4.5      # WCAG AA 正文
 rows = []
 for f in sorted(glob(SHOTS + "/*.png")):
