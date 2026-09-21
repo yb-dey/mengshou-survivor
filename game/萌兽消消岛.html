@@ -30527,8 +30527,12 @@ function drawBeastPanel(ctx, m) {
       : ("金币 " + saveData.coins + " · 点行解锁或设为协战 · 未解锁不出战跟宠");
     msgCol = CONFIG.colors.cardDesc;
   } else if (tab === "enemy") {
+    // 【v1.178】原为 msg = en.knife —— 同样与 drawCodexEnemyDetail 的碎刀子行重复
+    //   （未点选时页脚画一次、详情区再画一次）。页脚改为操作引导，信息不重不漏。
     en = codexEnemyOf(GAME.codexEnemySel || "rabbit");
-    msg = (en && en.knife) ? en.knife : "点分组再点条目 · 读招字 + 出处一眼能对上";
+    msg = (en && en.knife)
+      ? "点分组再点条目 · 碎刀子见上方 · 读招字 + 出处一眼能对上"
+      : "点分组再点条目 · 读招字 + 出处一眼能对上";
     msgCol = CONFIG.colors.cardDesc;
   } else {
     msg = "点卡看分叉差 · 成档是光环羁绊 · 进化是这件变强, 提示可略过";
@@ -30695,7 +30699,12 @@ function makeCodexEnemyCell(idx, x, y, w, h) {
       if (GAME.state !== GAME.flow.HOME && GAME.state !== GAME.flow.BEAST) return;
       if (!this.entry) return;
       GAME.codexEnemySel = this.entry.id;
-      uiBeastMsg = this.entry.knife || this.entry.hint;
+      // 【v1.178】原为 uiBeastMsg = entry.knife —— 与 drawCodexEnemyDetail 的碎刀子行**完全重复**：
+      //   该行已在 codexKnifeY(cb+64) 以深墨金画出，页脚(cb+104)再画一次 → 同屏出现两句一样的话
+      //   （截图实测：金色在上、墨色在下，间距 ~40px）。
+      //   页脚语义是"动作结果"（对齐跟宠行"已设为协战跟宠…"），故改为选中确认，不再复读碎刀子。
+      uiBeastMsg = "已选中 · " + (DATA_ENEMY[this.entry.id] ? DATA_ENEMY[this.entry.id].name : this.entry.id) +
+        " · 碎刀子见上方";
       uiBeastMsgOk = true;
       Audio.play("select");
     },
