@@ -21,6 +21,14 @@ jobs:
       - name: 从内联母版构建外链分发版（dist/）
         run: node ci/build-dist.js
 
+      # 【v1.172】门禁自审：扫描所有 workflow，断言"**声称是门禁的步骤必须真的会拦人**"。
+      #   存在理由：本轮实测抓到 3 处「名字写着门禁/必须 PASS，却带 continue-on-error 且无收口」
+      #   → 步骤永远绿，报告写 FAIL 也没人知道。**永远通过的守卫比没有守卫更危险。**
+      #   ⚠ 本步骤本身**不得**带 continue-on-error（否则它就是在犯自己审查的错）。
+      #   零依赖、秒级，故放在最前面 —— 连门禁本身都不可信时，后面跑再多也没意义。
+      - name: 门禁自审（声称门禁的步骤必须真的会拦人）
+        run: node ci/gate-audit.mjs
+
       - name: 断言 dist 自包含（音频必须随包，不许静默降级到程序化）
         run: node ci/assert-dist-audio.mjs
 
