@@ -39,6 +39,16 @@ jobs:
         run: |
           node ci/card-fit.mjs . --selftest
           node ci/card-fit.mjs . || true
+      # 大厅解锁条件文案 × 数据 交叉一致性：condText 是**玩家可见**的条件串，
+      # 【v1.187】实测 `startmag`/`mapledart` 把 BOSS 时刻硬编码成 6:00/10:00，
+      #   而 cond 只存 boss id、无章节限定 → 玩家**首次击杀**时才解锁：
+      #   boss2 首次 = ch2 @5:00、boss3 首次 = ch4 @8:00 → 卡面时刻与实况不符（误导）。
+      #   ⚠ 病根是"跨表抄了一份逐章变化的量"，**只有交叉比才看得见**（两边各自都合法）。
+      #   **硬门禁**（不一致即失败）。
+      - name: 解锁条件文案 × 数据 交叉核对（GATE）
+        run: |
+          node ci/unlock-text.mjs --selftest
+          node ci/unlock-text.mjs
       # 界面控件不得出屏：返回/关闭类控件是**唯一出口**，被裁即有真实可用性代价。
       # 【v1.185】图鉴配方 tab 的「返回」按钮实测底部出屏 32px（closeY 1248 + 64 = 1312 > 1280）。
       #   面板几何体检（screen-profile / card-band）测不到它 —— 那些量的是"面板内空带"，
