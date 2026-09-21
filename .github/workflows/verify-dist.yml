@@ -91,6 +91,7 @@ jobs:
       #   判据量**帧时间尾部**(p95) 而非 fps 均值，且**先断言"确实有怪"**再判帧率
       #   (否则"帧率好"可能只是"没怪" = 假阴性)；并内置阴性对照(注入阻塞必须报 FAIL)。
       - name: 重载帧时体检（怪潮：先证有怪，再判帧时间 p95）
+        id: stress
         continue-on-error: true
         env:
           VERIFY_DIR: dist
@@ -101,10 +102,28 @@ jobs:
       #   "进度没了"，没有报错/崩溃/日志。这类缺陷不被任何现有门禁发现。
       #   四组断言：结构完整 / chk 篡改拒绝(带正对照) / 六类脏值必须被钳制 / v1→v7 迁移不吞旧值。
       - name: 存档完整性体检（结构/篡改/钳制/迁移）
+        id: save
         continue-on-error: true
         env:
           VERIFY_DIR: dist
         run: node ci/save-integrity.mjs
+
+      # 【v1.172】⚠ 必须补齐的收口步骤 —— 否则上面三个体检**报了 FAIL 也显示 success**
+      #   （本轮实测踩到：save-integrity 报告写着 FAIL，步骤却是绿勾）。
+      #   原因：`continue-on-error: true` 让步骤失败**不**影响 job 结论。
+      #   加它是为了"体检失败也要上传报告"，但代价是**门禁形同虚设**（永远是绿的）。
+      #   → 标准解法：体检步骤只管产出报告(continue-on-error)，再单独用一步**读结论报错**。
+      #   这是本仓库反复踩到的"守卫永远通过"反模式（永远绿的守卫比没有守卫更危险）。
+      - name: 门禁收口（体检结论必须为 success，否则本步骤失败）
+        if: always()
+        run: |
+          fail=0
+          for pair in "verify:${{ steps.verify.outcome }}" "stress:${{ steps.stress.outcome }}" "save:${{ steps.save.outcome }}"; do
+            name="${pair%%:*}"; out="${pair##*:}"
+            if [ "$out" = "success" ]; then echo "✅ $name = success";
+            else echo "❌ $name = $out"; fail=1; fi
+          done
+          if [ "$fail" = "1" ]; then echo "::error::门禁未通过 —— 见上方各体检报告（产物 verify-dist-report 里有 md）"; exit 1; fi
 
       - name: 上传验证产物
         if: always()
