@@ -69,6 +69,16 @@ dist/                外链分发版（由 ci/build-dist.js 生成，不手工�
 | `find-dead-art.mjs` | AI 表死数据扫描（**只报不删**；"被跳过 ≠ 死"） | 手动 |
 | `audio-local-check.mjs` | 本地全量音频体检（格式 / 削波 / 接缝），云端 audio-audit 的离线前置 | 本地/手动 |
 | `content-gap-scan.mjs` | 内容缺口全维度扫描（12 个维度，声明数 vs 实际覆盖） | 手动 |
+| `loop-seam.py` | **BGM 循环接缝**体检（`ratio = |首−末| ÷ P90(首尾各128样本差分)`，阈值 4.0） | verify-dist（GATE） |
+| `bgm-spectrum.py` | **BGM 频谱重心与编排平衡**（跨曲中位数+MAD 离群，**不用绝对阈值**） | verify-dist（仅提示） |
+| `text-legibility.py` | ⛔ **已实测证伪**，仅留痕 + `--selftest` 作回归（**不得据此改画面**） | screen-sweep（continue-on-error） |
+
+> ⚠ **判据设计三例教训**（详见技能 `ai-art-pipeline` 第十·四节）：
+> 同一型错误（**参考量与实际信号不同尺度**）本轮出现 3 次，全部靠**真实产物上的对照实验**才抓到。
+> 最典型：`text-legibility` 用 5×5 邻域众数当"文字背景"，而缩略图里笔画只有 2–5px
+> → 窗口比笔画还宽，众数是随机量；`bgm-spectrum` v1 用"高频占比 > 4%"判不闷，
+> 而本项目 sine/triangle 高频**物理为 0** → 阈值恒真。
+> **黄金做法**：判据在真实产物上跑 + 配「已知无信号区」对照 + 阴性样本必须**物理上真含信号**。
 
 ### 体检类（产出报告 + 截图）
 
