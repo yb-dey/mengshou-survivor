@@ -1,0 +1,40 @@
+name: verify-dist
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'game/**'
+      - 'ci/**'
+permissions:
+  contents: read
+jobs:
+  verify-dist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 从内联母版构建外链分发版（dist/）
+        run: node ci/build-dist.js
+
+      - name: 安装 Playwright
+        run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
+
+      - name: 验证外链分发版（线上发布的就是它）
+        id: verify
+        continue-on-error: true
+        env:
+          VERIFY_DIR: dist
+        run: node ci/verify.mjs
+
+      - name: 上传验证产物
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-dist-report
+          path: ci/out/
+          retention-days: 14
