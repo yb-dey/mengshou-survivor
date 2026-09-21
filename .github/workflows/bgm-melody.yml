@@ -12,9 +12,13 @@ on:
   push:
     paths:
       - 'game/audio/bgm_*.wav'
+      - 'game/audio/sfx_*.wav'
       - 'ci/bgm-melody.py'
       - 'ci/bgm-lane-loudness.py'
+      - 'ci/audio-manifest.mjs'
+      - 'ci/audio-manifest.json'
       - 'ci/render-missing-bgm.mjs'
+      - 'ci/render-missing-sfx.mjs'
       - '.github/workflows/bgm-melody.yml'
   workflow_dispatch:
 
@@ -35,10 +39,12 @@ jobs:
           set -o pipefail
           python ci/bgm-melody.py 2>&1 | tee bgm-melody.md
 
+      - name: 音频交付清单一致性（本地↔仓库 指纹）
+        run: node ci/audio-manifest.mjs
+
       - name: 场景响度连续性（同档 peer / 切换链）
         run: |
           set -o pipefail
-          python ci/_diag-lane.py
           python ci/bgm-lane-loudness.py --selftest
           python ci/bgm-lane-loudness.py 2>&1 | tee bgm-lane-loudness.md
 
