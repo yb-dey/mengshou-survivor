@@ -41,6 +41,14 @@ jobs:
       - name: BGM 循环接缝体检（GATE=1 有接缝超标即失败）
         run: mkdir -p ci/out && GATE=1 python ci/loop-seam.py game/audio ci/out/loop-seam.md
 
+      # 【2026-09-21】BGM 频谱重心与编排平衡：只做跨曲横向比较（中位数+MAD 稳健离群），
+      #   **不用绝对阈值** —— sine/triangle 高频物理为 0，任何"高频占比"类绝对阈值恒真。
+      #   先自测（重心=基音 / 随音高单调 / 能分辨波形谐波 / 静音安全）再体检。
+      - name: BGM 频谱判据自测（阴性对照）
+        run: python ci/bgm-spectrum.py --selftest
+      - name: BGM 频谱重心与编排平衡体检（仅提示，不作门禁）
+        run: mkdir -p ci/out && python ci/bgm-spectrum.py game/audio ci/out/bgm-spectrum.md
+
       - name: 安装 Playwright
         run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
 
