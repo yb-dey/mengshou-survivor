@@ -49,6 +49,18 @@ jobs:
         run: |
           node ci/unlock-text.mjs --selftest
           node ci/unlock-text.mjs
+      # 表内文案数字 × 数值字段 交叉核对：desc/feel 里写死「+12/级」「100 只」
+      # 【v1.188】同族病根第二处：文案与数值字段**同表并存**，改一边忘另一边就骗玩家。
+      #   实测覆盖 DATA_HALL_TALENT(6) / DATA_ACHIEVE(13) / DATA_PASSIVE(14 条, 含
+      #   per 对象型与 "N/s/级" 数值型两种形态) / DATA_COMBAT_EVO 兄弟名引用。
+      #   ⚠ 三条"空跑陷阱"已封：① splitTopLevel 曾把整表当 1 条（只查首条）
+      #   ② 判据 A 正则只认标量 per → 整张 DATA_PASSIVE 静默跳过
+      #   ③ 阴性对照曾用 `|| mut===src` 把"变异没生效"当成"检出"（假绿）
+      #   解析器对每张表断言条目数 == 实测值，退化即抛错。**硬门禁**。
+      - name: 表内文案数字 × 数值字段 交叉核对（GATE）
+        run: |
+          node ci/desc-num-cross.mjs --selftest
+          node ci/desc-num-cross.mjs
       # 界面控件不得出屏：返回/关闭类控件是**唯一出口**，被裁即有真实可用性代价。
       # 【v1.185】图鉴配方 tab 的「返回」按钮实测底部出屏 32px（closeY 1248 + 64 = 1312 > 1280）。
       #   面板几何体检（screen-profile / card-band）测不到它 —— 那些量的是"面板内空带"，
