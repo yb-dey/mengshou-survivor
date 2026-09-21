@@ -29,7 +29,22 @@ jobs:
           done
           ls -la
 
-      - name: ② 死亡帧接线（4 处纯增量插入）
+      - name: ③ 受击帧：抠图 + 缩 192×192 + 注入（补 6 个缺口）
+        env:
+          ART_SUFFIX: '_hit'
+          ART_SIZE: '192'
+          ART_IDS: 'bear,raven,orbitcrab,boomfruit,sporecap,burrowmole'
+        run: python ci/build-dead-frames.py
+
+      - name: 用注入版替换（受击帧）
+        run: |
+          cd game
+          for f in *.dead.html; do
+            [ -e "$f" ] || continue
+            mv -f "$f" "${f%.dead.html}.html"
+          done
+
+      - name: ④ 死亡帧接线（6 处纯增量插入）
         run: node ci/patch-death-wiring.mjs
 
       - uses: actions/setup-node@v4
