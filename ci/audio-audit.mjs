@@ -40,7 +40,7 @@ page.on('pageerror', (e) => errs.push(String(e.message).slice(0, 200)));
 
 // ⚠ 必须在游戏脚本执行前挂钩（addInitScript 在 document 创建时注入）
 await page.addInitScript(() => {
-  window.__ac = { osc: 0, buf: 0, gain: 0, ctxMade: 0, play: 0, lastAt: 0 };
+  window.__ac = { osc: 0, buf: 0, gain: 0, ctxMade: 0, play: 0, lastAt: 0, clips: [], stats: [] };
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC || !AC.prototype) return;
   const wrap = (name, key) => {
@@ -53,8 +53,42 @@ await page.addInitScript(() => {
     };
   };
   wrap('createOscillator', 'osc');
-  wrap('createBufferSource', 'buf');
   wrap('createGain', 'gain');
+  // 【v1.167】不只数个数 —— 顺手把送进播放的 AudioBuffer **内容**量出来：
+  //   对每个 buffer source 的 start() 采样其通道数据，算 时长/峰值/RMS/削波。
+  //   这样"听到的"才有第二条证据链：不是"有没有声"，而是"声好不好"（削波刺耳 / 太轻听不见）。
+  const origBuf = AC.prototype.createBufferSource;
+  if (typeof origBuf === 'function') {
+    AC.prototype.createBufferSource = function () {
+      window.__ac.buf++;
+      window.__ac.lastAt = performance.now();
+      const node = origBuf.apply(this, arguments);
+      try {
+        const origStart = node.start;
+        node.start = function () {
+          try {
+            const b = node.buffer;
+            if (b) {
+              const d = b.getChannelData(0);
+              let peak = 0, sum = 0, n = 0;
+              for (let i = 0; i < d.length; i += 8) {
+                const v = Math.abs(d[i]);
+                if (v > peak) peak = v;
+                sum += d[i] * d[i];
+                n++;
+              }
+              const rms = Math.sqrt(sum / Math.max(1, n));
+              const rec = { dur: +b.duration.toFixed(3), peak: +peak.toFixed(4), rms: +rms.toFixed(4) };
+              window.__ac.stats.push(rec);
+              if (peak >= 0.999) window.__ac.clips.push(rec);
+            }
+          } catch (e) { /* 某些实现缓冲不可读，忽略 */ }
+          return origStart.apply(this, arguments);
+        };
+      } catch (e) { /* 保底：计数已足够 */ }
+      return node;
+    };
+  }
   // 记录 context 创建（部分实现需要 new，包一层构造器）
   try {
     const Wrapped = function () { window.__ac.ctxMade++; return new AC(); };
@@ -110,6 +144,27 @@ await page.waitForTimeout(3600);
 const t5 = await read();
 const muted = delta(t4, t5);
 
+// ---- 4) 音质：缓冲区内容统计 ----
+const q = await page.evaluate(() => {
+  const a = window.__ac || {};
+  const st = a.stats || [];
+  const srt = (arr) => arr.slice().sort((x, y) => x - y);
+  const pk = srt(st.map((r) => r.peak));
+  const rm = srt(st.map((r) => r.rms));
+  const du = srt(st.map((r) => r.dur));
+  const med = (arr) => (arr.length ? arr[(arr.length / 2) | 0] : 0);
+  return {
+    n: st.length,
+    clips: (a.clips || []).length,
+    peakMed: +(med(pk) || 0).toFixed(3), peakMax: +(pk.length ? pk[pk.length - 1] : 0).toFixed(3),
+    rmsMed: +(med(rm) || 0).toFixed(4), rmsMin: +(rm.length ? rm[0] : 0).toFixed(4),
+    durMed: +(med(du) || 0).toFixed(3), durMax: +(du.length ? du[du.length - 1] : 0).toFixed(3),
+    quiet: st.filter((r) => r.rms < 0.005).length,
+  };
+});
+const okClip = q.clips === 0;                 // 有削波 → 可能刺耳
+const okLoud = q.n > 0 && q.rmsMed >= 0.01;   // 整体太轻 → 可能听不见
+
 const rows = [
   { name: '大厅静置(BGM)', ...bgm },
   { name: '战斗+击杀(SFX)', ...battle },
@@ -136,16 +191,28 @@ const md = [
   `- ② 战斗+击杀高于 BGM 窗口（${bgm.src}→${battle.src}）: **${okBattle ? '✅' : '❌'}**`,
   `- ③ 静音后显著下降（${battle.src}→${muted.src}）: **${okMute ? '✅' : '❌'}**`,
   '',
+  '## 音质（把送进播放的 AudioBuffer 内容量出来）',
+  '',
+  `- 采样到的播放缓冲: **${q.n}** 个`,
+  `- 峰值 中位 **${q.peakMed}** / 最高 **${q.peakMax}**；RMS 中位 **${q.rmsMed}** / 最低 **${q.rmsMin}**`,
+  `- 时长 中位 **${q.durMed}s** / 最长 **${q.durMax}s**`,
+  `- ④ 无削波（峰值≥0.999 的缓冲 = 0）: **${okClip ? '✅' : '❌ 有 ' + q.clips + ' 个'}**`,
+  `- ⑤ 整体不偏轻（RMS 中位 ≥0.01）: **${okLoud ? '✅' : '❌'}**（RMS<0.005 的 ${q.quiet} 个）`,
+  '',
+  '> 方法：挂钩 `createBufferSource` 返回的节点，在其 `start()` 时读 `node.buffer` 的通道数据算指标。',
+  '> ⚠ 这是**静态内容**指标（不含实时混音/限幅），但足以抓"削波刺耳"与"轻到听不见"。',
+  '',
   '> 计数钩子挂在 `AudioContext.prototype.createOscillator/createBufferSource` 上，在游戏脚本执行前注入。',
   '> ⚠ BGM 是"开机建一次 + loop"的形态 → **窗口增量会为 0，属正常**，故 BGM 用累计量判定。',
   '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'audio-report.md'), md);
-fs.writeFileSync(path.join(OUT, 'audio-report.json'), JSON.stringify({ bgm, battle, muted, ctxMade: t1.ctxMade, errs, ok: { okBgm, okBattle, okMute } }, null, 2));
+fs.writeFileSync(path.join(OUT, 'audio-report.json'), JSON.stringify({ bgm, battle, muted, ctxMade: t1.ctxMade, quality: q, errs, ok: { okBgm, okBattle, okMute, okClip, okLoud } }, null, 2));
 console.log(md);
 
 await browser.close();
 server.close();
 if (errs.length) { console.error('❌ 有未捕获异常'); process.exit(3); }
-if (!(okBgm && okBattle && okMute)) { console.error('❌ 音频体检未通过'); process.exit(2); }
+if (!(okBgm && okBattle && okMute)) { console.error('❌ 音频体检未通过（BGM/SFX/静音）'); process.exit(2); }
+if (!(okClip && okLoud)) { console.error('❌ 音质体检未通过（削波/偏轻）'); process.exit(4); }
 process.exit(0);
