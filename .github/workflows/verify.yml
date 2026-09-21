@@ -95,6 +95,16 @@ jobs:
         run: |
           node ci/ui-fit.mjs --selftest
           node ci/ui-fit.mjs
+      # 主题 HUD 字/底对比度：第 17 个"无人守"的维度。
+      # 【v1.191】两套主题色板（DATA_CHAPTER 6 章 / DATA_WORLD_THEME 4 主题）各带
+      #   hudFg(字) + hudWash(净底氛围条) + bgColor(底色)，渲染点 L25204 / L25195。
+      #   实测 grep：**16 个既有门禁无一读这些字段**，text-legibility 又被证伪且只看渲染帧、
+      #   无法定位到"哪张表哪一行"。⇒ 存在真实路径：改一个 hudFg 使字与底同色 →
+      #   HUD 文字全消失而全部门禁绿灯。本脚本堵它。**硬门禁**。
+      - name: 主题 HUD 对比度（GATE）
+        run: |
+          node ci/theme-contrast.mjs --selftest
+          node ci/theme-contrast.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
