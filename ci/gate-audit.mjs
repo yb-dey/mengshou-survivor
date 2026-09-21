@@ -278,6 +278,10 @@ if (!posOk) md.push('- ❌ 正对照被误报 → 判据会误伤正确写法');
 md.push('');
 md.push('## **' + (pass ? 'PASS' : 'FAIL') + '** — ' + (pass ? '门禁名实相符 ✅' : '存在名不副实或判据失效 ❌'));
 
-fs.writeFileSync(path.join('ci', 'out', 'gate-audit.md'), md.join('\n'));
+// ⚠ 必须**自己建目录** —— 全新 checkout 里 `ci/out/` 不存在，直接 writeFileSync 会 ENOENT 崩掉。
+//   这是本轮云端跑出来的真 bug：本地跑过所以目录早就在，"在我机器上是好的"。
+const OUT_DIR = process.env.OUT_DIR || path.join('ci', 'out');
+fs.mkdirSync(OUT_DIR, { recursive: true });
+fs.writeFileSync(path.join(OUT_DIR, 'gate-audit.md'), md.join('\n'));
 console.log(md.join('\n'));
 process.exit(pass ? 0 : 1);
