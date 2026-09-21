@@ -124,6 +124,7 @@ const TABLE_EXPECT = {
   DATA_COMBAT_EVO: 9,
   DATA_HALL_UNLOCK: 6,
   DATA_RUNES: 5,
+  DATA_SUPER: 20,
 };
 function parseTable(src, name) {
   const { body } = cutBody(src, name);
@@ -228,6 +229,7 @@ function checkPassive(src) {
 
 
 // desc 形如 "累计击杀 100 只" / "通关第 1 章" / "集齐全部 7 只萌兽" / "单局获得 1000 金币"
+// ---------- 判据 B: DATA_ACHIEVE.desc 里的数字 × target ----------
 function checkAchieve(src) {
   const items = parseTable(src, 'DATA_ACHIEVE');
   for (const it of items) {
@@ -270,6 +272,70 @@ function checkRunes(src) {
     }
   }
 }
+
+// ---------- 判据 A4: DATA_SUPER.desc 的数字（阿拉伯 + 中文） × 表内数值字段 ----------
+// 20 条超武 desc 是本项目**引用数字最密集**的文案（`半径140`/`6 连发`/`连锁 3`/
+//   `六镖`/`四巨岩`/`七向`/`五叶`/`四只`），且**中阿混用**。
+// ⚠ 中文数字若不折算，`六镖` 会被整条漏掉 —— 那正是"空跑"的变体。
+const CN_NUM = { '零': 0, '一': 1, '二': 2, '两': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10 };
+function checkSuper(src) {
+  const items = parseTable(src, 'DATA_SUPER');
+  // 建立"名字 → 表内数值字段"索引，供 contrast 子句解析（对比句引用的是**别的**超武）
+  const byName = {};
+  for (const it of items) {
+    const n = strField(it.text, 'name');
+    if (!n) continue;
+    const vals = [];
+    const reKV0 = /([A-Za-z][A-Za-z0-9_]*)\s*:\s*(-?\d+(?:\.\d+)?)/g;
+    let m0;
+    while ((m0 = reKV0.exec(it.text)) !== null) vals.push(parseFloat(m0[2]));
+    byName[n] = vals;
+  }
+  let checked = 0;
+  for (const it of items) {
+    const id = idField(it.text);
+    const desc = strField(it.text, 'desc');
+    if (!id || !desc) { if (id) note('A4', `${id}: desc 缺失，跳过`); continue; }
+    const vals = [];
+    const reKV = /([A-Za-z][A-Za-z0-9_]*)\s*:\s*(-?\d+(?:\.\d+)?)/g;
+    let m;
+    while ((m = reKV.exec(it.text)) !== null) vals.push(parseFloat(m[2]));
+    if (!vals.length) { note('A4', `${id}: 无数值字段，跳过`); continue; }
+
+    // ⚠ 关键：desc 里的对比子句（`(与X分叉, …)`）引用的是**别的**超武的数值。
+    //   初版把整条 desc 的数字都拿来对**本条**字段 → `fluffguard` 的"与八只亲卫分叉"
+    //   里的 8 被误判（8 属于 beesguard）。必须**先剥离括号内的对比句**再核对。
+    const own = desc.replace(/[（(][^）)]*[）)]/g, '');
+    const contrast = (desc.match(/[（(]([^）)]*)[）)]/g) || []).join(' ');
+
+    const collect = (txt) => {
+      const s = new Set();
+      for (const x of (txt.match(/\d+(?:\.\d+)?/g) || [])) s.add(parseFloat(x));
+      for (const ch of txt) { if (CN_NUM[ch] !== undefined && CN_NUM[ch] >= 3) s.add(CN_NUM[ch]); }
+      return s;
+    };
+    const ownNums = collect(own);
+    const ctrNums = collect(contrast);
+    if (!ownNums.size && !ctrNums.size) { note('A4', `${id}: desc 无数字`); continue; }
+    checked++;
+
+    for (const n of ownNums) {
+      const ok = vals.some((v) => Math.abs(v - n) < 1e-6 || Math.abs(v * 100 - n) < 1e-6 || Math.abs(v / 100 - n) < 1e-6);
+      if (!ok) fail('A4', id, `desc 正文 "${own.trim()}" 宣称数字 ${n}，但本条数值字段 [${vals.join(', ')}] 无对应值`);
+    }
+    // 对比句里的数字必须能在**某一条**超武里找到（不限定是哪条，只要求"引用的是真数"）
+    if (ctrNums.size) {
+      const all = [];
+      for (const k in byName) for (const v of byName[k]) all.push(v);
+      for (const n of ctrNums) {
+        const ok = all.some((v) => Math.abs(v - n) < 1e-6 || Math.abs(v * 100 - n) < 1e-6);
+        if (!ok) fail('A4', id, `desc 对比句 "${contrast.trim()}" 宣称数字 ${n}，但全表超武数值无任何一条对应`);
+      }
+    }
+  }
+  if (!checked) note('A4', 'DATA_SUPER 无一条含可核数字，判据 A4 空跑（不构成通过）');
+}
+
 
 // ---------- 判据 C: 文案「点名兄弟」的反引号（『』「」）包裹才是精确引用 ----------
 // 教训：初版用 /与([^成,，;；]{1,10})成档/ 抓裸文本，会把
@@ -322,6 +388,7 @@ function run(src) {
   checkTalent(src);
   checkPassive(src);
   checkRunes(src);
+  checkSuper(src);
   checkAchieve(src);
   checkCrossNames(src);
   return { fails: FAILS.slice(), notes: NOTES.slice() };
@@ -411,6 +478,24 @@ if (process.argv.includes('--selftest')) {
   report('阴性对照 7: DATA_RUNES.rune_berserk hpMul 1.3→1.9（desc 仍写 ×1.3）', r7);
   const ok7 = inj7 && r7.fails.some((f) => f.cat === 'A3' && f.id === 'rune_berserk');
 
+  // 阴性对照 8：DATA_SUPER 阿拉伯数字漂移（"半径140" 但 aoeR 改了）
+  const mut8 = src.replace('aoeR: 140, arcT: 0.9', 'aoeR: 210, arcT: 0.9');
+  const inj8 = mut8 !== src;
+  const r8 = run(mut8);
+  report('阴性对照 8: DATA_SUPER.megaboom aoeR 140→210（desc 仍写 半径140）', r8);
+  const ok8 = inj8 && r8.fails.some((f) => f.cat === 'A4' && f.id === 'megaboom');
+
+  // 阴性对照 9：DATA_SUPER **中文数字**漂移（"六镖" 但 bulletCount 改了）
+  //   这条专门守"中文数字被整条漏掉"这个盲区 —— 阿拉伯正则抓不到它。
+  //   ⚠ 锚点必须**由实测取**，不能手抄（首版手抄的空格不对 → 替换没生效 → 假失败）。
+  const anchor9 = src.match(/mapletornado:[\s\S]{0,200}?bulletCount:\s*6/);
+  const mut9 = anchor9 ? src.replace(anchor9[0], anchor9[0].replace(/bulletCount:\s*6/, 'bulletCount: 9')) : src;
+  const inj9 = mut9 !== src;
+  const r9 = run(mut9);
+  report('阴性对照 9: DATA_SUPER.mapletornado bulletCount 6→9（desc 仍写 六镖）', r9);
+  const ok9 = inj9 && r9.fails.some((f) => f.cat === 'A4' && f.id === 'mapletornado');
+  if (!inj9) console.log('  ⚠ 阴性对照 9 的替换**未生效**（anchor 未命中）→ 视为漏检，不得算通过');
+
   const all = ok1 && ok2 && ok3;
   console.log('\n--- selftest ---');
   console.log(`  阴性对照 A(per 漂移): ${ok1 ? '检出 ✅' : '漏检 ❌'}`);
@@ -429,10 +514,12 @@ if (process.argv.includes('--selftest')) {
   console.log(`  阴性对照 E(DATA_PASSIVE 对象型 per 漂移): ${ok5 ? '检出 ✅' : '漏检 ❌'}`);
   console.log(`  阴性对照 F(DATA_PASSIVE 数值型 desc 漂移): ${ok6 ? '检出 ✅' : '漏检 ❌'}`);
   console.log(`  阴性对照 G(DATA_RUNES ×N 漂移): ${ok7 ? '检出 ✅' : '漏检 ❌'}`);
+  console.log(`  阴性对照 H(DATA_SUPER 阿拉伯数字漂移): ${ok8 ? '检出 ✅' : '漏检 ❌'}`);
+  console.log(`  阴性对照 I(DATA_SUPER 中文数字漂移): ${ok9 ? '检出 ✅' : '漏检 ❌'}`);
 
-  const n = (ok1 ? 1 : 0) + (ok2 ? 1 : 0) + (ok3 ? 1 : 0) + (ok4 ? 1 : 0) + (ok5 ? 1 : 0) + (ok6 ? 1 : 0) + (ok7 ? 1 : 0);
-  console.log(`  selftest ${n}/7 ${n === 7 ? '✅' : '❌'}`);
-  process.exit(n === 7 ? 0 : 1);
+  const n = (ok1?1:0)+(ok2?1:0)+(ok3?1:0)+(ok4?1:0)+(ok5?1:0)+(ok6?1:0)+(ok7?1:0)+(ok8?1:0)+(ok9?1:0);
+  console.log(`  selftest ${n}/9 ${n === 9 ? '✅' : '❌'}`);
+  process.exit(n === 9 ? 0 : 1);
 }
 
 const real = run(src);
