@@ -23,7 +23,12 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const port = server.address().port;
 
 const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required', '--allow-file-access-from-files'] });
-const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+// 【2026-09-21】视口默认改为 720x1280（= CONFIG.viewW/viewH）：
+//   原 1280x720 会把 720 宽的逻辑画布缩到 ~405px → 截图细节被抹掉，**无法用于美术评审**。
+//   1:1 取像后，肉眼能看清图标/描边/字重，art 审查才成立。SWEEP_W/SWEEP_H 可覆盖。
+const SWEEP_W = parseInt(process.env.SWEEP_W || '720', 10);
+const SWEEP_H = parseInt(process.env.SWEEP_H || '1280', 10);
+const page = await browser.newPage({ viewport: { width: SWEEP_W, height: SWEEP_H } });
 const errs = [];
 page.on('pageerror', (e) => errs.push(String(e.message).slice(0, 200)));
 await page.goto(`http://127.0.0.1:${port}/${encodeURIComponent(entryName)}`, { waitUntil: 'load', timeout: 90000 });
