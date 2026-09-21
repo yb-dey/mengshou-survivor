@@ -13,6 +13,12 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
+      # 零依赖静态门禁先跑（失败即快速反馈，不必等浏览器装完）
+      # 文案卫生：作者标注（【假设】/【来源】）与占位符不得出现在玩家可见字符串里。
+      - name: 文案卫生（作者标注 / 占位符）
+        run: |
+          node ci/text-hygiene.mjs --selftest
+          node ci/text-hygiene.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
