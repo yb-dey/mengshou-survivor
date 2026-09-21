@@ -25,6 +25,14 @@ jobs:
         run: |
           node ci/term-consistency.mjs --selftest
           node ci/term-consistency.mjs || true
+      # 配方卡渲染宽度：卡宽压到装不下文案时，玩家读到的是带省略号的半句话。
+      # 【v1.184】图鉴配方 tab 排 4+3 列 → 4 列卡宽仅 148px（可用 128px），曾实测 11/28 字段被
+      #   hudFitText 截断。修法是「卡面文案按最窄卡定稿」+ tag 行紧凑拼接。此门禁防回归。
+      # **只报不拦**（首次上线先观察，避免误伤历史布局）。
+      - name: 配方卡渲染宽度（只报不拦）
+        run: |
+          node ci/card-fit.mjs . --selftest
+          node ci/card-fit.mjs . || true
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
