@@ -64,7 +64,7 @@ dist/                外链分发版（由 ci/build-dist.js 生成，不手工�
 |---|---|---|
 | `verify.mjs` | 双通道加载验证（file:// vs http://），产出 `report.json/md` + 截图 | push 自动 |
 | `assert-dist-audio.mjs` | 断言 `dist/audio` 与源目录**逐字节大小一致**，缺失 exit 1 | verify-dist |
-| `assert-audio-map.mjs` | **音频映射一致性**：4 方一致 —— `gains`(渲染) / `sfxFiles`(加载) / `DATA_SFX`(**消费方**，66 事件落回 19 buffer) / 磁盘文件；含 **6 项**阴性对照 | verify-dist（GATE） |
+| `assert-audio-map.mjs` | **音频映射一致性**：4 方一致 —— `gains`(渲染) / `sfxFiles`(加载) / `DATA_SFX`(**消费方**，66 事件落回 19 buffer) / 磁盘文件；另查**外采渲染器**不得再抄 gain 表（防双重缩放）；含 **9 项**阴性对照 | verify-dist（GATE） |
 | `final-audit.mjs` | 三形态**内容级**复核：音频 md5 + 贴图键数 + 外链化 + 体积口径 | verify-dist |
 | `beast-art-audit.mjs` | 跟宠贴图入库体检（`TABLE_MODE=1` 只跑接线级，免浏览器） | verify-dist |
 | `find-dead-art.mjs` | AI 表死数据扫描（**只报不删**；"被跳过 ≠ 死"） | 手动 |
@@ -73,6 +73,8 @@ dist/                外链分发版（由 ci/build-dist.js 生成，不手工�
 | `loop-seam.py` | **BGM 循环接缝**体检（`ratio = |首−末| ÷ P90(首尾各128样本差分)`，阈值 4.0） | verify-dist（GATE） |
 | `bgm-spectrum.py` | **BGM 频谱重心与编排平衡**（跨曲中位数+MAD 离群，**不用绝对阈值**） | verify-dist（仅提示） |
 | `sfx-loudness.py` | **SFX 响度层级**（简化 K 加权能量响度，非峰值；按事件频率档分组比较） | verify-dist（仅提示） |
+| `sfx-intent-vs-real.py` | **SFX 意图-实响一致性**：`gains` 的档位意图 vs 实测**档均值**（**不逐对比 gain——不同尺度**）；要求 INFREQ>MID>FREQ 且落差 ≥2dB | verify-dist（GATE） |
+| `render-missing-sfx.mjs` | 外采 SFX 离线渲染（**只做平峰值归一 `peakNorm`，不按 id 缩放**；`--force` 重渲全部） | 手动/资产更新 |
 | `text-legibility.py` | ⛔ **已实测证伪**，仅留痕 + `--selftest` 作回归（**不得据此改画面**） | screen-sweep（continue-on-error） |
 
 > ⚠ **判据设计三例教训**（详见技能 `ai-art-pipeline` 第十·四节）：
@@ -104,7 +106,7 @@ dist/                外链分发版（由 ci/build-dist.js 生成，不手工�
 1. `ci/render-missing-sfx.mjs` 的渲染清单从"声明表"改为 **`CONFIG.audio.gains` 的键集**
 2. 渲染 4 个节点音（同源合成器公式，零新增音色）
 3. 补进 `AUDIO_ASSET.sfxFiles`（**不补的话文件渲了也 fetch 不到**）
-4. 新增 `ci/assert-audio-map.mjs` 作 GATE，含 6 项阴性对照
+4. 新增 `ci/assert-audio-map.mjs` 作 GATE，含 9 项阴性对照
 
 **同类第三例**（前两例：`dist/` 长期 0 音频 / `sfxFiles` 少 4 键）：
 → 共同点 = **"运行时按表拼接的路径"必须从"会被使用的集合"反推清单再比对产物**，
@@ -115,6 +117,29 @@ dist/                外链分发版（由 ci/build-dist.js 生成，不手工�
 > 且脚本的"音频声明 25 / 缺失 0 ✓"是从**它自己同步过去的旧产物**里数的 → **永远自洽、永远 PASS**。
 > 已修正路径 + 改为**以母版 HTML 声明为准**，并把 dist 侧缺口也计入 exit code。
 > **黄金做法**：判据在真实产物上跑 + 配「已知无信号区」对照 + 阴性样本必须**物理上真含信号**。
+
+### v1.170 —— 双重缩放：同一 gain 被应用两次（同类第四例）
+
+**现象**：新建 `ci/sfx-intent-vs-real.py` 比较"声明 gain"与"文件实测响度"，得 **rho = 0.491（弱相关）、21 组反向对** —— 声明越响的实测越轻。
+
+**根因（两层）**：
+1. **`ci/render-missing-sfx.mjs` 又抄了一份 `GAINS` 表** → 19 条中 **12 条**与真身 `CONFIG.audio.gains` 漂移（`CARD 0.62↔0.70` / `HURT 0.62↔0.72` / `BOSS_DIE 0.70↔0.80` / `WIN 0.68↔0.80` …）。
+2. 该表的值被**烘焙进文件峰值**（`normalize(raw, 0.708*gain/0.708)` ≡ 峰值=gain），而运行时（12593 行）**又乘一次** `CONFIG.audio.gains[sid]` → **同一个 gain 应用两次**，且两次取的是**不同版本的值**，误差非线性叠加。
+   → 铁证：`sfx_fire.wav` 峰值/gain = **2.168**（全场唯一离群，因为它是**从未被重渲**的历史资产，gains 从 0.50 改到 0.32 后它仍是旧标度）；其余 18 个比值聚在 0.85–1.11。
+
+**修法**：
+1. **删掉渲染器里的 `GAINS` 表**，改为与游戏内合成器 `_renderAll`(12173 行) **同口径 ——只做平峰值归一** `peakNorm = 0.7`。
+   → 两条通路（程序合成 / 外采 wav）行为一致，**响度层级只由运行时 `gains` 决定（单一权威）**。
+2. `--force` 重渲全部 19 个 SFX。实测峰值统一 **0.7000** ✅
+3. 渲染器的"跳过已存在文件"**改为打印出来**（旧版静默 skip 让 `sfx_fire.wav` 陈旧且零提示 —— 这正是缺陷 1 的藏身处）。
+4. 断言加 **检查⑦** + 阴性对照 **H**（渲染器又抄 GAINS 表）/ **I**（归一里仍烘焙 gain）→ 共 **9 项**。
+
+**⚠ 判据教训（我自己的错，记下来）**：
+`sfx-intent-vs-real.py` 第一版**逐对比较 `gain` 与文件响度** —— 但二者**不是同一尺度**：`gain` 是档内调色，响度是"能量×时长"。`SFX_BOMB`(0.66) 实测比 `SFX_REVIVE`(0.62) 轻 8dB 是**合法设计**（短促闷响 vs 绵长上扬，峰值同为 0.7 时能量差就是大）。
+逐对比较把这种合法设计报成 21 组"反向对"，**掩盖了唯一真问题**。
+→ 已改为**档均值 vs 档均值**（与设计注释 1420 行的层级同尺度），并加阴性对照（层级正确必 PASS / 塌陷必 FAIL）。
+→ **复用项目第①条铁律：参考量必须与被测现象同尺度。**
+
 
 ### 体检类（产出报告 + 截图）
 
