@@ -21,6 +21,9 @@ jobs:
       - name: 从内联母版构建外链分发版（dist/）
         run: node ci/build-dist.js
 
+      - name: 断言 dist 自包含（音频必须随包，不许静默降级到程序化）
+        run: node ci/assert-dist-audio.mjs
+
       - name: 安装 Playwright
         run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
 
