@@ -126,3 +126,30 @@ md += ["", "> 「死区」= 面板内最长连续无内容带（面板底色取�
 Path(OUT).write_text("\n".join(md), encoding="utf-8")
 print("\n".join(md))
 print("\n→ 已写 " + OUT)
+
+# ---- 总览拼图：把 13 屏缩略拼成一张，供"整套视觉语言一致性"评审 ----
+from PIL import ImageDraw
+shots = sorted(glob(SHOTS + "/*.png"))
+shots = [f for f in shots if not Path(f).name.startswith((".", "z-", "overview", "sheet", "cmp", "sim"))]
+if shots:
+    COLS, CW = 4, 300
+    ch = None
+    cells = []
+    for f in shots:
+        im = Image.open(f).convert("RGB")
+        if ch is None:
+            ch = int(CW * im.size[1] / im.size[0])
+        im2 = im.resize((CW, ch), Image.LANCZOS)
+        d2 = ImageDraw.Draw(im2)
+        d2.rectangle([0, 0, CW - 1, 16], fill=(16, 20, 14))
+        d2.text((5, 3), Path(f).stem, fill=(238, 244, 220))
+        cells.append(im2)
+    rows = (len(cells) + COLS - 1) // COLS
+    sheet = Image.new("RGB", (COLS * CW + (COLS + 1) * 8, rows * (ch + 22) + 8), (20, 20, 24))
+    for k, im2 in enumerate(cells):
+        gx = 8 + (k % COLS) * (CW + 8)
+        gy = 8 + (k // COLS) * (ch + 22)
+        sheet.paste(im2, (gx, gy))
+    out_png = str(Path(OUT).with_name("overview.png"))
+    sheet.save(out_png)
+    print("→ 已写 " + out_png + "  (" + str(len(cells)) + " 屏拼图)")
