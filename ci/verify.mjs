@@ -17,7 +17,8 @@ fs.mkdirSync(OUT, { recursive: true });
 // 验证目标目录可配：VERIFY_DIR=dist 即可验证**外链分发版**（线上发布的就是它）。
 // 此前只验过内联母版 → 分发版（assets 外链）从未进过云端门禁，属真缺口。
 const gameDir = path.resolve(process.env.VERIFY_DIR || 'game');
-const htmlFiles = fs.readdirSync(gameDir).filter((f) => f.toLowerCase().endsWith('.html'));
+// PICK_ENTRY_FILTERED: 排除 _ 前缀（_ = 临时/备份），防审计到备份文件（v1.187 实测）
+const htmlFiles = fs.readdirSync(gameDir).filter((f) => f.toLowerCase().endsWith('.html') && !f.startsWith('_'));
 if (!htmlFiles.length) { console.error('FAIL: game/ 下找不到 .html'); process.exit(1); }
 const entryName = htmlFiles[0];
 const entryPath = path.join(gameDir, entryName);
