@@ -30521,7 +30521,18 @@ function syncCodexFit() {
   GAME.codexCloseY = cb + 154;
   GAME.codexFitH = Math.min(CONFIG.viewH, GAME.codexCloseY + 64 + 40);
   codexShiftWidgets((CONFIG.viewH - (GAME.codexFitH || CONFIG.viewH)) / 2);   // 控件随面板平移
-  if (uiBeastClose) uiBeastClose.rect.y = GAME.codexCloseY;
+  // 【v1.185】「返回」按钮不得出屏。
+  //   病根：上一行 codexShiftWidgets 的平移在**钳制时恒等于 0**（fitH 触顶 viewH → py=0），
+  //   而本行原来无条件 `rect.y = codexCloseY` → 配方 tab 的 closeY=1248 + 按钮高 64 = 底 1312
+  //   > viewH 1280 → **底部裁掉 32px**（CDP 运行时实测：pet −26 正常 / fork +32 出屏 / enemy −148 正常）。
+  //   返回钮是图鉴的**唯一出口**，被裁即有真实可用性代价。
+  //   修法：加 viewH 下限钳制，保证「按钮底 ≤ viewH − 8」。**不碰面板几何**（fitH/面板高/其它控件全不变），
+  //   所以这是一处纯增益的收敛修复，不影响任何已验收的布局指标。
+  if (uiBeastClose) {
+    var bh = uiBeastClose.rect.h || 64;
+    var maxY = CONFIG.viewH - bh - 8;
+    uiBeastClose.rect.y = Math.min(GAME.codexCloseY, maxY);
+  }
 }
 function drawBeastPanel(ctx, m) {
   syncCodexFit();
