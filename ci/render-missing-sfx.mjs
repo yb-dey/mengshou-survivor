@@ -178,9 +178,18 @@ function toWav(samples) {
   return buf;
 }
 
-// AUDIO_ASSET.sfxFiles 声明的 15 个 + 已存在 2 个
+// 【2026-09-21 补】原先只列 AUDIO_ASSET.sfxFiles 声明的 15 个 —— 但 CONFIG.audio.gains
+//   里有 **19** 个键，`_renderAll()` 会渲这 19 个，而 `tryLoadLocalFiles()` 只按
+//   `sfxFiles` 表 fetch → 多出的 4 个（CARDSHOW/CHEST/EVENT/REVIVE）**永远拿不到外采文件**，
+//   静默走程序化兜底。这 4 个覆盖 **10 个埋点**（全部 5 个章事件提示 + 复活 + 开箱 + 亮卡），
+//   是玩家最常听到的"节点音"。
+//   → 本清单必须 = `CONFIG.audio.gains` 的键集（**判据**：渲染清单要跟"会被渲染的集合"对齐，
+//     不是跟"已声明的映射表"对齐；后者缺键时不会报错，只会静默降级。）
+//   ⚠ 同时必须同步补进游戏 `AUDIO_ASSET.sfxFiles` 表，否则文件渲染了也 fetch 不到（见 patch 脚本）。
 const ALL = ['SFX_FIRE', 'SFX_HIT', 'SFX_GEM', 'SFX_LEVELUP', 'SFX_CARD', 'SFX_HURT', 'SFX_BOSS_WARN',
-             'SFX_BOSS_DIE', 'SFX_WIN', 'SFX_LOSE', 'SFX_EVO', 'SFX_BOMB', 'SFX_KILL', 'SFX_UI', 'SFX_START'];
+             'SFX_BOSS_DIE', 'SFX_WIN', 'SFX_LOSE', 'SFX_EVO', 'SFX_BOMB', 'SFX_KILL', 'SFX_UI', 'SFX_START',
+             // 【2026-09-21】补齐 4 个"有合成器、无映射"的节点音
+             'SFX_CARDSHOW', 'SFX_CHEST', 'SFX_EVENT', 'SFX_REVIVE'];
 const outDir = path.join('game', 'audio');
 console.log(`模式: ${APPLY ? 'APPLY' : 'DRY-RUN'}  →  ${outDir}`);
 console.log('| id | 时长ms | 峰值 | RMS | 文件 |');
