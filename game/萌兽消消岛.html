@@ -2674,19 +2674,24 @@ function levelupCardsReady() {
 }
 function levelupPanelMetrics() {
   var panelW = CONFIG.uiModalPanelW || 580;
-  var panelH = CONFIG.uiModalPanelH || 1120;
-  var py = (CONFIG.viewH - panelH) / 2;
-  var px = (CONFIG.viewW - panelW) / 2;
   var cardW = panelW - 56;
   var cardH = CONFIG.uiCardH || 220;
   var gap = CONFIG.uiCardGap || 36;
+  // 【v1.167】面板高度随**可见卡数**自适应 —— 原写死 3 张：只出 2 张时白空一整个卡位(256px)
+  //   (实测于 fx-02-kill.png)。n 取不到时回退 3 → 与改动前完全一致。
+  var lvCardN = 0, lvI;
+  if (uiCards) for (lvI = 0; lvI < uiCards.length; lvI++) if (uiCards[lvI] && uiCards[lvI].visible) lvCardN++;
+  if (lvCardN < 1 || lvCardN > 3) lvCardN = 3;
+  var panelH = (CONFIG.uiModalPanelH || 1120) - (3 - lvCardN) * (cardH + gap);
+  var py = (CONFIG.viewH - panelH) / 2;
+  var px = (CONFIG.viewW - panelW) / 2;
   var cardX = (CONFIG.viewW - cardW) / 2;
   var gear = !!(GAME && GAME.gearPickMode);
   var headerH = gear ? (CONFIG.levelupGearHeaderH || 196) : (CONFIG.levelupHeaderH || 148);
   var cardY = py + headerH;
   var rerollW = CONFIG.levelupRerollW || 300;
   var rerollH = CONFIG.levelupRerollH || 68;
-  var lastBottom = cardY + 3 * cardH + 2 * gap;
+  var lastBottom = cardY + lvCardN * cardH + (lvCardN - 1) * gap;
   return {
     px: px,
     py: py,
@@ -28109,8 +28114,9 @@ function registerUi() {
   uiBtnGoHome = makeButton("btngohome", pauseAct.home.x, pauseAct.home.y, pauseAct.home.w, pauseAct.home.h, "回首页", onTapGoHome);
   // 升级弹窗: 模态先注册, 三张卡后注册。【v1.86】点空白只解锁不关; 换一批沉底。
   uiLevelupModal = makeModal("levelup", CONFIG.uiModalPanelW, CONFIG.uiModalPanelH, function (ctx, m) {
-    var py = (CONFIG.viewH - m.panelH) / 2;
     var lm = levelupPanelMetrics();
+    m.panelH = lm.panelH;                    // 【v1.167】面板随可见卡数自适应(否则卡片与底板错位)
+    var py = (CONFIG.viewH - m.panelH) / 2;
     ctx.fillStyle = c.cardTitle;
     ctx.font = "bold 32px " + FONT_STACK;
     ctx.textAlign = "center";
