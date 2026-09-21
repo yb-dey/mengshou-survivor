@@ -105,18 +105,28 @@ async function run(label, url, shotPrefix) {
   await page.screenshot({ path: path.join(OUT, shotPrefix + '-3-battle-late.png') });
   samples.push({ t: 18.5, ...(await snap()) });
 
-  // 死亡标记逐帧监视：标记只活 0.5s，瞬时采样几乎必然错过 → 必须每帧盯 8 秒取峰值
+  // 死亡标记逐帧监视：标记只活 0.5s，瞬时采样几乎必然错过 → 每帧盯 8 秒。
+// 关键：deathMarks 本体在闭包里探不到（AI_ART_READY 同类坑已踩过），必须走 MENGSHOU_DEBUG.deathMarks()；
+// 且 spawned/drawn 是**累计值**，所以即使窗口落在升级弹窗暂停期也能捕获到此前所有击杀。
 const deathWatch = await page.evaluate(() => new Promise((res) => {
-  let max = 0, total = 0, prev = 0;
+  let maxLive = 0, spawned = 0, drawn = 0, sprites = 0, viaDebug = false;
   const t0 = performance.now();
   const tick = () => {
     try {
-      const n = (window.deathMarks || []).length;
-      if (n > max) max = n;
-      if (n > prev) total += (n - prev);   // 新出现的个数累计
-      prev = n;
+      const D = window.MENGSHOU_DEBUG || {};
+      if (typeof D.deathMarks === 'function') {
+        viaDebug = true;
+        const f = D.deathMarks();
+        if (f) {
+          if (f.live > maxLive) maxLive = f.live;
+          if (f.spawned > spawned) spawned = f.spawned;
+          if (f.drawn > drawn) drawn = f.drawn;
+          if (f.sprites > sprites) sprites = f.sprites;
+        }
+      }
     } catch (e) { /* 忽略 */ }
-    if (performance.now() - t0 < 8000) requestAnimationFrame(tick); else res({ max, total });
+    if (performance.now() - t0 < 8000) requestAnimationFrame(tick);
+    else res({ maxLive, spawned, drawn, sprites, viaDebug });
   };
   requestAnimationFrame(tick);
 }));
@@ -144,8 +154,8 @@ const fps = await page.evaluate(() => new Promise((res) => {
   const counts = samples.map((s) => (s.field && s.field.counts) ? (s.field.counts.boss + s.field.counts.elite + s.field.counts.lethal + s.field.counts.trash + s.field.counts.gems) : null);
   const battleStarted = counts.some((x) => typeof x === 'number' && x > 0);
   // 死亡帧证据：① 已构建的 <id>_dead 贴图数；② 战斗中死亡标记出现过的峰值
-  const deadSprites = samples.length ? (samples[samples.length - 1].deadSprites || 0) : 0;
-  const deathMax = Math.max(0, ...samples.map((s) => s.deathMarks || 0));
+  const deadSprites = deathWatch.sprites || (samples.length ? (samples[samples.length - 1].deadSprites || 0) : 0);
+  const deathMax = deathWatch.maxLive;
   const uniqFailed = [...new Set(failedReqs)];
   const ok = pageErrors.length === 0 && canvasCheck.nonBlank === true && battleStarted === true;
 
