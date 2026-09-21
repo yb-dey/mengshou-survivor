@@ -11,13 +11,27 @@ let html = fs.readFileSync(P, 'utf8');
 const before = html.length;
 const log = [];
 
+// ⚠ 幂等 + 去重保护（实测踩过）：
+//   本脚本曾被应用两次（把已接线的母版推回仓库 → 工作流再接线一次），
+//   而 JS 里重复 function 声明后者生效、**零报错**，验证照样 ok=true —— 属静默错误。
+//   故：① 已存在则跳过；② 已存在两份则报错退出，要求先跑 _qc/repair-dup-wiring.mjs。
+function guard(payload, label) {
+  const c = html.split(payload).length - 1;
+  if (c > 1) {
+    console.error(`❌ [${label}] 该块已存在 ${c} 份 —— 请先运行 _qc/repair-dup-wiring.mjs 去重`);
+    process.exit(3);
+  }
+  return c === 1;
+}
 function insertAfter(anchor, payload, label) {
+  if (guard(payload, label)) { log.push(`  ⏭ ${label}（已存在，跳过）`); return; }
   const n = html.split(anchor).length - 1;
   if (n !== 1) { console.error(`❌ [${label}] 锚点命中 ${n} 次（应为 1）: ${anchor.slice(0, 60)}`); process.exit(2); }
   html = html.replace(anchor, anchor + payload);
   log.push(`  ✅ ${label}`);
 }
 function insertBefore(anchor, payload, label) {
+  if (guard(payload, label)) { log.push(`  ⏭ ${label}（已存在，跳过）`); return; }
   const n = html.split(anchor).length - 1;
   if (n !== 1) { console.error(`❌ [${label}] 锚点命中 ${n} 次（应为 1）: ${anchor.slice(0, 60)}`); process.exit(2); }
   html = html.replace(anchor, payload + anchor);
