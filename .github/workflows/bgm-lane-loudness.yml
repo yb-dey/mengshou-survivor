@@ -1,0 +1,50 @@
+name: bgm-lane-loudness
+# BGM 同档响度连续性体检（"听到的" 之二）—— 纯标准库，不装浏览器，秒级完成。
+#
+# 守住的东西：「**峰值归一 ≠ 响度归一**」
+#   本作 BGM 曾全部按平峰归一(peakNorm=0.708) 烘焙 → 每首峰值都 ≈0.708，
+#   但持续垫层型与稀疏瞬态型在同一峰值下响度差可达 8 dB。后果：
+#   同一局内 march(BATTLE_A) → horde(BATTLE_B) → abyss(BOSS) 互相切换时，
+#   打 BOSS 音乐反而**掉 5.3 dB** —— 与"深渊 BOSS 是戏剧顶点"的设计意图直接矛盾。
+#
+# 本 workflow 做两件事（顺序不可换）：
+#   ① `--selftest` 阴性对照 5 条 —— 判据本身是否还有效（含"注入已知缺陷必须被抓到"）
+#   ② 正式门禁 —— 同 lane 极差 >3dB / 局内切换链 >2dB 即报错
+#   ⚠ 对照必须**先跑**：判据坏了的门禁给"绿灯"比不给更危险。
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'game/audio/**'
+      - 'ci/bgm-lane-loudness.py'
+      - 'ci/fix-bgm-lane-loudness.mjs'
+      - '.github/workflows/bgm-lane-loudness.yml'
+jobs:
+  lane:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: ① 判据阴性对照（5 条）
+        run: python ci/bgm-lane-loudness.py --selftest
+      - name: ①b 瞬态整形器阴性对照（8 条）
+        run: node ci/fix-bgm-lane-loudness.mjs --selftest
+      - name: ② 正式门禁
+        run: python ci/bgm-lane-loudness.py game/audio ci/out/bgm-lane-loudness.md
+      - name: ③ 音频完整性（无削波 / 接缝）
+        run: |
+          node ci/audio-local-check.mjs
+          node ci/fix-bgm-lane-loudness.mjs --apply
+      - name: 上传产物
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bgm-lane-loudness
+          path: ci/out/
+          retention-days: 14
