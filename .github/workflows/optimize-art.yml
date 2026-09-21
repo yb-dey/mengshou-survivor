@@ -1,0 +1,53 @@
+name: optimize-art
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cutout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装 Pillow
+        run: pip install --quiet pillow
+
+      - name: 批量抠图（去白底）
+        run: python ci/cutout-art.py
+
+      - name: 用抠好的版本替换原文件（保证目录里只有一个 HTML）
+        run: |
+          cd game
+          for f in *.cutout.html; do
+            [ -e "$f" ] || continue
+            base="${f%.cutout.html}"
+            mv -f "$f" "$base.html"
+          done
+          ls -la
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 安装 Playwright
+        run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
+
+      - name: 跑验证（抠图后必须仍然 PASS）
+        id: verify
+        continue-on-error: true
+        run: node ci/verify.mjs
+
+      - name: 上传抠图结果与验证产物
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cutout-result
+          path: |
+            ci/out/
+            game/
+          retention-days: 14
