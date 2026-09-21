@@ -30,6 +30,13 @@
  *         只对 gains↔sfxFiles 做闭环，**两张表可以一起漏**（都在 HTML 里、一起改就一起错）；
  *         而 DATA_SFX 是 66 个游戏事件，漏一个立即在事件层露馅。
  *
+ *   ⑥ （v1.169 新增）**加载清单必须遍历声明表，不能是手抄副本** ——
+ *      `tryLoadLocalFiles()` 里若出现 `var localBgm = {...}` / `var localSfx = {...}`
+ *      这类硬编码清单，就与 `AUDIO_ASSET.bgmFiles/sfxFiles` 构成"两份真相"。
+ *      本项目实测：硬编码 6/7 键 vs 声明 10/19 键 → **12 个 SFX + 4 个 BGM 永远不被 fetch**。
+ *      ⚠ 这是 v1.168 修的那类坑的**更深一层**：v1.168 补"声明表漏键"，
+ *        本项防"加载清单漏键" —— 补完声明表也不算完，还得有人真的按它加载。
+ *
  * 用法: node ci/assert-audio-map.mjs [srcHtml] [audioDir]
  * 阴性对照: node ci/assert-audio-map.mjs --selftest
  */
@@ -147,6 +154,35 @@ export function checkAudioMap(s, audioDir, opts = {}) {
     note.push('未找到 `var DATA_SFX =`（跳过消费方口径检查 ⑤）');
   }
 
+  // ---- ⑥ 加载清单必须**遍历声明表**，不能硬编码副本 ----
+  //   v1.169 抓到的更深一层同类坑：`tryLoadLocalFiles()` 里硬编码 localBgm(6)/localSfx(7)，
+  //   而 AUDIO_ASSET 声明 10/19 → 12 个 SFX + 4 个 BGM 永远不被 fetch。
+  //   凡是"手抄的副本"都会漏；正确做法是 `for (id in AUDIO_ASSET.xxxFiles)`。
+  //
+  //   ⚠⚠ 锚点教训（同一轮内第二次踩，务必记住）：
+  //     这里**不能**用 `s.indexOf('tryLoadLocalFiles')` —— 它命中的是 CONFIG 块里的一句
+  //     **注释/字段提及**（idx 34712），而真正的函数体在 idx **518770**（相隔 484KB）！
+  //     第一版就是这么写的，于是窗口读到了无关文本 → 基线被误报为 FAIL。
+  //     → 锚点必须带**函数定义语法**：`tryLoadLocalFiles: function`。
+  const li = s.search(/tryLoadLocalFiles\s*:\s*function/);
+  if (li >= 0) {
+    // 窗口取函数体一段（够覆盖 loadOne 之后的清单段）
+    const body = s.slice(li, li + 2600);
+    const hardLbm = /var\s+localBgm\s*=\s*\{/.test(body);
+    const hardLsfx = /var\s+localSfx\s*=\s*\{/.test(body);
+    const iterBgm = /for\s*\(\s*\w+\s+in\s+AUDIO_ASSET\.bgmFiles\s*\)/.test(body);
+    const iterSfx = /for\s*\(\s*\w+\s+in\s+AUDIO_ASSET\.sfxFiles\s*\)/.test(body);
+    info.loadIter = iterBgm && iterSfx;
+    if (hardLbm || hardLsfx || !iterBgm || !iterSfx) {
+      fail.push('tryLoadLocalFiles() 的加载清单不是遍历 AUDIO_ASSET 声明表 ' +
+        `（硬编码 localBgm=${hardLbm} / localSfx=${hardLsfx}；` +
+        `遍历 bgmFiles=${iterBgm} / sfxFiles=${iterSfx}）` +
+        ' → 手抄副本一旦与声明表不一致，多出的键**永远不会被 fetch**（静默降级）');
+    }
+  } else {
+    note.push('未找到 `tryLoadLocalFiles: function`（跳过加载清单检查 ⑥）');
+  }
+
   // 全等提示（是否还有其它结构性差异）
   if (gains.size !== sfxMap.size) {
     note.push(`gains(${gains.size}) 与 sfxFiles(${sfxMap.size}) 键数不一致`);
@@ -211,6 +247,14 @@ if (SELFTEST) {
     !rf2.fail.some((f) => /没有映射/.test(f)),
     rf2.fail.join(' | ')]);
 
+  // G. ⑥ 加载清单退回硬编码副本 → 应报
+  const g = base.replace(
+    /for\s*\(\s*id\s+in\s+AUDIO_ASSET\.sfxFiles\s*\)/,
+    'var localSfx = { SFX_FIRE: 1 }; for (id in localSfx)');
+  const rg = checkAudioMap(g, tmpDir);
+  cases.push(['G 加载清单退回硬编码 localSfx', rg.fail.some((f) => /不是遍历 AUDIO_ASSET/.test(f)),
+    rg.fail.join(' | ')]);
+
   console.log('# 音频映射断言 —— 阴性对照自测\n');
   console.log('| 样本 | 期望 | 实测 | 说明 |');
   console.log('|---|---|---|---|');
@@ -220,7 +264,7 @@ if (SELFTEST) {
     console.log(`| ${name} | ${name.startsWith('基线') ? 'PASS' : 'FAIL'} | ${pass ? '✅ 符合' : '❌ 未检出'} | ${msg.slice(0, 110)} |`);
   }
   for (const t of [tmpDir, t2, t3]) fs.rmSync(t, { recursive: true, force: true });
-  console.log(allOk ? '\n## 自测: **PASS** — 守卫能检出全部 6 类错误 ✅' : '\n## 自测: **FAIL** — 有样本未被检出 ❌');
+  console.log(allOk ? '\n## 自测: **PASS** — 守卫能检出全部 7 类错误 ✅' : '\n## 自测: **FAIL** — 有样本未被检出 ❌');
   process.exit(allOk ? 0 : 1);
 }
 
