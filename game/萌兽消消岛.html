@@ -594,7 +594,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.172",                   // 【v1.172】新增 MENGSHOU_DEBUG.save() 只读存档证据口(字段集/关键值/往返自检): 补上"存档完整性"盲区 —— SAVE_SCHEMA/迁移链/钳制是唯一持久化通道, 损坏会静默摧毁玩家全部进度, 此前 ci/ 下零覆盖; 纯新增读取口, 不动任何游戏逻辑/数值/渲染
+  version: "1.173",                   // 【v1.173】补全「淡刀子」文案: 敌人图鉴 21/21(原 5/21) + 跟宠 7/7(原 2/7) 均有 knife 行 —— 此前 lore() 用 filter(!!e.knife) 静默丢掉 16 敌人/5 跟宠, 点条目只回退到通用提示; 纯文案补全, 不动数值/渲染/逻辑
   gameName: "萌兽幸存者",              // 玩家可见主标题; 历史别名「萌兽消消岛」
 
   // 新手引导(步骤14b, 文案包): 4 步事件触发/消失条件, guideFlags 入档防重放
@@ -10258,11 +10258,11 @@ var PATH_NODE_DEFS = [
 // 数组顺序=默认跟随优先级(解锁者中序号最小者跟随); 贴图本步矢量/几何预渲染, 步骤14a 换贴图。
 var DATA_BEAST = [
   { id: "capybara",    name: "水豚豚", price: 500,  color: "#a5713f", ai: "slam",    petDmg: 14, interval: 1.35, petR: 78, tagline: "砸地圈", desc: "跟宠砸地波, 近身清杂", knife: "砸地不是闹，是把漏走的热拍回巢里。" },
-  { id: "bunny",       name: "蹦蹦兔", price: 1000, color: "#d99aa8", ai: "hopshot", petDmg: 7,  interval: 0.62, petR: 0,  tagline: "弹射籽", desc: "朝最近怪弹射种子, 3/5星加弹" },
-  { id: "ursa",        name: "呼呼熊", price: 1500, color: "#7a5236", ai: "claw",    petDmg: 16, interval: 0.95, petR: 50, tagline: "近身爪", desc: "跟宠近身扇爪, 要贴着打" },
-  { id: "zapmouse",    name: "滋滋鼠", price: 2000, color: "#c9b23a", ai: "zap",     petDmg: 11, interval: 0.88, petR: 210, tagline: "连锁电", desc: "电最近怪, 3/5星加连锁" },
-  { id: "oinkpig",     name: "哼哼猪", price: 2500, color: "#e08a9a", ai: "dash",    petDmg: 18, interval: 1.55, petR: 28, tagline: "冲撞", desc: "朝最近怪短冲, 路径挨撞" },
-  { id: "shellturtle", name: "慢慢龟", price: 3000, color: "#4a8a5a", ai: "orbit",   petDmg: 9,  interval: 0.28, petR: 42, tagline: "环壳", desc: "身周一枚环壳擦伤, 不是蜂群" },
+  { id: "bunny",       name: "蹦蹦兔", price: 1000, color: "#d99aa8", ai: "hopshot", petDmg: 7,  interval: 0.62, petR: 0,  tagline: "弹射籽", desc: "朝最近怪弹射种子, 3/5星加弹", knife: "弹得远不是躲，是想把种子撒到暖一点的地方。" },
+  { id: "ursa",        name: "呼呼熊", price: 1500, color: "#7a5236", ai: "claw",    petDmg: 16, interval: 0.95, petR: 50, tagline: "近身爪", desc: "跟宠近身扇爪, 要贴着打", knife: "非要贴近不是逞能，是它只会用身子挡。" },
+  { id: "zapmouse",    name: "滋滋鼠", price: 2000, color: "#c9b23a", ai: "zap",     petDmg: 11, interval: 0.88, petR: 210, tagline: "连锁电", desc: "电最近怪, 3/5星加连锁", knife: "电传得远不是凶，是想一次叫醒好几个。" },
+  { id: "oinkpig",     name: "哼哼猪", price: 2500, color: "#e08a9a", ai: "dash",    petDmg: 18, interval: 1.55, petR: 28, tagline: "冲撞", desc: "朝最近怪短冲, 路径挨撞", knife: "撞得急不是莽，是晚一步那块地就凉了。" },
+  { id: "shellturtle", name: "慢慢龟", price: 3000, color: "#4a8a5a", ai: "orbit",   petDmg: 9,  interval: 0.28, petR: 42, tagline: "环壳", desc: "身周一枚环壳擦伤, 不是蜂群", knife: "绕得慢不是懒，是这一圈得一直转着才暖。" },
   { id: "veloursheep", name: "绒绒羊", price: 4000, color: "#F5E9D3", ai: "heal",    petDmg: 8,  interval: 2.05, petR: 64, tagline: "奶砸", desc: "奶一口玩家并砸出弱环", knife: "奶一口，是怕你冷得先走。" }   // 【R18】第 7 只毕业档: 贴图走 TEX-15 独立单格
 ];
 function beastDef(id) {
@@ -10284,22 +10284,22 @@ var DATA_CODEX_GROUP = [
   { id: "boss", name: "BOSS", tint: "#8a5ac2" }
 ];
 var DATA_CODEX_ENEMY = [
-  { id: "rabbit", group: "trash", tell: "直线追人", where: "全章开局杂兵", hint: "最常见, 拉开风筝" },
-  { id: "mouse", group: "trash", tell: "更快更薄", where: "开局鼠波 / 后段混编", hint: "比兔脆, 别被包" },
-  { id: "bear", group: "trash", tell: "厚血贴脸", where: "开局后段主力", hint: "站桩会被贴死" },
-  { id: "hedgehog", group: "trash", tell: "停步喷刺", where: "中段起远程威胁", hint: "驻停窗可走位" },
-  { id: "fox", group: "trash", tell: "尖耳蓬尾", where: "花花谷起混编", hint: "剪影可分, 比兔更快" },
-  { id: "raven", group: "trash", tell: "喙翼", where: "岩岩坡起混编", hint: "剪影可分, 比鼠更快" },
-  { id: "orbitcrab", group: "behave", tell: "绕圈后扑", where: "花花谷蟹阵起", hint: "绕完会扑, 别站圆心" },
-  { id: "boomfruit", group: "behave", tell: "近身自爆", where: "果果林果雨", hint: "红圈前摇, 拉开" },
-  { id: "sporecap", group: "behave", tell: "死亡裂殖", where: "岩岩坡裂殖潮", hint: "先风筝再集火" },
-  { id: "leaptoad", group: "behave", tell: "落点圈砸地", where: "试炼房 / 花花谷蟾跃", hint: "黄圈可走开" },
-  { id: "burrowmole", group: "behave", tell: "钻地破土圈", where: "岩岩坡 / 雾雾泽钻潮", hint: "土堆仍可打" },
-  { id: "badger", group: "elite", tell: "贴脸坦克", where: "各章精英轮换", hint: "打掉才掉袋" },
-  { id: "boar", group: "elite", tell: "高速贴脸", where: "各章精英轮换", hint: "比獾更快更肉" },
-  { id: "monkey", group: "elite", tell: "停步弹弓", where: "岩岩坡起", hint: "驻停窗可插伤" },
-  { id: "chargerhino", group: "elite", tell: "黄道冲撞 · 侧向躲开", where: "果果林起", hint: "贴身会出躲开" },
-  { id: "shieldbug", group: "elite", tell: "近怪减伤环", where: "岩岩坡起", hint: "必须先拆源" },
+  { id: "rabbit", group: "trash", tell: "直线追人", where: "全章开局杂兵", hint: "最常见, 拉开风筝", knife: "直着冲不是莽，是认准了这边还有热气。" },
+  { id: "mouse", group: "trash", tell: "更快更薄", where: "开局鼠波 / 后段混编", hint: "比兔脆, 别被包", knife: "跑得快不是凶，是薄得不敢停。" },
+  { id: "bear", group: "trash", tell: "厚血贴脸", where: "开局后段主力", hint: "站桩会被贴死", knife: "不走开不是凶，是这块地它守了一整夜。" },
+  { id: "hedgehog", group: "trash", tell: "停步喷刺", where: "中段起远程威胁", hint: "驻停窗可走位", knife: "竖起刺不是狠，是它只剩这一身能挡风。" },
+  { id: "fox", group: "trash", tell: "尖耳蓬尾", where: "花花谷起混编", hint: "剪影可分, 比兔更快", knife: "尖着耳朵不是防你，是怕听漏了旧名字。" },
+  { id: "raven", group: "trash", tell: "喙翼", where: "岩岩坡起混编", hint: "剪影可分, 比鼠更快", knife: "盘旋不走不是盯猎物，是在找还亮着的窗。" },
+  { id: "orbitcrab", group: "behave", tell: "绕圈后扑", where: "花花谷蟹阵起", hint: "绕完会扑, 别站圆心", knife: "绕圈不是戏耍，是想从背后护住那点暖。" },
+  { id: "boomfruit", group: "behave", tell: "近身自爆", where: "果果林果雨", hint: "红圈前摇, 拉开", knife: "把自己炸开不是绝路，是熟透前最后换热。" },
+  { id: "sporecap", group: "behave", tell: "死亡裂殖", where: "岩岩坡裂殖潮", hint: "先风筝再集火", knife: "裂开不是不甘，是怕自己冷透了没人接。" },
+  { id: "leaptoad", group: "behave", tell: "落点圈砸地", where: "试炼房 / 花花谷蟾跃", hint: "黄圈可走开", knife: "砸地不是示威，是先把地面焐热一点。" },
+  { id: "burrowmole", group: "behave", tell: "钻地破土圈", where: "岩岩坡 / 雾雾泽钻潮", hint: "土堆仍可打", knife: "往土里钻不是躲你，是下面是暖的。" },
+  { id: "badger", group: "elite", tell: "贴脸坦克", where: "各章精英轮换", hint: "打掉才掉袋", knife: "贴着不放不是凶，是它身后还有一窝要挡。" },
+  { id: "boar", group: "elite", tell: "高速贴脸", where: "各章精英轮换", hint: "比獾更快更肉", knife: "冲得急不是凶，是先替后面挡了风。" },
+  { id: "monkey", group: "elite", tell: "停步弹弓", where: "岩岩坡起", hint: "驻停窗可插伤", knife: "停下来不是犹豫，是在算还够打几次。" },
+  { id: "chargerhino", group: "elite", tell: "黄道冲撞 · 侧向躲开", where: "果果林起", hint: "贴身会出躲开", knife: "不肯拐弯不是犟，是怕一松劲就丢了方向。" },
+  { id: "shieldbug", group: "elite", tell: "近怪减伤环", where: "岩岩坡起", hint: "必须先拆源", knife: "撑起那圈不是护自己，是护着近旁还没醒的。" },
   { id: "honeypot", group: "elite", tell: "粉圈给近怪回血", where: "短章试炼房就能摸到", hint: "打掉奶源才停跳血", knife: "把蜜全给近旁，自己却越来越空。" },
   { id: "rollshell", group: "elite", tell: "石甲蓄力滚撞 · 侧向躲开", where: "芽芽原场上 / 岩岩坡试炼房", hint: "走廊+箭头, 贴身躲开", knife: "壳越滚越厚，里面已经喊不出声。" },
   { id: "boss1", group: "boss", tell: "冲撞走廊 + 扇形三连", where: "各章都有。10 分钟章在 3 分", hint: "侧向躲开, 贴身有字", knife: "举盾不是称王，是还想挡住身后那点暖。" },
@@ -34715,6 +34715,30 @@ function init() {
       };
     },
     saveKeys: function () { return this.save().keys; },
+    // 【v1.173】「淡刀子」覆盖证据口：lore() 用 filter(!!e.knife) 渲染刀语录，
+    //   **缺 knife 的条目会静默消失**（点条目只回退到通用提示），此前无任何门禁可查。
+    //   这里同时给出「全量条数」与「入匣条数」—— 两者不等即说明有文案被静默丢掉。
+    //   ⚠ 必须**两侧都报**：只报入匣数看不出缺口（5 和 21 都是"有值"）。
+    lorePack: function () {
+      var self = this, l = null;
+      try { l = self.lore(); } catch (e) { l = null; }
+      var allE = (typeof DATA_CODEX_ENEMY !== "undefined" && DATA_CODEX_ENEMY) || [];
+      var allB = (typeof DATA_BEAST !== "undefined" && DATA_BEAST) || [];
+      var cnt = function (arr) { var n = 0, i; for (i = 0; i < arr.length; i++) if (arr[i] && arr[i].knife) n++; return n; };
+      return {
+        version: CONFIG.version,
+        enemyTotal: allE.length, enemyWithKnife: cnt(allE),
+        petTotal: allB.length, petWithKnife: cnt(allB),
+        // 入匣数：lore() 里被 filter 放行、真正会渲染的条数
+        enemyInPack: (l && l.enemies) ? l.enemies.length : -1,
+        petInPack: (l && l.pets) ? l.pets.length : -1,
+        missingEnemies: (function () {
+          var out = [], i;
+          for (i = 0; i < allE.length; i++) if (!(allE[i] && allE[i].knife)) out.push(allE[i].id);
+          return out;
+        })()
+      };
+    },
     seek: debugSeekRunTime, phase: rhythmPhase, next: nextRhythmEvent, beat: readBeatClock, major: nextMajorBeat,
     skipBeat: onTapDebugSkipBeat,
     spine: function () {
