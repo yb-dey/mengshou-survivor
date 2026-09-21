@@ -1522,6 +1522,9 @@ var CONFIG = {
     cardBorder: "#8aa85a",
     cardTitle: "#3a5a20",
     cardDesc: "#6a6a5a",
+    // 【v1.167】金色**文字**专用: 原 #c9a24b 压浅面板(实测底色 rgb(238,244,220)) 仅 **2.13:1** 对比度,
+    //   正文标准 4.5:1 → 那行事件时间表几乎读不出。改深金 5.18:1。**只用于文字**, 图形/色签仍用 #c9a24b。
+    cardGold: "#7a6220",
     cardTagNew: "#3faf5a",
     cardTagUp: "#3a7bd5",
     cardLaneWeapon: "#e6c24a",      // 【v1.22】武器车道(金)
@@ -27596,7 +27599,7 @@ function drawChapterPanel(ctx, m) {
   ctx.fillText(chapterRhythmLine(sel) + " · 袋×" + ((sel.gearNodes && sel.gearNodes.length) || 0) +
     " · 武器池 " + chapterWeaponCount(chapterSelIdx) + " 把",
     CONFIG.viewW / 2, py + m.panelH - 72);
-  ctx.fillStyle = "#c9a24b";
+  ctx.fillStyle = c.cardGold;   // 【v1.167】文字用深金(对比度 2.13:1→5.18:1)
   ctx.fillText((chapterSelIdx <= CONFIG.tutorialChapterMax ? "短章 " : "正片 ") + chapterForkLine(chapterSelIdx) + " · " + chapterEventLine(sel), CONFIG.viewW / 2, py + m.panelH - 50);
   var info31 = [];
   if (GAME.runeId) info31.push("当前符文:" + DATA_RUNES[GAME.runeId].name);
@@ -29206,7 +29209,7 @@ function drawResultPanel(ctx, m) {
       (runSummary.petName ? (" · " + runSummary.petName + ((runSummary.petLv | 0) >= 5 ? "满星" : ((runSummary.petLv | 0) + "星"))) : ""));
   ctx.fillText(head, cx, py + 32);
   drawChapterMapStrip(ctx, ch, cx - 260, py + 4, 520, 26);
-  ctx.fillStyle = "#c9a24b";
+  ctx.fillStyle = c.cardGold;   // 【v1.167】文字用深金(对比度 2.13:1→5.18:1)
   ctx.font = "bold 14px " + FONT_STACK;
   ctx.fillText(mapThemeLine(ch), cx, py + 52);
   ctx.fillStyle = runSummary.win ? c.cardTitle : "#8a2a2a";
