@@ -23,11 +23,13 @@ jobs:
         run: python ci/screen-analyze.py ci/out ci/out/analysis.md
       # 【2026-09-21】判据自测先行：文字级可读性判据必须**先证明自己有效**（能区分深字/浅字、
       #   平坦图不误报），才允许用它的输出去下结论。曾因单位混用导致判据全灭 → 无自测就发现不了。
+      #   ⚠ 但自测通过≠判据可用：该判据随后在**真实截图**上被证伪（合成自测有盲区，见文件头横幅）。
       - name: 文字可读性判据自测（阴性对照）
         if: always()
         run: python ci/text-legibility.py --selftest
-      - name: 文字级可读性体检（局部文字-背景对口径）
+      - name: 文字级可读性体检（⛔ 判据已证伪，仅留痕，不影响门禁）
         if: always()
+        continue-on-error: true
         run: python ci/text-legibility.py ci/out ci/out/legibility-text.md
       - name: 上传巡检产物
         if: always()
