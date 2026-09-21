@@ -1,0 +1,52 @@
+name: bgm-melody
+
+# 第十八类病根门禁：BGM「旋律可辨度」—— 旋律层是否被和声垫层掩蔽
+# 口径：从 WAV 实测（16384 点 FFT）逐曲累加功率谱，按调式把功率归到「旋律音 / 垫层音」两组。
+# 不读源码参数 → 结构上不可能漂移。
+#
+# 必跑两个门禁（互补）：
+#   ① ci/bgm-melody.py        —— 旋律是否压得过垫层（层内平衡）
+#   ② ci/bgm-lane-loudness.py —— 同档 peer 有效响度是否齐（跨曲平衡）
+# 二者必须同时绿：抬/降增益能过其中一个，但很容易打散另一个（见「峰值归一陷阱」）。
+on:
+  push:
+    paths:
+      - 'game/audio/bgm_*.wav'
+      - 'ci/bgm-melody.py'
+      - 'ci/bgm-lane-loudness.py'
+      - 'ci/render-missing-bgm.mjs'
+      - '.github/workflows/bgm-melody.yml'
+  workflow_dispatch:
+
+jobs:
+  melody:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 判据自测（阴性对照）
+        run: python ci/bgm-melody.py --selftest
+
+      - name: 旋律可辨度门禁（正式）
+        run: |
+          set -o pipefail
+          python ci/bgm-melody.py 2>&1 | tee bgm-melody.md
+
+      - name: 场景响度连续性（同档 peer / 切换链）
+        run: |
+          set -o pipefail
+          python ci/bgm-lane-loudness.py --selftest
+          python ci/bgm-lane-loudness.py 2>&1 | tee bgm-lane-loudness.md
+
+      - name: 上传报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bgm-melody-report
+          path: |
+            bgm-melody.md
+            bgm-lane-loudness.md
+          retention-days: 14
