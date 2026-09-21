@@ -31351,7 +31351,10 @@ function drawSettingsPanel(ctx, m) {
   //   (实测占屏高 22.5%，是设置页最大的观感问题: 空占比 36.1%、主色占比 57.9%)。
   //   默认态: 面板 1060→880、底部说明与返回键各上移 216; 出现导出码时**与改动前完全一致**(零回归)。
   var setBoxOn = (uiExportCode !== "");
-  m.panelH = setBoxOn ? 1060 : 880;
+  // 【v1.167c】再收一档(CI 实测仍剩 101px 死区)：四个控件 64 高/间距 12 → "导入存档"底 = py+560，
+  //   页脚放 py+600(固定 40 间距、与面板高解耦)，返回键 py+660，面板高 = 660+64+40 = 764。
+  var setCompact2 = 1;
+  m.panelH = setBoxOn ? 1060 : 764;
   var py = (CONFIG.viewH - m.panelH) / 2;
   var px = (CONFIG.viewW - m.panelW) / 2;
   // 【v1.167b】⚠ 修我自己引入的重叠：面板改矮后 py 由 110 变 200，而音频行/4 个按钮仍锚在
@@ -31366,8 +31369,8 @@ function drawSettingsPanel(ctx, m) {
   if (uiSetBgm) uiSetBgm.rect.y = 454 + setD;
   if (uiSetExport) uiSetExport.rect.y = 530 + setD;
   if (uiSetImport) uiSetImport.rect.y = 606 + setD;
-  if (uiSetClose) uiSetClose.rect.y = py + (setBoxOn ? 970 : 754);
-  var setFootY = py + (setBoxOn ? 890 : 674);
+  if (uiSetClose) uiSetClose.rect.y = py + (setBoxOn ? 970 : 660);
+  var setFootY = py + (setBoxOn ? 890 : 600);
   // 【v1.155】设置页字阶对齐暂停/结算: 标题 40→34 + 细墨分隔线 + 音频分区小签, 导出码落苔纸盘
   ctx.fillStyle = c.cardTitle;
   ctx.textAlign = "center";
