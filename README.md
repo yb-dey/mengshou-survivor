@@ -18,7 +18,7 @@
 game/
   萌兽消消岛.html     内联母版（贴图 base64 全内联，双击即玩）
   assets/            AI 贴图（7 个精灵图集 / 2.17MB）
-  audio/             BGM + SFX（25 个 wav / 6.80MB）
+  audio/             BGM + SFX（29 个 wav / 7.10MB）
 ci/                  云端脚本（在 Actions 上跑）
   out/               产物目录（截图 / 报告，git 忽略）
 .github/workflows/   8 条流水线
@@ -64,6 +64,7 @@ dist/                外链分发版（由 ci/build-dist.js 生成，不手工�
 |---|---|---|
 | `verify.mjs` | 双通道加载验证（file:// vs http://），产出 `report.json/md` + 截图 | push 自动 |
 | `assert-dist-audio.mjs` | 断言 `dist/audio` 与源目录**逐字节大小一致**，缺失 exit 1 | verify-dist |
+| `assert-audio-map.mjs` | **音频映射一致性**：4 方一致 —— `gains`(渲染) / `sfxFiles`(加载) / `DATA_SFX`(**消费方**，66 事件落回 19 buffer) / 磁盘文件；含 **6 项**阴性对照 | verify-dist（GATE） |
 | `final-audit.mjs` | 三形态**内容级**复核：音频 md5 + 贴图键数 + 外链化 + 体积口径 | verify-dist |
 | `beast-art-audit.mjs` | 跟宠贴图入库体检（`TABLE_MODE=1` 只跑接线级，免浏览器） | verify-dist |
 | `find-dead-art.mjs` | AI 表死数据扫描（**只报不删**；"被跳过 ≠ 死"） | 手动 |
@@ -83,6 +84,36 @@ dist/                外链分发版（由 ci/build-dist.js 生成，不手工�
 > **判据自测必须含"能量口径"验证**：`sfx-loudness` 的 C 项（峰值相同、一尖脉冲一持续音，
 > 实测响度差 **44.7dB**）证明它测的是**能量**而不是**峰值**。缺这一项，
 > 一个"其实在测峰值"的响度判据会**全绿通过自测**。
+
+### 🕳 「两张表各自自洽」是静默降级的温床（2026-09-21 实测第三例）
+
+**现象**：`CONFIG.audio.gains` 有 **19** 个 SFX 键（`_renderAll()` 按它程序化渲染 19 个），
+而 `AUDIO_ASSET.sfxFiles` 只有 **15** 个键（`tryLoadLocalFiles()` 按它 fetch）
+→ 多出的 4 个（`SFX_CARDSHOW` / `SFX_CHEST` / `SFX_EVENT` / `SFX_REVIVE`）
+**永远拿不到外采文件**，静默走程序化兜底。
+
+**影响面**：这 4 个覆盖 **10 个埋点** —— 全部 5 个章事件提示 + 复活 + revivecard + 开箱 + 弹卡 + eventgift。
+也就是玩家听到的**全部章事件提示音**都在降级。
+
+**为什么所有既有门禁都没抓到**：
+- 两张表**各自都自洽** → 单独看谁都不错
+- 文件路径是**运行时按表拼接**（`audioAssetFileName()`），全仓库无字面量 → 正则/lint/构建全看不见
+- `assert-dist-audio.mjs` 数的是"HTML 声明的音频"，而声明本身就是缺的 → **口径被污染，永远 PASS**
+
+**修法**：
+1. `ci/render-missing-sfx.mjs` 的渲染清单从"声明表"改为 **`CONFIG.audio.gains` 的键集**
+2. 渲染 4 个节点音（同源合成器公式，零新增音色）
+3. 补进 `AUDIO_ASSET.sfxFiles`（**不补的话文件渲了也 fetch 不到**）
+4. 新增 `ci/assert-audio-map.mjs` 作 GATE，含 6 项阴性对照
+
+**同类第三例**（前两例：`dist/` 长期 0 音频 / `sfxFiles` 少 4 键）：
+→ 共同点 = **"运行时按表拼接的路径"必须从"会被使用的集合"反推清单再比对产物**，
+不能从"已经声明了什么的表"里数。
+
+> **附带修复**：`_qc/sync-deploy.js` 的 `ROOT/dist` 指向**顶层废弃副本**（旧 HTML + 25 个音频），
+> 而真身在 `.workbuddy/v1.162/mengshou/dist`（29 个）。后果是 deploy 一直同步旧产物，
+> 且脚本的"音频声明 25 / 缺失 0 ✓"是从**它自己同步过去的旧产物**里数的 → **永远自洽、永远 PASS**。
+> 已修正路径 + 改为**以母版 HTML 声明为准**，并把 dist 侧缺口也计入 exit code。
 > **黄金做法**：判据在真实产物上跑 + 配「已知无信号区」对照 + 阴性样本必须**物理上真含信号**。
 
 ### 体检类（产出报告 + 截图）
