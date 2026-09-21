@@ -8428,7 +8428,7 @@ var DATA_PASSIVE = {
   windbell: { id: "windbell", name: "风之铃",   maxLv: 5, per: { movePct: 0.04 }, tag: "机动", desc: "移速+4%/级; 短冲刺 0.5s x2 速(CD 30s, 5 级 20s); 与风车草籽成档=冲刺留铃浪" },  // 短冲刺 [来源]; 【v1.41】疾风对偶
   moss:     { id: "moss",     name: "苔藓护甲", maxLv: 5, per: { armorPct: 0.04, regen: 0.1 }, tag: "生存", desc: "受击减伤 4%/级, 回血+0.1/s/级; 与晨露菇成档=受击绽露甲" },  // 【v1.43】磐石对偶
   magnet:   { id: "magnet",   name: "磁石蘑菇", maxLv: 5, per: { pickupPct: 0.10, magnetPct: 0.20 }, tag: "经济", desc: "拾取半径+10%/级, 磁吸+20%/级; 与智慧果成档=拾珠爆金环, 珠越大环越狠" },   // 【v1.26】咕石分叉B磁砾密环; 【v1.46】聚宝对偶
-  wisdom:   { id: "wisdom",   name: "智慧果",   maxLv: 5, per: { xpPct: 0.08, mergePct: 0.02 }, tag: "经济", desc: "XP+8%/级, 宝石合并值+2%/级; 与磁石蘑菇成档=大珠爆大环刮伤吸珠" },   // R6: xpPct 5%→8%【R6】; 【v1.46】聚宝对偶
+  wisdom:   { id: "wisdom",   name: "智慧果",   maxLv: 5, per: { xpPct: 0.08, mergePct: 0.02 }, tag: "经济", desc: "XP+8%/级, 宝石合并值+2%/级; 与磁石蘑菇成档=拾珠爆金环·珠越大环越狠, 刮伤吸珠" },   // R6: xpPct 5%→8%【R6】; 【v1.46】聚宝对偶
   dandelion: { id: "dandelion", name: "蒲公英球", maxLv: 5, per: { sizePct: 0.12, armorPct: 0.02 }, tag: "环绕+生存", desc: "弹体体积+12%/级, 受击减伤+2%/级; 与扎根苔成档=站住生绒田刮伤减速" },   // 【R18】环绕 tag 第二件; 【v1.21】解锁蜂群分叉B绒球卫队; 【v1.48】扎根对偶
   spinachseed: { id: "spinachseed", name: "风车草籽", maxLv: 5, per: { movePct: 0.06 }, tag: "机动", desc: "移速+6%/级; 与风之铃成档=冲刺留铃浪刮伤", chMin: 3 },   // 【R18】机动 tag 第二件; 【v1.15】松果分叉B; 【v1.21】飞叶分叉B; 【v1.41】疾风对偶
   dewcap: { id: "dewcap", name: "晨露菇", maxLv: 5, per: { regen: 0.25 }, tag: "生存", desc: "回血+0.25/s/级; 与苔藓护甲成档=受击绽露甲回血推开", chMin: 5 },   // 【R18】生存 tag 第二件; 【v1.15】正片起入池, 接脉冲花环分叉; 【v1.43】磐石对偶
@@ -10175,7 +10175,7 @@ function synCardHint(opt) {
   }
   if ((opt.kind === "newPassive" || opt.kind === "upPassive") && hoardIsPairId(opt.id)) {
     if (hoardWouldHold(opt) && !hoardPairOn()) {
-      return { tone: "complete", text: "成档 聚宝 · 大珠爆大环", tags: ["经济"], pair: "hoard" };
+      return { tone: "complete", text: "成档 聚宝 · 拾珠爆金环", tags: ["经济"], pair: "hoard" };
     }
     if (hoardPairOn()) {
       return { tone: "active", text: "已成档 聚宝 · 珠越大环越狠", tags: ["经济"], pair: "hoard" };
