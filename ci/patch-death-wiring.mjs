@@ -78,6 +78,19 @@ insertAfter(
   '4/4 开新局清空（防跨局污染）'
 );
 
+// ---------- 5) 让 buildSprites 真的去构建 <id>_dead 贴图 ----------
+//   关键：AI_ART_TABLE 里有键 ≠ SPRITES 会构建。构建是按 DATA_ENEMY 遍历出来的，
+//   漏了这一步就会 deadSprites=0（实测踩过：以为注入了就能用）。
+insertAfter(
+  '      if (AI_ART_READY[eid + "_hit"]) {\n        SPRITES[eid + "_hit"] = makeEnemySprite(ed.r, ecol, eid + "_hit");\n      }',
+  `
+      // 【v1.166】死亡帧（可选）：与受击帧同款「有 AI 图才建」，复用同一 r → vis/pad/half 与本体完全一致
+      if (AI_ART_READY[eid + "_dead"]) {
+        SPRITES[eid + "_dead"] = makeEnemySprite(ed.r, ecol, eid + "_dead");
+      }`,
+  '5/5 buildSprites 构建 _dead 贴图（关键：不接这步 deadSprites=0）'
+);
+
 fs.writeFileSync(P, html, 'utf8');
 console.log(log.join('\n'));
 console.log('');
