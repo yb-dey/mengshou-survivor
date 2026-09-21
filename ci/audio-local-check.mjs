@@ -28,11 +28,12 @@ function parse(file) {
 
 function metrics(o) {
   const { d, frames, fmt } = o;
-  let peak = 0, sum = 0, clips = 0;
+  let peak = 0, sum = 0, clips = 0, hi = 0;
   for (let i = 0; i < frames; i++) {
     const v = d[i], a = Math.abs(v);
     if (a > peak) peak = a;
     if (a >= 0.999) clips++;
+    if (a > 0.90) hi++;
     sum += v * v;
   }
   const rms = Math.sqrt(sum / Math.max(1, frames));
@@ -45,7 +46,8 @@ function metrics(o) {
     diffs.sort((a, b) => a - b);
     seam = +(jump / (diffs[Math.floor(diffs.length * 0.95)] || 1e-6)).toFixed(2);
   }
-  return { dur: frames / fmt.rate, peak, rms, clips, seam, rate: fmt.rate, bits: fmt.bits, ch: fmt.ch };
+  return { dur: frames / fmt.rate, peak, rms, clips, seam, hi, hiFrac: hi / Math.max(1, frames),
+           rate: fmt.rate, bits: fmt.bits, ch: fmt.ch };
 }
 
 const files = fs.readdirSync(dir).filter((f) => /\.wav$/i.test(f)).sort();
@@ -62,7 +64,17 @@ for (const f of files) {
   if (m.ch !== 1) issues.push('非单声道');
   if (o.declaredBytes !== o.expectBytes) issues.push('data块长度不符');
   if (m.clips > 0) issues.push(`削波${m.clips}`);
-  if (m.peak > 0.75) issues.push('峰值过高');
+  // 峰值判据（v1.179 修订）：
+  //   ⚠ 旧版是裸阈值 `peak > 0.75` —— 那是"平峰归一(peakNorm=0.708)时代"的**等值检查**，
+  //     隐含要求"所有音频必须贴 0.708"。而平峰归一正是 BGM 响度不齐的病根（见
+  //     ci/bgm-lane-loudness.py），修复后有曲目**有意**使用更高峰值（bgm_abyss 靠瞬态
+  //     换整曲响度）。裸阈值会把"有意设计"误判为缺陷。
+  //   改为按"头部占用是否为单点瞬态"区分：
+  //     · peak ≤ 0.95            → 正常
+  //     · peak > 0.95 且 >0.90 样本占比 < 0.1% → 单点瞬态顶点，合法（距满刻度仍有余量）
+  //     · peak > 0.99 或 高位样本成片 → 过烫/逼近削波，报错
+  if (m.peak > 0.99) issues.push('峰值逼近满刻度');
+  else if (m.peak > 0.95 && m.hiFrac >= 0.001) issues.push(`峰值过高且成片（>0.90 占 ${(100 * m.hiFrac).toFixed(2)}%）`);
   if (m.rms < 0.01) issues.push('过轻');
   if (m.seam !== null && m.seam >= 4) issues.push(`接缝${m.seam}`);
   if (issues.length) fail++;
