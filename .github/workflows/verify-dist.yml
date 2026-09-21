@@ -49,6 +49,14 @@ jobs:
       - name: BGM 频谱重心与编排平衡体检（仅提示，不作门禁）
         run: mkdir -p ci/out && python ci/bgm-spectrum.py game/audio ci/out/bgm-spectrum.md
 
+      # 【2026-09-21】SFX 响度层级：量的是**能量加权响度**（简化 K 加权），不是峰值——
+      #   峰值无法区分"尖脉冲"与"持续音"（自测 C 实测两者差 44.7dB 而峰值相同）。
+      #   判据立场：高频事件必须低于低频事件，否则长局磨耳朵。
+      - name: SFX 响度判据自测（阴性对照）
+        run: python ci/sfx-loudness.py --selftest
+      - name: SFX 响度层级体检（仅提示，不作门禁）
+        run: mkdir -p ci/out && python ci/sfx-loudness.py game/audio ci/out/sfx-loudness.md
+
       - name: 安装 Playwright
         run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
 
