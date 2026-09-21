@@ -12,13 +12,18 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
-const ROOT = process.env.PROJECT_ROOT || 'D:/新建文件夹/方向3';
-const MENGSHOU = process.env.MENGSHOU_DIR || (ROOT + '/.workbuddy/v1.162/mengshou');
-const SRC_HTML = process.argv[2] || (MENGSHOU + '/game/萌兽消消岛.html');
+// ⚠ 不要写死本机绝对路径 —— CI 的工作目录是仓库根（`/home/runner/work/...`），
+//   写死绝对路径在云端必 ENOENT（本项目已踩过两次同类坑）。
+//   默认全部相对 cwd；本地跑 deploy 在仓库外，用 argv/环境变量覆盖即可。
+const HERE = process.cwd();                       // 仓库根（本地 = CI 一致）
+const MENGSHOU = process.env.MENGSHOU_DIR || HERE;
+const SRC_HTML = process.argv[2] || path.join(MENGSHOU, 'game',
+  fs.readdirSync(path.join(MENGSHOU, 'game')).find((f) => f.toLowerCase().endsWith('.html')));
 const SRC_AUDIO = path.join(path.dirname(SRC_HTML), 'audio');
-const DIST = process.argv[3] || (MENGSHOU + '/dist');
-const DEPLOY = process.argv[4] || (ROOT + '/deploy');
-// deploy/ 在本地仓库之外（CI 里不存在）→ 不给路径就跳过，并**显式说明跳过**
+const DIST = process.argv[3] || path.join(MENGSHOU, 'dist');
+// deploy/ 默认在仓库**外**的上一层（本地 D:/新建文件夹/方向3/deploy）；
+// 不存在则跳过相关检查，并**显式说明跳过**（不静默、也不误判为失败）。
+const DEPLOY = process.argv[4] || process.env.DEPLOY_DIR || path.resolve(MENGSHOU, '../..', 'deploy');
 const SKIP_DEPLOY = process.env.SKIP_DEPLOY === '1' || !fs.existsSync(DEPLOY);
 
 const fail = [];
