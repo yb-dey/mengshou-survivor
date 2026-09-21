@@ -59,6 +59,16 @@ jobs:
         continue-on-error: true
         run: node ci/verify.mjs
 
+      # 【v1.172】⚠ 收口步骤 —— 否则上面那句「（门禁）」是**空话**：
+      #   `continue-on-error: true` 让验证失败**不影响 job 结论**，job 照样打绿勾。
+      #   （与 verify-dist.yml / optimize-art.yml 同型的"守卫永远通过"反模式。）
+      - name: 门禁收口（验证结论必须为 success，否则本步骤失败）
+        if: always()
+        run: |
+          out="${{ steps.verify.outcome }}"
+          if [ "$out" = "success" ]; then echo "✅ verify = success";
+          else echo "::error::死亡帧/受击帧接入后验证未通过（verify=$out）—— 见产物 death-frames-result 里的 report.md"; exit 1; fi
+
       - name: 上传结果与验证产物
         if: always()
         uses: actions/upload-artifact@v4
