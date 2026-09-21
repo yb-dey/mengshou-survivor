@@ -55,18 +55,32 @@ const info = await page.evaluate(() => {
     try {
       const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
       let opaque = 0, total = 0;
-      for (let i = 3; i < d.length; i += 4) { total++; if (d[i] > 8) opaque++; }
-      stats[k] = { w: cv.width, h: cv.height, half: cv.half ?? null, fillPct: +(opaque / total * 100).toFixed(1) };
+      // 颜色丰富度：AI 位图颜色多；程序化剪影/纯色块颜色极少 → 用它区分「AI 贴图 vs 程序化回退」
+      const pal = new Set();
+      for (let i = 0; i < d.length; i += 4) {
+        total++;
+        if (d[i + 3] > 8) {
+          opaque++;
+          if (pal.size < 64) pal.add((d[i] >> 3) * 1024 + (d[i + 1] >> 3) * 32 + (d[i + 2] >> 3));
+        }
+      }
+      stats[k] = { w: cv.width, h: cv.height, half: cv.half ?? null,
+                   fillPct: +(opaque / total * 100).toFixed(1), colors: pal.size };
     } catch (e) { stats[k] = { err: String(e).slice(0, 60) }; }
   }
-  // 看看有没有暴露美术状态
   const D = window.MENGSHOU_DEBUG || {};
   const artHooks = Object.keys(D).filter((k) => /art|sprite|skin|ready/i.test(k));
   return { count: keys.length, keys, stats, artHooks };
 });
 
-console.log('SPRITES 条目: ' + info.count);
-console.log('美术相关调试钩子: ' + (info.artHooks.join(', ') || '(无)'));
+// 疑似「程序化回退」= 颜色极少（<=4）且不透明占比正常
+const flat = Object.entries(info.stats)
+  .filter(([, v]) => typeof v.colors === 'number' && v.colors <= 4)
+  .map(([k, v]) => k + '(' + v.colors + '色,' + v.w + 'px)');
+const rich = Object.values(info.stats).filter((v) => typeof v.colors === 'number' && v.colors > 16).length;
+console.log('SPRITES 条目: ' + info.count + '  颜色丰富(>16色, 疑似AI): ' + rich +
+            '  颜色极少(<=4色, 疑似程序化): ' + flat.length);
+if (flat.length) console.log('  疑似程序化清单: ' + flat.join(', '));
 
 // 联系表
 const sheet = await page.evaluate((keys) => {
@@ -129,13 +143,18 @@ const md = [
   '# 美术审计（基于实际绘制的 SPRITES）',
   '',
   '- SPRITES 条目: **' + info.count + '**',
-  '- 美术调试钩子: ' + (info.artHooks.join(', ') || '(无)'),
+  '- 颜色丰富（>16 色，疑似 AI 位图）: **' + rich + '**',
+  '- 颜色极少（≤4 色，疑似程序化回退）: **' + flat.length + '**',
   '',
-  '## 逐项尺寸与非透明占比',
+  '## 疑似程序化回退清单（颜色 ≤4，是最可能的「缺美术」候选）',
   '',
-  '| id | 尺寸 | half | 非透明占比 |',
-  '|---|---|---|---|',
-  ...Object.entries(info.stats).map(([k, v]) => '| ' + k + ' | ' + (v.w || '-') + '×' + (v.h || '-') + ' | ' + (v.half ?? '-') + ' | ' + (v.fillPct ?? v.err ?? '-') + '% |'),
+  ...(flat.length ? flat.map((f) => '- `' + f + '`') : ['（无）']),
+  '',
+  '## 逐项：尺寸 / half / 非透明占比 / 颜色数',
+  '',
+  '| id | 尺寸 | half | 非透明% | 颜色数 |',
+  '|---|---|---|---|---|',
+  ...Object.entries(info.stats).map(([k, v]) => '| ' + k + ' | ' + (v.w || '-') + '×' + (v.h || '-') + ' | ' + (v.half ?? '-') + ' | ' + (v.fillPct ?? v.err ?? '-') + ' | ' + (v.colors ?? '-') + ' |'),
   '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'report.md'), md);
