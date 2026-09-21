@@ -162,23 +162,38 @@ function renderOne(id) {
     tone(out, { wave: "triangle", f0: 880, f1: 220, t0: 0, dur: 0.7, a: 0.002, d: 0.42, s: 0.16, r: 0.3, gain: 1 });
     tone(out, { wave: "sine", f0: 2200, f1: 440, t0: 0.1, dur: 0.55, a: 0.002, d: 0.45, s: 0.05, r: 0.22, gain: 0.4 });
     tone(out, { wave: "sine", f0: 130, f1: 62, t0: 0.12, dur: 0.62, a: 0.01, d: 0.22, s: 0.2, r: 0.24, gain: 0.5 });
-  } else if (id === "SFX_WIN") { out = alloc(0.9);
+  } else if (id === "SFX_WIN") { out = alloc(1.02);
+    // 【v1.175】与母版逐字一致 —— 补"绽开"修辞(亮尾 C7 琶音 + 微失谐 shimmer + 五度高亮层 + 每音 +2% 上扬)。
+    //   ⚠ 本文件是"外采 wav"渲染器, 与母版 `_renderOne` **必须逐字同源**, 否则两条通路分叉
+    //     (外采文件一到位, 程序合成版就被换掉 → 修复静默失效)。
     const wf = [523, 659, 784, 1046];
-    for (let i = 0; i < 4; i++) tone(out, { wave: "triangle", f0: wf[i], t0: i * 0.15, dur: 0.45, a: 0.024, d: 0.28, s: 0.16, r: 0.2, gain: 0.84 });
+    for (let i = 0; i < 4; i++) tone(out, { wave: "triangle", f0: wf[i], f1: wf[i] * 1.02, t0: i * 0.15, dur: 0.45, a: 0.024, d: 0.28, s: 0.16, r: 0.2, gain: 0.95 });
+    const wtail = [1046.5, 1318.5, 1568.0, 2093.0];
+    for (let i = 0; i < 4; i++) tone(out, { wave: "sine", f0: wtail[i], t0: 0.58 + i * 0.055, dur: 0.26, a: 0.004, d: 0.09, s: 0.02, r: 0.14, gain: 0.34 });
+    tone(out, { wave: "sine", f0: 1568.0, t0: 0.56, dur: 0.42, a: 0.016, d: 0.18, s: 0.10, r: 0.2, gain: 0.16 });
+    tone(out, { wave: "sine", f0: 1571.6, t0: 0.56, dur: 0.42, a: 0.016, d: 0.18, s: 0.10, r: 0.2, gain: 0.13 });
+    tone(out, { wave: "triangle", f0: 1568.0, t0: 0.42, dur: 0.34, a: 0.02, d: 0.12, s: 0.08, r: 0.16, gain: 0.14 });
     // 【v1.170】补低音基础层（与游戏 _renderAll 逐字一致）: 原 win/lose 都是纯四音 triangle、
     //   完全没有低音层 → 实测 sfx_win 的 low 与 lowmid **双双 0.0%**, 是 6 个 INFREQ 里唯一低频全空的。
     //   ⚠ 增益是**扫出来的**(用 sfx-loudness.py 的 analyze 评候选):
     //     首版 0.78/0.62 把 low 抬到 15.2%, 但低音层抢了峰值 → 归一后整体变轻 1.2dB,
     //     把 INFREQ 档中位从 -16.8 拉到 -18.2 → 与 FREQ 的档位差距 3.9dB 缩到 2.5dB(设计意图被削弱)。
     //     最终取 0.30/0.20 + 旋律 0.84→0.95: **low 仍有 ~7%, 而响度回到 -17.69**(目标 -17.1)。
-    tone(out, { wave: "sine", f0: 65.41,  t0: 0, dur: 0.9, a: 0.03,  d: 0.3,  s: 0.62, r: 0.3,  gain: 0.30 });
-    tone(out, { wave: "sine", f0: 130.81, t0: 0, dur: 0.9, a: 0.025, d: 0.28, s: 0.55, r: 0.26, gain: 0.20 });
-  } else if (id === "SFX_LOSE") { out = alloc(0.9);
-    const lf = [523, 440, 349, 262];
-    for (let j = 0; j < 4; j++) tone(out, { wave: "triangle", f0: lf[j], t0: j * 0.15, dur: 0.45, a: 0.026, d: 0.3, s: 0.15, r: 0.22, gain: 0.93 });
+    tone(out, { wave: "sine", f0: 65.41,  t0: 0, dur: 1.02, a: 0.03,  d: 0.3,  s: 0.62, r: 0.34, gain: 0.30 });
+    tone(out, { wave: "sine", f0: 130.81, t0: 0, dur: 0.98, a: 0.025, d: 0.28, s: 0.55, r: 0.3,  gain: 0.20 });
+  } else if (id === "SFX_LOSE") { out = alloc(1.35);
+    // 【v1.175】与母版逐字一致 —— 补"沉降"修辞(8 个短音 + 每音 −1.5% 下坠 + 长下滑 sub + 暗色 saw pad + 散场气声)。
+    const lf = [523, 523, 440, 440, 349, 349, 262, 220];
+    for (let j = 0; j < 8; j++) tone(out, { wave: "triangle", f0: lf[j], f1: lf[j] * 0.985, t0: j * 0.095, dur: 0.14, a: 0.026, d: 0.22, s: 0.42, r: 0.22, gain: 1.8 });
+    tone(out, { wave: "sine", f0: 200, f1: 38, t0: 0.55, dur: 0.8, a: 0.02, d: 0.22, s: 0.5, r: 0.4, gain: 0.42 });
+    tone(out, { wave: "saw", f0: 87.3, t0: 0.24, dur: 0.92, a: 0.12, d: 0.34, s: 0.4, r: 0.36, gain: 0.16 });
+    noise(out, { t0: 0.62, dur: 0.68, a: 0.22, r: 0.4, gain: 0.06, seed: 91 });
     // 【v1.170】同档补齐低音层(与 win 对称; 下行曲用更低更暗的 A2 承托"落句", 增益略低维持档位关系)
-    tone(out, { wave: "sine", f0: 55.0,  t0: 0, dur: 0.9, a: 0.035, d: 0.32, s: 0.58, r: 0.34, gain: 0.28 });
-    tone(out, { wave: "sine", f0: 110.0, t0: 0, dur: 0.9, a: 0.03,  d: 0.3,  s: 0.52, r: 0.3,  gain: 0.18 });
+    //   【v1.175】低音床 gain 0.28/0.18→0.42/0.30、s 0.58/0.52→0.80/0.72:
+    //     新结构里 sub/saw/气声都是**宽包络层**, 会把峰值抬高 → 归一后稀释 RMS。
+    //     逐层量过后用低音床补回(它持音长、能量密度高), 使 RMS 0.1591→0.1587、ΔLUFS 基本不变。
+    tone(out, { wave: "sine", f0: 55.0,  t0: 0, dur: 1.34, a: 0.035, d: 0.32, s: 0.80, r: 0.5,  gain: 0.42 });
+    tone(out, { wave: "sine", f0: 110.0, t0: 0, dur: 1.20, a: 0.03,  d: 0.3,  s: 0.72, r: 0.35, gain: 0.30 });
   } else {
     out = alloc(0.01);
   }
