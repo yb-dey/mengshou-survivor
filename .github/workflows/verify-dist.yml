@@ -96,6 +96,16 @@ jobs:
           VERIFY_DIR: dist
         run: node ci/stress-perf.mjs
 
+      # 【v1.172】存档完整性体检：SAVE_SCHEMA/迁移链/钳制是**唯一持久化通道**，
+      #   而 Storage.load 的 catch **静默**落 defaultSave() —— 存档损坏时玩家只看到
+      #   "进度没了"，没有报错/崩溃/日志。这类缺陷不被任何现有门禁发现。
+      #   四组断言：结构完整 / chk 篡改拒绝(带正对照) / 六类脏值必须被钳制 / v1→v7 迁移不吞旧值。
+      - name: 存档完整性体检（结构/篡改/钳制/迁移）
+        continue-on-error: true
+        env:
+          VERIFY_DIR: dist
+        run: node ci/save-integrity.mjs
+
       - name: 上传验证产物
         if: always()
         uses: actions/upload-artifact@v4
