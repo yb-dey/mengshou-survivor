@@ -113,6 +113,11 @@ function renderTrack(tid) {
     tone(out, { wave: "sine", f0: 65.41,  t0: 0, dur: loopSec, a: 0.14, d: 0.5,  s: 0.3,  r: 0.6, gain: 0.30 });  // C2 胸腔层
     tone(out, { wave: "sine", f0: 130.81, t0: 0, dur: loopSec, a: 0.12, d: 0.45, s: 0.24, r: 0.6, gain: 0.24 }); // C3
     tone(out, { wave: "sine", f0: 132.0,  t0: 0, dur: loopSec, a: 0.12, d: 0.45, s: 0.24, r: 0.6, gain: 0.16 }); // C3 微失谐(破相位抵消)
+    // 【v1.170】中低音接续层: melody 从 C5(523) 起, 低音只到 C3(131) → 中间 C4(262) 空一节,
+    //   实测 lowmid(250-500Hz) 仅 0.02% (lose 72.6% / 场景曲 11-43%) = 声音"空心"。
+    //   补 C 大调的三音 G3=196Hz(和弦本身的音, 不引入新音级) + C4 根音, 把两层缝起来。
+    tone(out, { wave: "triangle", f0: 196.0,  t0: 0, dur: loopSec, a: 0.1, d: 0.4, s: 0.2, r: 0.6, gain: 0.14 }); // G3 五音
+    tone(out, { wave: "triangle", f0: 261.63, t0: 0, dur: loopSec, a: 0.1, d: 0.4, s: 0.2, r: 0.6, gain: 0.11 }); // C4 根音
 
   } else if (tid === "lose") {
     // 【v1.160】a 小调下行
