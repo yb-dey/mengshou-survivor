@@ -26516,7 +26516,7 @@ function makeButton(id, x, y, w, h, label, onTap) {
       else if (tone === "locked") { /* 【v1.167e】vaultLockedQuiet：锁住的状态该“安静”——原深灰实心(#5a5348)+浅字比可操作态还重，且与卡内“未解锁”小签重复喊话；改浅色描边 ghost 样式（墨字 4.74:1 达标），响亮留给可操作态。回退：fill=#5a5348 / stroke=#8a7a58 / ink=#efe6c8 */ fill = "rgba(16,20,14,0.06)"; stroke = "rgba(42,58,24,0.35)"; ink = "#6a6a58"; }
       // 【v1.157】done 档(满级/已入仓/静音关)去金盘: 苔纸+细墨缘+深墨字, 对齐仓库行卡状态签; 按下态仍走 widgetPressed 加粗
       else if (tone === "done") { fill = "#dde8c2"; stroke = "rgba(42,58,24,0.55)"; ink = "#3a4626"; }
-      else if (tone === "poor") { fill = "#6a3030"; stroke = "#c0392b"; ink = "#ffe0d4"; }
+      else if (tone === "poor") { /* 【v1.167g】tonePoorQuiet：“差N金”是**中性信息态**不是错误——原深红实心(#6a3030)+红缘把强化页铺成 11 个红签，整屏读作报错；改琥珀静默样式（本作价格语言本就是琥珀 #a06a10/#8a5a10）。回退：fill=#6a3030 / stroke=#c0392b / ink=#ffe0d4 */ fill = "rgba(138,90,16,0.12)"; stroke = "rgba(138,90,16,0.55)"; ink = "#7a5210"; }
       else if (tone === "arm") { fill = "#b86a10"; stroke = "#ffe082"; ink = "#fff7e0"; }
       else if (tone === "idle") { fill = "#3a4a32"; stroke = "#8aaa70"; ink = "#fff7e0"; }
       ctx.fillStyle = fill;
