@@ -7208,7 +7208,8 @@ function noteCombatGot(id, src) {
 }
 function pausePanelRect() {
   var w = CONFIG.pausePanelW || 660;
-  var h = CONFIG.pausePanelH || 1120;
+  // 【v1.167】面板高优先取"按内容算出的自适应高"；未算过 → 回退原常量 1120（零回归）
+  var h = GAME.pausePanelFitH || CONFIG.pausePanelH || 1120;
   return {
     x: (CONFIG.viewW - w) / 2,
     y: (CONFIG.viewH - h) / 2,
@@ -26685,6 +26686,25 @@ function bindPauseBuildChips() {
   hidePauseBuildChips();
   if (GAME.state !== GAME.flow.PAUSED_MENU) return;
   view = pauseBuildView();
+  // 【v1.167】先按内容算"需要多高"，再定面板高 —— 实测原来固定 1120，内容少时底部留 261px 死区（全屏最大）
+  (function () {
+    var g = CONFIG.pauseChipGap || 6, ch0 = CONFIG.pauseChipH || 40;
+    var lns = [
+      { id: "weapon", rows: view.weapons }, { id: "combat", rows: view.combat },
+      { id: "passive", rows: view.passives }, { id: "evo", rows: view.evos },
+      { id: "pair", rows: view.pairs }
+    ];
+    var need = 0, k, rr, cc;
+    for (k = 0; k < lns.length; k++) {
+      rr = lns[k].rows || [];
+      need += 20;
+      if (!rr.length) { need += 16; continue; }
+      cc = (lns[k].id === "pair" || lns[k].id === "evo")
+        ? (rr.length <= 4 ? Math.max(1, rr.length) : (rr.length <= 6 ? 3 : 4)) : 2;
+      need += Math.ceil(rr.length / cc) * (ch0 + g) + 6;
+    }
+    GAME.pausePanelFitH = Math.max(700, Math.min(CONFIG.pausePanelH || 1120, 528 + need + 12));
+  })();
   panel = pausePanelRect();
   x = panel.x + 18;
   innerW = panel.w - 36;
