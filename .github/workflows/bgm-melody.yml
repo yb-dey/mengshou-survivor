@@ -4,10 +4,13 @@ name: bgm-melody
 # 口径：从 WAV 实测（16384 点 FFT）逐曲累加功率谱，按调式把功率归到「旋律音 / 垫层音」两组。
 # 不读源码参数 → 结构上不可能漂移。
 #
-# 必跑两个门禁（互补）：
-#   ① ci/bgm-melody.py        —— 旋律是否压得过垫层（层内平衡）
-#   ② ci/bgm-lane-loudness.py —— 同档 peer 有效响度是否齐（跨曲平衡）
-# 二者必须同时绿：抬/降增益能过其中一个，但很容易打散另一个（见「峰值归一陷阱」）。
+# 必跑三个门禁（互补）：
+#   ① ci/bgm-melody.py            —— 旋律是否压得过垫层（层内平衡）
+#   ② ci/bgm-lane-loudness.py     —— 同档 peer 有效响度是否齐（跨曲平衡，P95 主判据）
+#   ③ ci/bgm-perceptual-cross.py  —— 独立口径交叉：分辨"响度缺陷"与"编配稀疏度"
+# 三者必须同时绿：抬/降增益能过其中一个，但很容易打散另一个（见「峰值归一陷阱」）。
+# ②③ 用**不同**判据族（②走 lane/trim 表并施加有效增益；③只从 wav 与表算 P95/静音占比），
+# 互为对照 —— 单一实现写错时，另一条会红。
 on:
   push:
     paths:
@@ -15,6 +18,7 @@ on:
       - 'game/audio/sfx_*.wav'
       - 'ci/bgm-melody.py'
       - 'ci/bgm-lane-loudness.py'
+      - 'ci/bgm-perceptual-cross.py'
       - 'ci/audio-manifest.mjs'
       - 'ci/audio-manifest.json'
       - 'ci/render-missing-bgm.mjs'
@@ -48,6 +52,12 @@ jobs:
           python ci/bgm-lane-loudness.py --selftest
           python ci/bgm-lane-loudness.py 2>&1 | tee bgm-lane-loudness.md
 
+      - name: 感知口径交叉（P95 缺陷 vs 稀疏度，独立实现）
+        run: |
+          set -o pipefail
+          python ci/bgm-perceptual-cross.py --selftest
+          python ci/bgm-perceptual-cross.py 2>&1 | tee bgm-perceptual-cross.md
+
       - name: 上传报告
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,4 +66,5 @@ jobs:
           path: |
             bgm-melody.md
             bgm-lane-loudness.md
+            bgm-perceptual-cross.md
           retention-days: 14
