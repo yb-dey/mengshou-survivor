@@ -584,6 +584,11 @@ var CONFIG = {
   playerR: 14,                      // 判定半径 px
   playerRingAlpha: 0.66,            // 【v1.96】只留一条墨线「这是你」, 不再套金色光环
   playerRingWidth: 2,               // 【v1.96】单条细环; 身份靠浣熊剪影, 不靠光环厚度
+  // 【v1.167】主角焦点辉光：暗场（底 0.017）上把主角"托"出来；同色柔光，预渲染缓存、零新增资产。
+  //   实测动机：主角有细标识环但**没有光层**，而敌人有读感环 → 最该突出的主角在"光"上不占优。
+  //   关闭：置 0；低画质档自动跳过（与落地影同门槛）。
+  heroGlowAlpha: 0.16,
+  heroGlowScale: 2.4,               // 光斑半径 = 角色半径 × 该系数
   playerRingRAdd: 8,                // 【R9】标识环半径外扩 px(R10: 5→8, 环 r=playerR+8=22 越过贴图纵向剪影半高 21, 横向留 7px)
   playerInvSec: 0.5,                // 受击无敌秒 [来源]
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
@@ -23502,6 +23507,37 @@ function stampGroundGrain(c2, w, h, mt) {
 // 【v1.167】底色罩染改为**预渲染渐变条**(1x256) ——
 //   原实现(v1.166)逐帧 createLinearGradient, 违反本项目明文规则「禁逐帧创建渐变」。
 //   渐变条按主题建一次, 之后只 drawImage 拉伸 → 视觉等价、每帧零分配。
+// 【v1.167】主角焦点辉光的**预渲染缓存**（同 themeWashSprite 范式：按色建一次，之后只 drawImage）
+var HERO_GLOW_SPR = {};
+function heroGlowSprite(color) {
+  var key = String(color || "?");
+  if (HERO_GLOW_SPR[key]) return HERO_GLOW_SPR[key];
+  var N = 128;
+  var cv = document.createElement("canvas");
+  cv.width = N; cv.height = N;
+  var c2 = cv.getContext("2d");
+  var g = c2.createRadialGradient(N / 2, N / 2, 2, N / 2, N / 2, N / 2);
+  g.addColorStop(0, key);
+  g.addColorStop(0.5, key);
+  g.addColorStop(1, "rgba(0,0,0,0)");
+  c2.fillStyle = g;
+  c2.beginPath();
+  c2.arc(N / 2, N / 2, N / 2, 0, CONFIG.TWO_PI);
+  c2.fill();
+  HERO_GLOW_SPR[key] = cv;
+  return cv;
+}
+function drawHeroFocusGlow(ctx, x, y, r) {
+  var a = CONFIG.heroGlowAlpha;
+  if (!a || !(r > 0)) return;
+  if (!(typeof fxTideQuiet !== "function" || !(fxTideQuiet() && juiceLevel() < 1))) return;   // 与落地影同质量门
+  var spr = heroGlowSprite(heroAccent());
+  if (!spr) return;
+  var R = r * (CONFIG.heroGlowScale || 2.4);
+  ctx.globalAlpha = a;
+  ctx.drawImage(spr, x - R, y - R * 0.92, R * 2, R * 1.84);   // 略压扁 → 贴地而非悬空
+  ctx.globalAlpha = 1;
+}
 var THEME_WASH_SPR = {};
 function themeWashSprite(id, top, bottom) {
   var key = (id || "?") + "|" + top + "|" + bottom;
@@ -24667,6 +24703,8 @@ function renderGame() {
   if (player.active) {
     var blink = GAME.time < player.invUntil && (GAME.frame & 1) === 0;
     if (!blink) {
+      // 【v1.167】焦点辉光画在贴图之下（不遮判定）
+      drawHeroFocusGlow(ctx, player.x, player.y, player.r * heroDrawScale());
       spr = heroSprite();
       drawActorSpr(ctx, spr, player.x, player.y, player.face < 0, GAME.time, !!player.moving, heroDrawScale(), dpr, wtx, wty);
     }
