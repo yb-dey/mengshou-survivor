@@ -594,7 +594,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.171",                   // 【v1.171】新增 MENGSHOU_DEBUG.stress() 只读性能证据口(enemyCount/pool/潮窗状态): 补上"重载帧时"盲区 —— 此前 verify.mjs 只量开局 8s 轻载 fps, 高负载(怪潮 200 怪)下帧时从未被量化; 纯新增读取口, 不动任何游戏逻辑/数值/渲染
+  version: "1.172",                   // 【v1.172】新增 MENGSHOU_DEBUG.save() 只读存档证据口(字段集/关键值/往返自检): 补上"存档完整性"盲区 —— SAVE_SCHEMA/迁移链/钳制是唯一持久化通道, 损坏会静默摧毁玩家全部进度, 此前 ci/ 下零覆盖; 纯新增读取口, 不动任何游戏逻辑/数值/渲染
   gameName: "萌兽幸存者",              // 玩家可见主标题; 历史别名「萌兽消消岛」
 
   // 新手引导(步骤14b, 文案包): 4 步事件触发/消失条件, guideFlags 入档防重放
@@ -34656,6 +34656,55 @@ function init() {
     },
     version: CONFIG.version,
     gameName: CONFIG.gameName,
+    // 【v1.172】存档证据口(只读)：SAVE_SCHEMA/validateSave/clampSaveRanges/migrateChain 是本作
+    //   唯一持久化通道，损坏会**静默**摧毁玩家全部进度，而 ci/ 下此前零覆盖 —— 属第七类病根
+    //   ("验证覆盖不到 ≠ 验证通过")的又一实例。此口只做**读**：不写档、不改 saveData，
+    //   并通过 fieldSet 让外部能断言"档里到底有哪些键"（少键=迁移漏补，多键=白名单漏收敛）。
+    save: function () {
+      var d = saveData || {}, keys = [], k, i, f;
+      for (k in d) if (k !== "chk") keys.push(k);
+      keys.sort();
+      var schemaKeys = [];
+      for (k in SAVE_SCHEMA.fields) schemaKeys.push(k);
+      schemaKeys.sort();
+      // 缺键/多键：迁移链与白名单的自检，外部直接断言 missing=0
+      var missing = [], extra = [], has = {};
+      for (i = 0; i < keys.length; i++) has[keys[i]] = true;
+      for (i = 0; i < schemaKeys.length; i++) if (!has[schemaKeys[i]]) missing.push(schemaKeys[i]);
+      for (i = 0; i < keys.length; i++) if (schemaKeys.indexOf(keys[i]) < 0) extra.push(keys[i]);
+      // 往返自检：导出→导入必须语义等价（此处只算摘要，不动真实存档）
+      var rt = { ok: null, err: "" };
+      try {
+        var txt = exportSaveText();
+        var back = Platform.Coding.decode(txt);
+        var pw = JSON.parse(back);
+        var okChk = (djb2(JSON.stringify(pw.d)) === pw.chk);
+        var clean = JSON.parse(JSON.stringify(d));
+        delete clean.chk;
+        var same = (JSON.stringify(validateSave(JSON.parse(JSON.stringify(pw.d)))) === JSON.stringify(validateSave(clean)));
+        rt = { ok: (okChk && same), chkOk: okChk, semEq: same, len: txt ? txt.length : 0 };
+      } catch (e) { rt = { ok: false, err: String((e && e.message) || e) }; }
+      return {
+        version: CONFIG.version,
+        schemaVersion: SAVE_SCHEMA.schemaVersion,
+        storageKey: SAVE_KEY,
+        fieldCount: schemaKeys.length,
+        keys: keys,
+        missing: missing,
+        extra: extra,
+        migrateLinks: (function () { var n = 0, j; for (j = 0; j < migrateChain.length; j++) if (typeof migrateChain[j] === "function") n++; return n; })(),
+        coins: d.coins | 0,
+        chapterUnlocked: d.chapterUnlocked | 0,
+        heroId: d.heroId || "",
+        worldTheme: d.worldTheme || "",
+        upgrades: JSON.parse(JSON.stringify(d.upgrades || {})),
+        achievements: (d.achievements || []).slice(),
+        guideFlags: JSON.parse(JSON.stringify(d.guideFlags || {})),
+        hallUnlocks: JSON.parse(JSON.stringify(d.hallUnlocks || {})),
+        roundTrip: rt
+      };
+    },
+    saveKeys: function () { return this.save().keys; },
     seek: debugSeekRunTime, phase: rhythmPhase, next: nextRhythmEvent, beat: readBeatClock, major: nextMajorBeat,
     skipBeat: onTapDebugSkipBeat,
     spine: function () {
