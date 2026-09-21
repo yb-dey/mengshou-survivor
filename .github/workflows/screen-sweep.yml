@@ -1,0 +1,22 @@
+name: screen-sweep
+on:
+  workflow_dispatch:
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
+      - name: 全界面巡检截图
+        run: node ci/screen-sweep.mjs
+      - name: 上传巡检产物
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screen-sweep
+          path: ci/out/
+          retention-days: 14
