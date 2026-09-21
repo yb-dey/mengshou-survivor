@@ -26,7 +26,8 @@ import fs from 'fs';
 import path from 'path';
 
 const GAME_DIR = process.env.GAME_DIR || 'game';
-const htmlName = fs.readdirSync(GAME_DIR).find((f) => f.toLowerCase().endsWith('.html'));
+// PICK_ENTRY_FILTERED: 排除 _ 前缀（_ = 临时/备份），防审计到备份文件（v1.187 实测）
+const htmlName = fs.readdirSync(GAME_DIR).filter((f) => f.toLowerCase().endsWith('.html') && !f.startsWith('_')).sort()[0];
 const HTML = path.join(GAME_DIR, htmlName);
 const h = fs.readFileSync(HTML, 'utf8');
 const AUDIO_DIR = path.join(GAME_DIR, 'audio');
