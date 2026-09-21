@@ -54,18 +54,24 @@ const info = await page.evaluate(() => {
     if (!cv || !cv.width) { stats[k] = { err: 'no canvas' }; continue; }
     try {
       const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
-      let opaque = 0, total = 0;
+      let opaque = 0, total = 0, lumSum = 0, satSum = 0;
       // 颜色丰富度：AI 位图颜色多；程序化剪影/纯色块颜色极少 → 用它区分「AI 贴图 vs 程序化回退」
       const pal = new Set();
       for (let i = 0; i < d.length; i += 4) {
         total++;
         if (d[i + 3] > 8) {
           opaque++;
-          if (pal.size < 64) pal.add((d[i] >> 3) * 1024 + (d[i + 1] >> 3) * 32 + (d[i + 2] >> 3));
+          const R = d[i], G = d[i + 1], B = d[i + 2];
+          lumSum += 0.2126 * R + 0.7152 * G + 0.0722 * B;    // 感知亮度：找"在暗场上看不见"的单位
+          const mx = Math.max(R, G, B), mn = Math.min(R, G, B);
+          satSum += mx ? (mx - mn) / mx : 0;                 // 饱和度：找"灰掉了"的图
+          if (pal.size < 64) pal.add((R >> 3) * 1024 + (G >> 3) * 32 + (B >> 3));
         }
       }
       stats[k] = { w: cv.width, h: cv.height, half: cv.half ?? null,
-                   fillPct: +(opaque / total * 100).toFixed(1), colors: pal.size };
+                   fillPct: +(opaque / total * 100).toFixed(1), colors: pal.size,
+                   lum: +(lumSum / Math.max(1, opaque)).toFixed(1),
+                   sat: +(satSum / Math.max(1, opaque)).toFixed(3) };
     } catch (e) { stats[k] = { err: String(e).slice(0, 60) }; }
   }
   const D = window.MENGSHOU_DEBUG || {};
@@ -81,6 +87,20 @@ const rich = Object.values(info.stats).filter((v) => typeof v.colors === 'number
 console.log('SPRITES 条目: ' + info.count + '  颜色丰富(>16色, 疑似AI): ' + rich +
             '  颜色极少(<=4色, 疑似程序化): ' + flat.length);
 if (flat.length) console.log('  疑似程序化清单: ' + flat.join(', '));
+
+// 离群检测（上次靠这招找到"乌鸦在暗场上看不见"）
+const ENEMY = /^(leaptoad|rabbit|bear|mouse|fox|raven|orbitcrab|boomfruit|sporecap|burrowmole|hedgehog|chargerhino|shieldbug|honeypot|boss1|rollshell|boss2|boss3|badger|boar|monkey)_?(dead|hit|enraged)?$/;
+const eRows = Object.entries(info.stats).filter(([k, v]) => ENEMY.test(k) && typeof v.lum === 'number');
+const lums = eRows.map(([, v]) => v.lum);
+const eMean = lums.reduce((a, b) => a + b, 0) / Math.max(1, lums.length);
+const eSd = Math.sqrt(lums.reduce((a, b) => a + (b - eMean) ** 2, 0) / Math.max(1, lums.length));
+const outLum = eRows.filter(([, v]) => v.lum < eMean - 2 * eSd).map(([k, v]) => k + '(亮度' + v.lum + ')');
+const lowSat = Object.entries(info.stats)
+  .filter(([, v]) => typeof v.sat === 'number' && v.sat < 0.10 && (v.fillPct ?? 0) > 12)
+  .map(([k, v]) => k + '(饱和' + v.sat + ')');
+console.log('敌人亮度 均值 ' + eMean.toFixed(1) + ' σ ' + eSd.toFixed(1) +
+            ' ｜ 离群(低于均值−2σ): ' + (outLum.join(', ') || '无'));
+console.log('低饱和(<0.10)候选(前 12): ' + (lowSat.slice(0, 12).join(', ') || '无'));
 
 // 联系表
 // 内存口径对齐：本项目的「像素内存」到底指什么？同时量三个口径，一次说清。
@@ -173,6 +193,17 @@ const md = [
   '| JS 堆 usedJSHeapSize | ' + (mem.usedJSHeapMB ?? '-') + ' MB |',
   '| 画布总和（全部 ' + mem.canvasCount + ' 张） | **' + mem.canvasMB + ' MB** |',
   '| 画布总和（除地面瓦片） | ' + mem.canvasNonTileMB + ' MB（' + mem.canvasNonTileCount + ' 张） |',
+  '',
+  '## 离群检测（可读性）',
+  '',
+  '- 敌人亮度：均值 ' + eMean.toFixed(1) + ' · σ ' + eSd.toFixed(1),
+  '- **低于均值−2σ 的离群（潜在"在暗场上看不见"）**：' + (outLum.join('、') || '无 ✅'),
+  '- 低饱和候选（<0.10，前 12）：' + (lowSat.slice(0, 12).join('、') || '无'),
+  '',
+  '| id | 尺寸 | 亮度 | 饱和度 | 非透明% |',
+  '|---|---|---|---|---|',
+  ...Object.entries(info.stats).filter(([k]) => ENEMY.test(k)).map(([k, v]) =>
+    '| ' + k + ' | ' + (v.w || '-') + '×' + (v.h || '-') + ' | ' + (v.lum ?? '-') + ' | ' + (v.sat ?? '-') + ' | ' + (v.fillPct ?? '-') + ' |'),
   '',
   '- SPRITES 条目: **' + info.count + '**',
   '- 颜色丰富（>16 色，疑似 AI 位图）: **' + rich + '**',
