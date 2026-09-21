@@ -33,6 +33,14 @@ jobs:
       - name: 内容缺口全维度扫描（12 维度，GATE=1 有缺口即失败）
         run: GATE=1 node ci/content-gap-scan.mjs
 
+      # 【2026-09-21】BGM 循环接缝：程序合成曲若首尾不接，循环处会"咔哒"爆音。
+      #   判据先自测（阴性对照）再体检 —— 自测用的是「带包络的曲被截断」而非正弦
+      #   （正弦天然无缝，拿它当阴性样本永远测不出问题，v1 就栽在这）。
+      - name: BGM 循环接缝判据自测（阴性对照）
+        run: python ci/loop-seam.py --selftest
+      - name: BGM 循环接缝体检（GATE=1 有接缝超标即失败）
+        run: mkdir -p ci/out && GATE=1 python ci/loop-seam.py game/audio ci/out/loop-seam.md
+
       - name: 安装 Playwright
         run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
 
