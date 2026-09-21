@@ -566,6 +566,9 @@ var CONFIG = {
   worldH: 2400,                     // 世界高 px
   camLerp: 8,                       // 摄像机指数平滑系数(1/s): cam+=(target-cam)*(1-exp(-dt*camLerp))
   groundTile: 512,                  // 地面预渲染瓦片逻辑边长 px(@2x 离屏 1024)
+  groundGrain: 0.055,               // 【v1.167】地表颗粒层强度(烘焙期一次; 0=关闭)。
+                                    //   实测战场仅 22 色、最高频占 59.7% → 地面缺的是质感而非物体;
+                                    //   故补"细颗粒"而不补"色斑"(v1.152~162 已连否四次成团装饰)。
   // v2.0 R2 章节系统【R2】
   groundTintAlpha: 0.22,            // 六档场景 tint 叠色透明度(source-atop 一次性, 载入/开局各至多一次)
   themeBgWashAlpha: 0.25,           // 【R27】章节主题底色罩染透明度(theme.bgColor 罩在地面瓦片上/实体下; 瓦片不透明致兜底 fill 不可见, 罩染保证六色底实际可达)
@@ -23426,6 +23429,51 @@ function stampChapterDecos(c2, w, h, mt) {
   // 【v1.96】可读草/石已在 paintChapterGround。不再盖 PNG 花点当噪声。
   void c2; void w; void h; void mt;
 }
+// 【v1.167】地表颗粒层 —— 补「质感」不补「物体」。
+//   动机（实测）: 战场 170x100 区域仅 22 色、最高频一色占 59.7%；量化后 7 色 → 地面接近平涂。
+//   成因: v1.162 为"不读作占位云"砍掉星巅的 6 团大色斑(只留海军底+厚土路); drawChapterFarLayer 连四代减弱。
+//   本层刻意**不成团**: 8px(@2x) 细点 + 低对比 + 只撒约 45% 的格 → 读作"地表颗粒",
+//   不会被读作灰斑/占位云。烘焙进瓦片(一次性), 运行期零成本, 零新增资产。CONFIG.groundGrain=0 关闭。
+function stampGroundGrain(c2, w, h, mt) {
+  var amp = CONFIG.groundGrain;
+  if (!amp || !mt) return;
+  var step = 8;
+  var seed = (((mt.mapId || "m").charCodeAt(0) * 7919) + 104729) | 0;
+  function rnd() { seed = (seed * 1664525 + 1013904223) | 0; return ((seed >>> 8) & 0xffff) / 65536; }
+  var hi = mt.wash || mt.accent || "#ffffff";
+  var lo = mt.tileB || mt.bgColor || "#000000";
+  var x, y, u;
+  for (y = 0; y < h; y += step) {
+    for (x = 0; x < w; x += step) {
+      u = rnd();
+      if (u < 0.55) continue;                       // 只撒不连续的格 → 不成团
+      c2.globalAlpha = amp * (0.30 + 0.70 * u);
+      c2.fillStyle = (u > 0.80) ? hi : lo;
+      c2.fillRect(x, y, step, step);
+    }
+  }
+  c2.globalAlpha = 1;
+}
+
+// 【v1.167】底色罩染改为**预渲染渐变条**(1x256) ——
+//   原实现(v1.166)逐帧 createLinearGradient, 违反本项目明文规则「禁逐帧创建渐变」。
+//   渐变条按主题建一次, 之后只 drawImage 拉伸 → 视觉等价、每帧零分配。
+var THEME_WASH_SPR = {};
+function themeWashSprite(id, top, bottom) {
+  var key = (id || "?") + "|" + top + "|" + bottom;
+  if (THEME_WASH_SPR[key]) return THEME_WASH_SPR[key];
+  var cv = document.createElement("canvas");
+  cv.width = 1; cv.height = 256;
+  var c2 = cv.getContext("2d");
+  var g = c2.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, top);
+  g.addColorStop(1, bottom);
+  c2.fillStyle = g;
+  c2.fillRect(0, 0, 1, 256);
+  THEME_WASH_SPR[key] = cv;
+  return cv;
+}
+
 function quietChapterGround(c2, w, h, mt) {
   // 【v1.97】轻罩一层底色, 不再压掉章题草石。质量对标鸣潮巅峰(干净不脏), 题材/资产不跟鸣潮。
   if (!c2 || !mt) return;
@@ -23484,6 +23532,7 @@ function bakeHallGround() {
     stampThemeDecos(c2, cv.width, cv.height, th);
   } else {
     paintHallGround(c2, cv.width, cv.height, th);
+    stampGroundGrain(c2, cv.width, cv.height, th);   // 【v1.167】大厅同步质感(同一套, 免场景不一致)
   }
   SPRITES.groundTile = cv;
 }
@@ -23519,6 +23568,7 @@ function bakeChapterMapGround(ch) {
   }
   quietChapterGround(c2, cv.width, cv.height, mt);
   stampChapterDecos(c2, cv.width, cv.height, mt);
+  stampGroundGrain(c2, cv.width, cv.height, mt);   // 【v1.167】地表质感(烘焙期一次)
   SPRITES.groundTile = cv;
   SPRITES.chapterMapId = mt.mapId || chId;
 }
@@ -23865,14 +23915,16 @@ function renderGame() {
     //   渐变两端直接取主题自带色（bgColor → wash），不引入新色；纯运行时渐变、零主包体积。
     //   上端保持 bgColor（与改动前完全一致），只是向下渐染到 wash → 观感是"变深"而非"换底"。
     //   回退方式：把本段换回 ctx.fillStyle = thR27.bgColor; 即可。
-    var washGrd = null;
-    try {
-      washGrd = ctx.createLinearGradient(camX, camY - wpad27, camX, camY + CONFIG.viewH + wpad27);
-      washGrd.addColorStop(0, thR27.bgColor);
-      washGrd.addColorStop(1, thR27.wash || thR27.bgColor);
-    } catch (eWash) { washGrd = null; }
-    ctx.fillStyle = washGrd || thR27.bgColor;
-    ctx.fillRect(camX - wpad27, camY - wpad27, CONFIG.viewW + wpad27 * 2, CONFIG.viewH + wpad27 * 2);
+    // 【v1.167】改用预渲染渐变条(建一次) —— 原逐帧 createLinearGradient 违反本项目「禁逐帧创建渐变」。
+    //   回退: 把本段换回逐帧 createLinearGradient 版本即可。
+    var washSpr = null;
+    try { washSpr = themeWashSprite(thR27.id, thR27.bgColor, thR27.wash || thR27.bgColor); } catch (eWash) { washSpr = null; }
+    if (washSpr) {
+      ctx.drawImage(washSpr, camX - wpad27, camY - wpad27, CONFIG.viewW + wpad27 * 2, CONFIG.viewH + wpad27 * 2);
+    } else {
+      ctx.fillStyle = thR27.bgColor;
+      ctx.fillRect(camX - wpad27, camY - wpad27, CONFIG.viewW + wpad27 * 2, CONFIG.viewH + wpad27 * 2);
+    }
     ctx.globalAlpha = 1;
   }
   // 【R27】环境氛围粒子(世界层实体之下, inPlay 门沿用 r13c 范式: HOME/RESULT 不渲染——
