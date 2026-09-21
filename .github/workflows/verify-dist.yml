@@ -129,7 +129,15 @@ jobs:
           for pair in "verify:${{ steps.verify.outcome }}" "stress:${{ steps.stress.outcome }}" "save:${{ steps.save.outcome }}"; do
             name="${pair%%:*}"; out="${pair##*:}"
             if [ "$out" = "success" ]; then echo "✅ $name = success";
-            else echo "❌ $name = $out"; fail=1; fi
+            else
+              echo "❌ $name = $out"; fail=1;
+              # ⚠ `skipped`/`cancelled` 几乎总是"上游步骤崩了"的连锁反应，而不是本步骤被判失败。
+              #   （本轮实测：门禁自审因 ci/out 不存在而崩 → 后面三个体检全变 skipped。）
+              #   直接报"门禁未通过"会把人引向错误的排查方向，故区分提示。
+              case "$out" in
+                skipped|cancelled) echo "   ⚠ 该步骤**没跑**（$out）——请优先检查**更早**的步骤是否崩溃/被跳过，而不是本步骤的判据。";;
+              esac
+            fi
           done
           if [ "$fail" = "1" ]; then echo "::error::门禁未通过 —— 见上方各体检报告（产物 verify-dist-report 里有 md）"; exit 1; fi
 
