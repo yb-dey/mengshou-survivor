@@ -1531,7 +1531,7 @@ var CONFIG = {
     // 【v1.167】金色**文字**专用: 原 #c9a24b 压浅面板(实测底色 rgb(238,244,220)) 仅 **2.13:1** 对比度,
     //   正文标准 4.5:1 → 那行事件时间表几乎读不出。改深金 5.18:1。**只用于文字**, 图形/色签仍用 #c9a24b。
     cardGold: "#7a6220",
-    cardTagNew: "#3faf5a",
+    cardTagNew: "#1e7a34",   // 【v1.167】标签文字用: 原 #3faf5a 压苔纸仅 2.41:1 → 深绿 4.66:1（图形/宝石仍用 gemGreen）
     cardTagUp: "#3a7bd5",
     cardLaneWeapon: "#e6c24a",      // 【v1.22】武器车道(金)
     cardLaneCombat: "#c0392b",      // 【v1.22】战斗道具车道(赤)
@@ -31200,7 +31200,9 @@ function makeGearBagCell(i, x, y, w, h) {
       var eq = false, sl;
       for (sl in saveData.gearEquip) if (saveData.gearEquip[sl] === uid) eq = true;
       if (eq) {
-        ctx.fillStyle = "#3faf5a";
+        // 【v1.167】状态文字可读性：实测 #3faf5a 压苔纸仅 2.41:1（正文标准 4.5:1）→ 改深绿 4.66:1。
+        //   原值 #3faf5a 备查；同色的细条/色块（图形）不动。
+        ctx.fillStyle = "#1e7a34";
         ctx.fillText("穿戴中", r.x + r.w / 2, r.y + 120);
       } else if (d) {
         ctx.fillStyle = CONFIG.colors.cardDesc;
