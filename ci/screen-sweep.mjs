@@ -65,7 +65,43 @@ const shots = [];
 //   结果 13 张里有 9 张与上一张**字节完全相同**（03/04/05 同、06~10 同、11/12/13 同），
 //   工具却照样打印"完成" —— 属"假成功"，9 个界面**从未真正被巡检过**。
 //   两条修法：① 每屏前先复位到大厅 + 关掉可能开着的面板；② 截图后算哈希，与上一张重复即标记 dup。
+// 【2026-09-21 补】只比"字节相同"**抓不到"动画导致的不相同"**：粒子每帧都在变，
+//   codex/heroSheet/daily 三屏其实还是大厅，却因哈希不同被判为成功。
+//   → 再加一层：**32x32 缩略指纹 vs 大厅基线的平均绝对差**，低于阈值即判定"仍是大厅"。
+//   缩略平均天然对粒子噪声不敏感，但对"弹窗整块出现"极敏感。
+const SIG_N = 32;
+async function screenSig() {
+  return await page.evaluate((N) => {
+    const c = document.querySelector('canvas');
+    if (!c) return null;
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    const bw = Math.max(1, Math.floor(c.width / N)), bh = Math.max(1, Math.floor(c.height / N));
+    const out = [];
+    for (let gy = 0; gy < N; gy++) {
+      for (let gx = 0; gx < N; gx++) {
+        let sum = 0, n = 0;
+        for (let y = gy * bh; y < (gy + 1) * bh; y += 3) {
+          for (let x = gx * bw; x < (gx + 1) * bw; x += 3) {
+            const i = (y * c.width + x) * 4;
+            sum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+            n++;
+          }
+        }
+        out.push(n ? sum / n : 0);
+      }
+    }
+    return out;
+  }, SIG_N);
+}
+function sigDiff(a, b) {
+  if (!a || !b || a.length !== b.length) return -1;
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]);
+  return s / a.length;
+}
+const HOME_DUP_MAX = 2.0;   // 与大厅基线平均差 < 2 亮度级 → 判定"这一屏根本没打开"
 let prevHash = '';
+let homeSig = null;
 for (const s of STEPS) {
   if (!available.includes(s.call)) { shots.push({ name: s.name, skipped: 'no hook ' + s.call }); continue; }
   try {
@@ -80,11 +116,17 @@ for (const s of STEPS) {
     await page.waitForTimeout(1400);
     const shotPath = path.join(OUT, s.name + '.png');
     await page.screenshot({ path: shotPath });
-    // ② 重复检测：与上一张同哈希 = 这一屏根本没打开
+    // ②a 重复检测：与上一张同哈希 = 这一屏根本没打开
     const h = crypto.createHash('sha1').update(fs.readFileSync(shotPath)).digest('hex').slice(0, 12);
     const dup = (h === prevHash);
     prevHash = h;
+    // ②b 与大厅基线的像素差（抓"动画导致的不相同"）
+    const sig = await screenSig();
+    if (s.name === '01-home') homeSig = sig;
+    const dHome = sigDiff(sig, homeSig);
+    const sameAsHome = (s.name !== '01-home') && dHome >= 0 && dHome < HOME_DUP_MAX;
     if (dup) console.log('  ⚠ ' + s.name + ' 与上一屏截图完全相同 → 该界面未真正打开');
+    if (sameAsHome) console.log('  ⚠ ' + s.name + ' 与大厅基线几乎无差异(Δ=' + dHome.toFixed(2) + ') → 该界面未真正打开');
     // 顺手量一下这一屏的「有效内容占比」：非背景色像素比例（越低越空）
     const dens = await page.evaluate(() => {
       const c = document.querySelector('canvas');
@@ -103,7 +145,7 @@ for (const s of STEPS) {
         return { w: c.width, h: c.height, distinct: buckets.size, dominantPct: +(top / n * 100).toFixed(1) };
       } catch (e) { return { err: String(e).slice(0, 80) }; }
     });
-    shots.push({ name: s.name, hook: s.call, dens, dup, hash: h });
+    shots.push({ name: s.name, hook: s.call, dens, dup, hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null, sameAsHome });
   } catch (e) {
     shots.push({ name: s.name, error: String(e).slice(0, 150) });
   }
@@ -148,12 +190,15 @@ const md = [
   '- 可用界面钩子: ' + available.length + ' 个',
   '- 未捕获异常: ' + errs.length,
   '',
-  '| 截图 | 钩子 | 画布 | 独特色数 | 主色占比 | 备注 |',
-  '|---|---|---|---|---|---|',
+  '| 截图 | 钩子 | 画布 | 独特色数 | 主色占比 | 与大厅Δ | 备注 |',
+  '|---|---|---|---|---|---|---|',
   ...shots.map((s) => '| ' + s.name + ' | ' + (s.hook || '-') + ' | ' +
     (s.dens && s.dens.w ? s.dens.w + '×' + s.dens.h : '-') + ' | ' + (s.dens && s.dens.distinct || '-') + ' | ' +
     (s.dens && s.dens.dominantPct !== undefined ? s.dens.dominantPct + '%' : '-') + ' | ' +
-    (s.dup ? '⚠ **与上一屏完全相同（未真正打开）**' : (s.skipped || s.error || '')) + ' |'),
+    (s.dHome !== undefined && s.dHome !== null ? s.dHome : '-') + ' | ' +
+    (s.dup ? '⚠ **与上一屏完全相同（未真正打开）**'
+      : (s.sameAsHome ? '⚠ **仍是大厅（与大厅基线 Δ=' + s.dHome + '，未真正打开）**'
+        : (s.skipped || s.error || ''))) + ' |'),
   '',
   '> 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。',
   '',
@@ -166,17 +211,17 @@ const md = [
   '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'screens.md'), md);
-const dupList = shots.filter((s) => s.dup).map((s) => s.name);
+const dupList = shots.filter((s) => s.dup || s.sameAsHome).map((s) => s.name);
 fs.writeFileSync(path.join(OUT, 'screens.json'),
   JSON.stringify({ available, shots, errs, distinctScreens: shots.length - dupList.length, dups: dupList }, null, 2));
 console.log(md);
 
 await browser.close();
 server.close();
-// 【2026-09-21】有"重复截图"就以非零退出 —— 让"没真正巡检"无法被当成成功（原实现静默通过，
-//   导致 9 个界面长期未被巡检却一直显示"完成"）。修好后应回到 0。
+// 【2026-09-21】有"未真正打开"的就以非零退出 —— 让"没真正巡检"无法被当成成功
+//   （判定双重：与上一屏字节相同 / 与大厅基线像素差 < HOME_DUP_MAX）。修好后应回到 0。
 if (dupList.length) {
-  console.error('\n❌ 有 ' + dupList.length + ' 屏未真正打开（截图与上一屏相同）: ' + dupList.join(', '));
+  console.error('\n❌ 有 ' + dupList.length + ' 屏未真正打开: ' + dupList.join(', '));
   process.exit(2);
 }
 process.exit(0);
