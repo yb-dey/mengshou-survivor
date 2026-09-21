@@ -3,36 +3,61 @@
 
 存在理由
   `CONFIG.audio.gains` 是设计师写下的响度意图；文件是被烘焙出来的实响。
-  但**两者不是同一个尺度** —— 这一点我第一版判据搞错了（见文末"判据演进"）。
-  正确口径是**档位**：设计注释（游戏 1420 行）写的是
+  正确口径是**档位**：设计注释（游戏 ~85730 行）写的是 5 级纵向层级 ——
 
-      受击/复活 > BOSS > 升级/选卡/结算 > 击杀/宝石 > 开火/命中
+      受击/复活(prio 5) > BOSS(prio 4) > 升级/选卡/结算/击杀(prio 3)
+                       > 宝石(prio 2) > 开火/命中(prio 1)
 
-  其精神是"**按事件发生频率分层**"：每局几次的（INFREQ）要比每秒数次的（FREQ）响，
+  其精神是"**按事件发生频率分层**"：每局几次的要比每秒数次的响，
   否则长局持续高频音会磨耳朵（游戏注释 v1.152→v1.160 反复在修这件事）。
 
 判据（与现象同尺度）
-  ① 档均值单调：`INFREQ > MID > FREQ`，且 `INFREQ − FREQ` 必须 ≥ 本文件 `MIN_SPREAD` dB。
-  ② 档内离群：中位数 + 3×1.4826×MAD，**只警告不判死**（包络风格是主观取舍）。
+  ① 档均值严格单调：`prio5 > prio4 > prio3 > prio2 > prio1`（相邻档都要成立）。
+  ② 极点落差：`prio5 − prio1 ≥ MIN_SPREAD` dB。
+  ③ 档内离群：中位数 + 3×1.4826×MAD，**只警告不判死**（包络风格是主观取舍）。
 
-⚠ 为什么**不**逐对比较 gain 与文件响度（第一版的错）
-    gain 是"档内调色"，响度是"能量 × 时长"。二者方向可以合法地不一致：
-    `SFX_BOMB`(gain 0.66) 实测比 `SFX_REVIVE`(gain 0.62) 轻 8dB —— 因为 BOMB 是
-    **短促闷响**、REVIVE 是**绵长上扬**，峰值同为 0.7 时能量差就是很大。
-    逐对比较会把这种**合法设计**报成 21 组"反向对"，掩盖唯一真问题。
-    本项目铁律："参考量必须与被测现象同尺度"—— 档位对档位才是。
+⚠ 判据演进（三代，每次都是"尺度错了"，请勿回退）
+  · 第一代：逐对比较 gain 与文件响度 → 错。gain 是"档内调色"，响度是"能量×时长"，
+    二者方向可合法不一致（`SFX_BOMB` gain 0.66 却比 `SFX_REVIVE` gain 0.62 轻 8dB）。
+  · 第二代：压成 3 档（INFREQ/MID/FREQ）+ **全段**均值平方 → 仍然错，两个缺陷叠加：
+      (a) **3 档压平**：把 prio3~prio5 全塞进 INFREQ/MID，档内跨度 5.9dB，
+          而 prio1 与 prio3 区间大量重叠 → 判"MID − FREQ 塌陷"其实是**分组粒度不够**。
+      (b) **全段 RMS 让时长进了响度**：`sfx_lose` 1.35s 全段 -16.0dB、
+          `sfx_hurt` 0.20s 全段 -16.2dB → 体检读出"结算音比受击音更响"，
+          但设计写的是 HURT(prio5) 该高于 LOSE(prio3)。**长音天然全段 RMS 高，
+          它污染了层级比较** —— 被测现象是"这一声有多突出"，"响了多久"是另一个维度。
+  · 第三代（本版 v1.177）：**按 prios 5 级分档 + 用 30ms 滑动窗峰值响度（`loudW`）**。
+      实测 19 个 SFX 在 win20/30/50ms 下 5 档**全部严格单调** →
+      证明**游戏音频的层级设计本身正确，错的只是判据尺度**。
+      这一步同时否掉了"要给 cardshow 硬抬响度去凑 MID−FREQ"的错误修法
+      （那会让卡片提示比开局还响，制造新的响度失衡）。
 """
 import sys, os, glob, importlib.util
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _spec = importlib.util.spec_from_file_location("_sfx_loudness", os.path.join(_HERE, "sfx-loudness.py"))
 _sl = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_sl)
-analyze, LANE, load_gains = _sl.analyze, _sl.LANE, _sl.load_gains
+analyze, load_gains = _sl.analyze, _sl.load_gains
 
-MIN_SPREAD = 2.0     # INFREQ 必须比 FREQ 至少高这么多 dB（低于此视为层级塌陷）
-LANES = ("INFREQ", "MID", "FREQ")
+MIN_SPREAD = 2.0     # prio5 必须比 prio1 至少高这么多 dB（低于此视为层级塌陷）
+METRIC = "loudW"     # 【v1.177】层级判据用滑动窗峰值响度，不用全段 loud（见头注"判据演进"）
+
+# 【v1.177】分档真身 = 游戏自己的 `CONFIG.audio.prios`（5 级纵向层级）。
+# ⚠ 与 ci/sfx-loudness.py 的 LANE（3 档）是**两个不同用途**：LANE 用于"高频 vs 低频"的
+#   磨耳朵检查（粗分即可），本表用于"纵向层级"，必须与 prios 一一对应。
+# ⚠ 新增 SFX 必须同步 `CONFIG.audio.prios`、`LANE`、本表三处；本文件 selftest 会查覆盖度。
+PRIO = {
+    "sfx_hurt": 5, "sfx_revive": 5,
+    "sfx_boss_warn": 4, "sfx_boss_die": 4, "sfx_start": 4, "sfx_evo": 4, "sfx_bomb": 4,
+    "sfx_levelup": 3, "sfx_card": 3, "sfx_cardshow": 3, "sfx_chest": 3, "sfx_event": 3,
+    "sfx_win": 3, "sfx_lose": 3, "sfx_ui": 3, "sfx_kill": 3,
+    "sfx_gem": 2,
+    "sfx_fire": 1, "sfx_hit": 1,
+}
+LEVELS = (5, 4, 3, 2, 1)
+LEVEL_NAME = {5: "受击/复活", 4: "BOSS/开局/进化", 3: "升级/选卡/结算/击杀",
+              2: "宝石", 1: "开火/命中"}
 
 
 def collect(root):
@@ -42,7 +67,8 @@ def collect(root):
         if not r:
             continue
         base = os.path.splitext(os.path.basename(f))[0]
-        r["lane"] = LANE.get(base, "?")
+        r["base"] = base
+        r["prio"] = PRIO.get(base)      # None = 未分档（run() 里会 FAIL 报出）
         rows.append(r)
     return rows
 
@@ -67,69 +93,81 @@ def run(root, out_path=None):
     rows = collect(root)
     L = []
     L.append("# SFX 意图-实响一致性体检\n")
-    L.append("> 口径：设计意图是**按事件频率分层的档位关系**（游戏 1420 行注释），")
-    L.append("> 故本检查比的是**档均值**，不是逐对 gain —— 二者不同尺度（见脚本头注）。\n")
+    L.append("> 口径：以游戏 `CONFIG.audio.prios` 的 **5 级纵向层级**为准，")
+    L.append("> 判据用 **30ms 滑动窗峰值响度**（不用全段 RMS —— 后者把时长混进了响度，见头注）。\n")
 
     if not rows:
         L.append("## **FAIL** — 未解析到任何 sfx_*.wav（解析失效 ≡ 守卫失效）")
         return emit(L, out_path, False)
 
-    L.append("| 档位 | n | 响度均值 | 中位 | 最响 | 最轻 |")
-    L.append("|---|---|---|---|---|---|")
-    stat = {}
+    # 覆盖度：每个文件都必须在 PRIO 表里，否则它被静默排除在层级体检之外
+    missing = [r["name"] for r in rows
+               if os.path.splitext(r["name"])[0] not in PRIO]
+    if missing:
+        L.append("## **FAIL** — 以下文件不在 PRIO 分档表里 → 被层级体检静默跳过：")
+        for n in missing:
+            L.append("- `%s`" % n)
+        L.append("\n→ 请在 ci/sfx-intent-vs-real.py 的 `PRIO` 中补档（须与游戏 `prios` 一致）。")
+        return emit(L, out_path, False)
+
     groups = {}
     for r in rows:
-        groups.setdefault(r["lane"], []).append(r)
-    for lane in LANES:
-        g = groups.get(lane, [])
+        groups.setdefault(PRIO[os.path.splitext(r["name"])[0]], []).append(r)
+
+    L.append("| 档(prio) | 语义 | n | 响度均值 | 中位 | 最响 | 最轻 |")
+    L.append("|---|---|---|---|---|---|---|")
+    stat = {}
+    for lv in LEVELS:
+        g = groups.get(lv, [])
         if not g:
             continue
-        ls = [x["loud"] for x in g]
+        ls = [x[METRIC] for x in g]
         m = sum(ls) / len(ls)
         md, _ = med_mad(ls)
-        stat[lane] = m
-        hi = max(g, key=lambda x: x["loud"]); lo = min(g, key=lambda x: x["loud"])
-        L.append("| %s | %d | %.1f | %.1f | %s(%.1f) | %s(%.1f) |" % (
-            lane, len(g), m, md, hi["name"], hi["loud"], lo["name"], lo["loud"]))
+        stat[lv] = m
+        hi = max(g, key=lambda x: x[METRIC]); lo = min(g, key=lambda x: x[METRIC])
+        L.append("| %d | %s | %d | %.1f | %.1f | %s(%.1f) | %s(%.1f) |" % (
+            lv, LEVEL_NAME[lv], len(g), m, md,
+            hi["name"].replace("sfx_", "").replace(".wav", ""), hi[METRIC],
+            lo["name"].replace("sfx_", "").replace(".wav", ""), lo[METRIC]))
 
-    L.append("\n## 档间落差（要求 INFREQ > MID > FREQ）")
-    pairs = [("INFREQ", "MID"), ("MID", "FREQ"), ("INFREQ", "FREQ")]
-    spread = None
-    for a, b in pairs:
-        if a in stat and b in stat:
-            d = stat[a] - stat[b]
-            if a == "INFREQ" and b == "FREQ":
-                spread = d
-            L.append("- %s − %s = **%+.1f dB**" % (a, b, d))
+    L.append("\n## 相邻档落差（要求 prio5 > prio4 > prio3 > prio2 > prio1）")
+    present = [lv for lv in LEVELS if lv in stat]
+    breaks = []
+    for a, b in zip(present, present[1:]):
+        d = stat[a] - stat[b]
+        okp = d > 0
+        if not okp:
+            breaks.append((a, b, d))
+        L.append("- prio%d − prio%d = **%+.1f dB** %s" % (a, b, d, "✅" if okp else "❌ **逆序**"))
+    spread = (stat[present[0]] - stat[present[-1]]) if len(present) >= 2 else None
 
     L.append("\n## 档内离群（中位数 + 3×1.4826×MAD，仅提示）")
     warns = []
-    for lane in LANES:
-        g = groups.get(lane, [])
+    for lv in LEVELS:
+        g = groups.get(lv, [])
         if len(g) < 4:
             continue
-        md, mad = med_mad([x["loud"] for x in g])
+        md, mad = med_mad([x[METRIC] for x in g])
         thr = 3 * 1.4826 * (mad or 0)
-        L.append("- **%s**（中位 %.1f，阈值 ±%.1f）：%s" % (
-            lane, md, thr,
-            "无" if thr <= 0.01 else ""))
-        if thr > 0.01:
-            for x in sorted(g, key=lambda y: y["loud"]):
-                if abs(x["loud"] - md) > thr:
-                    warns.append(x["name"])
-                    L.append("  - ⚠ %s %.1f（偏离中位 %+.1f）" % (x["name"], x["loud"], x["loud"] - md))
+        if thr <= 0.01:
+            continue
+        L.append("- **prio %d**（中位 %.1f，阈值 ±%.1f）：" % (lv, md, thr))
+        for x in sorted(g, key=lambda y: y[METRIC]):
+            if abs(x[METRIC] - md) > thr:
+                warns.append(x["name"])
+                L.append("  - ⚠ %s %.1f（偏离中位 %+.1f）" % (
+                    x["name"], x[METRIC], x[METRIC] - md))
 
-    # 判据①：档位单调 + 落差足够
-    mono = (stat.get("INFREQ", -999) > stat.get("MID", 999) > stat.get("FREQ", 999))
-    ok = mono and (spread is not None and spread >= MIN_SPREAD)
+    ok = (not breaks) and (spread is not None and spread >= MIN_SPREAD)
     L.append("\n## 结论")
-    L.append("- 档位单调 INFREQ>MID>FREQ：%s" % ("✅" if mono else "❌"))
-    L.append("- INFREQ − FREQ = %s dB（门限 ≥ %.1f）" % (
+    L.append("- 5 档严格单调：%s" % ("✅" if not breaks else "❌ 有 %d 处逆序" % len(breaks)))
+    L.append("- prio5 − prio1 = %s dB（门限 ≥ %.1f）" % (
         ("%.1f" % spread) if spread is not None else "N/A", MIN_SPREAD))
     L.append("- 档内离群 %d 个（仅提示，不判死）：%s" % (
         len(warns), "、".join(warns) if warns else "无"))
     L.append("\n" + ("## **PASS** — 意图与实响方向一致 ✅" if ok else
-                     "## **FAIL** — 档位层级塌陷（INFREQ 未显著高于 FREQ），需调 gain 或包络"))
+                     "## **FAIL** — 纵向层级塌陷（相邻档逆序或极差不足），需调 gain 或包络"))
     return emit(L, out_path, ok)
 
 
@@ -146,7 +184,14 @@ def emit(lines, out_path, ok):
 
 # ---- 阴性对照：判据自己坏掉时必须能发现 ----
 def selftest():
-    import tempfile, shutil
+    """用真名造样本（PRIO 表只认 19 个固定键），覆盖三类情形。
+
+    ⚠ 关键设计（为什么用**窗口响度**而不是"整段"来造样本）：
+      若用"长音 vs 短音"来造层级，本判据（loudW）应**忽略时长**只比峰值 —— 这正是它的价值。
+      故样本 A 故意把 prio5 造得**短而响**、prio3 造得**长而弱**：
+      旧的全段 RMS 口径会把它判成"塌陷"（假阳性），新口径应判 PASS。**这条即是回归守卫。**
+    """
+    import tempfile, shutil, math
     SR = 44100
     fails = []
 
@@ -158,49 +203,78 @@ def selftest():
         w.close()
 
     def mk(root, spec):
-        # spec: {name: (lane_name, ampl, dur)}
+        # spec: {name: (prio, ampl, dur)}
         ad = os.path.join(root, "game", "audio"); os.makedirs(ad, exist_ok=True)
-        for nm, (lane, ampl, dur) in spec.items():
+        for nm, (lv, ampl, dur) in spec.items():
             n = int(SR * dur)
-            s = [ampl * __import__("math").sin(2 * 3.14159 * 440 * i / SR) for i in range(n)]
+            s = [ampl * math.sin(2 * math.pi * 440 * i / SR) for i in range(n)]
             wav(os.path.join(ad, "sfx_%s.wav" % nm), s)
+        # 空 gains 的 html，避免 load_gains 报错
+        open(os.path.join(root, "game", "萌兽消消岛.html"), "w", encoding="utf-8") \
+            .write("var CONFIG={audio:{gains:{}}};")
 
-    # A: 层级正确 → 必须 PASS
+    REAL = {"revive": 5, "hurt": 5, "boss_die": 4, "boss_warn": 4,
+            "levelup": 3, "win": 3, "lose": 3, "cardshow": 3,
+            "gem": 2, "fire": 1, "hit": 1, "ui": 1}
+
+    # A: 层级按**峰值**正确，但故意让高 prio 短、低 prio 长
+    #    → 旧"全段"口径会误报塌陷；新 loudW 口径必须 PASS（时长无关）
     d = tempfile.mkdtemp()
     try:
         os.makedirs(os.path.join(d, "game"), exist_ok=True)
-        open(os.path.join(d, "game", "萌兽消消岛.html"), "w", encoding="utf-8").write("var CONFIG={audio:{gains:{}}};")
         spec = {}
-        for nm in ("win", "lose", "revive"):
-            spec[nm] = ("INFREQ", 0.7, 0.8)      # 长且满 → 响
-        for nm in ("bomb", "kill", "chest"):
-            spec[nm] = ("MID", 0.5, 0.5)
-        for nm in ("fire", "hit", "ui"):
-            spec[nm] = ("FREQ", 0.12, 0.1)       # 短且弱 → 轻
+        for nm, lv in REAL.items():
+            ampl = 0.80 - 0.13 * (5 - lv)     # prio5 → 0.80 … prio1 → 0.28
+            dur = 0.10 + 0.25 * (5 - lv)      # prio5 → 0.10s（短）… prio1 → 0.60s（长）★反转
+            spec[nm] = (lv, ampl, dur)
         mk(d, spec)
-        # 让 LANE 认出（复题：LANE 只认 19 个固定名，这里用真名）
         r = run(d)
         if r != 0:
-            fails.append("阴性对照 A 失败：层级正确却判 FAIL")
+            fails.append("阴性对照 A 失败：峰值层级正确（时长故意反转）却判 FAIL → 判据仍被时长污染")
     finally:
         shutil.rmtree(d, ignore_errors=True)
 
-    # B: 层级塌陷（FREQ 与 INFREQ 同响）→ 必须 FAIL
+    # B: 真塌陷（所有档同峰值）→ 必须 FAIL
     d = tempfile.mkdtemp()
     try:
         os.makedirs(os.path.join(d, "game"), exist_ok=True)
-        open(os.path.join(d, "game", "萌兽消消岛.html"), "w", encoding="utf-8").write("var CONFIG={audio:{gains:{}}};")
-        spec = {}
-        for nm in ("win", "lose", "revive"):
-            spec[nm] = ("INFREQ", 0.7, 0.8)
-        for nm in ("bomb", "kill", "chest"):
-            spec[nm] = ("MID", 0.5, 0.5)
-        for nm in ("fire", "hit", "ui"):
-            spec[nm] = ("FREQ", 0.7, 0.8)        # 与 INFREQ 一样响 → 塌陷
+        spec = {nm: (lv, 0.7, 0.4) for nm, lv in REAL.items()}
         mk(d, spec)
         r = run(d)
         if r == 0:
-            fails.append("阴性对照 B 失败：层级塌陷却判 PASS")
+            fails.append("阴性对照 B 失败：纵向层级塌陷却判 PASS")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+    # C: 覆盖度守卫 —— 漏一个文件进 PRIO 表必须 FAIL（防止被静默跳过）
+    d = tempfile.mkdtemp()
+    try:
+        os.makedirs(os.path.join(d, "game"), exist_ok=True)
+        spec = {nm: (lv, 0.3 + 0.1 * lv, 0.4) for nm, lv in REAL.items()}
+        mk(d, spec)
+        # 造一个不在 PRIO 表里的新文件
+        wav(os.path.join(d, "game", "audio", "sfx_zzznew.wav"),
+            [20000 * math.sin(2 * math.pi * 440 * i / SR) for i in range(int(SR * 0.3))])
+        r = run(d)
+        if r == 0:
+            fails.append("阴性对照 C 失败：有文件不在 PRIO 表里却判 PASS（会被静默跳过）")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+    # D: 中间档逆序（prio4 比 prio5 更响）→ 必须 FAIL
+    d = tempfile.mkdtemp()
+    try:
+        os.makedirs(os.path.join(d, "game"), exist_ok=True)
+        spec = {}
+        for nm, lv in REAL.items():
+            ampl = 0.30 + 0.09 * lv
+            if lv == 4:
+                ampl = 0.85                      # prio4 反超 prio5 → 逆序
+            spec[nm] = (lv, ampl, 0.4)
+        mk(d, spec)
+        r = run(d)
+        if r == 0:
+            fails.append("阴性对照 D 失败：中间档逆序（prio4 > prio5）却判 PASS")
     finally:
         shutil.rmtree(d, ignore_errors=True)
 
@@ -209,7 +283,7 @@ def selftest():
         for f in fails:
             print("❌ " + f)
         return 1
-    print("✅ 阴性对照全通过：判据能 PASS 正确样本、能 FAIL 塌陷样本")
+    print("✅ 阴性对照全通过（A 时长无关 / B 塌陷可检 / C 覆盖度 / D 逆序可检）")
     return 0
 
 
