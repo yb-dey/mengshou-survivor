@@ -140,6 +140,25 @@ const FIX_LANES = new Set(['battle', 'result']);
 // 只对"存在孤立瞬态"的曲目做补偿（= 真·头部被瞬态独占）；其余即使档内不齐也不动
 const NEED_LANES = new Set(['battle']);
 
+// ── 目标锚（**钉死的常量**，绝不从"当前文件"现算）────────────────
+// ⚠ 这里踩过一个隐蔽的坑，必须写下来：
+//   最初 target[lane] = max(当前各曲 rawP95)。在**已修好**的仓库上重跑时，abyss 的 P95
+//   已被抬高 → 锚跟着水涨船高 → 又得出"还需 +1.69 dB"，永远收敛不了。
+//   CI 上尤其致命：`.lnfix.json` 不在版本控制里（点开头的本地标记），CI 把它当"原文件"，
+//   于是 **dry-run 报"待修"** —— 幂等机制在换机器/CI 上整体失效。
+//   ⇒ 锚必须是**常量**（"希望 battle 档达到的 P95"），且幂等改为"**当前值是否已达锚**"判定，
+//     完全不依赖任何标记文件。
+//   取值依据（**只抬不压**——锚是"下限"不是"等值目标"）：
+//     修复前 battle 档 P95：march −17.37 / horde −19.05 / abyss −22.91（未加 lane 增益）
+//     · horde 是最轻的"正常峰"曲（无瞬态独占）→ 它就是该档的合理下限
+//     · 目标 = 让 abyss 追到 **horde 略下**（−19.05），即把 5.3dB 断崖压到 ~1dB
+//     · 比锚响的曲目（march）**绝不压低**（need > 0 才算）
+//   ⚠ abyss 的"已修值"（−18.70，比 horde 还高）是**一次过头**的结果：压瞬态后可用增益 1.65×
+//     被用满（封顶 0.98），把整曲抬过了头。新锚 −19.05 会把它正确回落到"恰好齐平 horde"。
+const ANCHOR_P95 = { battle: -19.05, result: null, home: null };
+// 只抬不压：need = 锚 − 当前值，且 need > 0 才动手
+const ONLY_RAISE = true;
+
 function peakOf(sig) { let p = 0; for (let i = 0; i < sig.length; i++) { const v = Math.abs(sig[i]); if (v > p) p = v; } return p; }
 function sha1(p) { return crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 16); }
 
@@ -357,11 +376,10 @@ for (const f of files) {
   const lane = TRACK_LANE[tid];
   if (!lane) continue;
   const p = path.join(AUDIO, f);
-  const already = marks[tid] && !FORCE;
-  // 已修过 → 从备份取原件重算（保证幂等：重复 apply 结果相同）
-  let src = p;
-  if (already && fs.existsSync(path.join(BAK, f))) src = path.join(BAK, f);
-  const { fmt, samples } = readWav(src);
+  // ⚠ 不再依赖 `.lnfix.json` 判"是否修过"（该文件不在版本控制 → CI/换机即失效）。
+  //   幂等改为**纯函数语义**：输入当前文件 → 输出目标状态；已达标则 k=1、无需写盘。
+  //   备份仍保留（首次写入前存原件），但它只用于 `--force` 重算，不参与幂等判定。
+  const { fmt, samples } = readWav(p);
   if (fmt.sr !== SR_EXPECT) { console.log(`⚠ ${f} 采样率 ${fmt.sr} ≠ ${SR_EXPECT}，跳过`); continue; }
   const sp = findSpikes(samples);
   let shaped = samples, deSpike = 1;
@@ -371,22 +389,34 @@ for (const f of files) {
     for (const [lo, hi] of sp.offs) for (let i = lo; i <= hi; i++) m[i] = 1;
     let restPk = 0;
     for (let i = 0; i < samples.length; i++) if (!m[i]) restPk = Math.max(restPk, Math.abs(samples[i]));
-    deSpike = (SPIKE_TGT * restPk) / sp.pk;
-    shaped = scaleSpans(samples, sp.offs, deSpike);
+    // ⚠ 幂等的关键：用**落差比**（peak / restPk）判"是否已压到位"，而不是"检测到 spiky 就压"。
+    //   为什么比值可以、绝对目标不行：`SPIKE_TGT × restPk` 会**随整曲增益漂移**
+    //   （整曲被放大 1.65× 后 restPk 也从 0.594 涨到 0.823，目标永远追不上 → 每跑一次再压一次）。
+    //   而 **peak/restPk 在等比例缩放下是不变量**：原件 0.708/0.5939 = 1.192，
+    //   已修文件 0.980/0.8228 = 1.191 —— 落差已恒定，说明"压到位"了，不该再动。
+    //   ⇒ 判据 = 当前落差比 > 目标落差比（1/SPIKE_TGT）才压；deSpike 用比值直接算，天然幂等。
+    const curRatio = restPk > 0 ? sp.pk / restPk : 1;
+    const wantRatio = 1 / SPIKE_TGT;
+    if (curRatio > wantRatio * 1.001) {
+      deSpike = wantRatio / curRatio;
+      shaped = scaleSpans(samples, sp.offs, deSpike);
+    }
   }
   rows.push({ f, tid, lane, p, fmt, samples: shaped, raw: samples, sp, deSpike,
               p95: p95Db(shaped, fmt.sr), peak: peakOf(shaped),
-              rawPeak: sp.pk, rawP95: p95Db(samples, fmt.sr), skip: already });
+              rawPeak: sp.pk, rawP95: p95Db(samples, fmt.sr) });
 }
 for (const r of rows) r.eff = r.p95 + 20 * Math.log10(LANE_GAIN[r.lane]);
 
 const byLane = {};
 for (const r of rows) (byLane[r.lane] = byLane[r.lane] || []).push(r);
-// 目标锚 = 该 lane「原始」P95 的较响者；lane 不在 NEED_LANES 或曲目无瞬态 → 目标 = 自身（不动）
+// 目标锚 = 常量（见 ANCHOR_P95）；未设锚的 lane → 目标 = 自身（不动）
 const target = {};
 for (const lane in byLane) {
-  const refs = byLane[lane].map((r) => r.rawP95 + 20 * Math.log10(LANE_GAIN[lane]));
-  target[lane] = Math.max(...refs);
+  const a = ANCHOR_P95[lane];
+  target[lane] = (a === null || a === undefined)
+    ? Math.max(...byLane[lane].map((r) => r.eff))
+    : a + 20 * Math.log10(LANE_GAIN[lane]);
 }
 
 console.log(`模式: ${APPLY ? 'APPLY' : 'DRY-RUN'} ｜ 文件 ${rows.length} ｜ 峰值封顶 ${PEAK_CEIL} ｜ 瞬态判据 簇宽<${SPIKE_W}ms且簇数<=${SPIKE_N}`);
@@ -400,14 +430,16 @@ for (const r of rows) {
   console.log(`| ${r.tid} | ${r.rawPeak.toFixed(3)} | ${r.sp.n} | ${r.sp.spans.length} | ${r.sp.maxW.toFixed(1)}ms | ${v} | ${r.sp.spikes ? r.sp.offs.length + ' 簇' : '—'} |`);
 }
 
-console.log('\n### ② 补偿增益（目标 = 同档原始 P95 较响者；仅 battle 档 + 有瞬态者）\n');
+console.log('\n### ② 补偿增益（目标锚 = 常量 ANCHOR_P95，不从文件现算；仅 battle 档 + 有瞬态者）\n');
 console.log('| 曲目 | lane | 原P95dB | 整形后P95 | 目标dB | 需 +dB | 倍率 | 新峰值 | 残差 | 状态 |');
 console.log('|---|---|---|---|---|---|---|---|---|---|');
 const plan = [];
 for (const lane in byLane) {
   for (const r of byLane[lane].sort((a, b) => a.eff - b.eff)) {
     const inScope = FIX_LANES.has(lane) && NEED_LANES.has(lane) && r.sp.spikes;
-    const need = inScope ? target[lane] - r.eff : 0;
+    // 只抬不压：need = 锚 − 当前值，但只在为正时生效（比锚响的曲目绝不压低）
+    let need = inScope ? target[lane] - r.eff : 0;
+    if (ONLY_RAISE && need < 0) need = 0;
     let k = Math.pow(10, need / 20);
     let newPeak = r.peak * k, cap = false;
     if (newPeak > PEAK_CEIL) { k = PEAK_CEIL / r.peak; newPeak = PEAK_CEIL; cap = true; }
@@ -415,9 +447,8 @@ for (const lane in byLane) {
     // ⚠ 判"待修"的充分条件 = **有实际增益**（|k-1| 有意义）。仅有瞬态但目标不差 → 不必重写文件：
     //   压瞬态只为"腾头部预算"，若本来不需要提响度，压它等于凭空改动（march 就属于这种）。
     const needFix = inScope && Math.abs(k - 1) > 1e-4;
-    const st = r.skip ? '已修(跳过)'
-      : (!inScope ? (lane === 'home' ? '不动(home编配差异)' : '不动(无瞬态)')
-        : (needFix ? '待修' : '已齐(无需增益)'));
+    const st = (!inScope ? (lane === 'home' ? '不动(home编配差异)' : '不动(无瞬态)')
+      : (needFix ? '待修' : '✅已达标'));
     plan.push({ ...r, k, newPeak, cap, residual, st, inScope, needFix });
     console.log(`| ${r.tid} | ${r.lane} | ${r.rawP95.toFixed(2)} | ${r.p95.toFixed(2)} | ${target[lane].toFixed(2)} | ${inScope ? (need >= 0 ? '+' : '') + need.toFixed(2) : '—'} | ×${k.toFixed(4)} | ${newPeak.toFixed(3)} | ${Math.abs(residual) < 0.05 ? '—' : residual.toFixed(2)} | ${st}${cap ? ' ⚠触顶' : ''} |`);
   }
@@ -428,9 +459,9 @@ if (!APPLY) { console.log('\n(dry-run，未落盘。加 --apply 执行)'); proce
 fs.mkdirSync(BAK, { recursive: true });
 let done = 0;
 for (const it of plan) {
-  if (!it.needFix || it.skip) continue;            // home / 无瞬态 / 无需增益 / 已修过 → 完全不碰
+  if (!it.needFix) continue;                       // home / 无瞬态 / 已达标 → 完全不碰
   const bak = path.join(BAK, it.f);
-  if (!fs.existsSync(bak)) fs.copyFileSync(it.p, bak);   // 首次原件只备份一次（幂等的关键）
+  if (!fs.existsSync(bak)) fs.copyFileSync(it.p, bak);   // 首次原件只备份一次
   const { out } = scaleTo(it.samples, it.newPeak);
   writeWav(it.p, it.fmt, out);
   marks[it.tid] = { sha: sha1(it.p), k: +it.k.toFixed(6), deSpike: +it.deSpike.toFixed(6),
