@@ -171,6 +171,19 @@ for (const fx of FX) {
 const THRESH = +(process.env.FX_THRESH || 1.4);
 // 判定看**平均差高于对照** 或 **最大格差显著**（后者覆盖平移类特效如震屏）
 const bad = rows.filter((r) => r.hook !== '-' && r.delta <= ctrl * THRESH && r.dmax < ctrlMax * 2);
+
+// ---- 死亡帧：用项目自带证据口 `deathMarks()` 的累计计数做**定量**证明 ----
+//   （闭包内数组外部探不到，项目为此专门开了 spawned/drawn 计数口）
+const dmBefore = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.deathMarks(); } catch (e) { return null; } });
+await ensureLive('死亡帧复测');
+await page.evaluate(() => { try { window.MENGSHOU_DEBUG.killDemo(); } catch (e) { void e; } });
+await page.waitForTimeout(900);
+const dmAfter = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.deathMarks(); } catch (e) { return null; } });
+const dmOk = !!(dmBefore && dmAfter && dmAfter.spawned > dmBefore.spawned && dmAfter.drawn > dmBefore.drawn);
+const dmLine = dmBefore && dmAfter
+  ? `- 死亡帧计数：spawned ${dmBefore.spawned}→**${dmAfter.spawned}** ／ drawn ${dmBefore.drawn}→**${dmAfter.drawn}** ／ _dead 贴图 ${dmAfter.sprites} 张 → **${dmOk ? '✅ 确认触发并绘制' : '❌'}**`
+  : '- 死亡帧计数：读取失败 ❌';
+
 const md = [
   '# 特效/反馈专项体检（fx-audit）',
   '',
@@ -185,6 +198,12 @@ const md = [
   '> 「平均差/最大格差」= 触发前后 32×32 灰度指纹。游戏一直在动，**必须与 ctrl 比**；',
   '> 只取平均会漏判平移类特效（震屏），故并列最大格差。',
   '',
+  '## 死亡帧（计数口证据，比帧差更硬）',
+  '',
+  dmLine,
+  '',
+  '> `deathMarks()` 是项目为此专设的证据口：`spawned` 证明"确实触发过"，`drawn` 证明"确实画出来过"。',
+  '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'fx-report.md'), md);
 fs.writeFileSync(path.join(OUT, 'fx-report.json'), JSON.stringify({ ctrl: +ctrl.toFixed(2), thresh: THRESH, rows, errs }, null, 2));
@@ -193,5 +212,6 @@ console.log(md);
 await browser.close();
 server.close();
 if (errs.length) { console.error('❌ 有未捕获异常'); process.exit(3); }
+if (!dmOk) { console.error("❌ 死亡帧未被确认触发/绘制"); process.exit(5); }
 if (bad.length) { console.error('❌ 以下特效在画面上不可见: ' + bad.map((b) => b.name).join(', ')); process.exit(2); }
 process.exit(0);
