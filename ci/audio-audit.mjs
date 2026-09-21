@@ -115,25 +115,29 @@ const rows = [
   { name: '战斗+击杀(SFX)', ...battle },
   { name: '静音后', ...muted },
 ];
-const okBgm = bgm.src > 0;
-const okBattle = battle.src > bgm.src * 1.3;
+// ⚠ 判定口径修正（实测踩过）：BGM 通常是**开机创建一次、loop 播放**的长 buffer source，
+//   窗口期（4s）内的"增量"会是 0 —— 那是**度量窗口问题，不是没声音**。
+//   → BGM 看**自加载以来的累计音源数**（t1.src），SFX/静音才看增量。
+const okBgm = t1.src > 0;
+const okBattle = battle.src > Math.max(bgm.src * 1.3, 0);
 const okMute = muted.src < Math.max(2, battle.src * 0.5);
 const md = [
   '# 音频专项体检（audio-audit）',
   '',
   `- AudioContext 创建次数: ${t1.ctxMade}（0 = 根本没初始化音频）`,
+  `- **自加载以来累计音源**: ${t1.src}（振荡器 ${t1.osc} + buffer ${t1.buf}）`,
   `- 未捕获异常: ${errs.length}`,
   '',
-  '| 阶段 | 振荡器 | 音频源(buffer) | 音源合计 | 判定 |',
-  '|---|---|---|---|---|',
-  ...rows.map((r) => `| ${r.name} | ${r.osc} | ${r.buf} | ${r.src} | |`),
+  '| 阶段（窗口内增量） | 振荡器 | 音频源(buffer) | 音源合计 |',
+  '|---|---|---|---|',
+  ...rows.map((r) => `| ${r.name} | ${r.osc} | ${r.buf} | ${r.src} |`),
   '',
-  `- ① 大厅应有 BGM（音源>0）: **${okBgm ? '✅' : '❌'}**`,
-  `- ② 战斗+击杀应高于 BGM×1.3（${bgm.src}→${battle.src}）: **${okBattle ? '✅' : '❌'}**`,
-  `- ③ 静音后应低于战斗×0.5（${battle.src}→${muted.src}）: **${okMute ? '✅' : '❌'}**`,
+  `- ① 有 BGM（**累计**音源 > 0）: **${okBgm ? '✅' : '❌'}**`,
+  `- ② 战斗+击杀高于 BGM 窗口（${bgm.src}→${battle.src}）: **${okBattle ? '✅' : '❌'}**`,
+  `- ③ 静音后显著下降（${battle.src}→${muted.src}）: **${okMute ? '✅' : '❌'}**`,
   '',
-  '> 计数钩子挂在 `AudioContext.prototype.createOscillator/createBufferSource` 上，',
-  '> 在游戏脚本执行前注入 → 无论音频走 wav 还是程序化合成，都会计入。',
+  '> 计数钩子挂在 `AudioContext.prototype.createOscillator/createBufferSource` 上，在游戏脚本执行前注入。',
+  '> ⚠ BGM 是"开机建一次 + loop"的形态 → **窗口增量会为 0，属正常**，故 BGM 用累计量判定。',
   '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'audio-report.md'), md);
