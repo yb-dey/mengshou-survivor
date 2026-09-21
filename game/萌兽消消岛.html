@@ -594,7 +594,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.162",                   // 【v1.162】锁英雄补美术: 早中波杂兵外轮廓/星巅去灰斑/大厅落地台/宝石墨缘/击杀软墨烟, 碰撞/数值/掉落/进化/10分钟轴不动
+  version: "1.168",                   // 【v1.168】音频映射补齐: sfxFiles 15→19 键(补 CARDSHOW/CHEST/EVENT/REVIVE 四个节点音离线渲染), 修"有合成器无映射→外采文件永远加载不到"的静默降级(覆盖10个埋点); 碰撞/数值/掉落/进化/10分钟轴不动
   gameName: "萌兽幸存者",              // 玩家可见主标题; 历史别名「萌兽消消岛」
 
   // 新手引导(步骤14b, 文案包): 4 步事件触发/消失条件, guideFlags 入档防重放
@@ -8199,7 +8199,14 @@ var AUDIO_ASSET = {
     SFX_BOSS_WARN: "sfx_boss_warn", SFX_BOSS_DIE: "sfx_boss_die",
     SFX_WIN: "sfx_win", SFX_LOSE: "sfx_lose",
     SFX_EVO: "sfx_evo", SFX_BOMB: "sfx_bomb",
-    SFX_KILL: "sfx_kill", SFX_UI: "sfx_ui", SFX_START: "sfx_start"
+    SFX_KILL: "sfx_kill", SFX_UI: "sfx_ui", SFX_START: "sfx_start",
+    // 【v1.168】补齐 4 个"有合成器、无映射"的节点音 —— 原先 CONFIG.audio.gains 有 19 键、
+    //   本表只有 15 键 → `tryLoadLocalFiles()` 按本表 fetch, 多出的 4 个**永远拿不到外采文件**,
+    //   静默走程序化兜底。这 4 个覆盖 **10 个埋点**(全部 5 个章事件提示 + 复活 + 开箱 + 亮卡),
+    //   正是玩家最常听到的节点音。offline 渲染同源(见 ci/render-missing-sfx.mjs), 零新增音色。
+    //   ⚠ 本表的键集必须与 CONFIG.audio.gains 一致 —— 不一致时不会报错, 只会静默降级。
+    SFX_CARDSHOW: "sfx_cardshow", SFX_CHEST: "sfx_chest",
+    SFX_EVENT: "sfx_event", SFX_REVIVE: "sfx_revive"
   }
 };
 function audioAssetFileName(kind, id) {
