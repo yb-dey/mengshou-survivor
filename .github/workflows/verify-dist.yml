@@ -27,6 +27,9 @@ jobs:
       - name: 三形态内容级复核（音频哈希一致 + 贴图键一致 + 体积口径）
         run: node ci/final-audit.mjs
 
+      - name: 跟宠贴图入库体检（接线级：7 只必须在 AI_ART_TABLE 里且值非空）
+        run: TABLE_MODE=1 node ci/beast-art-audit.mjs
+
       - name: 安装 Playwright
         run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
 
