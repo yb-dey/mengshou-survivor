@@ -183,6 +183,16 @@ const dmOk = !!(dmBefore && dmAfter && dmAfter.spawned > dmBefore.spawned && dmA
 const dmLine = dmBefore && dmAfter
   ? `- 死亡帧计数：spawned ${dmBefore.spawned}→**${dmAfter.spawned}** ／ drawn ${dmBefore.drawn}→**${dmAfter.drawn}** ／ _dead 贴图 ${dmAfter.sprites} 张 → **${dmOk ? '✅ 确认触发并绘制' : '❌'}**`
   : '- 死亡帧计数：读取失败 ❌';
+// ---- 受击白闪（0.07s 瞬时，帧差采样难命中）→ 同样用计数口 ----
+const hfBefore = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.hitFlash ? window.MENGSHOU_DEBUG.hitFlash() : null; } catch (e) { return null; } });
+await ensureLive('白闪复测');
+await page.evaluate(() => { try { window.MENGSHOU_DEBUG.killDemo(); } catch (e) { void e; } });
+await page.waitForTimeout(900);
+const hfAfter = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.hitFlash ? window.MENGSHOU_DEBUG.hitFlash() : null; } catch (e) { return null; } });
+const hfOk = !!(hfBefore && hfAfter && hfAfter.spawned > hfBefore.spawned && hfAfter.drawn > hfBefore.drawn);
+const hfLine = hfBefore && hfAfter
+  ? `- 受击白闪计数：spawned ${hfBefore.spawned}→**${hfAfter.spawned}** ／ drawn ${hfBefore.drawn}→**${hfAfter.drawn}** ／ 时长 ${hfAfter.sec}s ／ 贴图 ${hfAfter.sprite ? '有' : '无'} → **${hfOk ? '✅ 确认触发并绘制' : '❌'}**`
+  : '- 受击白闪计数：无证据口（需先给游戏补 hitFlash 计数）⚠';
 
 const md = [
   '# 特效/反馈专项体检（fx-audit）',
@@ -201,6 +211,7 @@ const md = [
   '## 死亡帧（计数口证据，比帧差更硬）',
   '',
   dmLine,
+  hfLine,
   '',
   '> `deathMarks()` 是项目为此专设的证据口：`spawned` 证明"确实触发过"，`drawn` 证明"确实画出来过"。',
   '',
@@ -213,5 +224,6 @@ await browser.close();
 server.close();
 if (errs.length) { console.error('❌ 有未捕获异常'); process.exit(3); }
 if (!dmOk) { console.error("❌ 死亡帧未被确认触发/绘制"); process.exit(5); }
+if (hfBefore && hfAfter && !hfOk) { console.error("❌ 受击白闪未被确认触发/绘制"); process.exit(6); }
 if (bad.length) { console.error('❌ 以下特效在画面上不可见: ' + bad.map((b) => b.name).join(', ')); process.exit(2); }
 process.exit(0);
