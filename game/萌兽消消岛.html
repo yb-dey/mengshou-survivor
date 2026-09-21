@@ -594,7 +594,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.173",                   // 【v1.173】补全「淡刀子」文案: 敌人图鉴 21/21(原 5/21) + 跟宠 7/7(原 2/7) 均有 knife 行 —— 此前 lore() 用 filter(!!e.knife) 静默丢掉 16 敌人/5 跟宠, 点条目只回退到通用提示; 纯文案补全, 不动数值/渲染/逻辑
+  version: "1.174",                   // 【v1.174】配方图鉴「选它当口」: DATA_CODEX_FORK 20 条分支补 pick(此前只有 3–4 字 feel, 玩家无分支决策依据) + forkCodexOf 透传 + fork 卡渲染第二行; 另修 codexContentBottom() 漏算成档/进化两段(pre-existing, 少算 416px); 纯文案+布局, 不动数值
   gameName: "萌兽幸存者",              // 玩家可见主标题; 历史别名「萌兽消消岛」
 
   // 新手引导(步骤14b, 文案包): 4 步事件触发/消失条件, guideFlags 入档防重放
@@ -795,6 +795,9 @@ var CONFIG = {
   codexEnemyGap: 6,              // 【v1.45】敌人行距
   codexGroupH: 52,               // 【v1.45】敌人分组签高
   codexForkH: 96,                // 【v1.71】分叉卡略矮, 给战斗物进化条留位
+                                 // 【v1.174】⚠ 不可调高：配方 tab 是「分叉+成档+进化」三段串排，
+                                 //   卡高每 +22px 就把整 tab 顶出 1280 视口（实测 +22 即溢出 182px，
+                                 //   底部成档卡被裁 + 返回钮压卡）。pick 行改为**在 96px 内挤**。
   codexForkGapX: 12,             // 【v1.45】分叉卡列距
   codexForkGapY: 6,              // 【v1.71】分叉卡行距略收, 给进化条留位
   codexEvoH: 54,                 // 【v1.71】战斗物进化卡高(紧凑可点, 不挡成档)
@@ -10307,16 +10310,16 @@ var DATA_CODEX_ENEMY = [
   { id: "boss3", group: "boss", tell: "水潭 + 八向环弹", where: "岩岩坡起。10 分钟章在 10 分", hint: "潭先预警再生效", knife: "把潮水吞回去，换岛上再亮一晚。" }
 ];
 var DATA_CODEX_FORK = [
-  { from: "pinecone", branches: [{ id: "acornstorm", feel: "叠弹暴雨" }, { id: "needlespray", feel: "七向扇铺" }] },
-  { from: "seedvolley", branches: [{ id: "seedcannon", feel: "七向扇铺" }, { id: "seedlance", feel: "瞄准贯珠" }] },
-  { from: "bombnut", branches: [{ id: "megaboom", feel: "巨木余燃" }, { id: "peppermine", feel: "落地地雷" }] },
-  { from: "dewpulse", branches: [{ id: "tideshield", feel: "走动花环" }, { id: "rootwell", feel: "站住才打" }] },
-  { from: "beeswarm", branches: [{ id: "beesguard", feel: "八只近卫" }, { id: "fluffguard", feel: "四球远轨" }] },
-  { from: "gurustone", branches: [{ id: "gurumeteor", feel: "四岩远砸" }, { id: "gurugravel", feel: "六砾密环" }] },
-  { from: "bladeleaf", branches: [{ id: "bladestorm", feel: "三叶远阵" }, { id: "leafdash", feel: "五叶近快" }] },
-  { from: "mapledart", branches: [{ id: "mapletornado", feel: "六镖远卷" }, { id: "maplecross", feel: "对穿近斩" }] },
-  { from: "thunder", branches: [{ id: "thunderstorm", feel: "连锁雷云" }, { id: "pepperbolt", feel: "短链快劈" }] },
-  { from: "laserflower", branches: [{ id: "solarflare", feel: "宽束慢扫" }, { id: "nectarsnap", feel: "窄束瞬斩" }] }
+  { from: "pinecone", branches: [{ id: "acornstorm", feel: "叠弹暴雨", pick: "要铺满一条走廊时选它" }, { id: "needlespray", feel: "七向扇铺", pick: "杂兵排成一行时选它" }] },
+  { from: "seedvolley", branches: [{ id: "seedcannon", feel: "七向扇铺", pick: "要同时压两路时选它" }, { id: "seedlance", feel: "瞄准贯珠", pick: "专打一个厚目标时选它" }] },
+  { from: "bombnut", branches: [{ id: "megaboom", feel: "巨木余燃", pick: "要一发清一圈时选它" }, { id: "peppermine", feel: "落地地雷", pick: "守路口比追人划算时选它" }] },
+  { from: "dewpulse", branches: [{ id: "tideshield", feel: "走动花环", pick: "边走边护住自己选它" }, { id: "rootwell", feel: "站住才打", pick: "站桩输出更稳时选它" }] },
+  { from: "beeswarm", branches: [{ id: "beesguard", feel: "八只近卫", pick: "要贴身有人挡时选它" }, { id: "fluffguard", feel: "四球远轨", pick: "想让伤害自己飞出去时选它" }] },
+  { from: "gurustone", branches: [{ id: "gurumeteor", feel: "四岩远砸", pick: "远处落点砸得狠选它" }, { id: "gurugravel", feel: "六砾密环", pick: "要在身周转一圈选它" }] },
+  { from: "bladeleaf", branches: [{ id: "bladestorm", feel: "三叶远阵", pick: "拉开距离慢慢磨时选它" }, { id: "leafdash", feel: "五叶近快", pick: "贴脸也要打得快时选它" }] },
+  { from: "mapledart", branches: [{ id: "mapletornado", feel: "六镖远卷", pick: "要卷着走一路选它" }, { id: "maplecross", feel: "对穿近斩", pick: "近身对穿两次选它" }] },
+  { from: "thunder", branches: [{ id: "thunderstorm", feel: "连锁雷云", pick: "怪挤成一堆时选它" }, { id: "pepperbolt", feel: "短链快劈", pick: "要劈得快、劈得准选它" }] },
+  { from: "laserflower", branches: [{ id: "solarflare", feel: "宽束慢扫", pick: "慢慢扫、扫得宽选它" }, { id: "nectarsnap", feel: "窄束瞬斩", pick: "短促高频切近敌选它" }] }
 ];
 var DATA_CODEX_PAIR = [
   { id: "gale", name: "疾风成档", a: "windbell", b: "spinachseed", tag: "机动",
@@ -10393,6 +10396,7 @@ function forkCodexOf(fromId) {
     branches.push({
       id: b.id,
       feel: b.feel,
+      pick: b.pick || "",   // 【v1.174】选它当口：玩家做分支决策用的那一行
       name: sd ? sd.name : b.id,
       req: sd ? sd.req : "",
       reqName: p ? p.name : "",
@@ -30379,7 +30383,25 @@ function codexContentBottom() {
   var tab = codexTabId();
   var bodyY = CONFIG.codexBodyY || 168;
   if (tab === "pet") return bodyY + DATA_BEAST.length * ((CONFIG.codexPetRowH || 118) + (CONFIG.codexPetGap || 6));
-  if (tab === "fork") return bodyY + Math.ceil(DATA_CODEX_FORK.length / 2) * ((CONFIG.codexForkH || 132) + (CONFIG.codexForkGapY || 8));
+  if (tab === "fork") {
+    // 【v1.174】⚠ 修正：此前只数分叉卡（5 行），**完全漏掉同 tab 下方的成档(7) + 进化(9) 两段** ——
+    //   而 codexForkRows 的构建（见 uiCodexForks/uiCodexPairs/uiCodexEvos）三段是**串行接排**的：
+    //     分叉区 → +16 → 成档区(2 行) → -pairGapY+10 → 进化区(3 行)
+    //   漏算的后果：面板高度小于真实内容 → 底部被裁 + 「返回」按钮压住成档卡（改卡高后更明显）。
+    //   这里**逐段照抄真实布局**，与构建端同口径；任何一段的行数/间距变了都必须同步改这里。
+    var fkH = CONFIG.codexForkH || 132, fkGapY = CONFIG.codexForkGapY || 8;
+    var pairH = CONFIG.codexPairH || 100, pairGapY = CONFIG.codexPairGapY || 10;
+    var evoH = CONFIG.codexEvoH || 54, evoGapY = CONFIG.codexEvoGapY || 6;
+    var forkRows = Math.ceil(DATA_CODEX_FORK.length / 2);
+    var pairRows = (DATA_CODEX_PAIR.length === 5 || DATA_CODEX_PAIR.length === 6 || DATA_CODEX_PAIR.length === 7)
+      ? 2 : Math.ceil(DATA_CODEX_PAIR.length / 2);
+    var evoCols = 3;
+    var evoRows = Math.ceil(DATA_COMBAT_EVO.length / evoCols);
+    var y = bodyY + forkRows * (fkH + fkGapY);          // 分叉区底
+    y = y + 16 + pairRows * (pairH + pairGapY);          // +16 起成档区，走 pairRows 行
+    y = y - pairGapY + 10 + evoRows * (evoH + evoGapY);  // 成档底 → +10 起进化区
+    return y;
+  }
   var gH = CONFIG.codexGroupH || 52, eH = CONFIG.codexEnemyRowH || 108, eG = CONFIG.codexEnemyGap || 6;
   var lst = enemiesInCodexGroup(GAME.codexEnemyGroup || "trash");
   return bodyY + gH + 10 + lst.length * (eH + eG);
@@ -30671,24 +30693,32 @@ function makeCodexForkCard(idx, x, y, w, h) {
       if (!view) return;
       selected = GAME.codexForkSel === view.from;
       drawCodexFrame(ctx, r.x, r.y, r.w, r.h, selected, view.color);
-      drawItemSprite(ctx, weaponSpriteKey(view.from), r.x + 10, r.y + 6, 28);
+      drawItemSprite(ctx, weaponSpriteKey(view.from), r.x + 10, r.y + 4, 24);
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
       ctx.fillStyle = "#3a5a20";
-      ctx.font = "bold 16px " + FONT_STACK;
-      ctx.fillText(view.weapon, r.x + 44, r.y + 16);
+      ctx.font = "bold 15px " + FONT_STACK;
+      ctx.fillText(view.weapon, r.x + 40, r.y + 14);
       ctx.fillStyle = flowColorOf(view.tag) || "#8a5a10";
-      ctx.font = "bold 12px " + FONT_STACK;
-      ctx.fillText((view.flow || view.tag) + " · 第" + view.chMin + "章入池", r.x + 44, r.y + 34);
+      ctx.font = "bold 11px " + FONT_STACK;
+      ctx.fillText((view.flow || view.tag) + " · 第" + view.chMin + "章入池", r.x + 40, r.y + 30);
+      // 【v1.174】每分支 = 「主行 + 选它当口」两行，pitch 30 塞进 96px 卡（不可调高卡，见 CONFIG 注释）。
+      //   布局：第0支主行 y+46 / pick y+56；第1支主行 y+76 / pick y+86 → 内容底 86+6=92 ≤ 96 ✓
       for (i = 0; i < 2; i++) {
         b0 = view.branches[i];
         if (!b0) continue;
-        by = r.y + 50 + i * 22;
-        drawItemSprite(ctx, passiveSpriteKey(b0.req), r.x + 10, by, 20);
+        by = r.y + 40 + i * 30;
+        drawItemSprite(ctx, passiveSpriteKey(b0.req), r.x + 8, by, 18);
         ctx.fillStyle = "#5a4a18";
         ctx.font = "bold 12px " + FONT_STACK;
         ctx.textAlign = "left";
-        ctx.fillText(hudFitText(ctx, b0.reqName + " → " + b0.name + " · " + b0.feel, r.w - 40), r.x + 34, by + 10);
+        ctx.fillText(hudFitText(ctx, b0.reqName + " → " + b0.name + " · " + b0.feel, r.w - 36), r.x + 30, by + 6);
+        // 【v1.174】选它当口：分支决策依据（此前只有 3–4 字 feel，玩家无法据此选）
+        if (b0.pick) {
+          ctx.fillStyle = "#7a6a38";
+          ctx.font = "10px " + FONT_STACK;
+          ctx.fillText(hudFitText(ctx, b0.pick, r.w - 36), r.x + 30, by + 17);
+        }
       }
     }
   });
