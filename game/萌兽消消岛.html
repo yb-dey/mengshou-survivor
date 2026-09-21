@@ -27615,10 +27615,13 @@ function makeRuneChip(i, x, y, w, h) {
       ctx.lineWidth = 1;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = selected ? "#e8f8e0" : "#b6ae96";
+      // 【v1.167】符文芯片文字可读性 —— 实测未选中标题 #b6ae96 对芯片底 rgb(171,175,154) 仅 **1.48:1**、
+    //   说明 #6e644a 仅 2.61:1；选中态近白压浅绿推算 1.23:1（正文标准 4.5:1）→ 大厅最常用的一行读不出来。
+    //   原值：标题 selected?"#e8f8e0":"#b6ae96"；说明 selected?"#b8f0c0":"#6e644a"。
+    ctx.fillStyle = selected ? "#1e4a22" : "#2b2718";
       ctx.font = "bold 15px " + FONT_STACK;
       ctx.fillText(rn.name, r.x + r.w / 2, r.y + r.h / 2 - 7);
-      ctx.fillStyle = selected ? "#b8f0c0" : "#6e644a";
+      ctx.fillStyle = selected ? "#2a5a2e" : "#443e2c";
       ctx.font = "11px " + FONT_STACK;
       ctx.fillText(rn.desc, r.x + r.w / 2, r.y + r.h / 2 + 10);
       endWidgetPress(ctx, pressed);
