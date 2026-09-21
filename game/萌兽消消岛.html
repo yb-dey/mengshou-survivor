@@ -34869,6 +34869,10 @@ function init() {
     },
     openGear: function () { onTapOpenGear(); return { state: GAME.state, sel: uiGearSel, view: enhanceDealView(selectedGearItem()) }; },
     closeGear: function () { onTapCloseGear(); return GAME.state; },
+    // 【2026-09-21】补设置页开关钩子：设置是真实界面，但此前**没有任何动作型钩子**可达 →
+    //   云端巡检永远拍不到它（13 屏里"08-hero"其实是数据查询 heroSheet，根本不存在该界面）。
+    openSettings: function () { onTapOpenSettings(); return GAME.state; },
+    closeSettings: function () { onTapCloseSettings(); return GAME.state; },
     openUp: onTapOpenUpgrade,
     closeUp: onTapCloseUpgrade,
     openBeast: function () { onTapOpenBeast(); return this.codex(); },
