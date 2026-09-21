@@ -2626,7 +2626,7 @@ function hallTalentCapN() {
   return n;
 }
 function vaultPanelMetrics() {
-  var py = (CONFIG.viewH - 1240) / 2;
+  var py = (CONFIG.viewH - 1140) / 2;   // 【v1.167f】与面板高 1140 一致
   var rowH = CONFIG.hallVaultRowH || 118;
   var btnW = CONFIG.hallVaultBtnW || 128;
   var btnH = CONFIG.hallVaultBtnH || 88;
@@ -2649,7 +2649,7 @@ function vaultPanelMetrics() {
     btnW: btnW,
     btnH: btnH,
     btnPadY: Math.max(0, Math.floor((cardH - btnH) / 2)),
-    closeY: py + 1150
+    closeY: py + 1036          // 【v1.167f】288 + 6*118 + 40，贴最后一行
   };
 }
 function vaultRowTop(i) {
@@ -28364,7 +28364,7 @@ function registerUi() {
   }
   uiUpClose = makeButton("upclose", CONFIG.viewW / 2 - 110, upPy + 1150, 220, 64, "返回", onTapCloseUpgrade);
   // 【v1.72/v1.85】仓库兑换/浅天赋: HOME 模态。行卡点选看账, 右钮两下才扣, 不抢正片出击。
-  uiVaultModal = makeModal("vaultmodal", 660, 1240, drawVaultPanel);
+  uiVaultModal = makeModal("vaultmodal", 660, 1140, drawVaultPanel)  /* 【v1.167f】vaultFitConst：6 行固定内容，1240→1140 收掉 154px 底留白 */;
   var vLay = vaultPanelMetrics();
   uiVaultTabs = [];
   uiVaultTabs.push(makeButton("vaulttab0", 80, vLay.tabY, 260, vLay.tabH, "进度打造", function () { onTapVaultTab("craft"); }));
