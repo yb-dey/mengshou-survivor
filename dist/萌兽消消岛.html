@@ -594,7 +594,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.170",                   // 【v1.170】修"双重缩放": ci/render-missing-sfx.mjs 里抄了一份 GAINS 表(19 条中 12 条与 CONFIG.audio.gains 漂移), 其值被烘焙进**文件峰值**, 而运行时(12593 行)又乘一次 gains → 同一增益应用两次且取不同版本值; sfx_fire.wav 峰值/gain=2.168 全场唯一离群; 改为与游戏 _renderAll 同口径"只做平峰值归一 peakNorm=0.7"(单一权威), 并删掉那张手抄表; 19 个 SFX 全部重渲; 新增检查⑦+阴性对照H/I(共9项); 碰撞/数值/掉落/进化/10分钟轴不动
+  version: "1.174",                   // 【v1.174】配方图鉴「选它当口」: DATA_CODEX_FORK 20 条分支补 pick(此前只有 3–4 字 feel, 玩家无分支决策依据) + forkCodexOf 透传 + fork 卡渲染第二行; 另修 codexContentBottom() 漏算成档/进化两段(pre-existing, 少算 416px); 纯文案+布局, 不动数值
   gameName: "萌兽幸存者",              // 玩家可见主标题; 历史别名「萌兽消消岛」
 
   // 新手引导(步骤14b, 文案包): 4 步事件触发/消失条件, guideFlags 入档防重放
@@ -795,6 +795,9 @@ var CONFIG = {
   codexEnemyGap: 6,              // 【v1.45】敌人行距
   codexGroupH: 52,               // 【v1.45】敌人分组签高
   codexForkH: 96,                // 【v1.71】分叉卡略矮, 给战斗物进化条留位
+                                 // 【v1.174】⚠ 不可调高：配方 tab 是「分叉+成档+进化」三段串排，
+                                 //   卡高每 +22px 就把整 tab 顶出 1280 视口（实测 +22 即溢出 182px，
+                                 //   底部成档卡被裁 + 返回钮压卡）。pick 行改为**在 96px 内挤**。
   codexForkGapX: 12,             // 【v1.45】分叉卡列距
   codexForkGapY: 6,              // 【v1.71】分叉卡行距略收, 给进化条留位
   codexEvoH: 54,                 // 【v1.71】战斗物进化卡高(紧凑可点, 不挡成档)
@@ -1051,9 +1054,13 @@ var CONFIG = {
   homeDailyHitPad: -8,             // 【v1.89】热区再收一圈, 难误点
   hallToastY: 860,                 // 【v1.142】出战地面/选角横幅(仓库下 +16, 不盖出击)
   dailyPickPanelW: 680,            // 【v1.75】加菜选关面板宽
-  dailyPickPanelH: 870,            // 【v1.167】1040→870: 实测内容只到 ~840, 原高在中下部留 191px 死区。
+  dailyPickPanelH: 756,            // 【v1.167】1040→870: 实测内容只到 ~840, 原高在中下部留 191px 死区。
                                     //   标题/卡片/返回大厅/页脚全部锚在 dPy 或 panelH 上 → 等比收紧, 相对间距不变
-  dailyPickCardH: 188,             // 【v1.75】单种挑战卡高
+                                    // 【v1.178】870→756: 卡高 188→150(-38×3=-114), 面板同步收 114 → 卡3底↔免责 仍 32px
+  dailyPickCardH: 150,             // 【v1.75】单种挑战卡高
+                                    // 【v1.178】188→150: 卡内内容只到 y+107(meta 行底), 而右下标签锚在 r.h-22=166
+                                    //   → 卡内留 49px 死区(占卡高 32%), 同屏选章卡的同类"右下标签"只留 14px。
+                                    //   150 时 tag 基线 y+128(文字顶 119), meta 底 107 → 净空 12px, 与选章卡同档
   enterSkipW: 228,                 // 【v1.83】过场跳过钮宽(适中, 不再整屏可跳)
   enterSkipH: 60,                  // 【v1.83】过场跳过钮高(≥44pt, 不盖咆哮/炸弹)
   bossSkipW: 168,                  // 【v1.83】BOSS 来袭跳过宽(走钮不走整幅)
@@ -10258,11 +10265,11 @@ var PATH_NODE_DEFS = [
 // 数组顺序=默认跟随优先级(解锁者中序号最小者跟随); 贴图本步矢量/几何预渲染, 步骤14a 换贴图。
 var DATA_BEAST = [
   { id: "capybara",    name: "水豚豚", price: 500,  color: "#a5713f", ai: "slam",    petDmg: 14, interval: 1.35, petR: 78, tagline: "砸地圈", desc: "跟宠砸地波, 近身清杂", knife: "砸地不是闹，是把漏走的热拍回巢里。" },
-  { id: "bunny",       name: "蹦蹦兔", price: 1000, color: "#d99aa8", ai: "hopshot", petDmg: 7,  interval: 0.62, petR: 0,  tagline: "弹射籽", desc: "朝最近怪弹射种子, 3/5星加弹" },
-  { id: "ursa",        name: "呼呼熊", price: 1500, color: "#7a5236", ai: "claw",    petDmg: 16, interval: 0.95, petR: 50, tagline: "近身爪", desc: "跟宠近身扇爪, 要贴着打" },
-  { id: "zapmouse",    name: "滋滋鼠", price: 2000, color: "#c9b23a", ai: "zap",     petDmg: 11, interval: 0.88, petR: 210, tagline: "连锁电", desc: "电最近怪, 3/5星加连锁" },
-  { id: "oinkpig",     name: "哼哼猪", price: 2500, color: "#e08a9a", ai: "dash",    petDmg: 18, interval: 1.55, petR: 28, tagline: "冲撞", desc: "朝最近怪短冲, 路径挨撞" },
-  { id: "shellturtle", name: "慢慢龟", price: 3000, color: "#4a8a5a", ai: "orbit",   petDmg: 9,  interval: 0.28, petR: 42, tagline: "环壳", desc: "身周一枚环壳擦伤, 不是蜂群" },
+  { id: "bunny",       name: "蹦蹦兔", price: 1000, color: "#d99aa8", ai: "hopshot", petDmg: 7,  interval: 0.62, petR: 0,  tagline: "弹射籽", desc: "朝最近怪弹射种子, 3/5星加弹", knife: "弹得远不是躲，是想把种子撒到暖一点的地方。" },
+  { id: "ursa",        name: "呼呼熊", price: 1500, color: "#7a5236", ai: "claw",    petDmg: 16, interval: 0.95, petR: 50, tagline: "近身爪", desc: "跟宠近身扇爪, 要贴着打", knife: "非要贴近不是逞能，是它只会用身子挡。" },
+  { id: "zapmouse",    name: "滋滋鼠", price: 2000, color: "#c9b23a", ai: "zap",     petDmg: 11, interval: 0.88, petR: 210, tagline: "连锁电", desc: "电最近怪, 3/5星加连锁", knife: "电传得远不是凶，是想一次叫醒好几个。" },
+  { id: "oinkpig",     name: "哼哼猪", price: 2500, color: "#e08a9a", ai: "dash",    petDmg: 18, interval: 1.55, petR: 28, tagline: "冲撞", desc: "朝最近怪短冲, 路径挨撞", knife: "撞得急不是莽，是晚一步那块地就凉了。" },
+  { id: "shellturtle", name: "慢慢龟", price: 3000, color: "#4a8a5a", ai: "orbit",   petDmg: 9,  interval: 0.28, petR: 42, tagline: "环壳", desc: "身周一枚环壳擦伤, 不是蜂群", knife: "绕得慢不是懒，是这一圈得一直转着才暖。" },
   { id: "veloursheep", name: "绒绒羊", price: 4000, color: "#F5E9D3", ai: "heal",    petDmg: 8,  interval: 2.05, petR: 64, tagline: "奶砸", desc: "奶一口玩家并砸出弱环", knife: "奶一口，是怕你冷得先走。" }   // 【R18】第 7 只毕业档: 贴图走 TEX-15 独立单格
 ];
 function beastDef(id) {
@@ -10284,22 +10291,22 @@ var DATA_CODEX_GROUP = [
   { id: "boss", name: "BOSS", tint: "#8a5ac2" }
 ];
 var DATA_CODEX_ENEMY = [
-  { id: "rabbit", group: "trash", tell: "直线追人", where: "全章开局杂兵", hint: "最常见, 拉开风筝" },
-  { id: "mouse", group: "trash", tell: "更快更薄", where: "开局鼠波 / 后段混编", hint: "比兔脆, 别被包" },
-  { id: "bear", group: "trash", tell: "厚血贴脸", where: "开局后段主力", hint: "站桩会被贴死" },
-  { id: "hedgehog", group: "trash", tell: "停步喷刺", where: "中段起远程威胁", hint: "驻停窗可走位" },
-  { id: "fox", group: "trash", tell: "尖耳蓬尾", where: "花花谷起混编", hint: "剪影可分, 比兔更快" },
-  { id: "raven", group: "trash", tell: "喙翼", where: "岩岩坡起混编", hint: "剪影可分, 比鼠更快" },
-  { id: "orbitcrab", group: "behave", tell: "绕圈后扑", where: "花花谷蟹阵起", hint: "绕完会扑, 别站圆心" },
-  { id: "boomfruit", group: "behave", tell: "近身自爆", where: "果果林果雨", hint: "红圈前摇, 拉开" },
-  { id: "sporecap", group: "behave", tell: "死亡裂殖", where: "岩岩坡裂殖潮", hint: "先风筝再集火" },
-  { id: "leaptoad", group: "behave", tell: "落点圈砸地", where: "试炼房 / 花花谷蟾跃", hint: "黄圈可走开" },
-  { id: "burrowmole", group: "behave", tell: "钻地破土圈", where: "岩岩坡 / 雾雾泽钻潮", hint: "土堆仍可打" },
-  { id: "badger", group: "elite", tell: "贴脸坦克", where: "各章精英轮换", hint: "打掉才掉袋" },
-  { id: "boar", group: "elite", tell: "高速贴脸", where: "各章精英轮换", hint: "比獾更快更肉" },
-  { id: "monkey", group: "elite", tell: "停步弹弓", where: "岩岩坡起", hint: "驻停窗可插伤" },
-  { id: "chargerhino", group: "elite", tell: "黄道冲撞 · 侧向躲开", where: "果果林起", hint: "贴身会出躲开" },
-  { id: "shieldbug", group: "elite", tell: "近怪减伤环", where: "岩岩坡起", hint: "必须先拆源" },
+  { id: "rabbit", group: "trash", tell: "直线追人", where: "全章开局杂兵", hint: "最常见, 拉开风筝", knife: "直着冲不是莽，是认准了这边还有热气。" },
+  { id: "mouse", group: "trash", tell: "更快更薄", where: "开局鼠波 / 后段混编", hint: "比兔脆, 别被包", knife: "跑得快不是凶，是薄得不敢停。" },
+  { id: "bear", group: "trash", tell: "厚血贴脸", where: "开局后段主力", hint: "站桩会被贴死", knife: "不走开不是凶，是这块地它守了一整夜。" },
+  { id: "hedgehog", group: "trash", tell: "停步喷刺", where: "中段起远程威胁", hint: "驻停窗可走位", knife: "竖起刺不是狠，是它只剩这一身能挡风。" },
+  { id: "fox", group: "trash", tell: "尖耳蓬尾", where: "花花谷起混编", hint: "剪影可分, 比兔更快", knife: "尖着耳朵不是防你，是怕听漏了旧名字。" },
+  { id: "raven", group: "trash", tell: "喙翼", where: "岩岩坡起混编", hint: "剪影可分, 比鼠更快", knife: "盘旋不走不是盯猎物，是在找还亮着的窗。" },
+  { id: "orbitcrab", group: "behave", tell: "绕圈后扑", where: "花花谷蟹阵起", hint: "绕完会扑, 别站圆心", knife: "绕圈不是戏耍，是想从背后护住那点暖。" },
+  { id: "boomfruit", group: "behave", tell: "近身自爆", where: "果果林果雨", hint: "红圈前摇, 拉开", knife: "把自己炸开不是绝路，是熟透前最后换热。" },
+  { id: "sporecap", group: "behave", tell: "死亡裂殖", where: "岩岩坡裂殖潮", hint: "先风筝再集火", knife: "裂开不是不甘，是怕自己冷透了没人接。" },
+  { id: "leaptoad", group: "behave", tell: "落点圈砸地", where: "试炼房 / 花花谷蟾跃", hint: "黄圈可走开", knife: "砸地不是示威，是先把地面焐热一点。" },
+  { id: "burrowmole", group: "behave", tell: "钻地破土圈", where: "岩岩坡 / 雾雾泽钻潮", hint: "土堆仍可打", knife: "往土里钻不是躲你，是下面是暖的。" },
+  { id: "badger", group: "elite", tell: "贴脸坦克", where: "各章精英轮换", hint: "打掉才掉袋", knife: "贴着不放不是凶，是它身后还有一窝要挡。" },
+  { id: "boar", group: "elite", tell: "高速贴脸", where: "各章精英轮换", hint: "比獾更快更肉", knife: "冲得急不是凶，是先替后面挡了风。" },
+  { id: "monkey", group: "elite", tell: "停步弹弓", where: "岩岩坡起", hint: "驻停窗可插伤", knife: "停下来不是犹豫，是在算还够打几次。" },
+  { id: "chargerhino", group: "elite", tell: "黄道冲撞 · 侧向躲开", where: "果果林起", hint: "贴身会出躲开", knife: "不肯拐弯不是犟，是怕一松劲就丢了方向。" },
+  { id: "shieldbug", group: "elite", tell: "近怪减伤环", where: "岩岩坡起", hint: "必须先拆源", knife: "撑起那圈不是护自己，是护着近旁还没醒的。" },
   { id: "honeypot", group: "elite", tell: "粉圈给近怪回血", where: "短章试炼房就能摸到", hint: "打掉奶源才停跳血", knife: "把蜜全给近旁，自己却越来越空。" },
   { id: "rollshell", group: "elite", tell: "石甲蓄力滚撞 · 侧向躲开", where: "芽芽原场上 / 岩岩坡试炼房", hint: "走廊+箭头, 贴身躲开", knife: "壳越滚越厚，里面已经喊不出声。" },
   { id: "boss1", group: "boss", tell: "冲撞走廊 + 扇形三连", where: "各章都有。10 分钟章在 3 分", hint: "侧向躲开, 贴身有字", knife: "举盾不是称王，是还想挡住身后那点暖。" },
@@ -10307,16 +10314,16 @@ var DATA_CODEX_ENEMY = [
   { id: "boss3", group: "boss", tell: "水潭 + 八向环弹", where: "岩岩坡起。10 分钟章在 10 分", hint: "潭先预警再生效", knife: "把潮水吞回去，换岛上再亮一晚。" }
 ];
 var DATA_CODEX_FORK = [
-  { from: "pinecone", branches: [{ id: "acornstorm", feel: "叠弹暴雨" }, { id: "needlespray", feel: "七向扇铺" }] },
-  { from: "seedvolley", branches: [{ id: "seedcannon", feel: "七向扇铺" }, { id: "seedlance", feel: "瞄准贯珠" }] },
-  { from: "bombnut", branches: [{ id: "megaboom", feel: "巨木余燃" }, { id: "peppermine", feel: "落地地雷" }] },
-  { from: "dewpulse", branches: [{ id: "tideshield", feel: "走动花环" }, { id: "rootwell", feel: "站住才打" }] },
-  { from: "beeswarm", branches: [{ id: "beesguard", feel: "八只近卫" }, { id: "fluffguard", feel: "四球远轨" }] },
-  { from: "gurustone", branches: [{ id: "gurumeteor", feel: "四岩远砸" }, { id: "gurugravel", feel: "六砾密环" }] },
-  { from: "bladeleaf", branches: [{ id: "bladestorm", feel: "三叶远阵" }, { id: "leafdash", feel: "五叶近快" }] },
-  { from: "mapledart", branches: [{ id: "mapletornado", feel: "六镖远卷" }, { id: "maplecross", feel: "对穿近斩" }] },
-  { from: "thunder", branches: [{ id: "thunderstorm", feel: "连锁雷云" }, { id: "pepperbolt", feel: "短链快劈" }] },
-  { from: "laserflower", branches: [{ id: "solarflare", feel: "宽束慢扫" }, { id: "nectarsnap", feel: "窄束瞬斩" }] }
+  { from: "pinecone", branches: [{ id: "acornstorm", feel: "叠弹暴雨", pick: "要铺满一条走廊时选它" }, { id: "needlespray", feel: "七向扇铺", pick: "杂兵排成一行时选它" }] },
+  { from: "seedvolley", branches: [{ id: "seedcannon", feel: "七向扇铺", pick: "要同时压两路时选它" }, { id: "seedlance", feel: "瞄准贯珠", pick: "专打一个厚目标时选它" }] },
+  { from: "bombnut", branches: [{ id: "megaboom", feel: "巨木余燃", pick: "要一发清一圈时选它" }, { id: "peppermine", feel: "落地地雷", pick: "守路口比追人划算时选它" }] },
+  { from: "dewpulse", branches: [{ id: "tideshield", feel: "走动花环", pick: "边走边护住自己选它" }, { id: "rootwell", feel: "站住才打", pick: "站桩输出更稳时选它" }] },
+  { from: "beeswarm", branches: [{ id: "beesguard", feel: "八只近卫", pick: "要贴身有人挡时选它" }, { id: "fluffguard", feel: "四球远轨", pick: "想让伤害自己飞出去时选它" }] },
+  { from: "gurustone", branches: [{ id: "gurumeteor", feel: "四岩远砸", pick: "远处落点砸得狠选它" }, { id: "gurugravel", feel: "六砾密环", pick: "要在身周转一圈选它" }] },
+  { from: "bladeleaf", branches: [{ id: "bladestorm", feel: "三叶远阵", pick: "拉开距离慢慢磨时选它" }, { id: "leafdash", feel: "五叶近快", pick: "贴脸也要打得快时选它" }] },
+  { from: "mapledart", branches: [{ id: "mapletornado", feel: "六镖远卷", pick: "要卷着走一路选它" }, { id: "maplecross", feel: "对穿近斩", pick: "近身对穿两次选它" }] },
+  { from: "thunder", branches: [{ id: "thunderstorm", feel: "连锁雷云", pick: "怪挤成一堆时选它" }, { id: "pepperbolt", feel: "短链快劈", pick: "要劈得快、劈得准选它" }] },
+  { from: "laserflower", branches: [{ id: "solarflare", feel: "宽束慢扫", pick: "慢慢扫、扫得宽选它" }, { id: "nectarsnap", feel: "窄束瞬斩", pick: "短促高频切近敌选它" }] }
 ];
 var DATA_CODEX_PAIR = [
   { id: "gale", name: "疾风成档", a: "windbell", b: "spinachseed", tag: "机动",
@@ -10393,6 +10400,7 @@ function forkCodexOf(fromId) {
     branches.push({
       id: b.id,
       feel: b.feel,
+      pick: b.pick || "",   // 【v1.174】选它当口：玩家做分支决策用的那一行
       name: sd ? sd.name : b.id,
       req: sd ? sd.req : "",
       reqName: p ? p.name : "",
@@ -11920,12 +11928,34 @@ var Audio = {
       this._tone(out, sr, { wave: "sine", f0: 148, f1: 82, t0: 0, dur: 0.16, a: 0.010, d: 0.11, s: 0, r: 0.08, gain: 0.70 });
       this._tone(out, sr, { wave: "triangle", f0: 196, f1: 98, t0: 0, dur: 0.12, a: 0.008, d: 0.08, s: 0, r: 0.06, gain: 0.26 });
       this._noise(out, sr, { t0: 0, dur: 0.05, a: 0.004, r: 0.04, gain: 0.06, seed: 33 });
-    } else if (id === "SFX_CARDSHOW") { len = 0.36; out = this._alloc(len, sr);
-      // 【v1.153】亮卡琶音起音放缓(3ms→9ms)+三角波增益略收, 三选一展开不刺耳
-      this._tone(out, sr, { wave: "triangle", f0: 523.25, t0: 0, dur: 0.14, a: 0.009, d: 0.08, s: 0, r: 0.05, gain: 0.78 });
-      this._tone(out, sr, { wave: "triangle", f0: 659.26, t0: 0.07, dur: 0.14, a: 0.009, d: 0.08, s: 0, r: 0.05, gain: 0.82 });
-      this._tone(out, sr, { wave: "triangle", f0: 783.99, t0: 0.14, dur: 0.18, a: 0.009, d: 0.08, s: 0.12, r: 0.08, gain: 0.9 });
-      this._tone(out, sr, { wave: "sine", f0: 1046.5, t0: 0.2, dur: 0.16, a: 0.009, d: 0.08, s: 0, r: 0.1, gain: 0.36 });
+    } else if (id === "SFX_CARDSHOW") { len = 0.30; out = this._alloc(len, sr);
+      // 【v1.176】⚠ 与 SFX_START 结构去同构（起因是**可量化**的感知缺陷，不是主观听感）:
+      //   `beginRun` 里 `Audio.play("start")` 之后**同一 tick** 就 `armEnterCine("chapter")`
+      //   → `playCardShowCue()` → `Audio.play("cardshow")` —— 两者**叠在一起响**。
+      //   而旧版 cardshow(523·659·784·1046 级进琶音, 0.36s, 重心 638Hz) 与
+      //   start(392·523·659 级进琶音, 0.38s, 重心 454Hz) 是**同一手势换调**（重心仅差 5.9 半音）
+      //   → 双轨判据报"距离 0.165(全 171 对第 4 近) + 结构同构率 0.857"（双轨同时告警 = 真缺陷）。
+      //   改法(承 v1.175 纪律: 正向性格不动、只改**手势形状**、只做平峰值归一):
+      //     旧 = 4 音**级进**上行琶音(慢、宽、有保持音)
+      //     新 = 2 音**大跳**(G5→C6) + 1568Hz **亮钉**极短收束 = "叮-咚"两下、利落"落定"
+      //   → 重心 638→**≈1180Hz**(与 start 差 ~16.5 半音, **跨八度**); 时长 0.36→**0.30s**(差 21%)。
+      //   ⚠ 响度纪律(v1.170): 只做平峰值归一(0.7), 档位只由运行时 gains(0.56) 决定。
+      // 【v1.177 终版】⚠ 两个目标互相拉扯，需**两个杠杆分开用**：
+      //   目标①响度：换手势后 RMS 0.1143→0.0693(-4.4dB)，30ms 窗口径只有 -16.4dB
+      //            = prio3 档最轻、甚至低于 prio1 的 hit(-15.3) → 这是"档位塌陷"的真来源。
+      //   目标②异构：与 start **同一 tick 连响**，结构同构率必须 < 0.8。
+      //   ⚠ 陷阱（实测踩过）：先试"加 sustain(s=0.25)"抬响度 → RMS 0.1033 ✅ 但
+      //      同构率 0.571→**0.857** ❌（sustain 正是 start 的特征，加了就撞）。
+      //   ✅ 正解 = 不用能量填充、改用**音数与节奏密度**：音更多 → 能量更多，
+      //      但节奏形状完全不同（"密集簇音"≠ start 的"级进琶音"）。
+      //   实测：RMS **0.1022**、对 start 结构同构率 **0.000**（7 维全不同）。
+      //   ⚠ 也别退回旧的 v1.175 版：那是 523·659·784·1046 **中音区级进**(重心 2.98)，
+      //      本版是 784·1046·1318·1568 **高音区密簇**(重心 3.40)，是另一个东西。
+      //   ⚠ 响度纪律(v1.170): 只做平峰值归一(0.7), 档位只由运行时 gains 决定。
+      var cf = [784.0, 1046.5, 1318.5, 1568.0];
+      for (var ci = 0; ci < 4; ci++) {
+        this._tone(out, sr, { wave: "triangle", f0: cf[ci], f1: cf[ci] * 1.008, t0: ci * 0.07, dur: 0.09, a: 0.003, d: 0.05, s: 0, r: 0.04, gain: 0.9 });
+      }
     } else if (id === "SFX_CHEST") { len = 0.36; out = this._alloc(len, sr);
       // 【v1.156】开箱木顿起音放缓+各层增益收一档, 开箱不喊; 木顿性格/时长/音高轮廓不动
       this._noise(out, sr, { t0: 0, dur: 0.08, a: 0.004, r: 0.05, gain: 0.42, seed: 77 });
@@ -11978,18 +12008,72 @@ var Audio = {
     } else if (id === "SFX_BOSS_DIE") { len = 0.7; out = this._alloc(len, sr);
       this._tone(out, sr, { wave: "triangle", f0: 880, f1: 220, t0: 0, dur: 0.7, a: 0.002, d: 0.5, s: 0, r: 0.2, gain: 1 });
       this._tone(out, sr, { wave: "sine", f0: 2200, f1: 440, t0: 0.1, dur: 0.5, a: 0.002, d: 0.35, s: 0, r: 0.15, gain: 0.4 });
-    } else if (id === "SFX_WIN") { len = 0.9; out = this._alloc(len, sr);
+    } else if (id === "SFX_WIN") { len = 1.02; out = this._alloc(len, sr);
       // 【v1.155】胜利音起音放缓一档(5→24ms)、增益收一档(1→0.84), 结算不再喊; 旋律/音色/时长不动
+      // 【v1.175】⚠ 结构性重构, 起因是一条**感知层**实测缺陷(不是听感主观):
+      //   `win` 与 `lose` 分别代表"赢了/输了"两个**情绪对立极点**, 但它们的 10 维感知距离
+      //   只有 **0.068**, 是全部 29 个音效里 **171 对中最像的一对**(判据 JND=0.210, 取自语料 p05)。
+      //   根因不是旋律方向错(方向是对的), 而是**除音高方向外全部同构**:
+      //   同 4 音 triangle 琶音、同节奏 t0=i*0.15、同时值 0.45、同 2 层低音织体、同 0.9s 长度
+      //   → 玩家在"赢了/输了"这两个极点上听到的几乎是同一段音。
+      //   修法(方向不变、音色家族不变、起音纪律不变, 只补**收束修辞**):
+      //     ① 末尾加"亮尾"—— 4 个 32 分音冲到 C7(1046.5→2093), 极短极亮 = "绽开"的胜利感
+      //     ② 加高八度微失谐 shimmer(G6 + 3.6Hz 差频), 制造"泛光"而非"单音"
+      //     ③ 加五度上方高亮层(0.42s 处), 让中段就开始"打开"
+      //     ④ 旋律每音尾 +2% 上扬(f1=f0×1.02), 4 音自己的微滑音
+      //     ⑤ 总长 0.9→**1.02s**(收得干脆, 不拖) —— 与 lose 的 1.35s 形成时长相反修辞
       var wf = [523, 659, 784, 1046];
       for (var i = 0; i < 4; i++) {
-        this._tone(out, sr, { wave: "triangle", f0: wf[i], t0: i * 0.15, dur: 0.45, a: 0.024, d: 0.28, s: 0.16, r: 0.2, gain: 0.84 });
+        this._tone(out, sr, { wave: "triangle", f0: wf[i], f1: wf[i] * 1.02, t0: i * 0.15, dur: 0.45, a: 0.024, d: 0.28, s: 0.16, r: 0.2, gain: 0.95 });
       }
-    } else if (id === "SFX_LOSE") { len = 0.9; out = this._alloc(len, sr);
+      // ① 亮尾: 0.58 起 4 个 32 分音冲到 C7(上行小二度/大三度/纯五度/八度), 只做"点"不做"线"
+      var wtail = [1046.5, 1318.5, 1568.0, 2093.0];
+      for (var i2 = 0; i2 < 4; i2++) {
+        this._tone(out, sr, { wave: "sine", f0: wtail[i2], t0: 0.58 + i2 * 0.055, dur: 0.26, a: 0.004, d: 0.09, s: 0.02, r: 0.14, gain: 0.34 });
+      }
+      // ② 高八度微失谐 shimmer 对(1568 与 1571.6 = 3.6Hz 拍频) —— "泛光"而非单音
+      this._tone(out, sr, { wave: "sine", f0: 1568.0, t0: 0.56, dur: 0.42, a: 0.016, d: 0.18, s: 0.10, r: 0.2, gain: 0.16 });
+      this._tone(out, sr, { wave: "sine", f0: 1571.6, t0: 0.56, dur: 0.42, a: 0.016, d: 0.18, s: 0.10, r: 0.2, gain: 0.13 });
+      // ③ 五度上方高亮层(0.42s 处) —— 中段就开始"打开", 不等到尾音
+      this._tone(out, sr, { wave: "triangle", f0: 1568.0, t0: 0.42, dur: 0.34, a: 0.02, d: 0.12, s: 0.08, r: 0.16, gain: 0.14 });
+      // 【v1.170】低音基础层 —— 原先 win/lose 都是**纯四音 triangle 旋律、完全没有低音层**:
+      //   实测 sfx_win 的 low(60-250) 与 lowmid(250-500) **双双 0.0%**, 是全部 6 个 INFREQ 事件里
+      //   唯一"低频区完全空白"的(对照: sfx_lose lowmid 22.3% / sfx_revive 25.2% / sfx_hurt low 32.9%)。
+      //   → 同为"结算级"重大反馈, win 却最单薄。补 **C2+C3**(自己的调性根音, 与 BGM win jingle 同源),
+      //   慢起音 + 长持音, 只给"落地感", 不改上行明亮性格; 归一后峰值不变。
+      //   ⚠ 增益是**扫出来的**: 低音层会抢峰值 → 归一后整体变轻 → 削弱 INFREQ 与 FREQ 的档位差距。
+      //     最终 0.30/0.20 + 旋律 0.84→0.95: low 仍有 ~7%, 响度回到 -17.7(目标 -17.1)。
+      this._tone(out, sr, { wave: "sine", f0: 65.41,  t0: 0, dur: 1.02, a: 0.03, d: 0.3, s: 0.62, r: 0.34, gain: 0.30 });
+      this._tone(out, sr, { wave: "sine", f0: 130.81, t0: 0, dur: 0.98, a: 0.025, d: 0.28, s: 0.55, r: 0.3, gain: 0.20 });
+    } else if (id === "SFX_LOSE") { len = 1.35; out = this._alloc(len, sr);
       // 【v1.155】失败音同档柔化: 起音 6→26ms, 增益 1→0.82, 下行轮廓不动
-      var lf = [523, 440, 349, 262];
-      for (var j = 0; j < 4; j++) {
-        this._tone(out, sr, { wave: "triangle", f0: lf[j], t0: j * 0.15, dur: 0.45, a: 0.026, d: 0.3, s: 0.15, r: 0.22, gain: 0.82 });
+      // 【v1.175】⚠ 与 SFX_WIN 同一次结构重构(见上); lose 侧补**沉降修辞**, 与 win 的"绽开"对轴:
+      //   ① 旋律由 4 个长音改为 **8 个短音**(C5 C5 A4 A4 F4 F4 C4 C3), 步长 0.15→0.095
+      //      → 同样下行, 但节奏从"4 口气"变"8 口气" = 更碎、更"泄气"
+      //   ② 每个音尾 −1.5% 下坠(f1=f0×0.985) —— 与 win 的 +2% 上扬**方向相反**
+      //   ③ 加长下滑 sub: 0.55s 起 200→38Hz 的 0.8s 滑音 —— "塌下去"的低频动作(win 没有)
+      //   ④ 暗色 saw pad(87.3Hz, 慢起 0.12s) —— 中低频"雾", 与 win 的高亮层对位
+      //   ⑤ 散场气声(noise, 0.22s 慢起) —— "人去楼空"的尾声
+      //   ⑥ 总长 0.9→**1.35s**(拖下去, 不收束) —— 与 win 的 1.02s 形成时长相反修辞
+      //   ⚠ 响度纪律(v1.170): 只做**平峰值归一**(0.7), 响度层级只由运行时 gains(0.80/0.76)决定。
+      //     本版经 `_qc/_try-final.mjs` 逐层量过: RMS 0.1591→**0.1587**(几乎不变),
+      //     ΔLUFS(win−lose) 由 −3.25 → **−3.07dB**(差 0.18dB, 听不出) → 档位关系保持。
+      //     低音床 gain 由 0.28/0.18 提到 0.42/0.30、s 由 0.58/0.52 提到 0.80/0.72,
+      //     正是用来补新结构(低区宽包络层)带来的 RMS 稀释。
+      var lf = [523, 523, 440, 440, 349, 349, 262, 220];
+      for (var j = 0; j < 8; j++) {
+        this._tone(out, sr, { wave: "triangle", f0: lf[j], f1: lf[j] * 0.985, t0: j * 0.095, dur: 0.14, a: 0.026, d: 0.22, s: 0.42, r: 0.22, gain: 1.8 });
       }
+      // ③ 长下滑 sub: 0.55s 起, 200→38Hz, 0.8s —— 唯一的"塌陷"低频动作
+      this._tone(out, sr, { wave: "sine", f0: 200, f1: 38, t0: 0.55, dur: 0.8, a: 0.02, d: 0.22, s: 0.5, r: 0.4, gain: 0.42 });
+      // ④ 暗色 saw pad(87.3Hz ≈ F2, 慢起 0.12s) —— 中低频雾层
+      this._tone(out, sr, { wave: "saw", f0: 87.3, t0: 0.24, dur: 0.92, a: 0.12, d: 0.34, s: 0.4, r: 0.36, gain: 0.16 });
+      // ⑤ 散场气声(确定性 LCG seed=91, 禁 Math.random)
+      this._noise(out, sr, { t0: 0.62, dur: 0.68, a: 0.22, r: 0.4, gain: 0.06, seed: 91 });
+      // 【v1.170】低音床 a 小调根音 A2+A3, 下行曲用更低更暗的低音承托"落句";
+      //   增益略低于 win 以维持 SFX_LOSE(0.76)<WIN(0.80) 的档位关系。
+      this._tone(out, sr, { wave: "sine", f0: 55.0,  t0: 0, dur: 1.34, a: 0.035, d: 0.32, s: 0.80, r: 0.5, gain: 0.42 });
+      this._tone(out, sr, { wave: "sine", f0: 110.0, t0: 0, dur: 1.20, a: 0.03,  d: 0.3,  s: 0.72, r: 0.35, gain: 0.30 });
     } else {
       out = this._alloc(0.01, sr);    // 未知 id: 静音 buffer 兜底
     }
@@ -12137,11 +12221,31 @@ var Audio = {
       // 【v1.160】句读重雕(调性/音高/长度不动): 上行三音+高两音答句分两段, 答句前留气口(0.52→0.86);
       //   句内增益弧起→扬→收, 起音 4→12ms、持音 0.3→0.2、非尾音 0.5→0.44 中频不再叠浑, 高八度花 0.12→0.09 收一档;
       //   峰值归一不动, 整体响度不升
+      // 【v1.170】补 C3 低音基础层 —— 原先 win 是**唯一没有任何低音层**的曲目:
+      //   lose 有一条 A2 衬底(gain 0.18 跑满全曲)、所有场景曲也有低音层, 只有 win 是纯中高频。
+      //   实测:<200Hz 能量占比 win **5.8%** vs lose **31.9%**(相差 26 个百分点), 而两者
+      //   峰值/RMS/峰均比几乎相同(0.708 / 0.110 vs 0.112 / 16.1 vs 16.0dB)
+      //   → **听感等响、但 win 没有"身体"**; 手机小喇叭(放不出 110Hz 以下)上更明显。
+      //   修法: **不抄 lose 的暗色 A2 踏板**(那是失败曲的性格), 而是补它自己的**调性根音**,
+      //     起音慢、走满全曲 —— 只给"落地感", 不改变大调明亮的上行性格; 峰值归一后整体响度不变。
+      //   ⚠ 第一版只放一条 130.81Hz sine @0.14 → 实测低频只从 5.8% 抬到 **7.4%**, 几乎无效。
+      //     原因: 130.81 与"和弦里已有的 C3 泛音"仅差 13.6Hz, 同相叠加互相抵消, 能量攒不住。
+      //   第二版改为**双八度 + 轻微失谐对**: C2(65.4) 给胸腔低频 + C3(130.8/132.0) 微失谐对
+      //     破相位抵消。手机小喇叭放不出 C2, 但 C3 对能补上"身体"。
       var wF = [523.25, 659.26, 783.99, 1046.5, 1318.5];
       var wT = [0, 0.26, 0.52, 0.86, 1.14];
       var wShape = [0.84, 0.92, 1.0, 0.88, 1.0];
       for (i = 0; i < wF.length; i++) this._tone(out, sr, { wave: "triangle", f0: wF[i], t0: wT[i], dur: i === 4 ? 0.96 : 0.44, a: 0.012, d: 0.2, s: 0.2, r: i === 4 ? 0.32 : 0.25, gain: 0.5 * wShape[i] });
       for (i = 0; i < 4; i++) this._tone(out, sr, { wave: "sine", f0: wF[i] * 2, t0: wT[i], dur: 0.24, a: 0.008, d: 0.13, s: 0, r: 0.1, gain: 0.09 });
+      // 【v1.170】低音基础层(自己的调性根音, 双八度 + 微失谐)
+      this._tone(out, sr, { wave: "sine", f0: 65.41,  t0: 0, dur: loopSec, a: 0.14, d: 0.5, s: 0.3, r: 0.6, gain: 0.30 });  // C2 胸腔层
+      this._tone(out, sr, { wave: "sine", f0: 130.81, t0: 0, dur: loopSec, a: 0.12, d: 0.45, s: 0.24, r: 0.6, gain: 0.24 }); // C3
+      this._tone(out, sr, { wave: "sine", f0: 132.0,  t0: 0, dur: loopSec, a: 0.12, d: 0.45, s: 0.24, r: 0.6, gain: 0.16 }); // C3 微失谐(破相位抵消)
+      // 【v1.170】中低音接续层: melody 从 C5(523) 起, 低音只到 C3(131) → 中间 C4(262) 空一节,
+      //   实测 lowmid(250-500Hz) 仅 **0.02%** (lose 72.6% / 场景曲 11-43%) = 声音"空心"。
+      //   补 **C 大调的三音 G3=196Hz**(和弦本身的音, 不引入新音级) + C4 根音, 把两层缝起来。
+      this._tone(out, sr, { wave: "triangle", f0: 196.0,  t0: 0, dur: loopSec, a: 0.1, d: 0.4, s: 0.2, r: 0.6, gain: 0.14 }); // G3 五音
+      this._tone(out, sr, { wave: "triangle", f0: 261.63, t0: 0, dur: loopSec, a: 0.1, d: 0.4, s: 0.2, r: 0.6, gain: 0.11 }); // C4 根音
     } else if (tid === "lose") {         // 失败 jingle: a 小调下行(110,250smp=2.5s)
       // 【v1.160】同档句读重雕: 下行三音+低两音收束分两段(收束前留气口 0.64→1.08), 起音 6→14ms、
       //   持音 0.25→0.18、非尾音 0.55→0.48 减少中频叠浑; A2 衬底 0.25→0.18 且慢入, 不惩戒只落句; 响度不升
@@ -30346,7 +30450,25 @@ function codexContentBottom() {
   var tab = codexTabId();
   var bodyY = CONFIG.codexBodyY || 168;
   if (tab === "pet") return bodyY + DATA_BEAST.length * ((CONFIG.codexPetRowH || 118) + (CONFIG.codexPetGap || 6));
-  if (tab === "fork") return bodyY + Math.ceil(DATA_CODEX_FORK.length / 2) * ((CONFIG.codexForkH || 132) + (CONFIG.codexForkGapY || 8));
+  if (tab === "fork") {
+    // 【v1.174】⚠ 修正：此前只数分叉卡（5 行），**完全漏掉同 tab 下方的成档(7) + 进化(9) 两段** ——
+    //   而 codexForkRows 的构建（见 uiCodexForks/uiCodexPairs/uiCodexEvos）三段是**串行接排**的：
+    //     分叉区 → +16 → 成档区(2 行) → -pairGapY+10 → 进化区(3 行)
+    //   漏算的后果：面板高度小于真实内容 → 底部被裁 + 「返回」按钮压住成档卡（改卡高后更明显）。
+    //   这里**逐段照抄真实布局**，与构建端同口径；任何一段的行数/间距变了都必须同步改这里。
+    var fkH = CONFIG.codexForkH || 132, fkGapY = CONFIG.codexForkGapY || 8;
+    var pairH = CONFIG.codexPairH || 100, pairGapY = CONFIG.codexPairGapY || 10;
+    var evoH = CONFIG.codexEvoH || 54, evoGapY = CONFIG.codexEvoGapY || 6;
+    var forkRows = Math.ceil(DATA_CODEX_FORK.length / 2);
+    var pairRows = (DATA_CODEX_PAIR.length === 5 || DATA_CODEX_PAIR.length === 6 || DATA_CODEX_PAIR.length === 7)
+      ? 2 : Math.ceil(DATA_CODEX_PAIR.length / 2);
+    var evoCols = 3;
+    var evoRows = Math.ceil(DATA_COMBAT_EVO.length / evoCols);
+    var y = bodyY + forkRows * (fkH + fkGapY);          // 分叉区底
+    y = y + 16 + pairRows * (pairH + pairGapY);          // +16 起成档区，走 pairRows 行
+    y = y - pairGapY + 10 + evoRows * (evoH + evoGapY);  // 成档底 → +10 起进化区
+    return y;
+  }
   var gH = CONFIG.codexGroupH || 52, eH = CONFIG.codexEnemyRowH || 108, eG = CONFIG.codexEnemyGap || 6;
   var lst = enemiesInCodexGroup(GAME.codexEnemyGroup || "trash");
   return bodyY + gH + 10 + lst.length * (eH + eG);
@@ -30638,24 +30760,32 @@ function makeCodexForkCard(idx, x, y, w, h) {
       if (!view) return;
       selected = GAME.codexForkSel === view.from;
       drawCodexFrame(ctx, r.x, r.y, r.w, r.h, selected, view.color);
-      drawItemSprite(ctx, weaponSpriteKey(view.from), r.x + 10, r.y + 6, 28);
+      drawItemSprite(ctx, weaponSpriteKey(view.from), r.x + 10, r.y + 4, 24);
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
       ctx.fillStyle = "#3a5a20";
-      ctx.font = "bold 16px " + FONT_STACK;
-      ctx.fillText(view.weapon, r.x + 44, r.y + 16);
+      ctx.font = "bold 15px " + FONT_STACK;
+      ctx.fillText(view.weapon, r.x + 40, r.y + 14);
       ctx.fillStyle = flowColorOf(view.tag) || "#8a5a10";
-      ctx.font = "bold 12px " + FONT_STACK;
-      ctx.fillText((view.flow || view.tag) + " · 第" + view.chMin + "章入池", r.x + 44, r.y + 34);
+      ctx.font = "bold 11px " + FONT_STACK;
+      ctx.fillText((view.flow || view.tag) + " · 第" + view.chMin + "章入池", r.x + 40, r.y + 30);
+      // 【v1.174】每分支 = 「主行 + 选它当口」两行，pitch 30 塞进 96px 卡（不可调高卡，见 CONFIG 注释）。
+      //   布局：第0支主行 y+46 / pick y+56；第1支主行 y+76 / pick y+86 → 内容底 86+6=92 ≤ 96 ✓
       for (i = 0; i < 2; i++) {
         b0 = view.branches[i];
         if (!b0) continue;
-        by = r.y + 50 + i * 22;
-        drawItemSprite(ctx, passiveSpriteKey(b0.req), r.x + 10, by, 20);
+        by = r.y + 40 + i * 30;
+        drawItemSprite(ctx, passiveSpriteKey(b0.req), r.x + 8, by, 18);
         ctx.fillStyle = "#5a4a18";
         ctx.font = "bold 12px " + FONT_STACK;
         ctx.textAlign = "left";
-        ctx.fillText(hudFitText(ctx, b0.reqName + " → " + b0.name + " · " + b0.feel, r.w - 40), r.x + 34, by + 10);
+        ctx.fillText(hudFitText(ctx, b0.reqName + " → " + b0.name + " · " + b0.feel, r.w - 36), r.x + 30, by + 6);
+        // 【v1.174】选它当口：分支决策依据（此前只有 3–4 字 feel，玩家无法据此选）
+        if (b0.pick) {
+          ctx.fillStyle = "#7a6a38";
+          ctx.font = "10px " + FONT_STACK;
+          ctx.fillText(hudFitText(ctx, b0.pick, r.w - 36), r.x + 30, by + 17);
+        }
       }
     }
   });
@@ -34605,8 +34735,107 @@ function init() {
       return { live: deathMarks.length, spawned: deathMarksSpawned, drawn: deathMarksDrawn,
                sprites: (function () { var n = 0, k; for (k in SPRITES) if (k.slice(-5) === "_dead") n++; return n; })() };
     },
+    // 【v1.171】重载性能证据口：enemyCount/enemyTotal 与 hordeState 都在闭包里探不到（同类坑已踩过），
+    //   必须经此接口读取。供云端脚本断言"这确实是高负载帧"（enemyCount 接近 maxEnemy），
+    //   并区分"帧率低是因为卡"还是"帧率低是因为根本没怪"（后者是假阴性）。
+    stress: function () {
+      var live = 0, i;
+      for (i = 0; i < enemyTotal; i++) if (enemyPool[i].active) live++;
+      var ch = chapterOf();
+      return {
+        enemyCount: enemyCount, specialCount: specialCount,
+        activeTotal: live, poolTotal: enemyTotal,
+        maxEnemy: CONFIG.maxEnemy, maxSpecial: CONFIG.maxSpecial,
+        hordeActive: !!hordeState.active, hordeIdx: hordeState.idx | 0,
+        hordeTimes: ch ? ch.hordeTimes.slice() : [],
+        runTime: +GAME.runTime.toFixed(2)
+      };
+    },
     version: CONFIG.version,
     gameName: CONFIG.gameName,
+    // 【v1.172】存档证据口(只读)：SAVE_SCHEMA/validateSave/clampSaveRanges/migrateChain 是本作
+    //   唯一持久化通道，损坏会**静默**摧毁玩家全部进度，而 ci/ 下此前零覆盖 —— 属第七类病根
+    //   ("验证覆盖不到 ≠ 验证通过")的又一实例。此口只做**读**：不写档、不改 saveData，
+    //   并通过 fieldSet 让外部能断言"档里到底有哪些键"（少键=迁移漏补，多键=白名单漏收敛）。
+    save: function () {
+      var d = saveData || {}, keys = [], k, i, f;
+      for (k in d) if (k !== "chk") keys.push(k);
+      keys.sort();
+      var schemaKeys = [];
+      for (k in SAVE_SCHEMA.fields) schemaKeys.push(k);
+      schemaKeys.sort();
+      // 缺键/多键：迁移链与白名单的自检，外部直接断言 missing=0
+      var missing = [], extra = [], has = {};
+      for (i = 0; i < keys.length; i++) has[keys[i]] = true;
+      for (i = 0; i < schemaKeys.length; i++) if (!has[schemaKeys[i]]) missing.push(schemaKeys[i]);
+      for (i = 0; i < keys.length; i++) if (schemaKeys.indexOf(keys[i]) < 0) extra.push(keys[i]);
+      // 往返自检：导出→导入必须语义等价（此处只算摘要，不动真实存档）
+      //   ⚠ 判据必须是**两条同形状的路径**（本轮踩到的坑）：
+      //   exportSaveText 会往 body 里**注入 schemaVersion**，而运行时 saveData **从不存**该键
+      //   （它只在写档/导出时补上）。若直接拿"导出的 d"与"运行时 saveData"对比，
+      //   两者形状差一个键 → 永远 semEq=false。正确做法：**两侧都先过 validateSave**
+      //   （validateSave 会补齐 schemaVersion 之外的字段），再比。
+      var rt = { ok: null, err: "" };
+      try {
+        var txt = exportSaveText();
+        var back = Platform.Coding.decode(txt);
+        var pw = JSON.parse(back);
+        var okChk = (djb2(JSON.stringify(pw.d)) === pw.chk);
+        var clean = JSON.parse(JSON.stringify(d));
+        var norm = function (o) {
+          var c = JSON.parse(JSON.stringify(o));
+          delete c.chk;
+          c.schemaVersion = SAVE_SCHEMA.schemaVersion;   // 两侧同形状：都补上版本键
+          return JSON.stringify(validateSave(c));
+        };
+        var same = (norm(pw.d) === norm(clean));
+        rt = { ok: (okChk && same), chkOk: okChk, semEq: same, len: txt ? txt.length : 0 };
+      } catch (e) { rt = { ok: false, err: String((e && e.message) || e) }; }
+      return {
+        version: CONFIG.version,
+        schemaVersion: SAVE_SCHEMA.schemaVersion,
+        storageKey: SAVE_KEY,
+        fieldCount: schemaKeys.length,
+        keys: keys,
+        missing: missing,
+        extra: extra,
+        migrateLinks: (function () { var n = 0, j; for (j = 0; j < migrateChain.length; j++) if (typeof migrateChain[j] === "function") n++; return n; })(),
+        coins: d.coins | 0,
+        chapterUnlocked: d.chapterUnlocked | 0,
+        heroId: d.heroId || "",
+        worldTheme: d.worldTheme || "",
+        upgrades: JSON.parse(JSON.stringify(d.upgrades || {})),
+        achievements: (d.achievements || []).slice(),
+        guideFlags: JSON.parse(JSON.stringify(d.guideFlags || {})),
+        hallUnlocks: JSON.parse(JSON.stringify(d.hallUnlocks || {})),
+        roundTrip: rt
+      };
+    },
+    saveKeys: function () { return this.save().keys; },
+    // 【v1.173】「淡刀子」覆盖证据口：lore() 用 filter(!!e.knife) 渲染刀语录，
+    //   **缺 knife 的条目会静默消失**（点条目只回退到通用提示），此前无任何门禁可查。
+    //   这里同时给出「全量条数」与「入匣条数」—— 两者不等即说明有文案被静默丢掉。
+    //   ⚠ 必须**两侧都报**：只报入匣数看不出缺口（5 和 21 都是"有值"）。
+    lorePack: function () {
+      var self = this, l = null;
+      try { l = self.lore(); } catch (e) { l = null; }
+      var allE = (typeof DATA_CODEX_ENEMY !== "undefined" && DATA_CODEX_ENEMY) || [];
+      var allB = (typeof DATA_BEAST !== "undefined" && DATA_BEAST) || [];
+      var cnt = function (arr) { var n = 0, i; for (i = 0; i < arr.length; i++) if (arr[i] && arr[i].knife) n++; return n; };
+      return {
+        version: CONFIG.version,
+        enemyTotal: allE.length, enemyWithKnife: cnt(allE),
+        petTotal: allB.length, petWithKnife: cnt(allB),
+        // 入匣数：lore() 里被 filter 放行、真正会渲染的条数
+        enemyInPack: (l && l.enemies) ? l.enemies.length : -1,
+        petInPack: (l && l.pets) ? l.pets.length : -1,
+        missingEnemies: (function () {
+          var out = [], i;
+          for (i = 0; i < allE.length; i++) if (!(allE[i] && allE[i].knife)) out.push(allE[i].id);
+          return out;
+        })()
+      };
+    },
     seek: debugSeekRunTime, phase: rhythmPhase, next: nextRhythmEvent, beat: readBeatClock, major: nextMajorBeat,
     skipBeat: onTapDebugSkipBeat,
     spine: function () {
