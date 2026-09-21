@@ -566,7 +566,9 @@ var CONFIG = {
   worldH: 2400,                     // 世界高 px
   camLerp: 8,                       // 摄像机指数平滑系数(1/s): cam+=(target-cam)*(1-exp(-dt*camLerp))
   groundTile: 512,                  // 地面预渲染瓦片逻辑边长 px(@2x 离屏 1024)
-  groundGrain: 0.055,               // 【v1.167】地表颗粒层强度(烘焙期一次; 0=关闭)。
+  groundGrain: 12,                  // 【v1.167g】地表颗粒层: **亮度偏移(0~255)**, 0=关闭。
+                                    //   改按偏移取色而非 alpha 混合: 实测 alpha=0.055 时实际偏移仅 1.8 级,
+                                    //   **指标变好但人眼看不见**(3bit 量化指标比眼睛灵敏)。
                                     //   实测战场仅 22 色、最高频占 59.7% → 地面缺的是质感而非物体;
                                     //   故补"细颗粒"而不补"色斑"(v1.152~162 已连否四次成团装饰)。
   // v2.0 R2 章节系统【R2】
@@ -23434,21 +23436,29 @@ function stampChapterDecos(c2, w, h, mt) {
 //   成因: v1.162 为"不读作占位云"砍掉星巅的 6 团大色斑(只留海军底+厚土路); drawChapterFarLayer 连四代减弱。
 //   本层刻意**不成团**: 8px(@2x) 细点 + 低对比 + 只撒约 45% 的格 → 读作"地表颗粒",
 //   不会被读作灰斑/占位云。烘焙进瓦片(一次性), 运行期零成本, 零新增资产。CONFIG.groundGrain=0 关闭。
+function grainHexShift(hex, d) {
+  var h = String(hex || "#000000").replace("#", "");
+  if (h.length === 3) h = h.charAt(0) + h.charAt(0) + h.charAt(1) + h.charAt(1) + h.charAt(2) + h.charAt(2);
+  function ch(v) { v = v < 0 ? 0 : (v > 255 ? 255 : v | 0); var s = v.toString(16); return s.length < 2 ? "0" + s : s; }
+  return "#" + ch(parseInt(h.substr(0, 2), 16) + d) + ch(parseInt(h.substr(2, 2), 16) + d) +
+         ch(parseInt(h.substr(4, 2), 16) + d);
+}
 function stampGroundGrain(c2, w, h, mt) {
-  var amp = CONFIG.groundGrain;
-  if (!amp || !mt) return;
-  var step = 8;
+  var d = CONFIG.groundGrain;                       // **亮度偏移**(0~255), 不是 alpha
+  if (!d || !mt) return;
+  var step = 8;                                     // @2x 8px = 逻辑 4px 颗粒
   var seed = (((mt.mapId || "m").charCodeAt(0) * 7919) + 104729) | 0;
   function rnd() { seed = (seed * 1664525 + 1013904223) | 0; return ((seed >>> 8) & 0xffff) / 65536; }
-  var hi = mt.wash || mt.accent || "#ffffff";
-  var lo = mt.tileB || mt.bgColor || "#000000";
+  var base = mt.tileA || mt.bgColor || "#000000";
+  var hi = grainHexShift(base, d);
+  var lo = grainHexShift(base, -d);
   var x, y, u;
   for (y = 0; y < h; y += step) {
     for (x = 0; x < w; x += step) {
       u = rnd();
-      if (u < 0.55) continue;                       // 只撒不连续的格 → 不成团
-      c2.globalAlpha = amp * (0.30 + 0.70 * u);
-      c2.fillStyle = (u > 0.80) ? hi : lo;
+      if (u < 0.62) continue;                       // 约 38% 覆盖 → 颗粒感, 不成团
+      c2.globalAlpha = 0.55 + 0.45 * u;             // 深浅不一, 避免读作规则网格
+      c2.fillStyle = (u > 0.815) ? hi : lo;
       c2.fillRect(x, y, step, step);
     }
   }
