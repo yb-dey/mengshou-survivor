@@ -34422,6 +34422,24 @@ function init() {
   window.MENGSHOU_DEBUG = {
     // 【v1.166】死亡帧证据口：闭包内的 deathMarks 从外部探不到（AI_ART_READY 同类坑已踩过），
     //   必须经此接口读取 —— 验证脚本用 spawned>0 证明"确实触发过"，用 drawn>0 证明"确实画出来过"。
+    // 【v1.167】通用状态口：让云端脚本能**断言"这就是目标屏"**，而不是只证明"不是大厅"
+    //   （三处假成功都因为没有这个口：拍到上一个弹窗 / 拍到普通战斗帧 / 拍到别的面板）
+    state: function () {
+      var f = GAME.flow, name = "?", k;
+      for (k in f) if (f[k] === GAME.state) { name = k; break; }
+      var tab = "";
+      try { tab = codexTabId(); } catch (e) { tab = ""; }
+      return {
+        state: GAME.state, name: name, flow: f,
+        playing: GAME.state === f.PLAYING,
+        gearPick: !!GAME.gearPickMode,
+        dailyPick: !!dailyPickOpen,
+        vault: (typeof vaultUiOpen === "function") ? !!vaultUiOpen() : null,
+        codex: tab, beast: (GAME.state === f.BEAST),
+        settings: (GAME.state === f.SETTINGS), about: (GAME.state === f.ABOUT),
+        up: (GAME.state === (f.ARMORY || f.UPGRADE)), pause: (GAME.state === f.PAUSED_MENU)
+      };
+    },
     hitFlash: function () {
       return { spawned: hitFlashSpawned, drawn: hitFlashDrawn,
                sec: CONFIG.hitFlashDur, sprite: !!(SPRITES && SPRITES.hitFlash) };
