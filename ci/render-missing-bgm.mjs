@@ -48,6 +48,7 @@ function tone(out, o) {
 
 // ---- 逐字复刻游戏 DATA_BGM 中这 4 条的定义 ----
 const DEFS = {
+  march: { bpm: 118, beats: 32 },      // 【v1.180】纳入本脚本(第十八类病根修复需重渲)
   horde: { bpm: 147, beats: 32 },
   abyss: { bpm: 84,  beats: 16 },
   win:   { jingle: true, refSmp: 94500 },
@@ -63,11 +64,15 @@ function renderTrack(tid) {
   let i, k;
 
   if (tid === "horde") {
-    // 【v1.102/v1.159】E 小调四句 + 轻踩
+    // 【v1.102/v1.159/v1.180】E 小调四句 + 轻踩
+    // 【v1.180】第十八类病根修复(旋律被垫层掩蔽): oPad 0.22→0.072 (二段: 0.22→0.13→0.072,
+    //   终值以"旋律占比 >= 垫层占比"为准) / 123.47 0.10→0.06 /
+    //   钩句 0.2:0.26→0.34:0.44 / 八度花 0.028:0.040→0.044:0.062 / 回声 0.08→0.045。
+    //   E2(82.41) drone 是"怪潮"性格锚点 → 保持不动。音高/调式/节奏/长度不动。
     const oPad = [164.81, 196.0, 246.94, 293.66];
-    for (i = 0; i < oPad.length; i++) tone(out, { wave: "triangle", f0: oPad[i], t0: 0, dur: loopSec, a: 0.03, d: 0.3, s: 0.18, r: 0.3, gain: 0.22 });
+    for (i = 0; i < oPad.length; i++) tone(out, { wave: "triangle", f0: oPad[i], t0: 0, dur: loopSec, a: 0.03, d: 0.3, s: 0.18, r: 0.3, gain: 0.072 });
     tone(out, { wave: "sine", f0: 82.41, t0: 0, dur: loopSec, a: 0.02, d: 0.25, s: 0.85, r: 0.35, gain: 0.3 });
-    tone(out, { wave: "sine", f0: 123.47, t0: 0, dur: loopSec, a: 0.04, d: 0.3, s: 0.28, r: 0.4, gain: 0.10 });
+    tone(out, { wave: "sine", f0: 123.47, t0: 0, dur: loopSec, a: 0.04, d: 0.3, s: 0.28, r: 0.4, gain: 0.06 });
     const oHook  = [329.63, 392.0, 440.0, 392.0, 293.66, 329.63, 246.94, 293.66];
     const oHookB = [392.0, 440.0, 493.88, 440.0, 329.63, 293.66, 246.94, 329.63];
     const oHookC = [196.0, 220.0, 246.94, 293.66, 329.63, 293.66, 246.94, 220.0];
@@ -76,13 +81,42 @@ function renderTrack(tid) {
     for (k = 0; k < def.beats; k++) {
       const oPhrase = Math.floor(k / 8);
       const oNote = (oPhrase === 0 ? oHook : oPhrase === 1 ? oHookB : oPhrase === 2 ? oHookC : oHookD)[k % 8];
-      tone(out, { wave: "triangle", f0: oNote, t0: k * beat, dur: beat * 0.9, a: 0.008, d: 0.16, s: 0.08, r: 0.28, gain: (oPhrase % 2) === 0 ? 0.2 : 0.26 });
-      tone(out, { wave: "sine", f0: oNote * 2, t0: k * beat, dur: beat * 0.38, a: 0.006, d: 0.1, s: 0, r: 0.16, gain: (oPhrase % 2) === 0 ? 0.028 : 0.040 });
+      tone(out, { wave: "triangle", f0: oNote, t0: k * beat, dur: beat * 0.9, a: 0.008, d: 0.16, s: 0.08, r: 0.28, gain: (oPhrase % 2) === 0 ? 0.34 : 0.44 });
+      tone(out, { wave: "sine", f0: oNote * 2, t0: k * beat, dur: beat * 0.38, a: 0.006, d: 0.1, s: 0, r: 0.16, gain: (oPhrase % 2) === 0 ? 0.044 : 0.062 });
       if ((k & 1) === 0) tone(out, { wave: "sine", f0: 55, t0: k * beat, dur: beat * 0.18, a: 0.003, d: 0.07, s: 0, r: 0.07, gain: 0.2 });
-      if ((oPhrase % 2) === 1 && (k & 1)) tone(out, { wave: "triangle", f0: oNote * 0.5, t0: k * beat, dur: beat * 1.2, a: 0.012, d: 0.16, s: 0.06, r: 0.3, gain: 0.08 });
+      if ((oPhrase % 2) === 1 && (k & 1)) tone(out, { wave: "triangle", f0: oNote * 0.5, t0: k * beat, dur: beat * 1.2, a: 0.012, d: 0.16, s: 0.06, r: 0.3, gain: 0.045 });
     }
     for (k = 0; k < def.beats * 2; k++) {
       tone(out, { wave: "sine", f0: oPenta[(k * 3) % 8], t0: k * beat / 2, dur: beat / 2.4, a: 0.002, d: 0.05, s: 0, r: 0.05, gain: 0.030 });
+    }
+
+  } else if (tid === "march") {
+    // 【v1.95/v1.159/v1.180】G 五声四句
+    // 【v1.180】第十八类病根修复: mPad 0.12→0.075 / 146.83 0.06→0.045 / 246.94 0.05→0.032 /
+    //   E4吊垫 0.03→0.02 / 钩句 0.18:0.24:0.22:0.30→0.25:0.33:0.30:0.41 /
+    //   八度花 0.03:0.05→0.042:0.068 / 回声 0.07→0.045 / 196 0.05→0.032。
+    //   98Hz 低音 0.16 与 73.42 脉冲鼓 0.11 → 保持不动（节奏骨架）。
+    const mPad = [196.0, 246.94, 293.66];
+    for (i = 0; i < mPad.length; i++) tone(out, { wave: "triangle", f0: mPad[i], t0: 0, dur: loopSec, a: 0.08, d: 0.4, s: 0.28, r: 0.5, gain: 0.075 });
+    tone(out, { wave: "sine", f0: 98.0, t0: 0, dur: loopSec, a: 0.04, d: 0.3, s: 0.55, r: 0.4, gain: 0.16 });
+    tone(out, { wave: "sine", f0: 146.83, t0: 0, dur: loopSec, a: 0.06, d: 0.4, s: 0.32, r: 0.5, gain: 0.045 });
+    tone(out, { wave: "sine", f0: 246.94, t0: 0, dur: loopSec, a: 0.08, d: 0.45, s: 0.22, r: 0.5, gain: 0.032 });
+    tone(out, { wave: "triangle", f0: 329.63, t0: 0, dur: loopSec, a: 0.10, d: 0.5, s: 0.16, r: 0.55, gain: 0.02 });
+    const mHookA = [392.0, 440.0, 493.88, 587.33, 493.88, 440.0, 392.0, 329.63];
+    const mHookB = [440.0, 392.0, 329.63, 293.66, 329.63, 392.0, 440.0, 493.88];
+    const mHookC = [493.88, 587.33, 659.26, 587.33, 493.88, 440.0, 392.0, 293.66];
+    const mHookD = [329.63, 392.0, 440.0, 493.88, 587.33, 493.88, 440.0, 392.0];
+    const mShape = [0.88, 0.94, 1.0, 1.04, 1.0, 0.96, 0.92, 0.72];
+    for (k = 0; k < def.beats; k++) {
+      const phrase = (k / 8) | 0;
+      const hook = phrase === 0 ? mHookA[k % 8] : (phrase === 1 ? mHookB[k % 8] : (phrase === 2 ? mHookC[k % 8] : mHookD[k % 8]));
+      const gHook = phrase === 0 ? 0.25 : (phrase === 1 ? 0.33 : (phrase === 2 ? 0.30 : 0.41));
+      const mCad = (k & 7) === 7;
+      tone(out, { wave: "triangle", f0: hook, t0: k * beat, dur: mCad ? beat * 0.62 : beat * 0.92, a: 0.016, d: 0.2, s: 0.1, r: 0.32, gain: gHook * mShape[k & 7] });
+      if (!mCad) tone(out, { wave: "sine", f0: hook * 2, t0: k * beat, dur: beat * 0.45, a: 0.008, d: 0.12, s: 0, r: 0.18, gain: phrase < 2 ? 0.042 : 0.068 });
+      if ((k & 1) === 0) tone(out, { wave: "sine", f0: 73.42, t0: k * beat, dur: beat * 0.22, a: 0.004, d: 0.08, s: 0, r: 0.08, gain: 0.11 });
+      if (phrase >= 1 && (k & 1)) tone(out, { wave: "triangle", f0: hook * 0.5, t0: k * beat, dur: beat * 1.35, a: 0.02, d: 0.22, s: 0.08, r: 0.4, gain: 0.045 });
+      if (phrase >= 2 && (k % 4) === 0) tone(out, { wave: "sine", f0: 196.0, t0: k * beat, dur: beat * 1.6, a: 0.02, d: 0.2, s: 0.08, r: 0.4, gain: 0.032 });
     }
 
   } else if (tid === "abyss") {
@@ -183,7 +217,7 @@ console.log(`模式: ${APPLY ? 'APPLY' : 'DRY-RUN'}  →  ${outDir}`);
 console.log('| 轨道 | 时长s | 峰值 | 接缝(xP95) | RMS | 输出 |');
 console.log('|---|---|---|---|---|---|');
 const results = {};
-for (const tid of ['horde', 'abyss', 'win', 'lose']) {
+for (const tid of ['march', 'horde', 'abyss', 'win', 'lose']) {
   const { out, jingle } = renderTrack(tid);
   const rawPeak = normalize(out);
   tailFade(out);
