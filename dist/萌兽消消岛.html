@@ -594,7 +594,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.162",                   // 【v1.162】锁英雄补美术: 早中波杂兵外轮廓/星巅去灰斑/大厅落地台/宝石墨缘/击杀软墨烟, 碰撞/数值/掉落/进化/10分钟轴不动
+  version: "1.170",                   // 【v1.170】修"双重缩放": ci/render-missing-sfx.mjs 里抄了一份 GAINS 表(19 条中 12 条与 CONFIG.audio.gains 漂移), 其值被烘焙进**文件峰值**, 而运行时(12593 行)又乘一次 gains → 同一增益应用两次且取不同版本值; sfx_fire.wav 峰值/gain=2.168 全场唯一离群; 改为与游戏 _renderAll 同口径"只做平峰值归一 peakNorm=0.7"(单一权威), 并删掉那张手抄表; 19 个 SFX 全部重渲; 新增检查⑦+阴性对照H/I(共9项); 碰撞/数值/掉落/进化/10分钟轴不动
   gameName: "萌兽幸存者",              // 玩家可见主标题; 历史别名「萌兽消消岛」
 
   // 新手引导(步骤14b, 文案包): 4 步事件触发/消失条件, guideFlags 入档防重放
@@ -8199,7 +8199,14 @@ var AUDIO_ASSET = {
     SFX_BOSS_WARN: "sfx_boss_warn", SFX_BOSS_DIE: "sfx_boss_die",
     SFX_WIN: "sfx_win", SFX_LOSE: "sfx_lose",
     SFX_EVO: "sfx_evo", SFX_BOMB: "sfx_bomb",
-    SFX_KILL: "sfx_kill", SFX_UI: "sfx_ui", SFX_START: "sfx_start"
+    SFX_KILL: "sfx_kill", SFX_UI: "sfx_ui", SFX_START: "sfx_start",
+    // 【v1.168】补齐 4 个"有合成器、无映射"的节点音 —— 原先 CONFIG.audio.gains 有 19 键、
+    //   本表只有 15 键 → `tryLoadLocalFiles()` 按本表 fetch, 多出的 4 个**永远拿不到外采文件**,
+    //   静默走程序化兜底。这 4 个覆盖 **10 个埋点**(全部 5 个章事件提示 + 复活 + 开箱 + 亮卡),
+    //   正是玩家最常听到的节点音。offline 渲染同源(见 ci/render-missing-sfx.mjs), 零新增音色。
+    //   ⚠ 本表的键集必须与 CONFIG.audio.gains 一致 —— 不一致时不会报错, 只会静默降级。
+    SFX_CARDSHOW: "sfx_cardshow", SFX_CHEST: "sfx_chest",
+    SFX_EVENT: "sfx_event", SFX_REVIVE: "sfx_revive"
   }
 };
 function audioAssetFileName(kind, id) {
@@ -11790,11 +11797,16 @@ var Audio = {
         }, function () { /* 解码失败回程序化 */ });
       }).catch(function () { /* file:// / 缺文件静默 */ });
     }
+    // 【v1.169】原先这里**硬编码**了 localBgm 6 键 / localSfx 7 键 —— 而 AUDIO_ASSET
+    //   声明的是 bgmFiles **10** 键 / sfxFiles **19** 键 → 多出的（BGM: horde/abyss/win/lose;
+    //   SFX: 12 个，含 BOSS_DIE/WIN/LOSE/EVO/BOMB/KILL/UI/START/CARDSHOW/CHEST/EVENT/REVIVE）
+    //   **永远不会被 fetch**，静默走程序化兜底、零报错。这与 v1.168 修的是同一类坑，
+    //   只是更深一层：v1.168 补的是"声明表漏键"，这里补的是"加载清单漏键"。
+    //   → 改为**遍历声明表本身**，让加载集合与声明表**结构上不可能再漂移**。
+    //   ⚠ 不要退回硬编码清单：任何"手抄的副本"都是下一次静默降级的温床。
     var id;
-    var localBgm = { harbor: 1, march: 1, meadow: 1, city: 1, dune: 1, frost: 1 };
-    var localSfx = { SFX_FIRE: 1, SFX_HIT: 1, SFX_GEM: 1, SFX_LEVELUP: 1, SFX_CARD: 1, SFX_HURT: 1, SFX_BOSS_WARN: 1 };
-    for (id in localBgm) loadOne("bgm", id);
-    for (id in localSfx) loadOne("sfx", id);
+    for (id in AUDIO_ASSET.bgmFiles) loadOne("bgm", id);
+    for (id in AUDIO_ASSET.sfxFiles) loadOne("sfx", id);
   },
 
   applyAudioPack: function (pack) {
@@ -12578,6 +12590,11 @@ var Audio = {
       var g = this.ctx.createGain();
       src.buffer = buf;
       src.playbackRate.value = rate * this.rateMul;   // R3: 全局速率乘(慢放沉浸)
+      // 【v1.170】gains 是**唯一的响度权威** —— 无论 buffer 来自程序合成(_renderAll, 平峰值归一)
+      //   还是外采 wav(ci/render-missing-sfx.mjs, 同样平峰值归一 peakNorm), 都**不含** per-id 增益。
+      //   ⚠ 曾把 gain 烘焙进外采文件峰值 → 与这一行构成**双重缩放**, 且两张表版本不一致,
+      //     导致"声明更响的实测更轻"(rho=0.491)。修好后 19 条 SFX 峰值统一 (ls: 0.7000)。
+      //   ⚠ 不要在任何离线渲染脚本里按 id 缩放 —— 层级只在这里乘一次。
       g.gain.value = CONFIG.audio.gains[sid] * gainMul;
       src.connect(g);
       if (!this.sfxGain) this._initSfxGain();
