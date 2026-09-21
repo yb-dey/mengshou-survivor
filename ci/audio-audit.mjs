@@ -79,16 +79,16 @@ await page.addInitScript(() => {
               }
               const rms = Math.sqrt(sum / Math.max(1, n));
               // 【v1.167】接缝检查：长缓冲(≈BGM 循环)首尾若"断崖"，循环点会有"咔哒"。
-              //   取尾部与头部各 512 样本的最大差值 / 峰值 → 相对跳变。
+              //   ⚠ 口径修正：真·循环咔哒只看"**末样本 vs 首样本**"（单样本跳变）；
+              //   再取首/尾各 128 样本的平均差作短窗跳变（抗"单点毛刺"误报）。
               let seam = -1;
               if (b.duration > 3 && d.length > 48000) {
-                let mx = 0;
-                const W = Math.min(512, d.length >> 2);
-                for (let k = 0; k < W; k++) {
-                  const delta = Math.abs(d[d.length - 1 - k] - d[k]);
-                  if (delta > mx) mx = delta;
-                }
-                seam = +(mx / Math.max(1e-4, peak)).toFixed(3);
+                let wrap = Math.abs(d[d.length - 1] - d[0]);
+                let s = 0, m = 0;
+                const W = Math.min(128, d.length >> 2);
+                for (let k = 0; k < W; k++) { s += Math.abs(d[d.length - 1 - k] - d[k]); }
+                m = s / W;
+                seam = +(Math.max(wrap, m) / Math.max(1e-4, peak)).toFixed(3);
               }
               const rec = { dur: +b.duration.toFixed(3), peak: +peak.toFixed(4), rms: +rms.toFixed(4), seam: seam };
               window.__ac.stats.push(rec);
