@@ -28476,6 +28476,7 @@ function registerUi() {
       evoW, evoH));
   }
   uiBeastClose = makeButton("beastclose", CONFIG.viewW / 2 - 110, bPy + 1210, 220, 64, "返回", onTapCloseBeast);
+  codexStampBases();      // 【v1.167b】面板高自适应后 py 会变 → 先记下各控件的基准 y
   // 设置页(步骤12): 静音/导出/导入/返回; 存储不可用警示 draw 时读 Platform.Storage.available()(状态唯一来源)。
   uiSettingsModal = makeModal("settingsmodal", 660, 1060, drawSettingsPanel);
   var sPy = (CONFIG.viewH - 1060) / 2;
@@ -30289,6 +30290,29 @@ function drawCodexBeastPlate(ctx, x, y, w, h, tint) {
   ctx.lineWidth = 1;
 }
 // 【v1.167】图鉴"内容底" —— 页脚不再写死绝对偏移，而是跟着当前页签的真实条目数走
+// 【v1.167b】控件基准 y：面板改矮后 py 会变，控件必须跟着平移，否则标题被裁、副标题压页签
+function codexStampBases() {
+  var arrs = [uiCodexTabs, uiBeastCells, uiCodexEnemyGroups, uiCodexEnemyCells, uiCodexForks, uiCodexPairs, uiCodexEvos, [uiBeastClose]];
+  for (var a = 0; a < arrs.length; a++) {
+    var g = arrs[a];
+    if (!g) continue;
+    for (var i = 0; i < g.length; i++) {
+      var w = g[i];
+      if (w && w.baseY === undefined) w.baseY = w.rect.y;
+    }
+  }
+}
+function codexShiftWidgets(py) {
+  var arrs = [uiCodexTabs, uiBeastCells, uiCodexEnemyGroups, uiCodexEnemyCells, uiCodexForks, uiCodexPairs, uiCodexEvos, [uiBeastClose]];
+  for (var a = 0; a < arrs.length; a++) {
+    var g = arrs[a];
+    if (!g) continue;
+    for (var i = 0; i < g.length; i++) {
+      var w = g[i];
+      if (w && w.baseY !== undefined) w.rect.y = w.baseY + py;
+    }
+  }
+}
 function codexContentBottom() {
   var tab = codexTabId();
   var bodyY = CONFIG.codexBodyY || 168;
@@ -30305,6 +30329,7 @@ function syncCodexFit() {
   GAME.codexFootYFit = cb + 104;
   GAME.codexCloseY = cb + 154;
   GAME.codexFitH = Math.min(CONFIG.viewH, GAME.codexCloseY + 64 + 40);
+  codexShiftWidgets((CONFIG.viewH - (GAME.codexFitH || CONFIG.viewH)) / 2);   // 控件随面板平移
   if (uiBeastClose) uiBeastClose.rect.y = GAME.codexCloseY;
 }
 function drawBeastPanel(ctx, m) {
