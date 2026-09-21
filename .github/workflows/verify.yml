@@ -39,6 +39,14 @@ jobs:
         run: |
           node ci/card-fit.mjs . --selftest
           node ci/card-fit.mjs . || true
+      # 界面控件不得出屏：返回/关闭类控件是**唯一出口**，被裁即有真实可用性代价。
+      # 【v1.185】图鉴配方 tab 的「返回」按钮实测底部出屏 32px（closeY 1248 + 64 = 1312 > 1280）。
+      #   面板几何体检（screen-profile / card-band）测不到它 —— 那些量的是"面板内空带"，
+      #   而出屏控件在视口之外。故独立设"越界"口径。**硬门禁**（有越界即失败）。
+      - name: 界面控件出屏体检（GATE）
+        run: |
+          node ci/ui-fit.mjs --selftest
+          node ci/ui-fit.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
