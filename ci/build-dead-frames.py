@@ -26,7 +26,9 @@ GAME = Path("game")
 OUT = Path("ci/out")
 OUT.mkdir(parents=True, exist_ok=True)
 
-IDS = ["rabbit", "mouse", "bear", "fox", "badger", "boar", "monkey", "boss1", "boss2", "boss3"]
+IDS = ["rabbit", "mouse", "bear", "fox", "badger", "boar", "monkey", "boss1", "boss2", "boss3",
+       "leaptoad", "raven", "orbitcrab", "boomfruit", "sporecap", "burrowmole",
+       "hedgehog", "chargerhino", "shieldbug", "honeypot", "rollshell"]   # 21 个敌人全覆盖
 
 
 def cutout(im, tol=TOL):
