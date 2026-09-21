@@ -100,11 +100,19 @@ function renderTrack(tid) {
 
   } else if (tid === "win") {
     // 【v1.160】C 大调上行
+    // 【v1.170】补低音基础层（与游戏 _renderBgmTrack 逐字一致）：
+    //   原 win 是唯一**没有任何低音层**的曲目（lose 有 A2 衬底、场景曲都有低音层）
+    //   → 实测 <200Hz 能量 5.8% vs lose 31.9%（峰值/RMS/峰均比却几乎相同 = 等响但没"身体"）。
+    //   补它自己的调性根音（不抄 lose 的暗色 A2），双八度 + 微失谐对，只给落地感。
     const wF = [523.25, 659.26, 783.99, 1046.5, 1318.5];
     const wT = [0, 0.26, 0.52, 0.86, 1.14];
     const wShape = [0.84, 0.92, 1.0, 0.88, 1.0];
     for (i = 0; i < wF.length; i++) tone(out, { wave: "triangle", f0: wF[i], t0: wT[i], dur: i === 4 ? 0.96 : 0.44, a: 0.012, d: 0.2, s: 0.2, r: i === 4 ? 0.32 : 0.25, gain: 0.5 * wShape[i] });
     for (i = 0; i < 4; i++) tone(out, { wave: "sine", f0: wF[i] * 2, t0: wT[i], dur: 0.24, a: 0.008, d: 0.13, s: 0, r: 0.1, gain: 0.09 });
+    // 【v1.170】低音基础层(自己的调性根音, 双八度 + 微失谐)
+    tone(out, { wave: "sine", f0: 65.41,  t0: 0, dur: loopSec, a: 0.14, d: 0.5,  s: 0.3,  r: 0.6, gain: 0.30 });  // C2 胸腔层
+    tone(out, { wave: "sine", f0: 130.81, t0: 0, dur: loopSec, a: 0.12, d: 0.45, s: 0.24, r: 0.6, gain: 0.24 }); // C3
+    tone(out, { wave: "sine", f0: 132.0,  t0: 0, dur: loopSec, a: 0.12, d: 0.45, s: 0.24, r: 0.6, gain: 0.16 }); // C3 微失谐(破相位抵消)
 
   } else if (tid === "lose") {
     // 【v1.160】a 小调下行
