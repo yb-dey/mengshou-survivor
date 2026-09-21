@@ -43,10 +43,16 @@ const available = await page.evaluate(() => {
   const want = ['hall', 'goHome', 'openGear', 'closeGear', 'openUp', 'openVault', 'openBeast', 'openChapters',
     'openPetCard', 'codex', 'about', 'lore', 'pause', 'levelup', 'resultBuild', 'win', 'lose', 'daily',
     'startDaily', 'enterRoom', 'enterSkip', 'upgradeView', 'forgeView', 'vaultTapCraft', 'vaultTapTalent',
-    'openVault', 'showGearPick', 'heroSheet', 'openUp', 'gearPreview'];
+    'openVault', 'showGearPick', 'heroSheet', 'openUp', 'gearPreview',
+    'codexTab', 'openSettings', 'closeSettings', 'dailyPick'];   // 【2026-09-21】补齐真实动作型钩子
   return want.filter((k) => typeof D[k] === 'function');
 });
 
+// 【2026-09-21 再修】原 07/08/10 用的 `codex` / `heroSheet` / `daily` **全是"状态查询"函数**
+//   （return 状态对象），不是打开动作 → 截图永远是大厅（与大厅基线 Δ=0.00）。
+//   正确动作：07 用 `codexTab('enemy')`（顺带打开图鉴并切到敌人页）；10 用 `dailyPick()`；
+//   08 原本指向的"英雄卡界面"**并不存在**（heroSheet 只是数据查询，英雄信息是大厅内的卡片）
+//   → 换成真实存在却从未被巡检的 **设置页** `openSettings()`。
 const STEPS = [
   { name: '01-home', call: 'hall' },
   { name: '02-chapters', call: 'openChapters' },
@@ -54,10 +60,10 @@ const STEPS = [
   { name: '04-upgrade', call: 'openUp' },
   { name: '05-vault', call: 'openVault' },
   { name: '06-beast', call: 'openBeast' },
-  { name: '07-codex', call: 'codex' },
-  { name: '08-hero', call: 'heroSheet' },
+  { name: '07-codex-enemy', call: 'codexTab', arg: 'enemy' },
+  { name: '08-settings', call: 'openSettings' },
   { name: '09-about', call: 'about' },
-  { name: '10-daily', call: 'daily' },
+  { name: '10-daily', call: 'dailyPick' },
 ];
 
 const shots = [];
@@ -105,14 +111,18 @@ let homeSig = null;
 for (const s of STEPS) {
   if (!available.includes(s.call)) { shots.push({ name: s.name, skipped: 'no hook ' + s.call }); continue; }
   try {
-    // ① 复位：goHome 回大厅，closeGear 关面板（不存在时静默）
+    // ① 复位：goHome 回大厅，关掉可能开着的面板（不存在时静默）
     await page.evaluate(() => {
       const D = window.MENGSHOU_DEBUG || {};
       try { if (D.closeGear) D.closeGear(); } catch (e) { void e; }
+      try { if (D.closeSettings) D.closeSettings(); } catch (e) { void e; }
+      try { if (D.closeBeast) D.closeBeast(); } catch (e) { void e; }
       try { if (D.goHome) D.goHome(); } catch (e) { void e; }
     });
     await page.waitForTimeout(450);
-    await page.evaluate((c) => { try { window.MENGSHOU_DEBUG[c](); } catch (e) { return String(e); } }, s.call);
+    await page.evaluate((o) => {
+      try { window.MENGSHOU_DEBUG[o.c](o.a); } catch (e) { return String(e); }
+    }, { c: s.call, a: s.arg });
     await page.waitForTimeout(1400);
     const shotPath = path.join(OUT, s.name + '.png');
     await page.screenshot({ path: shotPath });
@@ -161,7 +171,12 @@ async function tryShoot(outName, candidates) {
     await page.waitForTimeout(1300);
     await page.screenshot({ path: p });
     const h = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 12);
-    if (h !== base) { prevHash = h; shots.push({ name: outName, hook: c, hash: h }); return; }
+    if (h !== base) {
+      prevHash = h;
+      const dHome = sigDiff(await screenSig(), homeSig);
+      shots.push({ name: outName, hook: c, hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
+      return;
+    }
   }
   await page.screenshot({ path: p });
   const h = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 12);
@@ -179,7 +194,10 @@ try {
   await page.waitForTimeout(7000);
   await page.screenshot({ path: path.join(OUT, '11-battle.png') });
   prevHash = crypto.createHash('sha1').update(fs.readFileSync(path.join(OUT, '11-battle.png'))).digest('hex').slice(0, 12);
-  shots.push({ name: '11-battle', hook: 'mouse', hash: prevHash });
+  {
+    const dHome = sigDiff(await screenSig(), homeSig);
+    shots.push({ name: '11-battle', hook: 'mouse', hash: prevHash, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
+  }
   await tryShoot('12-levelup', ['levelup', 'upgradeView', 'showGearPick']);
   await tryShoot('13-pause', ['pause', 'resultBuild']);
 } catch (e) { shots.push({ name: 'battle-series', error: String(e).slice(0, 150) }); }
