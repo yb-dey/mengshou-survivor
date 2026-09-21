@@ -23386,9 +23386,11 @@ function paintChapterGround(c2, w, h, mt) {
     // 【v1.152】星巅地面只留夜海军蓝+厚土石路: 星井/夜石块杂物移除, 战场不再撒碎块抢英雄戏
     // 【v1.162】去掉 5 团 #3a4258 灰斑(读作占位云); 海军底保持安静, 土路墨边再厚一档
     pathH = Math.max(96, h * 0.16);
-    c2.fillStyle = "#6a5a48";
+    // 【v1.167】压亮度(不动宽度/形状): 实测土路亮度 0.098~0.120 ≈ 英雄, 且占屏高 26% → 抢戏。
+    //   原色 #6a5a48 / #7a6a54 备查回退。
+    c2.fillStyle = "#5c4e3e";
     c2.fillRect(0, h * 0.42, w, pathH);
-    c2.fillStyle = "#7a6a54";
+    c2.fillStyle = "#6a5c48";
     c2.fillRect(0, h * 0.42 + pathH * 0.18, w, pathH * 0.38);
     c2.fillStyle = "#2a3248";
     c2.globalAlpha = 0.28;
