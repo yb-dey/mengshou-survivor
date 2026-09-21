@@ -20,7 +20,7 @@ import path from 'path';
 
 const GAME_DIR = process.env.GAME_DIR || 'game';
 const HTML = path.join(GAME_DIR,
-  fs.readdirSync(GAME_DIR).find((f) => f.toLowerCase().endsWith('.html')));
+  fs.readdirSync(GAME_DIR).filter((f) => f.toLowerCase().endsWith('.html') && !f.startsWith('_')).sort()[0]);
 const h = fs.readFileSync(HTML, 'utf8');
 
 const m = h.match(/var AI_ART_TABLE = (\{[^}]*\});\s*\/\* AI_ART_INJECT \*\//);
