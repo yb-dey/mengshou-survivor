@@ -21,7 +21,7 @@ const IDS = ['capybara', 'bunny', 'ursa', 'zapmouse', 'oinkpig', 'shellturtle', 
 
 const GAME_DIR = process.env.GAME_DIR || 'game';
 const HTML = path.join(GAME_DIR,
-  fs.readdirSync(GAME_DIR).find((f) => f.toLowerCase().endsWith('.html')));
+  fs.readdirSync(GAME_DIR).filter((f) => f.toLowerCase().endsWith('.html') && !f.startsWith('_')).sort()[0]);
 const ASSETS = process.env.ASSETS_DIR || path.join('dist', 'assets');
 
 const fail = [];
