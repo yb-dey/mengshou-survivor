@@ -24,6 +24,9 @@ jobs:
       - name: 断言 dist 自包含（音频必须随包，不许静默降级到程序化）
         run: node ci/assert-dist-audio.mjs
 
+      - name: 三形态内容级复核（音频哈希一致 + 贴图键一致 + 体积口径）
+        run: node ci/final-audit.mjs
+
       - name: 安装 Playwright
         run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
 
