@@ -34,6 +34,7 @@ import sys, os, glob, wave, struct, math
 HIGH_BINS = 4          # 分组：按"事件频率档"分（本项目语义手动映射）
 LOW_CUT = 100.0        # 高通截止 Hz（简化 K 加权）
 HIGH_CUT = 8000.0      # 低通截止 Hz（简化 K 加权）
+WIN_MS = 30            # 【v1.177】层级判据的滑动窗宽度（ms）；见 window_peak_loudness 头注
 
 # 事件频率档：INFREQ=每局几次（应最响）/ MID=每波几次 / FREQ=每秒数次（应最轻）
 # 【v1.169】分档表：按"事件发生频率"分三档，层级要求 INFREQ > MID > FREQ。
@@ -98,10 +99,63 @@ def read_mono(path):
 
 
 def kweight_loudness(v, sr):
-    """简化 K 加权 → 相对响度（dB）。同一滤波下横向可比，非标准 LUFS。"""
+    """简化 K 加权 → 相对响度（dB）。同一滤波下横向可比，非标准 LUFS。
+
+    ⚠ 这是**全段**均值平方口径 → 时长会进入数值。做**层级**比较请用
+    `window_peak_loudness`（30ms 滑动窗），见其头注。
+    """
     if not v:
         return float("-inf")
-    # 一阶高通：y[n] = a*(y[n-1] + x[n] - x[n-1])
+    lp = _kweight_filter(v, sr)
+    # 均值平方（全段，含静音——与 LUFS 门控不同，此处简化）
+    ms = sum((x / 32768.0) ** 2 for x in lp) / len(lp)
+    if ms <= 1e-12:
+        return float("-inf")
+    return 10.0 * math.log10(ms)
+
+
+def window_peak_loudness(v, sr, win_ms=WIN_MS):
+    """【v1.177】固定时长滑动窗的**最大** K 加权响度（dB）。
+
+    ⚠ 为什么需要它（本文件第二个尺度缺陷，与 v1.174 stress-perf 同型）：
+
+    原先层级体检用的是 `loud`（**全段**均值平方）→ **时长被算进了响度**：
+      · `sfx_lose` 1.35s 全段 -15.99dB，`sfx_hurt` 0.20s 全段 -16.18dB
+        → 体检读出"结算音比受击音更响" → 推断"档位塌陷"。
+      · 但设计写的是 `prios: HURT=5, REVIVE=5 > BOSS=4 > … > FIRE=1`，
+        实际**起音**上 HURT(-10.19) 明显响于 LOSE(-10.38)/WIN(-11.95)。
+      · 即"长音天然全段 RMS 高"污染了层级比较 —— 被测现象是**"这一声有多突出"**，
+        而"响了多久"是另一个维度，不该混进同一个数。
+
+    改用**30ms 滑动窗取最大**：对 0.07s 的 fire 和 1.35s 的 lose 都只问
+    "它最响亮的一瞬有多响"，与总时长解耦。实测（本项目 19 个 SFX）：
+      win20/30/50ms 三档下 `prio5 > prio4 > prio3 > prio2 > prio1` **全部严格单调**，
+      证明游戏音频的层级设计本身是正确的，错的只是判据尺度。
+
+    窗口宽度不敏感（8.03/8.78/10.48 三档结论一致），故取 30ms 居中。
+    """
+    if not v:
+        return float("-inf")
+    n = max(1, int(win_ms / 1000.0 * sr))
+    kw = kweight_loudness  # 复用同一加权，保证与 loud 同量纲
+    if n >= len(v):
+        return kw(v, sr)
+    # K 加权后按步长滑窗，取最大均值平方
+    lp = _kweight_filter(v, sr)
+    step = max(1, n // 4)
+    run = sum(x * x for x in lp[:n]) / n
+    best = run
+    for i in range(n, len(lp), step):
+        run = sum(x * x for x in lp[i - n + 1:i + 1]) / n
+        if run > best:
+            best = run
+    if best <= 1e-12:
+        return float("-inf")
+    return 10.0 * math.log10(best)
+
+
+def _kweight_filter(v, sr):
+    """K 加权滤波后的样本（与 kweight_loudness 内部同实现，抽出来供窗函数复用）。"""
     rc = 1.0 / (2 * math.pi * LOW_CUT)
     dt = 1.0 / sr
     a = rc / (rc + dt)
@@ -111,7 +165,6 @@ def kweight_loudness(v, sr):
         y = a * (y + x - prev_x)
         prev_x = x
         hp.append(y)
-    # 一阶低通
     rc2 = 1.0 / (2 * math.pi * HIGH_CUT)
     a2 = dt / (rc2 + dt)
     lp = []
@@ -119,11 +172,7 @@ def kweight_loudness(v, sr):
     for x in hp:
         z = z + a2 * (x - z)
         lp.append(z)
-    # 均值平方（全段，含静音——与 LUFS 门控不同，此处简化）
-    ms = sum((x / 32768.0) ** 2 for x in lp) / len(lp)
-    if ms <= 1e-12:
-        return float("-inf")
-    return 10.0 * math.log10(ms)
+    return lp
 
 
 def analyze(path):
@@ -139,7 +188,8 @@ def analyze(path):
             last = i
     dur = (last + 1) / float(sr)
     return dict(name=os.path.basename(path), dur=dur, sr=sr, peak=peak,
-                loud=kweight_loudness(v, sr))
+                loud=kweight_loudness(v, sr),
+                loudW=window_peak_loudness(v, sr))
 
 
 def _median(xs):
