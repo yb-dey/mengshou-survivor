@@ -219,23 +219,26 @@ try {
   //    但**正好可以当探针轮询**"升级是否已出现"，出现再截图；
   //  · `pause` 只在 `GAME.state === PLAYING` 时生效 → 若此刻升级卡还开着，调用等于空操作。
   //    → 先点掉升级卡回到战斗，再轮询重试 pause(true)。
+  // ⚠ 判据修正：`levelup().ready` = `!(cardPopT>0)`（**弹出动画结束**），
+  //   **没有卡时也返回 true** → 用它轮询会立刻"就绪"，拍到的是普通战斗帧（实测踩过）。
+  //   正确判据是 `cards.length > 0`（debugCardSnap 已按 `visible` 过滤 = 真正在屏的三选一）。
   let lu = null;
   for (let t = 0; t < 70; t++) {
     lu = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.levelup(); } catch (e) { return null; } });
-    if (lu && (lu.ready || lu.armed)) break;
+    if (lu && lu.cards && lu.cards.length > 0) break;
     await page.waitForTimeout(500);
   }
-  if (lu && (lu.ready || lu.armed)) {
-    // 卡片弹出动画需要一点时间，等到 pop 基本归位再拍
-    await page.waitForTimeout(900);
+  const cardsVis = !!(lu && lu.cards && lu.cards.length > 0);
+  if (cardsVis) {
+    await page.waitForTimeout(700);
     await page.screenshot({ path: path.join(OUT, '12-levelup.png') });
     const h = crypto.createHash('sha1').update(fs.readFileSync(path.join(OUT, '12-levelup.png'))).digest('hex').slice(0, 12);
     prevHash = h;
     const dHome = sigDiff(await screenSig(), homeSig);
-    shots.push({ name: '12-levelup', hook: '轮询 levelup() 就绪', hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
+    shots.push({ name: '12-levelup', hook: '轮询 cards.length>0 (' + lu.cards.length + ' 张)', hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
   } else {
     console.log('  ⚠ 12-levelup 等待超时：35s 内没有出现升级三选一（战斗可能未进入/时间不够）');
-    shots.push({ name: '12-levelup', hook: '轮询 levelup() 超时', dup: true });
+    shots.push({ name: '12-levelup', hook: '轮询 cards.length>0 超时', dup: true });
   }
   // 点掉升级卡 + 清助力卡，回到可暂停的战斗态
   await page.evaluate(() => {
