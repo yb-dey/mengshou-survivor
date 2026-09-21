@@ -19,6 +19,11 @@ from PIL import Image
 SHOTS = sys.argv[1] if len(sys.argv) > 1 else "ci/out"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "ci/out/analysis.md"
 
+# ⚠ 自己确保输出目录存在。此前依赖调用方先 `mkdir -p`（或前一步恰好建过），
+#   一旦调用顺序变了就会 FileNotFoundError 崩掉 —— 而崩掉的是**体检步骤**本身，
+#   等于门禁静默失效。在全新 checkout 上尤其危险。
+Path(OUT).parent.mkdir(parents=True, exist_ok=True)
+
 
 def lum(r, g, b):
     def f(c):
