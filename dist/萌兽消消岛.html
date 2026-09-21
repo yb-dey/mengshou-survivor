@@ -301,7 +301,7 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 //   HUD 三卡/扎根成档/选角三卡/聚宝成档/图鉴三页/强化消耗路径/磐石成档/本章回礼/
 //   疾风成档/可跳过引导/蜜罐猬/WASD 稳帧/大厅主题装强鉴/juice/节点音/复活结算/
 //   章事件/跟宠升星/BOSS 读招/装备袋/跳钻/三车道/挑战房。
-// 【v1.53 玩法】局内暂停构筑一览做透: 暂停层在继续/音效/回首页之上加「本局构筑」
+// 【v1.53 玩法】局内暂停构筑一览做透: 暂停层在继续/音效/回大厅之上加「本局构筑」
 //   (武器栏 / 战斗物 / 被动 / 已点亮成档), 战力与将至拍跟 HUD 三卡同一套用语,
 //   点条目短提示怎么来的, 未点亮成档灰显不堆墙。未暂停零干扰。不改 TTK/掉落/成档数值。无逼氪。
 //   回归 v1.52 挑战房回礼三格/爆辣成档/读招让位/冲撞走廊/HUD 三卡/扎根成档/选角三卡/
@@ -1258,10 +1258,10 @@ var CONFIG = {
   pauseChipH: 40,                 // 【v1.53】构筑条目高
   pauseChipGap: 6,                // 【v1.53】条目间距
   pauseStatusH: 46,               // 【v1.53】战力/将至条高
-  pauseBtnW: 300,                 // 【v1.53】继续/回首页钮宽
-  pauseBtnH: 84,                  // 【v1.91】音响/回首页钮高(390 竖屏约 45css, 不抢继续)
+  pauseBtnW: 300,                 // 【v1.53】继续/回大厅钮宽
+  pauseBtnH: 84,                  // 【v1.91】音响/回大厅钮高(390 竖屏约 45css, 不抢继续)
   pauseBtnContinueH: 88,          // 【v1.91】继续游戏钮高
-  pauseBtnGap: 14,                // 【v1.91】暂停钮行距(音响行不贴继续/回首页)
+  pauseBtnGap: 14,                // 【v1.91】暂停钮行距(音响行不贴继续/回大厅)
   pauseAudioGap: 18,              // 【v1.91】BGM/音效/静音列缝, 防误触
   pauseChipN: 56,                 // 【v1.90】构筑芯池+顶栏三格+进化条(时钟生命杀敌/武/战斗/被动/进化/成档)
   uiModalPanelW: 580,               // 【v1.86】略加宽, 名字/堆叠更好读
@@ -1394,6 +1394,28 @@ var CONFIG = {
     levelupDuckMul: 0.62,         // 【v1.154】升级三选一开窗垫乐再压一档(读卡更静), 关窗经 syncDuck 自动回
     unlockSilentSec: 0.01,         // 手势解锁空 buffer 秒 [建议]
     peakNorm: 0.7,                 // 渲染期峰值归一目标(-3dBFS) [建议]
+    // 【v1.180】BGM 逐曲响度配平(线性增益, 烘焙期在峰值归一**之后**施加)。
+    //   为什么必须: 全部 BGM 按"峰值归一"烘焙 → 峰值相等 ≠ 响度相等。
+    //   实测(ci/bgm-lane-loudness.py, 简化K加权) 同档内极差曾达 5.1 dB:
+    //     battle 档 horde -36.89 / march -38.88 / abyss -41.99
+    //   手法: 不动音高/调式/节奏/编配, 只对**偏响的曲子**做统一乘性衰减。
+    //   每次改动都必须重跑 bgm-lane-loudness.py(档内 ≤3.0 / 切换链 ≤2.0)。
+    bgmTrim: {
+      march: 0.8300,               // -1.62 dB: 配平到档内目标 -40.5
+      horde: 0.6597,               // -3.61 dB: 原为档内最响(-36.89), 是跳档主因
+      abyss: 1.1872,               // +1.49 dB: BOSS 段本应更突出, 从最静端抬到档内
+      // 【v1.181】home 档(世界主题曲)配平。玩家可在首页**主动切换主题**,
+      //   切换即换曲 → 档内 5 首必须听感等响。判据口径见 ci/bgm-perceptual-cross.py:
+      //   全曲均方极差会被"稀疏度"稀释(frost P50 比 city 低 9.95dB 是编配意图),
+      //   所以按**P95(有声音时多响)**配平 —— 这才是"切主题时会听到的音量"。
+      //   实测 P95 极差 4.97dB → 2.24dB(阈 3.5)。
+      //   ⚠ **只抬不压**(city 是默认主题, 不能变轻), 且设峰值上限 0.985 防削波:
+      //     meadow/frost 抬到上限即止 → 2.24dB 是峰值约束下的最优, 不是 0。
+      meadow: 1.3703,              // +2.74 dB(被 0.985 峰值上限卡住)
+      frost: 1.3706,               // +2.74 dB(同上)
+      dune: 1.2368,                // +1.85 dB
+      harbor: 1.1080               // +0.89 dB
+    },
     gemComboMax: 24,               // 宝石连击升调上限级(R3: 24=全音阶两八度)【R3】
     gemComboStep: 1.0594631,       // 连击每级 playbackRate 倍率(R3: 2^(1/12) 全音阶半音)【R3】
     gemComboWindowSec: 1.5,        // 连击窗口秒, 超时回落 1 级(R3: 1.0→1.5 与 HUD 连击窗对齐)【R3】
@@ -2166,22 +2188,22 @@ function roomChapterShort(ch) {
 // 核实: 弹壳公开章有街道/公园/地库/金融/桥梁/郊外/农场/沙漠等地图换皮, 不是单一底色罩染。
 // 本表独立于章节难度, 玩家在首页点选; 不改波次数值。
 var DATA_WORLD_THEME = [
-  { id: "meadow", name: "芽野晨光", homeTrack: "meadow", battleTrack: "meadow",
+  { id: "meadow", name: "芽野晨光", homeTrack: "meadow",
     bgColor: "#c8e86a", wash: "#7bc43a", hudFg: "#2a4a18", hudWash: "rgba(80,140,40,0.22)",
     homeTop: "#9fd36a", homeBot: "#e8f4c8", accent: "#3faf5a",
     hallMoss: "#6a8a52", hallWood: "#c8d6a4", tag: "花瓣",
     ambient: { color: "#ffb7c5", rate: 3.2, vx: 6, vy: 28, size: 4, kind: "petal" } },
-  { id: "city", name: "灯笼港湾", homeTrack: "city", battleTrack: "city",
+  { id: "city", name: "灯笼港湾", homeTrack: "city",
     bgColor: "#163040", wash: "#2a2818", hudFg: "#f0e8d0", hudWash: "rgba(40,30,12,0.32)",
     homeTop: "#1a3040", homeBot: "#0c1c24", accent: "#e0a040",
     hallMoss: "#5a7a6a", hallWood: "#d4c4a0", tag: "灯笼",
     ambient: { color: "#e0a040", rate: 3.4, vx: -8, vy: 12, size: 3, kind: "lantern" } },
-  { id: "dune", name: "沙原黄昏", homeTrack: "dune", battleTrack: "dune",
+  { id: "dune", name: "沙原黄昏", homeTrack: "dune",
     bgColor: "#e8b86a", wash: "#d4893a", hudFg: "#4a2a10", hudWash: "rgba(180,90,20,0.22)",
     homeTop: "#f0a040", homeBot: "#f6d8a0", accent: "#c06020",
     hallMoss: "#c4a06a", hallWood: "#e8d0a0", tag: "沙尘",
     ambient: { color: "#f3d39a", rate: 3.6, vx: 28, vy: 8, size: 3, kind: "dust" } },
-  { id: "frost", name: "霜原极光", homeTrack: "frost", battleTrack: "frost",
+  { id: "frost", name: "霜原极光", homeTrack: "frost",
     bgColor: "#d8eef6", wash: "#7ec8e0", hudFg: "#123040", hudWash: "rgba(40,90,130,0.22)",
     homeTop: "#8fd0e8", homeBot: "#eef7fb", accent: "#3aa0c8",
     hallMoss: "#6a8a96", hallWood: "#d0e4ec", tag: "雪晶",
@@ -8375,13 +8397,13 @@ var STAR_DMG = [1, 1.25, 1.5625, 1.953125, 2.44140625];
 // ①②③ 数值 [来源]; ④⑤⑥ 方案只给名与归属, 数值按同系首发超武标定【假设】(主理人裁决 2)。
 // 【v1.23】超武不写 tag 字段, 协同按 from 源武继承(weaponTagOf), 避免进化散档。
 var DATA_SUPER = {
-  acornstorm:   { id: "acornstorm",   name: "狂风橡果暴雨", from: "pinecone",    req: "nectar",   dmg: 30, interval: 0.4, bulletSpd: 520, bulletR: 6, pierce: 3, bulletCount: 6, kind: "straight", color: "#8a5a2b", desc: "松果连弩+花蜜: 6 连发穿透暴雨 [来源]" },
-  megaboom:     { id: "megaboom",     name: "巨木崩裂",     from: "bombnut",     req: "nutshell", dmg: 60, interval: 1.8, bulletSpd: 0, bulletR: 10, pierce: 0, bulletCount: 1, kind: "arc", aoeDmg: 0, aoeR: 140, arcT: 0.9, burnDmg: 8, burnDur: 3, color: "#7a4a1a", desc: "爆爆橡果+坚果壳: 半径140 巨木砸地+余燃 8x3s [来源]" },
-  beesguard:    { id: "beesguard",    name: "蜂后亲卫队",   from: "beeswarm",    req: "windbell", dmg: 15, interval: 0, bulletSpd: 0, bulletR: 15, pierce: 0, bulletCount: 8, kind: "orbit", orbitR: 110, orbitSpd: 240, hitCd: 0.5, orbitSizeMul: 1.5, color: "#e8b420", desc: "蜂群+风之铃: 8 只亲卫蜂(体型 x1.5) [来源]" },
-  bladestorm:   { id: "bladestorm",   name: "刃风回旋阵",   from: "bladeleaf",   req: "moss",     dmg: 30, interval: 0.8, bulletSpd: 300, bulletR: 9, pierce: 999, bulletCount: 3, kind: "boomerang", range: 380, color: "#4faf3f", desc: "回旋飞叶+苔藓护甲: 三叶回旋阵 【假设】" },
-  thunderstorm: { id: "thunderstorm", name: "雷云风暴",     from: "thunder",     req: "magnet",   dmg: 40, interval: 1.2, bulletSpd: 0, bulletR: 0, pierce: 0, bulletCount: 1, kind: "strike", chain: 3, chainR: 180, color: "#8a5ae2", desc: "雷蘑菇+磁石蘑菇: 连锁 3 雷云 【假设】" },
-  solarflare:   { id: "solarflare",   name: "日冕射线",     from: "laserflower", req: "wisdom",   dmg: 15, interval: 3, bulletSpd: 0, bulletR: 0, pierce: 0, bulletCount: 1, kind: "laser", sweepDeg: 120, laserW: 40, laserDur: 3, laserTick: 0.25, laserRange: 480, color: "#f2a030", desc: "激光花+智慧果: 日冕宽束慢扫(与花蜜瞬斩分叉, 宽扫不是快刺) 【假设】" },
-  mapletornado: { id: "mapletornado", name: "绯枫龙卷",     from: "mapledart",   req: "moss",     dmg: 28, interval: 0.9, bulletSpd: 320, bulletR: 8, pierce: 999, bulletCount: 6, kind: "boomerang", range: 430, color: "#c03a2a", desc: "枫叶双镖+苔藓护甲: 六镖远距龙卷(与胡椒对穿枫月分叉, 铺远不是对穿) 【假设】" },   // 【R16】第 7 超武: 回旋流双超武闭环(boomerang 同源升格零新机制, 22px·枚错拍沿用 r16a 范式)
+  acornstorm:   { id: "acornstorm",   name: "狂风橡果暴雨", from: "pinecone",    req: "nectar",   dmg: 30, interval: 0.4, bulletSpd: 520, bulletR: 6, pierce: 3, bulletCount: 6, kind: "straight", color: "#8a5a2b", desc: "松果连弩+花蜜: 6 连发穿透暴雨" },   // 数值 [来源]
+  megaboom:     { id: "megaboom",     name: "巨木崩裂",     from: "bombnut",     req: "nutshell", dmg: 60, interval: 1.8, bulletSpd: 0, bulletR: 10, pierce: 0, bulletCount: 1, kind: "arc", aoeDmg: 0, aoeR: 140, arcT: 0.9, burnDmg: 8, burnDur: 3, color: "#7a4a1a", desc: "爆爆橡果+坚果壳: 半径140 巨木砸地+余燃 8x3s" },   // 数值 [来源]
+  beesguard:    { id: "beesguard",    name: "蜂后亲卫队",   from: "beeswarm",    req: "windbell", dmg: 15, interval: 0, bulletSpd: 0, bulletR: 15, pierce: 0, bulletCount: 8, kind: "orbit", orbitR: 110, orbitSpd: 240, hitCd: 0.5, orbitSizeMul: 1.5, color: "#e8b420", desc: "蜂群+风之铃: 8 只亲卫蜂(体型 x1.5)" },   // 数值 [来源]
+  bladestorm:   { id: "bladestorm",   name: "刃风回旋阵",   from: "bladeleaf",   req: "moss",     dmg: 30, interval: 0.8, bulletSpd: 300, bulletR: 9, pierce: 999, bulletCount: 3, kind: "boomerang", range: 380, color: "#4faf3f", desc: "回旋飞叶+苔藓护甲: 三叶回旋阵" },   // 数值为自定初值待调参 【假设】
+  thunderstorm: { id: "thunderstorm", name: "雷云风暴",     from: "thunder",     req: "magnet",   dmg: 40, interval: 1.2, bulletSpd: 0, bulletR: 0, pierce: 0, bulletCount: 1, kind: "strike", chain: 3, chainR: 180, color: "#8a5ae2", desc: "雷蘑菇+磁石蘑菇: 连锁 3 雷云" },   // 数值为自定初值待调参 【假设】
+  solarflare:   { id: "solarflare",   name: "日冕射线",     from: "laserflower", req: "wisdom",   dmg: 15, interval: 3, bulletSpd: 0, bulletR: 0, pierce: 0, bulletCount: 1, kind: "laser", sweepDeg: 120, laserW: 40, laserDur: 3, laserTick: 0.25, laserRange: 480, color: "#f2a030", desc: "激光花+智慧果: 日冕宽束慢扫(与花蜜瞬斩分叉, 宽扫不是快刺)" },   // 数值为自定初值待调参 【假设】
+  mapletornado: { id: "mapletornado", name: "绯枫龙卷",     from: "mapledart",   req: "moss",     dmg: 28, interval: 0.9, bulletSpd: 320, bulletR: 8, pierce: 999, bulletCount: 6, kind: "boomerang", range: 430, color: "#c03a2a", desc: "枫叶双镖+苔藓护甲: 六镖远距龙卷(与胡椒对穿枫月分叉, 铺远不是对穿)" },   // 数值为自定初值待调参 【假设】；【R16】第 7 超武: 回旋流双超武闭环(boomerang 同源升格零新机制, 22px·枚错拍沿用 r16a 范式)
   gurumeteor:   { id: "gurumeteor",   name: "碎岩咕噜阵",   from: "gurustone",   req: "windbell", dmg: 45, interval: 0, bulletSpd: 0, bulletR: 22, pierce: 0, bulletCount: 4, kind: "orbit", orbitR: 130, orbitSpd: 170, hitCd: 0.8, color: "#5a5d65", desc: "咕噜石+风之铃: 四巨岩远环重砸(与磁石磁砾密环分叉, 远环不是贴身快转)" },   // 【R29】第 8 超武: 环绕流双超武闭环(orbit 同源升格零新机制; 数值按同系首发 beesguard 口径标定【假设】: dmg 15→45/体型 16→22/4 石)
   seedcannon:   { id: "seedcannon",   name: "疾风种雨",     from: "seedvolley",  req: "spinachseed", dmg: 18, interval: 0.45, bulletSpd: 480, bulletR: 6, pierce: 2, bulletCount: 7, kind: "straight", color: "#5a8a22", desc: "种子散射+风车草籽: 七向疾风种雨(与花蜜蜜种贯珠分叉, 扇铺不是叠穿)" },   // 【v1.13】直射第二超武: 直线弹扇形升格, 零新机制
   tideshield:   { id: "tideshield",   name: "潮汐花环",     from: "dewpulse",    req: "dewcap",     dmg: 0,  interval: 0.95, bulletSpd: 0, bulletR: 0, pierce: 0, bulletCount: 1, kind: "nova", aoeDmg: 28, aoeR: 132, color: "#2a88b8", desc: "露珠脉冲+晨露菇: 身周大潮汐环, 站桩清场" },   // 【v1.14】脉冲环超武: 仍走 nova, 半径/频率升格
@@ -12103,12 +12125,15 @@ var Audio = {
     } else if (tid === "march") {        // 【v1.95】启程发育段: G 五声四句, 后半加厚托住约 10 分钟; 质量对标鸣潮巅峰、题材/资产不跟鸣潮
       // 【v1.159】混音重平衡(旋律/调性/长度/循环不动): 中频常鸣层(D3/B3/E4)与垫层各收一档去浑浊, 钩句加句内呼吸弧+
       //   句尾收拍(第 8 拍短而轻=句读), 起音 12→16ms、高八度花与鼓点略收; 峰值归一不动, 整体响度不升, 长局更耐听。
+      // 【v1.180】第十八类病根修复(旋律层被垫层掩蔽, 门禁 ci/bgm-melody.py 实测):
+      //   改前实测 旋律占比 18.1% / 人均压制比 0.40 → 旋律喊不过垫层(垫层音与旋律音同和弦、且一直响)。
+      //   手法: 垫层各降一档(常鸣音感知远大于其数值)、钩句抬一档; **音高/调式/节奏/长度不动**。
       var mPad = [196.0, 246.94, 293.66];
-      for (i = 0; i < mPad.length; i++) this._tone(out, sr, { wave: "triangle", f0: mPad[i], t0: 0, dur: loopSec, a: 0.08, d: 0.4, s: 0.28, r: 0.5, gain: 0.12 });
+      for (i = 0; i < mPad.length; i++) this._tone(out, sr, { wave: "triangle", f0: mPad[i], t0: 0, dur: loopSec, a: 0.08, d: 0.4, s: 0.28, r: 0.5, gain: 0.075 });
       this._tone(out, sr, { wave: "sine", f0: 98.0, t0: 0, dur: loopSec, a: 0.04, d: 0.3, s: 0.55, r: 0.4, gain: 0.16 });
-      this._tone(out, sr, { wave: "sine", f0: 146.83, t0: 0, dur: loopSec, a: 0.06, d: 0.4, s: 0.32, r: 0.5, gain: 0.06 });
-      this._tone(out, sr, { wave: "sine", f0: 246.94, t0: 0, dur: loopSec, a: 0.08, d: 0.45, s: 0.22, r: 0.5, gain: 0.05 });
-      this._tone(out, sr, { wave: "triangle", f0: 329.63, t0: 0, dur: loopSec, a: 0.10, d: 0.5, s: 0.16, r: 0.55, gain: 0.03 });
+      this._tone(out, sr, { wave: "sine", f0: 146.83, t0: 0, dur: loopSec, a: 0.06, d: 0.4, s: 0.32, r: 0.5, gain: 0.045 });
+      this._tone(out, sr, { wave: "sine", f0: 246.94, t0: 0, dur: loopSec, a: 0.08, d: 0.45, s: 0.22, r: 0.5, gain: 0.032 });
+      this._tone(out, sr, { wave: "triangle", f0: 329.63, t0: 0, dur: loopSec, a: 0.10, d: 0.5, s: 0.16, r: 0.55, gain: 0.02 });
       var mHookA = [392.0, 440.0, 493.88, 587.33, 493.88, 440.0, 392.0, 329.63];
       var mHookB = [440.0, 392.0, 329.63, 293.66, 329.63, 392.0, 440.0, 493.88];
       var mHookC = [493.88, 587.33, 659.26, 587.33, 493.88, 440.0, 392.0, 293.66];
@@ -12117,19 +12142,22 @@ var Audio = {
       for (k = 0; k < def.beats; k++) {
         var phrase = (k / 8) | 0;
         var hook = phrase === 0 ? mHookA[k % 8] : (phrase === 1 ? mHookB[k % 8] : (phrase === 2 ? mHookC[k % 8] : mHookD[k % 8]));
-        var gHook = phrase === 0 ? 0.18 : (phrase === 1 ? 0.24 : (phrase === 2 ? 0.22 : 0.30));
+        var gHook = phrase === 0 ? 0.25 : (phrase === 1 ? 0.33 : (phrase === 2 ? 0.30 : 0.41));
         var mCad = (k & 7) === 7;                                    // 句尾收拍: 更短更轻, 句与句之间有气口
         this._tone(out, sr, { wave: "triangle", f0: hook, t0: k * beat, dur: mCad ? beat * 0.62 : beat * 0.92, a: 0.016, d: 0.2, s: 0.1, r: 0.32, gain: gHook * mShape[k & 7] });
-        if (!mCad) this._tone(out, sr, { wave: "sine", f0: hook * 2, t0: k * beat, dur: beat * 0.45, a: 0.008, d: 0.12, s: 0, r: 0.18, gain: phrase < 2 ? 0.03 : 0.05 });
+        if (!mCad) this._tone(out, sr, { wave: "sine", f0: hook * 2, t0: k * beat, dur: beat * 0.45, a: 0.008, d: 0.12, s: 0, r: 0.18, gain: phrase < 2 ? 0.042 : 0.068 });
         if ((k & 1) === 0) this._tone(out, sr, { wave: "sine", f0: 73.42, t0: k * beat, dur: beat * 0.22, a: 0.004, d: 0.08, s: 0, r: 0.08, gain: 0.11 });
-        if (phrase >= 1 && (k & 1)) this._tone(out, sr, { wave: "triangle", f0: hook * 0.5, t0: k * beat, dur: beat * 1.35, a: 0.02, d: 0.22, s: 0.08, r: 0.4, gain: 0.07 });
-        if (phrase >= 2 && (k % 4) === 0) this._tone(out, sr, { wave: "sine", f0: 196.0, t0: k * beat, dur: beat * 1.6, a: 0.02, d: 0.2, s: 0.08, r: 0.4, gain: 0.05 });
+        if (phrase >= 1 && (k & 1)) this._tone(out, sr, { wave: "triangle", f0: hook * 0.5, t0: k * beat, dur: beat * 1.35, a: 0.02, d: 0.22, s: 0.08, r: 0.4, gain: 0.045 });
+        if (phrase >= 2 && (k % 4) === 0) this._tone(out, sr, { wave: "sine", f0: 196.0, t0: k * beat, dur: beat * 1.6, a: 0.02, d: 0.2, s: 0.08, r: 0.4, gain: 0.032 });
       }
     } else if (tid === "horde") {        // 【v1.102】放开段: E 小调四句+轻踩, 约 13 秒; 十六分再压一档不刺耳不吞音
-      var oPad = [164.81, 196.0, 246.94, 293.66];           // E3 G3 B3 D4(Em7); 【v1.159】垫层 0.26→0.22 中频略收, 钩/踩仍清
-      for (i = 0; i < oPad.length; i++) this._tone(out, sr, { wave: "triangle", f0: oPad[i], t0: 0, dur: loopSec, a: 0.03, d: 0.3, s: 0.18, r: 0.3, gain: 0.22 });
+      // 【v1.180】第十八类病根修复: 改前实测 旋律占比 3.4% / 人均压制比 0.16 —— 全场最差
+      //   (Em7 四音常鸣 0.22 + E2 drone 0.30 把钩句压没)。手法同 march: 垫层降档 + 钩句抬档,
+      //   音高/调式/节奏/长度不动; 低音 drone(E2 82.41)是"怪潮"性格锚点, 保持不动。
+      var oPad = [164.81, 196.0, 246.94, 293.66];           // E3 G3 B3 D4(Em7)
+      for (i = 0; i < oPad.length; i++) this._tone(out, sr, { wave: "triangle", f0: oPad[i], t0: 0, dur: loopSec, a: 0.03, d: 0.3, s: 0.18, r: 0.3, gain: 0.072 });
       this._tone(out, sr, { wave: "sine", f0: 82.41, t0: 0, dur: loopSec, a: 0.02, d: 0.25, s: 0.85, r: 0.35, gain: 0.3 });
-      this._tone(out, sr, { wave: "sine", f0: 123.47, t0: 0, dur: loopSec, a: 0.04, d: 0.3, s: 0.28, r: 0.4, gain: 0.10 });
+      this._tone(out, sr, { wave: "sine", f0: 123.47, t0: 0, dur: loopSec, a: 0.04, d: 0.3, s: 0.28, r: 0.4, gain: 0.06 });
       var oHook = [329.63, 392.0, 440.0, 392.0, 293.66, 329.63, 246.94, 293.66];
       var oHookB = [392.0, 440.0, 493.88, 440.0, 329.63, 293.66, 246.94, 329.63];
       var oHookC = [196.0, 220.0, 246.94, 293.66, 329.63, 293.66, 246.94, 220.0];
@@ -12138,13 +12166,13 @@ var Audio = {
       for (k = 0; k < def.beats; k++) {
         var oPhrase = Math.floor(k / 8);
         var oNote = (oPhrase === 0 ? oHook : oPhrase === 1 ? oHookB : oPhrase === 2 ? oHookC : oHookD)[k % 8];
-        this._tone(out, sr, { wave: "triangle", f0: oNote, t0: k * beat, dur: beat * 0.9, a: 0.008, d: 0.16, s: 0.08, r: 0.28, gain: (oPhrase % 2) === 0 ? 0.2 : 0.26 });
-        this._tone(out, sr, { wave: "sine", f0: oNote * 2, t0: k * beat, dur: beat * 0.38, a: 0.006, d: 0.1, s: 0, r: 0.16, gain: (oPhrase % 2) === 0 ? 0.028 : 0.040 });
+        this._tone(out, sr, { wave: "triangle", f0: oNote, t0: k * beat, dur: beat * 0.9, a: 0.008, d: 0.16, s: 0.08, r: 0.28, gain: (oPhrase % 2) === 0 ? 0.34 : 0.44 });
+        this._tone(out, sr, { wave: "sine", f0: oNote * 2, t0: k * beat, dur: beat * 0.38, a: 0.006, d: 0.1, s: 0, r: 0.16, gain: (oPhrase % 2) === 0 ? 0.044 : 0.062 });
         if ((k & 1) === 0) this._tone(out, sr, { wave: "sine", f0: 55, t0: k * beat, dur: beat * 0.18, a: 0.003, d: 0.07, s: 0, r: 0.07, gain: 0.2 });
-        if ((oPhrase % 2) === 1 && (k & 1)) this._tone(out, sr, { wave: "triangle", f0: oNote * 0.5, t0: k * beat, dur: beat * 1.2, a: 0.012, d: 0.16, s: 0.06, r: 0.3, gain: 0.08 });
+        if ((oPhrase % 2) === 1 && (k & 1)) this._tone(out, sr, { wave: "triangle", f0: oNote * 0.5, t0: k * beat, dur: beat * 1.2, a: 0.012, d: 0.16, s: 0.06, r: 0.3, gain: 0.045 });
       }
       for (k = 0; k < def.beats * 2; k++) {
-        this._tone(out, sr, { wave: "sine", f0: oPenta[(k * 3) % 8], t0: k * beat / 2, dur: beat / 2.4, a: 0.002, d: 0.05, s: 0, r: 0.05, gain: 0.030 });   // 【v1.159】十六分 run 0.036→0.030 不再叠 chirp
+        this._tone(out, sr, { wave: "sine", f0: oPenta[(k * 3) % 8], t0: k * beat / 2, dur: beat / 2.4, a: 0.002, d: 0.05, s: 0, r: 0.05, gain: 0.030 });   // 十六分 run 保持不叠 chirp
       }
     } else if (tid === "abyss") {        // 深渊: D Phrygian 84BPM —— saw drone+小二度 pad+心跳 thump
       // 【v1.159】锯齿 drone 双层各收一档(0.2→0.17/0.1→0.08)去长鸣毛刺, 心跳/拍频性格不动
@@ -12361,7 +12389,13 @@ var Audio = {
   },
   bgmLiveGain: function () {
     if (!this.bgmEnabled()) return 0;
-    return this.bgmSceneGain();
+    // 【v1.180】逐曲响度配平: 与 lane 增益相乘。
+    //   ⚠ 必须放在**这里**(播放增益)而不是烘焙期 —— 因为运行时会走
+    //     _overlayExternal() 用外采 wav **整个覆盖**烘焙结果,
+    //     烘焙期施加的 trim 会被覆盖掉(实测: 改 bake 后门禁仍报跳档)。
+    //     放在播放增益处则程序化/外采两条路径**同时生效**。
+    var trim = (CONFIG.audio.bgmTrim && CONFIG.audio.bgmTrim[this.bgmTrack]) || 1;
+    return this.bgmSceneGain() * trim;
   },
   bgmDuckedGain: function () {
     var mul = this.bgmDuckMul;
@@ -22103,11 +22137,11 @@ function checkAchieves(dim, val) {
   }
 }
 
-// 结算确认: 金币唯一入账点(纪律级)。之后回首页并写档(结算确认时机)。
+// 结算确认: 金币唯一入账点(纪律级)。之后回大厅并写档(结算确认时机)。
 // v2.0 R2【R2】: 通关时在此点内完成 章解锁(unlocked=max(unlocked,N+1))/通关章表/章最佳更新;
 //   首通奖励已并入 runSummary.coins(computeRunSummary), 不新增 saveData.coins 写入路径。
 function confirmResult() {
-  GAME.deathCineT = 0;              // 【R15】定格窗内领取回首页: 清镜头计时(结算组本隐藏, 防归零误恢复)
+  GAME.deathCineT = 0;              // 【R15】定格窗内领取回大厅: 清镜头计时(结算组本隐藏, 防归零误恢复)
   var wallet0 = saveData.coins | 0;
   var pFrom = (runSummary.powerStart | 0) || hallCombatPower();
   var unlockName = "";
@@ -28314,7 +28348,7 @@ function registerUi() {
   uiBtnBgm = makeButton("btnbgm", pauseAct.bgm.x, pauseAct.bgm.y, pauseAct.bgm.w, pauseAct.bgm.h, "BGM 开", onTapPauseBgm);
   uiBtnNodeSfx = makeButton("btnnodesfx", pauseAct.node.x, pauseAct.node.y, pauseAct.node.w, pauseAct.node.h, "音效 开", onTapPauseNodeSfx);
   uiBtnMute = makeButton("btnmute", pauseAct.mute.x, pauseAct.mute.y, pauseAct.mute.w, pauseAct.mute.h, "静音 关", onTapMute);
-  uiBtnGoHome = makeButton("btngohome", pauseAct.home.x, pauseAct.home.y, pauseAct.home.w, pauseAct.home.h, "回首页", onTapGoHome);
+  uiBtnGoHome = makeButton("btngohome", pauseAct.home.x, pauseAct.home.y, pauseAct.home.w, pauseAct.home.h, "回大厅", onTapGoHome);
   // 升级弹窗: 模态先注册, 三张卡后注册。【v1.86】点空白只解锁不关; 换一批沉底。
   uiLevelupModal = makeModal("levelup", CONFIG.uiModalPanelW, CONFIG.uiModalPanelH, function (ctx, m) {
     var lm = levelupPanelMetrics();
@@ -28461,7 +28495,7 @@ function registerUi() {
   uiDailyCancel.skin = "sec";
   // 结算页(步骤10): RESULT_WIN/RESULT_LOSE 共用组件; 模态先注册(先画), 构筑芯后注册, 按钮最后注册(先命中)。
   // 双倍领取走 Hooks.requestCoinDouble->AdService(免费同步回调, 每局 1 次只翻金币, 无广告字样);
-  // 领取回首页=confirmResult(金币唯一入账点)。【v1.56】本局构筑回看在房回礼下, 钮贴面板底。
+  // 领取回大厅=confirmResult(金币唯一入账点)。【v1.56】本局构筑回看在房回礼下, 钮贴面板底。
   uiResultModal = makeModal("resultmodal", CONFIG.resultPanelW || 600, CONFIG.resultPanelH || 1220, drawResultPanel);
   uiResultChips = [];
   for (var rci = 0; rci < (CONFIG.resultChipN || 24); rci++) uiResultChips.push(makeResultBuildChip(rci));
@@ -32025,8 +32059,8 @@ function onTapGiveUpBtn() {
 }
 
 function onTapGoHome() {
-  // 【R31】无尽模式"回首页"= 弃局结算(enterResult(LOSE)): 无尽死亡是唯一合法结算出口, 原直弃=收益静默
-  //   全丢(想停手只能送死)。普通章维持回首页原语义(死亡/通关结算天然可达, 且行为锁 T14.6 口径不变)。
+  // 【R31】无尽模式"回大厅"= 弃局结算(enterResult(LOSE)): 无尽死亡是唯一合法结算出口, 原直弃=收益静默
+  //   全丢(想停手只能送死)。普通章维持回大厅原语义(死亡/通关结算天然可达, 且行为锁 T14.6 口径不变)。
   closePauseUi();
   if (GAME.state === GAME.flow.PAUSED_MENU && GAME.endlessMode) {
     enterResult(GAME.flow.RESULT_LOSE);
@@ -33545,12 +33579,12 @@ function onTapDebugSkipBeat() {
 //   BOOT    -> HOME              (启动完成)
 //   HOME    -> PLAYING           (点击"开始游戏" startRun)
 //   PLAYING -> PAUSED_MENU       (暂停按钮 / hidden 切后台)
-//   PAUSED_MENU -> PLAYING       (暂停菜单"继续"; 回首页走 HOME)
+//   PAUSED_MENU -> PLAYING       (暂停菜单"继续"; 回大厅走 HOME)
 //   PLAYING <-> LEVELUP_MODAL   (升级触发 openLevelUp / 选卡 applyUpgrade)
 //   PLAYING -> REVIVE_MODAL     (死亡判定, 步骤9 接入)
 //   REVIVE_MODAL -> PLAYING | RESULT_LOSE (步骤9)
 //   PLAYING -> RESULT_WIN / RESULT_LOSE (步骤8/10: 通关与死亡结算, enterResult 定格 runSummary)
-//   RESULT_WIN/RESULT_LOSE -> HOME ("领取回首页"=confirmResult, 金币唯一入账, 步骤10)
+//   RESULT_WIN/RESULT_LOSE -> HOME ("领取回大厅"=confirmResult, 金币唯一入账, 步骤10)
 //   HOME -> BEAST -> HOME (图鉴屏, 步骤11)
 //   HOME -> SETTINGS -> HOME (设置屏, 步骤12: 静音/导出/导入)
 //   HOME -> GUIDE -> HOME (怎么玩可跳过, v1.40; 局内短提示另走 HUD 教练条)
@@ -34165,7 +34199,7 @@ function stepGame(dt) {
   }
 }
 
-// 新局: 全状态复位(首页"开始游戏"/回首页重开)。
+// 新局: 全状态复位(首页"开始游戏"/回大厅重开)。
 function clearRunEntities() {
   var i;
   for (i = 0; i < enemyTotal; i++) enemyPool[i].active = false;
@@ -34528,7 +34562,7 @@ function dismissStickyModals() {
 
 function goHome() {
   dismissStickyModals();
-  closeChapterSelectUi();           // 【R2】回首页关闭章节选择层(防残留)
+  closeChapterSelectUi();           // 【R2】回大厅关闭章节选择层(防残留)
   hideDailyPickUi();
   leaveDailyMode();                 // 【v1.76】回大厅卸加菜规则(禁珠/潮汐/精英倍率/时长套/回礼标记)
   resetChallengeRoom("idle");       // 【v1.21】回大厅收试炼光环, 避免世界层状态残留
@@ -34543,7 +34577,7 @@ function goHome() {
 }
 
 // 结果屏进入(步骤8; 步骤10 接结算): RESULT_WIN/RESULT_LOSE; 定格结算快照+开结算页组件。
-// 金币入账不在此处(唯一入账=玩家点"领取回首页"的 confirmResult, [10])。
+// 金币入账不在此处(唯一入账=玩家点"领取回大厅"的 confirmResult, [10])。
 function enterResult(next, fromDeath) {
   GAME.pendingDeath = false;
   GAME.paused = false;
