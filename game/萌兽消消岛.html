@@ -301,7 +301,7 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 //   HUD 三卡/扎根成档/选角三卡/聚宝成档/图鉴三页/强化消耗路径/磐石成档/本章回礼/
 //   疾风成档/可跳过引导/蜜罐猬/WASD 稳帧/大厅主题装强鉴/juice/节点音/复活结算/
 //   章事件/跟宠升星/BOSS 读招/装备袋/跳钻/三车道/挑战房。
-// 【v1.53 玩法】局内暂停构筑一览做透: 暂停层在继续/音效/回首页之上加「本局构筑」
+// 【v1.53 玩法】局内暂停构筑一览做透: 暂停层在继续/音效/回大厅之上加「本局构筑」
 //   (武器栏 / 战斗物 / 被动 / 已点亮成档), 战力与将至拍跟 HUD 三卡同一套用语,
 //   点条目短提示怎么来的, 未点亮成档灰显不堆墙。未暂停零干扰。不改 TTK/掉落/成档数值。无逼氪。
 //   回归 v1.52 挑战房回礼三格/爆辣成档/读招让位/冲撞走廊/HUD 三卡/扎根成档/选角三卡/
@@ -1258,10 +1258,10 @@ var CONFIG = {
   pauseChipH: 40,                 // 【v1.53】构筑条目高
   pauseChipGap: 6,                // 【v1.53】条目间距
   pauseStatusH: 46,               // 【v1.53】战力/将至条高
-  pauseBtnW: 300,                 // 【v1.53】继续/回首页钮宽
-  pauseBtnH: 84,                  // 【v1.91】音响/回首页钮高(390 竖屏约 45css, 不抢继续)
+  pauseBtnW: 300,                 // 【v1.53】继续/回大厅钮宽
+  pauseBtnH: 84,                  // 【v1.91】音响/回大厅钮高(390 竖屏约 45css, 不抢继续)
   pauseBtnContinueH: 88,          // 【v1.91】继续游戏钮高
-  pauseBtnGap: 14,                // 【v1.91】暂停钮行距(音响行不贴继续/回首页)
+  pauseBtnGap: 14,                // 【v1.91】暂停钮行距(音响行不贴继续/回大厅)
   pauseAudioGap: 18,              // 【v1.91】BGM/音效/静音列缝, 防误触
   pauseChipN: 56,                 // 【v1.90】构筑芯池+顶栏三格+进化条(时钟生命杀敌/武/战斗/被动/进化/成档)
   uiModalPanelW: 580,               // 【v1.86】略加宽, 名字/堆叠更好读
@@ -22137,11 +22137,11 @@ function checkAchieves(dim, val) {
   }
 }
 
-// 结算确认: 金币唯一入账点(纪律级)。之后回首页并写档(结算确认时机)。
+// 结算确认: 金币唯一入账点(纪律级)。之后回大厅并写档(结算确认时机)。
 // v2.0 R2【R2】: 通关时在此点内完成 章解锁(unlocked=max(unlocked,N+1))/通关章表/章最佳更新;
 //   首通奖励已并入 runSummary.coins(computeRunSummary), 不新增 saveData.coins 写入路径。
 function confirmResult() {
-  GAME.deathCineT = 0;              // 【R15】定格窗内领取回首页: 清镜头计时(结算组本隐藏, 防归零误恢复)
+  GAME.deathCineT = 0;              // 【R15】定格窗内领取回大厅: 清镜头计时(结算组本隐藏, 防归零误恢复)
   var wallet0 = saveData.coins | 0;
   var pFrom = (runSummary.powerStart | 0) || hallCombatPower();
   var unlockName = "";
@@ -28348,7 +28348,7 @@ function registerUi() {
   uiBtnBgm = makeButton("btnbgm", pauseAct.bgm.x, pauseAct.bgm.y, pauseAct.bgm.w, pauseAct.bgm.h, "BGM 开", onTapPauseBgm);
   uiBtnNodeSfx = makeButton("btnnodesfx", pauseAct.node.x, pauseAct.node.y, pauseAct.node.w, pauseAct.node.h, "音效 开", onTapPauseNodeSfx);
   uiBtnMute = makeButton("btnmute", pauseAct.mute.x, pauseAct.mute.y, pauseAct.mute.w, pauseAct.mute.h, "静音 关", onTapMute);
-  uiBtnGoHome = makeButton("btngohome", pauseAct.home.x, pauseAct.home.y, pauseAct.home.w, pauseAct.home.h, "回首页", onTapGoHome);
+  uiBtnGoHome = makeButton("btngohome", pauseAct.home.x, pauseAct.home.y, pauseAct.home.w, pauseAct.home.h, "回大厅", onTapGoHome);
   // 升级弹窗: 模态先注册, 三张卡后注册。【v1.86】点空白只解锁不关; 换一批沉底。
   uiLevelupModal = makeModal("levelup", CONFIG.uiModalPanelW, CONFIG.uiModalPanelH, function (ctx, m) {
     var lm = levelupPanelMetrics();
@@ -28495,7 +28495,7 @@ function registerUi() {
   uiDailyCancel.skin = "sec";
   // 结算页(步骤10): RESULT_WIN/RESULT_LOSE 共用组件; 模态先注册(先画), 构筑芯后注册, 按钮最后注册(先命中)。
   // 双倍领取走 Hooks.requestCoinDouble->AdService(免费同步回调, 每局 1 次只翻金币, 无广告字样);
-  // 领取回首页=confirmResult(金币唯一入账点)。【v1.56】本局构筑回看在房回礼下, 钮贴面板底。
+  // 领取回大厅=confirmResult(金币唯一入账点)。【v1.56】本局构筑回看在房回礼下, 钮贴面板底。
   uiResultModal = makeModal("resultmodal", CONFIG.resultPanelW || 600, CONFIG.resultPanelH || 1220, drawResultPanel);
   uiResultChips = [];
   for (var rci = 0; rci < (CONFIG.resultChipN || 24); rci++) uiResultChips.push(makeResultBuildChip(rci));
@@ -32059,8 +32059,8 @@ function onTapGiveUpBtn() {
 }
 
 function onTapGoHome() {
-  // 【R31】无尽模式"回首页"= 弃局结算(enterResult(LOSE)): 无尽死亡是唯一合法结算出口, 原直弃=收益静默
-  //   全丢(想停手只能送死)。普通章维持回首页原语义(死亡/通关结算天然可达, 且行为锁 T14.6 口径不变)。
+  // 【R31】无尽模式"回大厅"= 弃局结算(enterResult(LOSE)): 无尽死亡是唯一合法结算出口, 原直弃=收益静默
+  //   全丢(想停手只能送死)。普通章维持回大厅原语义(死亡/通关结算天然可达, 且行为锁 T14.6 口径不变)。
   closePauseUi();
   if (GAME.state === GAME.flow.PAUSED_MENU && GAME.endlessMode) {
     enterResult(GAME.flow.RESULT_LOSE);
@@ -33579,12 +33579,12 @@ function onTapDebugSkipBeat() {
 //   BOOT    -> HOME              (启动完成)
 //   HOME    -> PLAYING           (点击"开始游戏" startRun)
 //   PLAYING -> PAUSED_MENU       (暂停按钮 / hidden 切后台)
-//   PAUSED_MENU -> PLAYING       (暂停菜单"继续"; 回首页走 HOME)
+//   PAUSED_MENU -> PLAYING       (暂停菜单"继续"; 回大厅走 HOME)
 //   PLAYING <-> LEVELUP_MODAL   (升级触发 openLevelUp / 选卡 applyUpgrade)
 //   PLAYING -> REVIVE_MODAL     (死亡判定, 步骤9 接入)
 //   REVIVE_MODAL -> PLAYING | RESULT_LOSE (步骤9)
 //   PLAYING -> RESULT_WIN / RESULT_LOSE (步骤8/10: 通关与死亡结算, enterResult 定格 runSummary)
-//   RESULT_WIN/RESULT_LOSE -> HOME ("领取回首页"=confirmResult, 金币唯一入账, 步骤10)
+//   RESULT_WIN/RESULT_LOSE -> HOME ("领取回大厅"=confirmResult, 金币唯一入账, 步骤10)
 //   HOME -> BEAST -> HOME (图鉴屏, 步骤11)
 //   HOME -> SETTINGS -> HOME (设置屏, 步骤12: 静音/导出/导入)
 //   HOME -> GUIDE -> HOME (怎么玩可跳过, v1.40; 局内短提示另走 HUD 教练条)
@@ -34199,7 +34199,7 @@ function stepGame(dt) {
   }
 }
 
-// 新局: 全状态复位(首页"开始游戏"/回首页重开)。
+// 新局: 全状态复位(首页"开始游戏"/回大厅重开)。
 function clearRunEntities() {
   var i;
   for (i = 0; i < enemyTotal; i++) enemyPool[i].active = false;
@@ -34562,7 +34562,7 @@ function dismissStickyModals() {
 
 function goHome() {
   dismissStickyModals();
-  closeChapterSelectUi();           // 【R2】回首页关闭章节选择层(防残留)
+  closeChapterSelectUi();           // 【R2】回大厅关闭章节选择层(防残留)
   hideDailyPickUi();
   leaveDailyMode();                 // 【v1.76】回大厅卸加菜规则(禁珠/潮汐/精英倍率/时长套/回礼标记)
   resetChallengeRoom("idle");       // 【v1.21】回大厅收试炼光环, 避免世界层状态残留
@@ -34577,7 +34577,7 @@ function goHome() {
 }
 
 // 结果屏进入(步骤8; 步骤10 接结算): RESULT_WIN/RESULT_LOSE; 定格结算快照+开结算页组件。
-// 金币入账不在此处(唯一入账=玩家点"领取回首页"的 confirmResult, [10])。
+// 金币入账不在此处(唯一入账=玩家点"领取回大厅"的 confirmResult, [10])。
 function enterResult(next, fromDeath) {
   GAME.pendingDeath = false;
   GAME.paused = false;
