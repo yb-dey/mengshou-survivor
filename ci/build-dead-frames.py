@@ -88,6 +88,7 @@ end = html.index("};", start)
 block = html[start:end]
 
 entries = []
+injections = []
 total_before = 0
 total_after = 0
 preview = []
@@ -106,19 +107,31 @@ for eid in IDS:
     out = buf.getvalue()
     b64 = base64.b64encode(out).decode("ascii")
     key = eid + "_dead"
-    # 若键已存在则替换，否则插入到表头之后
-    pat = re.compile('"' + re.escape(key) + '":"data:image/[a-z]+;base64,[A-Za-z0-9+/=]+"')
-    if pat.search(block):
-        block = pat.sub('"' + key + '":"data:image/webp;base64,' + b64 + '"', block, count=1)
-        mode = "替换"
-    else:
-        block = block.replace('{"', '{"' + key + '":"data:image/webp;base64,' + b64 + '",', 1)
-        mode = "插入"
-    entries.append({"id": eid, "key": key, "mode": mode, "cutPct": round(cleared * 100.0 / tot, 1),
+    entries.append({"id": eid, "key": key, "cutPct": round(cleared * 100.0 / tot, 1),
                     "size": SIZE, "bytes": len(out), "kb": round(len(out) / 1024, 1)})
     total_after += len(out)
+    injections.append((key, b64))
     if len(preview) < 10:
         preview.append((key, small))
+
+# ---------- 注入：一次性前缀插入（不做累积替换，避免引号/逗号错位）----------
+# 幂等：先把同名旧键整段删掉（含其尾随逗号可选），再统一前缀插入
+for key, _ in injections:
+    block = re.sub('"' + re.escape(key) + '":"data:image/[a-z]+;base64,[A-Za-z0-9+/=]+",?', '', block)
+prefix = "".join('"' + k + '":"data:image/webp;base64,' + v + '",' for k, v in injections)
+ANCHOR = "var AI_ART_TABLE = {"
+if block.count(ANCHOR) != 1:
+    print("FAIL: 锚点 AI_ART_TABLE 命中 %d 次" % block.count(ANCHOR))
+    sys.exit(3)
+block = block.replace(ANCHOR, ANCHOR + prefix, 1)
+for e, (k, _) in zip([x for x in entries if "bytes" in x], injections):
+    e["mode"] = "前缀插入"
+
+# 自检：键数应等于注入数，且每个键都必须带引号
+quoted = len(re.findall('"[A-Za-z0-9_]+_dead":"data:image', block))
+if quoted != len(injections):
+    print("FAIL: 带引号的 _dead 键 %d 个，期望 %d 个" % (quoted, len(injections)))
+    sys.exit(4)
 
 new_html = html[:start] + block + html[end:]
 out_path = src_path.with_suffix(".dead.html")
