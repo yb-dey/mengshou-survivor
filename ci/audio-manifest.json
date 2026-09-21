@@ -1,0 +1,133 @@
+{
+  "_comment": "音频交付清单：--write 生成，CI 校验。任何\"本地改了没推\"都会在此第一现场报出，避免下游响度/频谱门禁报出方向感错误的症状。",
+  "audioDir": "game/audio",
+  "trackTrim": {
+    "bgm_march": 0.83,
+    "bgm_horde": 0.6597,
+    "bgm_abyss": 1.1872
+  },
+  "tooling": {
+    "ci/render-missing-bgm.mjs": "45eeeba51ee08bd477d8d49b7f7afbe03e8b920b4a0d8915700ef4658fe91777",
+    "ci/render-missing-sfx.mjs": "91973229a4840dcbfb3804fc34d583faaaba23f721bb6749e70c5655b9d6dd9f",
+    "ci/bgm-lane-loudness.py": "f536720402c0909bb1a2684235ad0d152f3c1334f3d85b3080ac028793aa9fa3",
+    "ci/bgm-melody.py": "90d10ef62fce07d84eff16ac1b9ec8e1569d6beb191f78488acb8a86e9bf9c00"
+  },
+  "wav": {
+    "bgm_abyss.wav": {
+      "sha256": "883271017129ef03cede69c53904d63b8335942589fa2331a67b3e8517a00d46",
+      "bytes": 1008044
+    },
+    "bgm_city.wav": {
+      "sha256": "77b0c6bc761831a0d85a4110abc7ba4a979310f9f7fb1b77ae28540360669296",
+      "bytes": 656252
+    },
+    "bgm_dune.wav": {
+      "sha256": "19ad7759e74108c46a7b8beb273289690d8d9993aeb58c152044e5de14b8b618",
+      "bytes": 475844
+    },
+    "bgm_frost.wav": {
+      "sha256": "e3d877006710c40a2359d06808275511a56dd74a0b1b8c0a88697574f7a06b85",
+      "bytes": 582752
+    },
+    "bgm_harbor.wav": {
+      "sha256": "1885eee18d8e690bffa5eadda96a0ce146c727632e997d889d90ec548cd481fe",
+      "bytes": 465152
+    },
+    "bgm_horde.wav": {
+      "sha256": "1d93d863515a9664f22ac07c6696044c936e17c20359f381f5bbe15364dad733",
+      "bytes": 1152044
+    },
+    "bgm_lose.wav": {
+      "sha256": "78f83370d834d94ff6369a0f3ab2c15730af4b03bf279e439eeac7015b44439a",
+      "bytes": 220544
+    },
+    "bgm_march.wav": {
+      "sha256": "8590f1945ce98f23057c14af47b55f241a85aa4cc08e8ff3497cc3050cf97247",
+      "bytes": 1435162
+    },
+    "bgm_meadow.wav": {
+      "sha256": "1620a401b31ba542ed3daaa5c20e834eea4d8e580d90ac257206ef2707c3955f",
+      "bytes": 435752
+    },
+    "bgm_win.wav": {
+      "sha256": "4591a02257d269f8dd8432784f5d791b977c6f41c3ec8692f465fc16f67a91b0",
+      "bytes": 189044
+    },
+    "sfx_bomb.wav": {
+      "sha256": "faa0adf9e23dc86ba3c5fe569c49eb1b6ac4196a8fcdad51dff7ee0a19cfc305",
+      "bytes": 37088
+    },
+    "sfx_boss_die.wav": {
+      "sha256": "30d8e7d05b0f9f113509a3a0254457c45f1eb28010e534d5d899cec150832dae",
+      "bytes": 61782
+    },
+    "sfx_boss_warn.wav": {
+      "sha256": "74b7c09f620f6add61bfc4d215ef5e7735b1cd579d304243448f92d391f463c9",
+      "bytes": 70604
+    },
+    "sfx_card.wav": {
+      "sha256": "50b4627a64919c404fa74bdd3578dde298613d5bc0726000ac2d091b495e0433",
+      "bytes": 15920
+    },
+    "sfx_cardshow.wav": {
+      "sha256": "05cd56dd0ac2e73668f935850b221b2441d5007286ff963480ab37b86c8438f4",
+      "bytes": 26504
+    },
+    "sfx_chest.wav": {
+      "sha256": "55d87c2d0eb78e9fea0d16d8b92beed12d970d4e9a4937bf9df4345e4b78913b",
+      "bytes": 31796
+    },
+    "sfx_event.wav": {
+      "sha256": "a2f98a9b25722ab8aabb3bf26c437968ad11571a06c51ea8961f76f4656aa3bf",
+      "bytes": 44144
+    },
+    "sfx_evo.wav": {
+      "sha256": "ee031fbdb4cc798c5ac7107000c1f7bffff415d30b355079ac317a0cdeeef0d7",
+      "bytes": 40616
+    },
+    "sfx_fire.wav": {
+      "sha256": "82e169148b954368bf5f6052d43d8363c32458bdcd77043d2193586607eafead",
+      "bytes": 6218
+    },
+    "sfx_gem.wav": {
+      "sha256": "c1cbf4497a959c8fab69ebe724f92e8ee81bcd4a39dac6fdc30e90cfdba886fa",
+      "bytes": 8864
+    },
+    "sfx_hit.wav": {
+      "sha256": "755c68cc65b0f8025b51201db24f2137cf9d2db0e3b28e4459412e3732bfd5ed",
+      "bytes": 8864
+    },
+    "sfx_hurt.wav": {
+      "sha256": "4938d18e89749aa3194c5cea6fc64a3cab994711176e1521cc650da0c68feee6",
+      "bytes": 17684
+    },
+    "sfx_kill.wav": {
+      "sha256": "fd5de647ea5cc258f21818a42dbad3ebe30aa64f797d9ce5cae73f03aecc72b0",
+      "bytes": 12392
+    },
+    "sfx_levelup.wav": {
+      "sha256": "540046782a1581d8606a3337f0ea709bc9f6723a9e494b5bc20eba05400bed64",
+      "bytes": 37088
+    },
+    "sfx_lose.wav": {
+      "sha256": "dff442f1aae93f720384b784fd95951eb031a20c4e4df8d30b19e8d8cefbeb7d",
+      "bytes": 119114
+    },
+    "sfx_revive.wav": {
+      "sha256": "86be8765fe841fec9dadf66bcdb974593b8d21ae724c0e3b42d298f91c05876a",
+      "bytes": 51200
+    },
+    "sfx_start.wav": {
+      "sha256": "5967d8fdbe51f3475ab10ba41952311c1e4021a90d90c1c804eb28310fa2b62f",
+      "bytes": 33560
+    },
+    "sfx_ui.wav": {
+      "sha256": "22333c66891670ec5a8259bd9a9b6a849ba26255602de001744d23a455fdadbf",
+      "bytes": 10628
+    },
+    "sfx_win.wav": {
+      "sha256": "736343b23b905298e13536b1fd3ac08a5517c9866b009db7ba47b03ee7144297",
+      "bytes": 90008
+    }
+  }
+}
