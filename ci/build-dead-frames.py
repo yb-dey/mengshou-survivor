@@ -132,12 +132,17 @@ block = block.replace(ANCHOR, ANCHOR + prefix, 1)
 for e, (k, _) in zip([x for x in entries if "bytes" in x], injections):
     e["mode"] = "前缀插入"
 
-# 自检：键数应等于注入数，且每个键都必须带引号（**按当前 SUFFIX 计数**，
-# 写死 "_dead" 会在受击帧那趟误报：它会把已有的 21 个 _dead 键当成目标数去比 → 实测踩过）
-quoted = len(re.findall('"[A-Za-z0-9_]+' + re.escape(SUFFIX) + '":"data:image', block))
-if quoted != len(injections):
-    print("FAIL: 带引号的 %s 键 %d 个，期望 %d 个" % (SUFFIX, quoted, len(injections)))
+# 自检：**逐个校验本轮注入的键**，不能拿"所有同后缀键的总数"去比 ——
+# 受击帧那趟已有 15 个 _hit 键，注入 6 个后总数 21，用总数比会误报（实测踩过两次）。
+missing = [k for k, _ in injections if ('"' + k + '":"data:image') not in block]
+if missing:
+    print("FAIL: 未找到注入的键: %s" % ", ".join(missing))
     sys.exit(4)
+dup = [k for k, _ in injections if block.count('"' + k + '":"data:image') != 1]
+if dup:
+    print("FAIL: 键出现次数 != 1: %s" % ", ".join(dup))
+    sys.exit(4)
+print("自检通过：本轮 %d 个键均已注入且唯一" % len(injections))
 
 new_html = html[:start] + block + html[end:]
 out_path = src_path.with_suffix(".dead.html")
