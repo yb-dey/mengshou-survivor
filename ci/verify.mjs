@@ -92,7 +92,9 @@ async function run(label, url, shotPrefix) {
     let f = null, rt = null;
     try { f = D.readField ? D.readField() : null; } catch (e) { f = 'err'; }
     try { rt = D.liveEvent ? undefined : undefined; } catch {}
-    return { field: f, runTime: (window.GAME && window.GAME.runTime) ?? null };
+    return { field: f, runTime: (window.GAME && window.GAME.runTime) ?? null,
+             deathMarks: (window.deathMarks || []).length,
+             deadSprites: Object.keys(window.SPRITES || {}).filter((k) => k.endsWith('_dead')).length };
   });
   const samples = [];
   samples.push({ t: 1.5, ...(await snap()) });
@@ -125,11 +127,14 @@ async function run(label, url, shotPrefix) {
 
   const counts = samples.map((s) => (s.field && s.field.counts) ? (s.field.counts.boss + s.field.counts.elite + s.field.counts.lethal + s.field.counts.trash + s.field.counts.gems) : null);
   const battleStarted = counts.some((x) => typeof x === 'number' && x > 0);
+  // 死亡帧证据：① 已构建的 <id>_dead 贴图数；② 战斗中死亡标记出现过的峰值
+  const deadSprites = samples.length ? (samples[samples.length - 1].deadSprites || 0) : 0;
+  const deathMax = Math.max(0, ...samples.map((s) => s.deathMarks || 0));
   const uniqFailed = [...new Set(failedReqs)];
   const ok = pageErrors.length === 0 && canvasCheck.nonBlank === true && battleStarted === true;
 
   return { label, url: url.replace(/^file:.*\//, 'file://…/'), loadMs, fps, guide, probe, counts, samples,
-    battleStarted, canvas: canvasCheck, ok,
+    battleStarted, deadSprites, deathMax, canvas: canvasCheck, ok,
     pageErrorCount: pageErrors.length, pageErrors,
     envWarningCount: envWarnings.length, envWarnings: envWarnings.slice(0, 12),
     otherErrorCount: otherErrors.length, otherErrors: otherErrors.slice(0, 10),
