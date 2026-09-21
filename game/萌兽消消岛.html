@@ -10347,21 +10347,27 @@ var DATA_CODEX_FORK = [
   { from: "thunder", branches: [{ id: "thunderstorm", feel: "连锁雷云", pick: "怪挤成一堆时选它" }, { id: "pepperbolt", feel: "短链快劈", pick: "要劈得快、劈得准选它" }] },
   { from: "laserflower", branches: [{ id: "solarflare", feel: "宽束慢扫", pick: "慢慢扫、扫得宽选它" }, { id: "nectarsnap", feel: "窄束瞬斩", pick: "短促高频切近敌选它" }] }
 ];
+// 【v1.184】配方卡面文案按「最窄卡」定稿：7 条配方在 720px 宽内排 4+3 列，
+//   前 4 张卡宽 148px（可用 128px），后 3 张 201px（可用 181px）。原 effect/contrast 长句
+//   在 148px 卡内被 hudFitText 截成「…」（实测 11/28 字段带省略号），玩家读到的是半句话。
+//   定稿原则：删的是**冗余虚词与空格**，不删信息点 —— 「冲刺留铃浪 · 近刮 · CD缩短」→
+//   「冲刺留铃·近刮·CD短」仍保留「冲刺留铃浪 / 近刮 / CD 缩短」三件事，只是挤掉分隔空格。
+//   门禁：ci/card-fit.mjs（按真实字体度量逐字段判超宽）+ ci/term-consistency.mjs。
 var DATA_CODEX_PAIR = [
   { id: "gale", name: "疾风成档", a: "windbell", b: "spinachseed", tag: "机动",
-    effect: "冲刺留铃浪 · 近刮 · CD缩短", contrast: "不是数值 +6% 埋进总伤" },
+    effect: "冲刺留铃·近刮·CD短", contrast: "不是数值+6%堆总伤" },
   { id: "dew", name: "磐石成档", a: "moss", b: "dewcap", tag: "生存",
-    effect: "受击绽露甲 · 回血推开近敌", contrast: "不是疾风冲刺铃浪换皮" },
+    effect: "受击绽甲·回血退敌", contrast: "不是疾风冲刺换皮" },
   { id: "hoard", name: "聚宝成档", a: "magnet", b: "wisdom", tag: "经济",
-    effect: "拾珠爆金环 · 珠越大环越狠", contrast: "不是冲刺也不是挨打" },
+    effect: "拾珠爆金环·大珠大环", contrast: "不是冲刺挨打换皮" },
   { id: "root", name: "扎根成档", a: "rootmoss", b: "dandelion", tag: "扎根",
-    effect: "站住生绒田 · 短中满田刮伤", contrast: "不是冲刺/受击/拾珠换皮" },
+    effect: "站住生绒田·满田刮", contrast: "不是冲刺/受击/拾珠" },
   { id: "spice", name: "爆辣成档", a: "nutshell", b: "peppercorn", tag: "爆辣",
     effect: "击杀掉尸爆 · 小刮连爆大清兔", contrast: "爆点在尸体, 不是身周环" },
   { id: "mist", name: "清露成档", a: "nectar", b: "mistleaf", tag: "清露",
     effect: "击杀或拾取喷清雾 · 清弹吸珠", contrast: "是雾不是伤圈, 也不是拾珠金环" },
   { id: "hearth", name: "暖巢成档", a: "warmfluff", b: "nesttwig", tag: "暖巢",
-    effect: "清波结暖巢 · 回血短护罩", contrast: "不是磐石受击绽甲, 也不是清雾清弹" }
+    effect: "清波结暖巢 · 回血短护罩", contrast: "不是磐石绽甲, 也不是清雾清弹" }
 ];
 function petCodexStars(def) {
   var d = def || DATA_BEAST[0];
@@ -30868,7 +30874,14 @@ function makeCodexPairCard(idx, x, y, w, h) {
       ctx.fillText(hudFitText(ctx, view.name, textW), nameX, r.y + 22);
       ctx.fillStyle = view.color;
       ctx.font = (r.w < 240 ? "bold 12px " : "bold 13px ") + FONT_STACK;
-      ctx.fillText(hudFitText(ctx, flowNameOf(view.tag) + " · " + view.aName + "+" + view.bName, r.w - 20), r.x + 10, r.y + 48);
+      // 【v1.184】窄卡下 tag 行必被截断：4 列 148px 卡里「疾风流 · 风之铃+风车草籽」12px 需 146px，可用仅 128px。
+      //   做法有两处：① 紧凑分隔符（" · " → "·"，省 8px，零信息损失）② flowNameOf 的「流」字在卡面冗余
+      //   （「疾风流」的流派义已由同卡 color 色点 + effect 表达），窄卡下裁掉尾字。
+      //   ⚠ 阈值 r.w < 240：配方 tab 现有两种列宽（4 列 148 / 3 列 201）**都** < 240，故当前全部走紧凑分支；
+      //   "≥240 保留全称" 是给未来更宽布局留的口子，现在拿不到。改列宽时请同步 ci/card-fit.mjs。
+      var tagName = flowNameOf(view.tag);
+      if (r.w < 240 && tagName.length > 2 && tagName.slice(-1) === "流") tagName = tagName.slice(0, -1);
+      ctx.fillText(hudFitText(ctx, tagName + (r.w < 240 ? "·" : " · ") + view.aName + "+" + view.bName, r.w - 20), r.x + 10, r.y + 48);
       ctx.fillStyle = "#8a5a10";
       ctx.font = "bold 13px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, view.effect, r.w - 20), r.x + 10, r.y + 68);
