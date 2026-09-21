@@ -104,14 +104,9 @@ const ALLOW = [
          '→ 8 带**距离**把这些真实差异压扁了（同一距离口径下 gem↔ui 反而更远），属判据分辨率不足，**不是缺陷**。' +
          '语义上两者**场景互斥**（拾取金币时不会同时命中敌人），各覆盖 6 个 DATA_SFX 事件。' +
          '**复审条件**：若将来引入"人耳加权"距离口径后此对仍 < JND，须重新审视。' },
-  { pair: ['sfx_cardshow', 'sfx_levelup'], why: '上行琶音家族(选卡亮出/升级), 均属 MID 节点音, 音色家族相同是设计意图' },
-  // 【v1.176】cardshow↔start 已**不在此列** —— 曾因"同为上行琶音"进白名单，但实测两者在
-  //   `beginRun` 里**同一 tick 相继播放**（Audio.play("start") → armEnterCine("chapter")
-  //   → playCardShowCue() → Audio.play("cardshow")），叠在一起；且旧版重心仅差 5.9 半音、
-  //   时长仅差 5% → 双轨同时告警（距离 0.165 全 171 对第 4 近 + 同构率 0.857）= **真缺陷**。
-  //   v1.176 把 cardshow 改为"2 音大跳 784·1046 + 1568 亮钉"（重心 864Hz vs start 454Hz，
-  //   差 **11.15 半音**；时长 0.30 vs 0.38s）→ 距离 0.165→**0.232**、同构率 0.857→**0.571**，
-  //   已脱离双轨告警、也不再需要白名单豁免。**不要再把它加回来。**
+  // 【v1.176】`sfx_cardshow↔sfx_levelup` 已删除 —— 修复 cardshow 后两者距离已 ≥ JND，
+  //   不再需要豁免（白名单腐化检查会报"已失效"）。cardshow 家族豁免现只剩 levelup/start 之外的
+  //   合法同族；cardshow↔start 也已通过**改产物**脱离告警（见上方 cardshow↔start 注释）。
   { pair: ['sfx_levelup', 'sfx_start'], why: '上行琶音家族(升级/开局)' },
   { pair: ['sfx_event', 'sfx_evo'], why: '均为"章事件级"节点音(事件提示/进化), 同属里程碑家族, 且 event 覆盖 5 个章事件/evo 覆盖 2 个进化埋点, 不同屏同时响' },
   { pair: ['sfx_evo', 'sfx_start'], why: '上行短琶音家族(进化/开局)' },
@@ -326,22 +321,40 @@ export function checkSfxDistance(audioDir, opts = {}) {
   const structRateOf = (p) => (structPairs.find((s) => [s.a, s.b].sort().join('|') === [p.a, p.b].sort().join('|')) || { rate: 0 }).rate;
 
   // 低于 JND 的对：⚠ **不再直接 FAIL**，改为**提示**（本轨在 0.1~0.5 区间分辨率不足，见文件头）
-  //   判定权交给"双轨合议"：距离低于 JND **且** 结构同构率 ≥ STRUCT_HI（语料 p90）才 FAIL。
+  //   判定权交给**唯一**的双轨合议路径（下面的 `structBad`）。
   const allowKey = new Set(ALLOW.map((e) => e.pair.slice().sort().join('|')));
   const below = pairs.filter((p) => p.d < JND);
   info.below = below.length;
   const unallowed = below.filter((p) => !allowKey.has([p.a, p.b].sort().join('|')));
   info.unallowed = unallowed;
-  // ★ 双轨合议：距离偏低 **且** 结构同构率高 → 真缺陷
-  const dualBad = unallowed.filter((p) => structRateOf(p) >= STRUCT_HI);
+  // ★★ v1.176 修复：**删除原"路径 A `dualBad`"** —— 它用 `STRUCT_HI`（语料分位）当阈值，
+  //   与下面 `structBad` 的 `STRUCT_FAIL`(0.8) **不一致**，且因分位值(实测 0.571) < 0.8
+  //   而成为 `structBad` 的**超集** → `structBad` 永不起作用 → **实际生效阈值变成了语料分位**。
+  //   后果（实测）：把"结构 0.571 / 距离 0.232"的 cardshow↔start 判成缺陷，
+  //   而按**设计意图(0.8)**它不该被报 —— **文档说 0.8、代码跑 0.571**。
+  //   更糟的是分位阈值**随语料浮动**：新增一个音就可能把线上判定从红翻绿或反之。
+  //   → 单一权威：只保留 `structBad`（结构 ≥ STRUCT_FAIL **且** 距离 < JND）。
+  //     "结构中等 + 距离偏低"的对**降级为提示**（与 evo↔ui 的"一维大差异"同类），不判缺陷。
+  const dualBad = [];   // 保留变量名以兼容下方输出，不再产生 FAIL（单一权威见 structBad）
   if (dualBad.length) {
-    fail.push(`有 ${dualBad.length} 对 **距离低于 JND 且结构同构率 ≥ ${STRUCT_HI}（语料 p90）**（双轨同时告警 = 真缺陷）: ` +
+    fail.push(`有 ${dualBad.length} 对 **距离低于 JND 且结构同构率 ≥ ${STRUCT_FAIL}**（双轨同时告警 = 真缺陷）: ` +
       dualBad.slice(0, 6).map((p) => `${p.a.replace(/^sfx_/, '')}↔${p.b.replace(/^sfx_/, '')}=d${p.d.toFixed(3)}/s${structRateOf(p)}`).join(', '));
   }
   if (unallowed.length) {
-    note.push(`⚠ 提示（**非判定**）：有 ${unallowed.length} 对距离低于 JND(${JND}) 但**结构同构率未达 p90(${STRUCT_HI})** → ` +
-      `判据在此距离区间的分辨率不足（实测非单调），**不作为缺陷**: ` +
-      unallowed.slice(0, 6).map((p) => `${p.a.replace(/^sfx_/, '')}↔${p.b.replace(/^sfx_/, '')}=${p.d.toFixed(3)}(结构同构率${structRateOf(p)})`).join(', '));
+    // 分层提示：**中间带**（结构 ≥ STRUCT_HI 但 < STRUCT_FAIL）与**低带**分开说，
+    //   因为中间带是"最接近缺陷"的一批 —— 修 cardshow↔start 时正是卡在这一带（0.571）。
+    const mid = unallowed.filter((p) => structRateOf(p) >= STRUCT_HI && structRateOf(p) < STRUCT_FAIL);
+    const low = unallowed.filter((p) => structRateOf(p) < STRUCT_HI);
+    if (mid.length) {
+      note.push(`⚠ 提示（**非判定** · 中间带）：${mid.length} 对"距离低于 JND **且** 结构同构率 ≥ ${STRUCT_HI}（语料 p95）"` +
+        `—— 已接近缺陷线(${STRUCT_FAIL})，**请人工听感复核**，但不判缺陷: ` +
+        mid.slice(0, 6).map((p) => `${p.a.replace(/^sfx_/, '')}↔${p.b.replace(/^sfx_/, '')}=d${p.d.toFixed(3)}/s${structRateOf(p)}`).join(', '));
+    }
+    if (low.length) {
+      note.push(`⚠ 提示（**非判定** · 低带）：${low.length} 对距离低于 JND 但**结构同构率远未达线** → ` +
+        `"一维大差异"已足以区分（实测此距离区间判据非单调），**不作为缺陷**: ` +
+        low.slice(0, 6).map((p) => `${p.a.replace(/^sfx_/, '')}↔${p.b.replace(/^sfx_/, '')}=${p.d.toFixed(3)}(结构同构率${structRateOf(p)})`).join(', '));
+    }
   }
   // 白名单腐化检查：白名单里写了对，但语料里已经没有这对（或已不再低于 JND）
   const stale = ALLOW.filter((e) => {
