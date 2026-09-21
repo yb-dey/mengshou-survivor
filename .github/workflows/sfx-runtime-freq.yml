@@ -1,0 +1,33 @@
+name: sfx-runtime-freq
+# 【新门禁】运行时 SFX 触发频次实测 —— 补上"频率"这一半证据。
+#
+# 为什么需要它（第十四类病根）：
+#   `CONFIG.audio.prios` 的 5 级纵向层级，其**设计立场**是
+#     "高频事件（每秒数次）必须显著低于低频事件（每局几次）"。
+#   而此前所有门禁（sfx-loudness / sfx-intent-vs-real / audio-audit）都只看**响度**，
+#   从不看**次数** → "档位内混进高频事件"这种缺陷可以完全静默通过
+#   （静态审计全绿时，`levelup` 仍是全场最响而它一局响十几次）。
+#
+# 本 workflow 在真实浏览器里跑整局，统计每个音效的**自发**触发次数，
+# 与 sfx-loudness 的响度交叉 → 才可能判"这个音效是否过响"。
+on:
+  workflow_dispatch:
+jobs:
+  freq:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
+      - name: 运行时 SFX 频次实测
+        run: node ci/sfx-runtime-freq.mjs
+      - name: 上传产物
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sfx-runtime-freq
+          path: ci/out/sfx-runtime-freq.*
+          retention-days: 14
