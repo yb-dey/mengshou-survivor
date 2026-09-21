@@ -6,16 +6,21 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
-const ROOT = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou';
+// cwd = 仓库根（本地=仓库目录，CI=/home/runner/work/...）。绝不写死绝对路径。
+const ROOT = process.cwd();
 const IN = path.join(ROOT, 'ci', 'out', 'sfx-runtime-freq.json');
 const BAK = path.join(ROOT, 'ci', 'out', '_freq-backup.json');
 
+if (!fs.existsSync(IN)) {
+  console.error('❌ 缺少前置产物 ' + IN + ' —— 请先跑 ci/sfx-runtime-freq.mjs');
+  process.exit(2);
+}
 const orig = fs.readFileSync(IN, 'utf8');
 fs.writeFileSync(BAK, orig, 'utf8');
 
 function runGate() {
   try {
-    const o = execFileSync('node', ['ci/sfx-freq-vs-loud.mjs'], { cwd: ROOT, encoding: 'utf8' });
+    const o = execFileSync(process.execPath, ['ci/sfx-freq-vs-loud.mjs'], { cwd: ROOT, encoding: 'utf8' });
     return { code: 0, out: o };
   } catch (e) {
     return { code: e.status || 1, out: String(e.stdout || '') + String(e.stderr || '') };
@@ -72,13 +77,25 @@ fs.writeFileSync(IN, orig, 'utf8');   // 还原
 fs.unlinkSync(BAK);
 
 console.log('=== 阴性对照结果 ===');
+const assert = [];
 let allOk = true;
 results.forEach((r) => {
   const mark = r.pass ? '✅' : '❌';
-  if (!r.pass) allOk = false;
+  assert.push(mark + ' ' + r.name + '  [exit ' + r.code + ']');
   console.log(mark + ' ' + r.name + '  [exit ' + r.code + ']');
   console.log('    ' + r.hint);
 });
 console.log('');
 console.log(allOk ? '✅ 阴性对照全通过（门禁真的会报错，不是永远通过）' : '❌ 有对照未通过 —— 门禁判据不成立');
+
+// 落盘文本小产物，供 CI 上传与分析（图像/浏览器都在云端，本机只读文本）
+const outDir = path.join(ROOT, 'ci', 'out');
+try {
+  fs.mkdirSync(outDir, { recursive: true });
+  fs.writeFileSync(path.join(outDir, 'sfx-freq-vs-loud.selftest.txt'),
+    '=== 阴性对照结果 ===\n' + assert.join('\n') + '\n\n' +
+    (allOk ? '✅ 阴性对照全通过（门禁真的会报错，不是永远通过）' : '❌ 有对照未通过 —— 门禁判据不成立') + '\n',
+    'utf8');
+} catch (e) { /* 不影响退出码 */ }
+
 process.exit(allOk ? 0 : 2);
