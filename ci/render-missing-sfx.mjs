@@ -165,9 +165,20 @@ function renderOne(id) {
   } else if (id === "SFX_WIN") { out = alloc(0.9);
     const wf = [523, 659, 784, 1046];
     for (let i = 0; i < 4; i++) tone(out, { wave: "triangle", f0: wf[i], t0: i * 0.15, dur: 0.45, a: 0.024, d: 0.28, s: 0.16, r: 0.2, gain: 0.84 });
+    // 【v1.170】补低音基础层（与游戏 _renderAll 逐字一致）: 原 win/lose 都是纯四音 triangle、
+    //   完全没有低音层 → 实测 sfx_win 的 low 与 lowmid **双双 0.0%**, 是 6 个 INFREQ 里唯一低频全空的。
+    //   ⚠ 增益是**扫出来的**(用 sfx-loudness.py 的 analyze 评候选):
+    //     首版 0.78/0.62 把 low 抬到 15.2%, 但低音层抢了峰值 → 归一后整体变轻 1.2dB,
+    //     把 INFREQ 档中位从 -16.8 拉到 -18.2 → 与 FREQ 的档位差距 3.9dB 缩到 2.5dB(设计意图被削弱)。
+    //     最终取 0.30/0.20 + 旋律 0.84→0.95: **low 仍有 ~7%, 而响度回到 -17.69**(目标 -17.1)。
+    tone(out, { wave: "sine", f0: 65.41,  t0: 0, dur: 0.9, a: 0.03,  d: 0.3,  s: 0.62, r: 0.3,  gain: 0.30 });
+    tone(out, { wave: "sine", f0: 130.81, t0: 0, dur: 0.9, a: 0.025, d: 0.28, s: 0.55, r: 0.26, gain: 0.20 });
   } else if (id === "SFX_LOSE") { out = alloc(0.9);
     const lf = [523, 440, 349, 262];
-    for (let j = 0; j < 4; j++) tone(out, { wave: "triangle", f0: lf[j], t0: j * 0.15, dur: 0.45, a: 0.026, d: 0.3, s: 0.15, r: 0.22, gain: 0.82 });
+    for (let j = 0; j < 4; j++) tone(out, { wave: "triangle", f0: lf[j], t0: j * 0.15, dur: 0.45, a: 0.026, d: 0.3, s: 0.15, r: 0.22, gain: 0.93 });
+    // 【v1.170】同档补齐低音层(与 win 对称; 下行曲用更低更暗的 A2 承托"落句", 增益略低维持档位关系)
+    tone(out, { wave: "sine", f0: 55.0,  t0: 0, dur: 0.9, a: 0.035, d: 0.32, s: 0.58, r: 0.34, gain: 0.28 });
+    tone(out, { wave: "sine", f0: 110.0, t0: 0, dur: 0.9, a: 0.03,  d: 0.3,  s: 0.52, r: 0.3,  gain: 0.18 });
   } else {
     out = alloc(0.01);
   }
