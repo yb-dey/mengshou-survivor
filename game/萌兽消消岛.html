@@ -26513,7 +26513,7 @@ function makeButton(id, x, y, w, h, label, onTap) {
         return;
       }
       if (tone === "ok") { fill = "#2e8b47"; stroke = "#fff7e0"; ink = "#ffffff"; }
-      else if (tone === "locked") { fill = "#5a5348"; stroke = "#8a7a58"; ink = "#efe6c8"; }
+      else if (tone === "locked") { /* 【v1.167e】vaultLockedQuiet：锁住的状态该“安静”——原深灰实心(#5a5348)+浅字比可操作态还重，且与卡内“未解锁”小签重复喊话；改浅色描边 ghost 样式（墨字 4.74:1 达标），响亮留给可操作态。回退：fill=#5a5348 / stroke=#8a7a58 / ink=#efe6c8 */ fill = "rgba(16,20,14,0.06)"; stroke = "rgba(42,58,24,0.35)"; ink = "#6a6a58"; }
       // 【v1.157】done 档(满级/已入仓/静音关)去金盘: 苔纸+细墨缘+深墨字, 对齐仓库行卡状态签; 按下态仍走 widgetPressed 加粗
       else if (tone === "done") { fill = "#dde8c2"; stroke = "rgba(42,58,24,0.55)"; ink = "#3a4626"; }
       else if (tone === "poor") { fill = "#6a3030"; stroke = "#c0392b"; ink = "#ffe0d4"; }
