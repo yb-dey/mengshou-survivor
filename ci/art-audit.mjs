@@ -83,6 +83,28 @@ console.log('SPRITES 条目: ' + info.count + '  颜色丰富(>16色, 疑似AI):
 if (flat.length) console.log('  疑似程序化清单: ' + flat.join(', '));
 
 // 联系表
+// 内存口径对齐：本项目的「像素内存」到底指什么？同时量三个口径，一次说清。
+const mem = await page.evaluate(() => {
+  const m = performance.memory || {};
+  let canvasBytes = 0, n = 0, nonTileBytes = 0, nonTileN = 0;
+  for (const k in window.SPRITES) {
+    const cv = window.SPRITES[k];
+    if (!cv || !cv.width) continue;
+    const b = cv.width * cv.height * 4;
+    canvasBytes += b; n++;
+    if (k !== 'groundTile') { nonTileBytes += b; nonTileN++; }
+  }
+  const MB = 1048576;
+  return {
+    usedJSHeapMB: m.usedJSHeapSize ? +(m.usedJSHeapSize / MB).toFixed(2) : null,
+    totalJSHeapMB: m.totalJSHeapSize ? +(m.totalJSHeapSize / MB).toFixed(2) : null,
+    canvasMB: +(canvasBytes / MB).toFixed(2), canvasCount: n,
+    canvasNonTileMB: +(nonTileBytes / MB).toFixed(2), canvasNonTileCount: nonTileN,
+  };
+});
+console.log('内存口径: JS堆=' + mem.usedJSHeapMB + 'MB  画布总和=' + mem.canvasMB + 'MB(' + mem.canvasCount +
+            '张)  画布(除地面瓦片)=' + mem.canvasNonTileMB + 'MB(' + mem.canvasNonTileCount + '张)');
+
 const sheet = await page.evaluate((keys) => {
   const S = window.SPRITES;
   const COLS = 12, CELL = 96, PAD = 6;
@@ -141,6 +163,14 @@ fs.writeFileSync(path.join(OUT, 'art-audit.json'), JSON.stringify(report, null, 
 
 const md = [
   '# 美术审计（基于实际绘制的 SPRITES）',
+  '',
+  '## 内存口径（先对齐，再谈优化）',
+  '',
+  '| 口径 | 数值 |',
+  '|---|---|',
+  '| JS 堆 usedJSHeapSize | ' + (mem.usedJSHeapMB ?? '-') + ' MB |',
+  '| 画布总和（全部 ' + mem.canvasCount + ' 张） | **' + mem.canvasMB + ' MB** |',
+  '| 画布总和（除地面瓦片） | ' + mem.canvasNonTileMB + ' MB（' + mem.canvasNonTileCount + ' 张） |',
   '',
   '- SPRITES 条目: **' + info.count + '**',
   '- 颜色丰富（>16 色，疑似 AI 位图）: **' + rich + '**',
