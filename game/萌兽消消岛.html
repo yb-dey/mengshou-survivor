@@ -1394,6 +1394,17 @@ var CONFIG = {
     levelupDuckMul: 0.62,         // 【v1.154】升级三选一开窗垫乐再压一档(读卡更静), 关窗经 syncDuck 自动回
     unlockSilentSec: 0.01,         // 手势解锁空 buffer 秒 [建议]
     peakNorm: 0.7,                 // 渲染期峰值归一目标(-3dBFS) [建议]
+    // 【v1.180】BGM 逐曲响度配平(线性增益, 烘焙期在峰值归一**之后**施加)。
+    //   为什么必须: 全部 BGM 按"峰值归一"烘焙 → 峰值相等 ≠ 响度相等。
+    //   实测(ci/bgm-lane-loudness.py, 简化K加权) 同档内极差曾达 5.1 dB:
+    //     battle 档 horde -36.89 / march -38.88 / abyss -41.99
+    //   手法: 不动音高/调式/节奏/编配, 只对**偏响的曲子**做统一乘性衰减。
+    //   每次改动都必须重跑 bgm-lane-loudness.py(档内 ≤3.0 / 切换链 ≤2.0)。
+    bgmTrim: {
+      march: 0.8300,               // -1.62 dB: 配平到档内目标 -40.5
+      horde: 0.6597,               // -3.61 dB: 原为档内最响(-36.89), 是跳档主因
+      abyss: 1.1872                // +1.49 dB: BOSS 段本应更突出, 从最静端抬到档内
+    },
     gemComboMax: 24,               // 宝石连击升调上限级(R3: 24=全音阶两八度)【R3】
     gemComboStep: 1.0594631,       // 连击每级 playbackRate 倍率(R3: 2^(1/12) 全音阶半音)【R3】
     gemComboWindowSec: 1.5,        // 连击窗口秒, 超时回落 1 级(R3: 1.0→1.5 与 HUD 连击窗对齐)【R3】
@@ -12103,12 +12114,15 @@ var Audio = {
     } else if (tid === "march") {        // 【v1.95】启程发育段: G 五声四句, 后半加厚托住约 10 分钟; 质量对标鸣潮巅峰、题材/资产不跟鸣潮
       // 【v1.159】混音重平衡(旋律/调性/长度/循环不动): 中频常鸣层(D3/B3/E4)与垫层各收一档去浑浊, 钩句加句内呼吸弧+
       //   句尾收拍(第 8 拍短而轻=句读), 起音 12→16ms、高八度花与鼓点略收; 峰值归一不动, 整体响度不升, 长局更耐听。
+      // 【v1.180】第十八类病根修复(旋律层被垫层掩蔽, 门禁 ci/bgm-melody.py 实测):
+      //   改前实测 旋律占比 18.1% / 人均压制比 0.40 → 旋律喊不过垫层(垫层音与旋律音同和弦、且一直响)。
+      //   手法: 垫层各降一档(常鸣音感知远大于其数值)、钩句抬一档; **音高/调式/节奏/长度不动**。
       var mPad = [196.0, 246.94, 293.66];
-      for (i = 0; i < mPad.length; i++) this._tone(out, sr, { wave: "triangle", f0: mPad[i], t0: 0, dur: loopSec, a: 0.08, d: 0.4, s: 0.28, r: 0.5, gain: 0.12 });
+      for (i = 0; i < mPad.length; i++) this._tone(out, sr, { wave: "triangle", f0: mPad[i], t0: 0, dur: loopSec, a: 0.08, d: 0.4, s: 0.28, r: 0.5, gain: 0.075 });
       this._tone(out, sr, { wave: "sine", f0: 98.0, t0: 0, dur: loopSec, a: 0.04, d: 0.3, s: 0.55, r: 0.4, gain: 0.16 });
-      this._tone(out, sr, { wave: "sine", f0: 146.83, t0: 0, dur: loopSec, a: 0.06, d: 0.4, s: 0.32, r: 0.5, gain: 0.06 });
-      this._tone(out, sr, { wave: "sine", f0: 246.94, t0: 0, dur: loopSec, a: 0.08, d: 0.45, s: 0.22, r: 0.5, gain: 0.05 });
-      this._tone(out, sr, { wave: "triangle", f0: 329.63, t0: 0, dur: loopSec, a: 0.10, d: 0.5, s: 0.16, r: 0.55, gain: 0.03 });
+      this._tone(out, sr, { wave: "sine", f0: 146.83, t0: 0, dur: loopSec, a: 0.06, d: 0.4, s: 0.32, r: 0.5, gain: 0.045 });
+      this._tone(out, sr, { wave: "sine", f0: 246.94, t0: 0, dur: loopSec, a: 0.08, d: 0.45, s: 0.22, r: 0.5, gain: 0.032 });
+      this._tone(out, sr, { wave: "triangle", f0: 329.63, t0: 0, dur: loopSec, a: 0.10, d: 0.5, s: 0.16, r: 0.55, gain: 0.02 });
       var mHookA = [392.0, 440.0, 493.88, 587.33, 493.88, 440.0, 392.0, 329.63];
       var mHookB = [440.0, 392.0, 329.63, 293.66, 329.63, 392.0, 440.0, 493.88];
       var mHookC = [493.88, 587.33, 659.26, 587.33, 493.88, 440.0, 392.0, 293.66];
@@ -12117,19 +12131,22 @@ var Audio = {
       for (k = 0; k < def.beats; k++) {
         var phrase = (k / 8) | 0;
         var hook = phrase === 0 ? mHookA[k % 8] : (phrase === 1 ? mHookB[k % 8] : (phrase === 2 ? mHookC[k % 8] : mHookD[k % 8]));
-        var gHook = phrase === 0 ? 0.18 : (phrase === 1 ? 0.24 : (phrase === 2 ? 0.22 : 0.30));
+        var gHook = phrase === 0 ? 0.25 : (phrase === 1 ? 0.33 : (phrase === 2 ? 0.30 : 0.41));
         var mCad = (k & 7) === 7;                                    // 句尾收拍: 更短更轻, 句与句之间有气口
         this._tone(out, sr, { wave: "triangle", f0: hook, t0: k * beat, dur: mCad ? beat * 0.62 : beat * 0.92, a: 0.016, d: 0.2, s: 0.1, r: 0.32, gain: gHook * mShape[k & 7] });
-        if (!mCad) this._tone(out, sr, { wave: "sine", f0: hook * 2, t0: k * beat, dur: beat * 0.45, a: 0.008, d: 0.12, s: 0, r: 0.18, gain: phrase < 2 ? 0.03 : 0.05 });
+        if (!mCad) this._tone(out, sr, { wave: "sine", f0: hook * 2, t0: k * beat, dur: beat * 0.45, a: 0.008, d: 0.12, s: 0, r: 0.18, gain: phrase < 2 ? 0.042 : 0.068 });
         if ((k & 1) === 0) this._tone(out, sr, { wave: "sine", f0: 73.42, t0: k * beat, dur: beat * 0.22, a: 0.004, d: 0.08, s: 0, r: 0.08, gain: 0.11 });
-        if (phrase >= 1 && (k & 1)) this._tone(out, sr, { wave: "triangle", f0: hook * 0.5, t0: k * beat, dur: beat * 1.35, a: 0.02, d: 0.22, s: 0.08, r: 0.4, gain: 0.07 });
-        if (phrase >= 2 && (k % 4) === 0) this._tone(out, sr, { wave: "sine", f0: 196.0, t0: k * beat, dur: beat * 1.6, a: 0.02, d: 0.2, s: 0.08, r: 0.4, gain: 0.05 });
+        if (phrase >= 1 && (k & 1)) this._tone(out, sr, { wave: "triangle", f0: hook * 0.5, t0: k * beat, dur: beat * 1.35, a: 0.02, d: 0.22, s: 0.08, r: 0.4, gain: 0.045 });
+        if (phrase >= 2 && (k % 4) === 0) this._tone(out, sr, { wave: "sine", f0: 196.0, t0: k * beat, dur: beat * 1.6, a: 0.02, d: 0.2, s: 0.08, r: 0.4, gain: 0.032 });
       }
     } else if (tid === "horde") {        // 【v1.102】放开段: E 小调四句+轻踩, 约 13 秒; 十六分再压一档不刺耳不吞音
-      var oPad = [164.81, 196.0, 246.94, 293.66];           // E3 G3 B3 D4(Em7); 【v1.159】垫层 0.26→0.22 中频略收, 钩/踩仍清
-      for (i = 0; i < oPad.length; i++) this._tone(out, sr, { wave: "triangle", f0: oPad[i], t0: 0, dur: loopSec, a: 0.03, d: 0.3, s: 0.18, r: 0.3, gain: 0.22 });
+      // 【v1.180】第十八类病根修复: 改前实测 旋律占比 3.4% / 人均压制比 0.16 —— 全场最差
+      //   (Em7 四音常鸣 0.22 + E2 drone 0.30 把钩句压没)。手法同 march: 垫层降档 + 钩句抬档,
+      //   音高/调式/节奏/长度不动; 低音 drone(E2 82.41)是"怪潮"性格锚点, 保持不动。
+      var oPad = [164.81, 196.0, 246.94, 293.66];           // E3 G3 B3 D4(Em7)
+      for (i = 0; i < oPad.length; i++) this._tone(out, sr, { wave: "triangle", f0: oPad[i], t0: 0, dur: loopSec, a: 0.03, d: 0.3, s: 0.18, r: 0.3, gain: 0.072 });
       this._tone(out, sr, { wave: "sine", f0: 82.41, t0: 0, dur: loopSec, a: 0.02, d: 0.25, s: 0.85, r: 0.35, gain: 0.3 });
-      this._tone(out, sr, { wave: "sine", f0: 123.47, t0: 0, dur: loopSec, a: 0.04, d: 0.3, s: 0.28, r: 0.4, gain: 0.10 });
+      this._tone(out, sr, { wave: "sine", f0: 123.47, t0: 0, dur: loopSec, a: 0.04, d: 0.3, s: 0.28, r: 0.4, gain: 0.06 });
       var oHook = [329.63, 392.0, 440.0, 392.0, 293.66, 329.63, 246.94, 293.66];
       var oHookB = [392.0, 440.0, 493.88, 440.0, 329.63, 293.66, 246.94, 329.63];
       var oHookC = [196.0, 220.0, 246.94, 293.66, 329.63, 293.66, 246.94, 220.0];
@@ -12138,13 +12155,13 @@ var Audio = {
       for (k = 0; k < def.beats; k++) {
         var oPhrase = Math.floor(k / 8);
         var oNote = (oPhrase === 0 ? oHook : oPhrase === 1 ? oHookB : oPhrase === 2 ? oHookC : oHookD)[k % 8];
-        this._tone(out, sr, { wave: "triangle", f0: oNote, t0: k * beat, dur: beat * 0.9, a: 0.008, d: 0.16, s: 0.08, r: 0.28, gain: (oPhrase % 2) === 0 ? 0.2 : 0.26 });
-        this._tone(out, sr, { wave: "sine", f0: oNote * 2, t0: k * beat, dur: beat * 0.38, a: 0.006, d: 0.1, s: 0, r: 0.16, gain: (oPhrase % 2) === 0 ? 0.028 : 0.040 });
+        this._tone(out, sr, { wave: "triangle", f0: oNote, t0: k * beat, dur: beat * 0.9, a: 0.008, d: 0.16, s: 0.08, r: 0.28, gain: (oPhrase % 2) === 0 ? 0.34 : 0.44 });
+        this._tone(out, sr, { wave: "sine", f0: oNote * 2, t0: k * beat, dur: beat * 0.38, a: 0.006, d: 0.1, s: 0, r: 0.16, gain: (oPhrase % 2) === 0 ? 0.044 : 0.062 });
         if ((k & 1) === 0) this._tone(out, sr, { wave: "sine", f0: 55, t0: k * beat, dur: beat * 0.18, a: 0.003, d: 0.07, s: 0, r: 0.07, gain: 0.2 });
-        if ((oPhrase % 2) === 1 && (k & 1)) this._tone(out, sr, { wave: "triangle", f0: oNote * 0.5, t0: k * beat, dur: beat * 1.2, a: 0.012, d: 0.16, s: 0.06, r: 0.3, gain: 0.08 });
+        if ((oPhrase % 2) === 1 && (k & 1)) this._tone(out, sr, { wave: "triangle", f0: oNote * 0.5, t0: k * beat, dur: beat * 1.2, a: 0.012, d: 0.16, s: 0.06, r: 0.3, gain: 0.045 });
       }
       for (k = 0; k < def.beats * 2; k++) {
-        this._tone(out, sr, { wave: "sine", f0: oPenta[(k * 3) % 8], t0: k * beat / 2, dur: beat / 2.4, a: 0.002, d: 0.05, s: 0, r: 0.05, gain: 0.030 });   // 【v1.159】十六分 run 0.036→0.030 不再叠 chirp
+        this._tone(out, sr, { wave: "sine", f0: oPenta[(k * 3) % 8], t0: k * beat / 2, dur: beat / 2.4, a: 0.002, d: 0.05, s: 0, r: 0.05, gain: 0.030 });   // 十六分 run 保持不叠 chirp
       }
     } else if (tid === "abyss") {        // 深渊: D Phrygian 84BPM —— saw drone+小二度 pad+心跳 thump
       // 【v1.159】锯齿 drone 双层各收一档(0.2→0.17/0.1→0.08)去长鸣毛刺, 心跳/拍频性格不动
@@ -12361,7 +12378,13 @@ var Audio = {
   },
   bgmLiveGain: function () {
     if (!this.bgmEnabled()) return 0;
-    return this.bgmSceneGain();
+    // 【v1.180】逐曲响度配平: 与 lane 增益相乘。
+    //   ⚠ 必须放在**这里**(播放增益)而不是烘焙期 —— 因为运行时会走
+    //     _overlayExternal() 用外采 wav **整个覆盖**烘焙结果,
+    //     烘焙期施加的 trim 会被覆盖掉(实测: 改 bake 后门禁仍报跳档)。
+    //     放在播放增益处则程序化/外采两条路径**同时生效**。
+    var trim = (CONFIG.audio.bgmTrim && CONFIG.audio.bgmTrim[this.bgmTrack]) || 1;
+    return this.bgmSceneGain() * trim;
   },
   bgmDuckedGain: function () {
     var mul = this.bgmDuckMul;
