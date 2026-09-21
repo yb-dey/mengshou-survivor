@@ -130,7 +130,9 @@ const sheet = await page.evaluate((keys) => {
 fs.writeFileSync(path.join(OUT, 'contact-sheet.png'), Buffer.from(sheet.split(',')[1], 'base64'));
 
 // 敌人放大 8 倍（看清笔触）
-const enemyIds = info.keys.filter((k) => /^(rabbit|bear|mouse|fox|raven|orbitcrab|boomfruit|sporecap|burrowmole|hedgehog|chargerhino|shieldbug|honeypot|leaptoad|rollshell|boss1|boss2|boss3|player|gem0|gem1|gem2|coin)$/.test(k));
+// 本轮新生成的贴图做风格一致性核对（此前只肉眼验过 1 张，属 QA 缺口）
+const NEW_IDS = /^(leaptoad|raven|orbitcrab|boomfruit|sporecap|burrowmole|hedgehog|chargerhino|shieldbug|honeypot|rollshell|bear|rabbit|boss1)$/;
+const enemyIds = info.keys.filter((k) => /_(dead|hit)$/.test(k) && NEW_IDS.test(k.replace(/_(dead|hit)$/, '')));
 const zoom = await page.evaluate((ids) => {
   const S = window.SPRITES;
   const COLS = 6, CELL = 200;
