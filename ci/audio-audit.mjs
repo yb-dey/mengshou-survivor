@@ -78,17 +78,21 @@ await page.addInitScript(() => {
                 n++;
               }
               const rms = Math.sqrt(sum / Math.max(1, n));
-              // 【v1.167】接缝检查：长缓冲(≈BGM 循环)首尾若"断崖"，循环点会有"咔哒"。
-              //   ⚠ 口径修正：真·循环咔哒只看"**末样本 vs 首样本**"（单样本跳变）；
-              //   再取首/尾各 128 样本的平均差作短窗跳变（抗"单点毛刺"误报）。
+              // 【v1.167j】接缝检查：循环点是否"断崖"。
+              //   ⚠ 口径两次踩坑，最终确定「物理正确」版本：
+              //   ① 旧版 max(|末-首|, max_{k<128}|d[n-1-k]-d[k]|)/peak < 0.15 —— **假阳性**：
+              //      阴性对照（数学上完美循环的正弦）也报 0.361 FAIL → 判据本身不成立。
+              //      错在第二项取"任意样本对最大差"，44.1kHz 下相邻两样本跨半周期就能差 ~0.5。
+              //   ② 正确量法：循环回跳到头部那**一步**的样本跳变 seamJump = |d[0] - d[n-1]|，
+              //      再除以"缓冲内部相邻样本差的 P95"归一 → ≈1~3× 表示与正常波形起伏同级（听不出）。
               let seam = -1;
               if (b.duration > 3 && d.length > 48000) {
-                let wrap = Math.abs(d[d.length - 1] - d[0]);
-                let s = 0, m = 0;
-                const W = Math.min(128, d.length >> 2);
-                for (let k = 0; k < W; k++) { s += Math.abs(d[d.length - 1 - k] - d[k]); }
-                m = s / W;
-                seam = +(Math.max(wrap, m) / Math.max(1e-4, peak)).toFixed(3);
+                const jump = Math.abs(d[0] - d[d.length - 1]);
+                const diffs = [];
+                for (let z = 1; z < d.length; z += 16) diffs.push(Math.abs(d[z] - d[z - 1]));
+                diffs.sort((p, q) => p - q);
+                const p95 = diffs[Math.floor(diffs.length * 0.95)] || 1e-6;
+                seam = +(jump / p95).toFixed(2);
               }
               const rec = { dur: +b.duration.toFixed(3), peak: +peak.toFixed(4), rms: +rms.toFixed(4), seam: seam };
               window.__ac.stats.push(rec);
@@ -178,7 +182,31 @@ const q = await page.evaluate(() => {
 });
 const okClip = q.clips === 0;                 // 有削波 → 可能刺耳
 const okLoud = q.n > 0 && q.rmsMed >= 0.01;   // 整体太轻 → 可能听不见
-const okSeam = q.seamMax < 0.15;              // 循环点断崖 < 峰值 15% → 无"咔哒"（实测咔哒通常 >0.3）
+// 【v1.167j】接缝阈值：seamJump ÷ 相邻样本差 P95。与正常波形起伏同级（≤4×）即听不出跳。
+//   ⚠ 附**阴性对照**（见下 selftest）：判据必须先证明"完美循环能过"，否则不许上岗。
+const SEAM_LIMIT = 4;
+const okSeam = q.seamMax < SEAM_LIMIT;
+
+// ---- 阴性对照：判据自检（完美循环必须 PASS；人为断崖必须 FAIL）----
+//   没有这一步，"永远失败"的守卫比没有守卫更危险（本项目已踩过：旧口径对完美正弦报 FAIL）。
+const selftest = await page.evaluate(() => {
+  const SR = 44100;
+  const metric = (d) => {
+    const jump = Math.abs(d[0] - d[d.length - 1]);
+    const diffs = [];
+    for (let z = 1; z < d.length; z += 16) diffs.push(Math.abs(d[z] - d[z - 1]));
+    diffs.sort((p, q) => p - q);
+    const p95 = diffs[Math.floor(diffs.length * 0.95)] || 1e-6;
+    return +(jump / p95).toFixed(2);
+  };
+  const n = SR * 5;
+  const perfect = new Float64Array(n);
+  for (let i = 0; i < n; i++) perfect[i] = Math.sin(2 * Math.PI * (SR / 4410) * i / SR);   // 整数周期 → 天然无缝
+  const broken = Float64Array.from(perfect);
+  for (let i = n - 3000; i < n; i++) broken[i] = 0.5;                                      // 尾段抬到 0.5 → 真断崖
+  return { perfect: metric(perfect), broken: metric(broken) };
+});
+const okSelftest = selftest.perfect < SEAM_LIMIT && selftest.broken >= SEAM_LIMIT;
 
 const rows = [
   { name: '大厅静置(BGM)', ...bgm },
@@ -213,23 +241,28 @@ const md = [
   `- 时长 中位 **${q.durMed}s** / 最长 **${q.durMax}s**`,
   `- ④ 无削波（峰值≥0.999 的缓冲 = 0）: **${okClip ? '✅' : '❌ 有 ' + q.clips + ' 个'}**`,
   `- ⑤ 整体不偏轻（RMS 中位 ≥0.01）: **${okLoud ? '✅' : '❌'}**（RMS<0.005 的 ${q.quiet} 个）`,
-  `- ⑥ 循环接缝连续（首尾最大跳变 ${q.seamMax} < 0.15×峰值）: **${okSeam ? '✅' : '❌ 循环点可能有咔哒'}**`,
+  `- ⑥ 循环接缝连续（回跳幅度 ${q.seamMax}× 相邻样本差P95 < ${SEAM_LIMIT}）: **${okSeam ? '✅' : '❌ 循环点有断崖'}**`,
+  `- ⑥′ 判据自检（阴性对照）: 完美循环 **${selftest.perfect}×**（须 <${SEAM_LIMIT}）/ 人为断崖 **${selftest.broken}×**（须 ≥${SEAM_LIMIT}）: **${okSelftest ? '✅ 判据有效' : '❌ 判据失效'}**`,
   '',
   '> 方法：挂钩 `createBufferSource` 返回的节点，在其 `start()` 时读 `node.buffer` 的通道数据算指标。',
   '> ⚠ 这是**静态内容**指标（不含实时混音/限幅），但足以抓"削波刺耳"与"轻到听不见"。',
-  '> ⑥ 接缝：对时长>3s 的缓冲取尾/头各 512 样本的最大差值 ÷ 峰值；循环点"断崖"会 >0.3。',
+  '> ⑥ 接缝口径（v1.167j 修正）：一度用「首尾各 512 样本最大差 ÷ 峰值 < 0.15」，',
+  '>   **阴性对照打穿**（数学上完美循环的正弦也报 0.361 → FAIL）→ 该判据不成立。',
+  '>   现口径 = `|d[0] - d[n-1]| ÷ 相邻样本差 P95`；循环回跳与波形正常起伏同级即无缝。',
+  '>   ⑥′ 自检是本判据的"上岗证"：完美循环必须过、人为断崖必须挂，两者都对才认 ⑥ 的结论。',
   '',
   '> 计数钩子挂在 `AudioContext.prototype.createOscillator/createBufferSource` 上，在游戏脚本执行前注入。',
   '> ⚠ BGM 是"开机建一次 + loop"的形态 → **窗口增量会为 0，属正常**，故 BGM 用累计量判定。',
   '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'audio-report.md'), md);
-fs.writeFileSync(path.join(OUT, 'audio-report.json'), JSON.stringify({ bgm, battle, muted, ctxMade: t1.ctxMade, quality: q, errs, ok: { okBgm, okBattle, okMute, okClip, okLoud, okSeam } }, null, 2));
+fs.writeFileSync(path.join(OUT, 'audio-report.json'), JSON.stringify({ bgm, battle, muted, ctxMade: t1.ctxMade, quality: q, selftest, errs, ok: { okBgm, okBattle, okMute, okClip, okLoud, okSeam, okSelftest } }, null, 2));
 console.log(md);
 
 await browser.close();
 server.close();
 if (errs.length) { console.error('❌ 有未捕获异常'); process.exit(3); }
 if (!(okBgm && okBattle && okMute)) { console.error('❌ 音频体检未通过（BGM/SFX/静音）'); process.exit(2); }
+if (!okSelftest) { console.error('❌ 接缝判据自检失败（判据本身不可信，结论作废）'); process.exit(5); }
 if (!(okClip && okLoud && okSeam)) { console.error('❌ 音质体检未通过（削波/偏轻/循环接缝）'); process.exit(4); }
 process.exit(0);
