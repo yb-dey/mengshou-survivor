@@ -37,6 +37,15 @@
  *      ⚠ 这是 v1.168 修的那类坑的**更深一层**：v1.168 补"声明表漏键"，
  *        本项防"加载清单漏键" —— 补完声明表也不算完，还得有人真的按它加载。
  *
+ *   ⑦ （v1.170 新增）**外采渲染器不得再抄一份 gain 表**：
+ *      `ci/render-missing-sfx.mjs` 里若出现 `const GAINS =` 或归一调用里含 gain，
+ *      则该 gain 会被**烘焙进文件峰值**，而运行时（12593 行）**又乘一次**
+ *      → **同一个 gain 应用两次**，且两次取的是**不同版本的值**（陈旧值 × 现行值），
+ *      误差非线性叠加。实测 `sfx_fire.wav` 峰值/gain = 2.168，全场唯一离群。
+ *      正确口径 = 与游戏 `_renderAll`(12173 行) 一致：**只做平峰值归一** `peakNorm`，
+ *      响度层级**只由运行时 gains 决定**（单一权威）。
+ *      ⑦ 与 ①②③⑤⑥ 同源，都是"手抄副本"病 —— 这也是本项目第二大缺陷类。
+ *
  * 用法: node ci/assert-audio-map.mjs [srcHtml] [audioDir]
  * 阴性对照: node ci/assert-audio-map.mjs --selftest
  */
@@ -64,6 +73,7 @@ const stripComments = (t) => t.replace(/\/\/[^\n]*/g, '');
 
 /** 核心检查：给定 HTML 文本与音频目录，返回 {fail, note, info} */
 export function checkAudioMap(s, audioDir, opts = {}) {
+  const rendererSrc = opts.rendererSrc;   // 供自测注入"被改坏的渲染器"；主流程不传则读磁盘
   const fail = [];
   const note = [];
   const info = {};
@@ -183,6 +193,36 @@ export function checkAudioMap(s, audioDir, opts = {}) {
     note.push('未找到 `tryLoadLocalFiles: function`（跳过加载清单检查 ⑥）');
   }
 
+  // ---- ⑦ （v1.170 新增）**外采渲染器不得再抄一份 gain 表** ----
+  //   病根同 ①②③⑤⑥：**手抄副本**。实测 `ci/render-missing-sfx.mjs` 里有一张 GAINS 表，
+  //   19 条中 12 条与真身 `CONFIG.audio.gains` 漂移（CARD 0.62↔0.70 / HURT 0.62↔0.72 /
+  //   BOSS_DIE 0.70↔0.80 / WIN 0.68↔0.80 …）。
+  //   危害不是"抄错"而是**双重缩放**：该表的值被烘焙进**文件峰值**，而运行时第 12593 行
+  //   **又乘一次** `CONFIG.audio.gains[sid]` → 同一个 gain 应用两次，且两次取的是
+  //   **不同版本的值**，误差非线性叠加（实测 `sfx_fire.wav` 峰值/gain = 2.168，全场唯一离群）。
+  //   正确做法：外采文件与游戏内合成器 `_renderAll` 同口径 —— **只做平峰值归一**，
+  //   响度层级**只由运行时 gains 决定**（单一权威）。
+  const rp = path.join('ci', 'render-missing-sfx.mjs');
+  if (rendererSrc !== undefined ? rendererSrc !== null : fs.existsSync(rp)) {
+    const r = rendererSrc !== undefined && rendererSrc !== null
+      ? rendererSrc
+      : fs.readFileSync(rp, 'utf8');
+    const hasGainTable = /const\s+GAINS\s*=/.test(r);
+    const bakesGain = /normalize\s*\(\s*\w+\s*,\s*[^)]*gain/i.test(r) ||
+      /0\.708\s*\*\s*gain/.test(r);
+    info.rendererClean = !hasGainTable && !bakesGain;
+    if (hasGainTable) {
+      fail.push('ci/render-missing-sfx.mjs 又出现了 per-id 增益表 `const GAINS =` ' +
+        '→ 它与 CONFIG.audio.gains 必然漂移，且被烘焙进文件峰值 → 运行时再乘一次 = 双重缩放');
+    }
+    if (bakesGain) {
+      fail.push('ci/render-missing-sfx.mjs 的归一调用里仍含 gain（烘焙时乘了一次）' +
+        '→ 与运行时 gains 构成双重缩放；应只做平峰值归一 normalize(raw, PEAK_NORM)');
+    }
+  } else {
+    note.push('未找到 ci/render-missing-sfx.mjs（跳过外采渲染器检查 ⑦）');
+  }
+
   // 全等提示（是否还有其它结构性差异）
   if (gains.size !== sfxMap.size) {
     note.push(`gains(${gains.size}) 与 sfxFiles(${sfxMap.size}) 键数不一致`);
@@ -255,6 +295,22 @@ if (SELFTEST) {
   cases.push(['G 加载清单退回硬编码 localSfx', rg.fail.some((f) => /不是遍历 AUDIO_ASSET/.test(f)),
     rg.fail.join(' | ')]);
 
+  // H. ⑦ 渲染器重新引入 per-id 增益表 → 应报
+  const RENDERER = fs.readFileSync(path.join('ci', 'render-missing-sfx.mjs'), 'utf8');
+  const h = checkAudioMap(base, tmpDir,
+    { rendererSrc: RENDERER + '\nconst GAINS = { SFX_FIRE: 0.32 };\n' });
+  cases.push(['H 渲染器又抄一份 GAINS 表', h.fail.some((f) => /又出现了 per-id 增益表/.test(f)),
+    h.fail.join(' | ')]);
+
+  // I. ⑦ 归一调用里仍烘焙 gain（双重缩放）→ 应报
+  //    构造：把正确的 normalize(raw, PEAK_NORM) 换回旧的 normalize(raw, 0.708*gain/0.708)
+  const i = checkAudioMap(base, tmpDir, {
+    rendererSrc: RENDERER.replace(/normalize\s*\(\s*raw\s*,\s*PEAK_NORM\s*\)/,
+      'normalize(raw, 0.708 * gain / 0.708)'),
+  });
+  cases.push(['I 渲染器归一里仍烘焙 gain（双重缩放）',
+    i.fail.some((f) => /仍含 gain/.test(f)), i.fail.join(' | ')]);
+
   console.log('# 音频映射断言 —— 阴性对照自测\n');
   console.log('| 样本 | 期望 | 实测 | 说明 |');
   console.log('|---|---|---|---|');
@@ -264,7 +320,7 @@ if (SELFTEST) {
     console.log(`| ${name} | ${name.startsWith('基线') ? 'PASS' : 'FAIL'} | ${pass ? '✅ 符合' : '❌ 未检出'} | ${msg.slice(0, 110)} |`);
   }
   for (const t of [tmpDir, t2, t3]) fs.rmSync(t, { recursive: true, force: true });
-  console.log(allOk ? '\n## 自测: **PASS** — 守卫能检出全部 7 类错误 ✅' : '\n## 自测: **FAIL** — 有样本未被检出 ❌');
+  console.log(allOk ? '\n## 自测: **PASS** — 守卫能检出全部 9 类错误 ✅' : '\n## 自测: **FAIL** — 有样本未被检出 ❌');
   process.exit(allOk ? 0 : 1);
 }
 
