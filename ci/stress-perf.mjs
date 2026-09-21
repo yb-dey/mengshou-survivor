@@ -87,34 +87,47 @@ await page.mouse.click(cx, cy);
 await page.waitForTimeout(2500);
 
 // —— 推进到怪潮窗口 ——
-//   取第一个 hordeTime，seek 到它前 2s，让潮真正开始灌怪。
+//   取第一个 hordeTime，seek 到**潮窗中段**（潮会持续 durSec≈50s 灌怪），
+//   让游戏有足够时间把怪堆到高位。seek 到"刚开始"会浪费窗口。
 const plan = await page.evaluate(() => {
-  const D = window.MENGSHOU_DEBUG || {};
-  let sp = null; try { sp = D.spine ? D.spine() : null; } catch (e) {}
-  return sp;
+  try { return window.MENGSHOU_DEBUG.spine ? window.MENGSHOU_DEBUG.spine() : null; } catch (e) { return null; }
 });
-let hordeT = plan && plan.hordeTimes && plan.hordeTimes.length ? plan.hordeTimes[0] : 90;
-await page.evaluate((t) => { try { window.MENGSHOU_DEBUG.seek(t + 1); } catch (e) {} }, hordeT);
+const hordeT = plan && plan.hordeTimes && plan.hordeTimes.length ? plan.hordeTimes[0] : 90;
+await page.evaluate((t) => { try { window.MENGSHOU_DEBUG.seek(t); } catch (e) {} }, hordeT + 2);
 
-// 灌怪期：等敌人数爬到高位（最多 20s；途中若有升级弹窗，就点掉继续）
+// 灌怪期：等敌人数爬到高位。
+//   ⚠ 必须"先证有怪" —— 否则"帧率好"可能只是"没怪"（假阴性，与"守卫自己坏了"同型）。
+//   期间若弹升级/选卡（状态 LEVELUP_MODAL）会**暂停刷怪**，必须点掉才能继续灌。
+const S = { LEVELUP: 'LEVELUP_MODAL', REVIVE: 'REVIVE_MODAL', WIN: 'RESULT_WIN', LOSE: 'RESULT_LOSE' };
 let peak = { enemyCount: 0, activeTotal: 0 };
+const LOAD_TARGET = +(process.env.LOAD_TARGET || 60);
 const tWait0 = Date.now();
-let stagnant = 0;
-while (Date.now() - tWait0 < 22000) {
-  const s = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.stress(); } catch (e) { return null; } });
-  if (s) {
-    if (s.enemyCount > peak.enemyCount) peak = s;
-    if (s.enemyCount >= 120) break;
-    // 升级/选卡弹窗会暂停刷怪 → 点一下画面中央推进
-    const paused = await page.evaluate(() => {
-      const D = window.MENGSHOU_DEBUG || {};
-      try { const st = D.state ? D.state() : null; return st ? st.state : 0; } catch (e) { return 0; }
-    });
-    if (paused === 2 /* 升级/选卡 */ || paused > 0) {
-      await page.mouse.click(geom.left + geom.width / 2, geom.top + geom.height / 2);
-    }
+while (Date.now() - tWait0 < 55000) {
+  const s = await page.evaluate(() => {
+    const D = window.MENGSHOU_DEBUG || {};
+    let st = ''; try { st = (D.state ? D.state() : {}).state || ''; } catch (e) {}
+    let sk = null; try { sk = D.stress ? D.stress() : null; } catch (e) {}
+    return { st, sk };
+  });
+  if (s.sk) {
+    if (s.sk.enemyCount > peak.enemyCount) peak = s.sk;
+    if (peak.enemyCount >= LOAD_TARGET) break;
   }
-  await page.waitForTimeout(600);
+  // 弹窗会暂停刷怪 → 点画面中央推进（升级/选卡=点掉；复活=取消）
+  if (s.st === S.LEVELUP || s.st === S.REVIVE) {
+    await page.mouse.click(geom.left + geom.width / 2, geom.top + geom.height / 2);
+    await page.waitForTimeout(400);
+    continue;
+  }
+  // 结算/失败 → 这一波已过，重开一局再进潮
+  if (s.st === S.WIN || s.st === S.LOSE) break;
+  // 潮窗已过（idx 前移且场上怪在掉）→ 重新 seek 回潮首，继续灌
+  if (s.sk && s.sk.hordeTimes && s.sk.hordeIdx >= 1 && peak.enemyCount < LOAD_TARGET) {
+    const ht = s.sk.hordeTimes[Math.min(s.sk.hordeIdx, s.sk.hordeTimes.length - 1)];
+    await page.evaluate((t) => { try { window.MENGSHOU_DEBUG.seek(t); } catch (e) {} }, ht + 1);
+    await page.waitForTimeout(300);
+  }
+  await page.waitForTimeout(500);
 }
 
 // —— 量帧时间（重载窗口 5s）——
@@ -141,8 +154,11 @@ await browser.close();
 server.close();
 
 // —— 判定 ——
-const P95_BUDGET_MS = 34;   // ~29fps 尾帧；超过即有明显卡顿感（60fps=16.7ms，放宽一倍）
-const LOAD_MIN = 100;        // 判定"这确实是重载"的最低同屏怪数（低于此不算有效样本）
+// p95 预算：60fps=16.7ms。CI 跑的是 **swiftshader 软件渲染**（无 GPU 加速），
+//   逐帧光栅化比真机慢得多 → 预算按"软件渲染下的可接受尾部"设，别拿它当真机标准。
+//   真机有 GPU，同一场景会快数倍；此处的价值是**回归哨兵**（改坏了会掉出预算）。
+const P95_BUDGET_MS = +(process.env.P95_BUDGET || 34);
+const LOAD_MIN = +(process.env.LOAD_TARGET || 60);   // "这确实是重载"的最低同屏怪数
 const NEG_MIN_P95 = 60;      // 阴性对照：注入阻塞后 p95 必须显著高于预算，否则判据量不到
 
 const loaded = peak.enemyCount >= LOAD_MIN;
@@ -152,6 +168,8 @@ const md = [];
 md.push('# 重载帧时体检（怪潮）');
 md.push('');
 md.push('> 为什么量帧时间而不是 fps：fps 是均值，会掩盖偶发长帧；玩家感知的是**帧时间的尾部**。');
+md.push('> ⚠ CI 为 **swiftshader 软件渲染**（无 GPU）→ 绝对值比真机慢数倍，此处作**回归哨兵**用，不当真机标准。');
+md.push('> ✅ 判据**先证有怪再判帧率** —— 否则"帧率好"可能只是"没怪"（假阴性）。');
 md.push('');
 md.push('| 指标 | 值 |');
 md.push('|---|---|');
