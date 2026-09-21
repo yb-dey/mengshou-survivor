@@ -10,8 +10,13 @@
 const fs = require('fs');
 const path = require('path');
 
-const SRC = process.argv[2] || 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/game/萌兽消消岛.html';
-const OUT = process.argv[3] || 'D:/新建文件夹/方向3/dist';
+// ⚠ 原来 SRC/OUT 写死了本机绝对路径 → **只能在本地跑，进 CI 必挂**
+//   （实测：云端报 ENOENT: .../D:/新建文件夹/.../萌兽消消岛.html）。
+//   改成"相对当前工作目录"，本地与 CI 通用；需要时可用 argv 或 GAME_DIR 覆盖。
+const _gameDir = path.resolve(process.env.GAME_DIR || 'game');
+const SRC = process.argv[2] ||
+  path.join(_gameDir, fs.readdirSync(_gameDir).find((f) => f.toLowerCase().endsWith('.html')));
+const OUT = process.argv[3] || 'dist';
 const ASSETS = path.join(OUT, 'assets');
 
 fs.mkdirSync(ASSETS, { recursive: true });
