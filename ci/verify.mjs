@@ -105,7 +105,23 @@ async function run(label, url, shotPrefix) {
   await page.screenshot({ path: path.join(OUT, shotPrefix + '-3-battle-late.png') });
   samples.push({ t: 18.5, ...(await snap()) });
 
-  const fps = await page.evaluate(() => new Promise((res) => {
+  // 死亡标记逐帧监视：标记只活 0.5s，瞬时采样几乎必然错过 → 必须每帧盯 8 秒取峰值
+const deathWatch = await page.evaluate(() => new Promise((res) => {
+  let max = 0, total = 0, prev = 0;
+  const t0 = performance.now();
+  const tick = () => {
+    try {
+      const n = (window.deathMarks || []).length;
+      if (n > max) max = n;
+      if (n > prev) total += (n - prev);   // 新出现的个数累计
+      prev = n;
+    } catch (e) { /* 忽略 */ }
+    if (performance.now() - t0 < 8000) requestAnimationFrame(tick); else res({ max, total });
+  };
+  requestAnimationFrame(tick);
+}));
+
+const fps = await page.evaluate(() => new Promise((res) => {
     let n = 0; const t = performance.now();
     const tick = () => { n++; if (performance.now() - t < 2000) requestAnimationFrame(tick); else res(+(n / ((performance.now() - t) / 1000)).toFixed(1)); };
     requestAnimationFrame(tick);
@@ -134,7 +150,7 @@ async function run(label, url, shotPrefix) {
   const ok = pageErrors.length === 0 && canvasCheck.nonBlank === true && battleStarted === true;
 
   return { label, url: url.replace(/^file:.*\//, 'file://…/'), loadMs, fps, guide, probe, counts, samples,
-    battleStarted, deadSprites, deathMax, canvas: canvasCheck, ok,
+    battleStarted, deadSprites, deathMax, deathWatch, canvas: canvasCheck, ok,
     pageErrorCount: pageErrors.length, pageErrors,
     envWarningCount: envWarnings.length, envWarnings: envWarnings.slice(0, 12),
     otherErrorCount: otherErrors.length, otherErrors: otherErrors.slice(0, 10),
