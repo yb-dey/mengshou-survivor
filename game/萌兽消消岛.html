@@ -30495,7 +30495,7 @@ function makeBeastCell(idx, x, y, w, h) {
       }
       if (!unlocked) {
         if ((saveData.coins | 0) >= d.price) { chip = d.price + "金→" + d.tagline; chipFill = "#3faf5a"; chipInk = "#2a2418"; }
-        else { chip = "差" + (d.price - (saveData.coins | 0)) + "金"; chipFill = "#c0392b"; chipInk = "#fff7e0"; }
+        else { chip = "差" + (d.price - (saveData.coins | 0)) + "金"; /* 【v1.167h】codexPoorAmber：同类清理——价格不足是中性信息态，红=错误；改琥珀静默小签（与价格语言 #8a5a10 同族）。回退：chipFill=#c0392b / chipInk=#fff7e0 */ chipFill = "rgba(138,90,16,0.14)"; chipInk = "#7a5210"; }
       } else if (isFollow) { chip = "协战中"; chipFill = "#5a7a32"; chipInk = "#f2f6e4"; }
       else { chip = "点击协战"; chipFill = "#3faf5a"; chipInk = "#fff7e0"; }
       drawCodexChip(ctx, r.x + r.w - 118, r.y + 36, 102, 44, chip, chipFill, chipInk);
