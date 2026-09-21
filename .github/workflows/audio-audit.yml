@@ -1,0 +1,24 @@
+name: audio-audit
+# 音频专项体检（"听到的"）—— 在游戏脚本执行前挂钩 WebAudio 音源创建，计数并判定
+# BGM/战斗SFX/静音 三档是否真的生效。截图验不了声音，这是它的证据链。
+on:
+  workflow_dispatch:
+jobs:
+  audio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
+      - name: 音频专项体检
+        run: node ci/audio-audit.mjs
+      - name: 上传产物
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audio-audit
+          path: ci/out/
+          retention-days: 14
