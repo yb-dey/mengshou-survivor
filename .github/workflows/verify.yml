@@ -13,6 +13,12 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
+      # 中文字体：卡片宽度门禁要用真实字形度量中文；缺字体会静默退化成豆腐块/等宽，宽度不可信。
+      - name: 安装中文字体（供字体度量门禁）
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk fonts-wqy-microhei
+          fc-list :lang=zh | head -5 || true
       # 零依赖静态门禁先跑（失败即快速反馈，不必等浏览器装完）
       # 文案卫生：作者标注（【假设】/【来源】）与占位符不得出现在玩家可见字符串里。
       - name: 文案卫生（作者标注 / 占位符）
