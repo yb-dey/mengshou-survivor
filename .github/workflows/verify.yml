@@ -19,6 +19,12 @@ jobs:
         run: |
           node ci/text-hygiene.mjs --selftest
           node ci/text-hygiene.mjs
+      # 术语一致性：同一玩家概念不得被两个词指代（**只报不拦**，先观察再收紧）。
+      # 历史教训：站桩/站住 看似漂移，运行时实测为两个独立状态，误改即引入缺陷。
+      - name: 术语一致性（只报不拦）
+        run: |
+          node ci/term-consistency.mjs --selftest
+          node ci/term-consistency.mjs || true
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
