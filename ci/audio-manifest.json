@@ -9,7 +9,7 @@
   "tooling": {
     "ci/render-missing-bgm.mjs": "45eeeba51ee08bd477d8d49b7f7afbe03e8b920b4a0d8915700ef4658fe91777",
     "ci/render-missing-sfx.mjs": "91973229a4840dcbfb3804fc34d583faaaba23f721bb6749e70c5655b9d6dd9f",
-    "ci/bgm-lane-loudness.py": "f536720402c0909bb1a2684235ad0d152f3c1334f3d85b3080ac028793aa9fa3",
+    "ci/bgm-lane-loudness.py": "734b0889c206709d567c5d9ffd5bb7484a0cf8e78aa607f0632bb096c3300e87",
     "ci/bgm-melody.py": "90d10ef62fce07d84eff16ac1b9ec8e1569d6beb191f78488acb8a86e9bf9c00"
   },
   "wav": {
