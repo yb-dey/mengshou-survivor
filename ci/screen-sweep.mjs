@@ -53,6 +53,22 @@ const available = await page.evaluate(() => {
 //   正确动作：07 用 `codexTab('enemy')`（顺带打开图鉴并切到敌人页）；10 用 `dailyPick()`；
 //   08 原本指向的"英雄卡界面"**并不存在**（heroSheet 只是数据查询，英雄信息是大厅内的卡片）
 //   → 换成真实存在却从未被巡检的 **设置页** `openSettings()`。
+// 【2026-09-21】目标屏断言表（数据，不是人肉核特征）——
+//   此前只证明"这一屏 ≠ 大厅"，结果两处假成功（拍到上一个弹窗 / 拍到普通战斗帧）都放过去了。
+//   EXPECT：flow 状态名必须等于该值（强断言）
+//   FLAGS ：该标志必须为真（弹窗类，用 `state()` 返回的开合标志）
+//   其余屏仅**记录**实测状态，留给下一轮收紧（不瞎猜）。
+const EXPECT = {
+  "01-home": "HOME",
+  "08-settings": "SETTINGS",
+  "09-about": "ABOUT",
+};
+const FLAGS = {
+  "05-vault": "vault",
+  "06-beast": "beast",
+  "07-codex-enemy": "beast",
+  "10-daily": "dailyPick",
+};
 const STEPS = [
   { name: '01-home', call: 'hall' },
   { name: '02-chapters', call: 'openChapters' },
@@ -135,6 +151,14 @@ for (const s of STEPS) {
     if (s.name === '01-home') homeSig = sig;
     const dHome = sigDiff(sig, homeSig);
     const sameAsHome = (s.name !== '01-home') && dHome >= 0 && dHome < HOME_DUP_MAX;
+    // 【v1.167】目标屏断言：读一次 state() 拿全 flow 状态与弹窗开合
+    let stGot = null, stateOk = true;
+    try { stGot = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.state(); } catch (e) { return null; } }); } catch (e) { stGot = null; }
+    if (stGot) {
+      if (EXPECT[s.name]) stateOk = (stGot.name === EXPECT[s.name]);
+      else if (FLAGS[s.name]) stateOk = (stGot[FLAGS[s.name]] === true);
+      if (!stateOk) console.log('  ⚠ ' + s.name + ' 目标屏断言不通过：实测 state=' + stGot.name + ' / 期望 ' + (EXPECT[s.name] || FLAGS[s.name] + '=true'));
+    }
     if (dup) console.log('  ⚠ ' + s.name + ' 与上一屏截图完全相同 → 该界面未真正打开');
     if (sameAsHome) console.log('  ⚠ ' + s.name + ' 与大厅基线几乎无差异(Δ=' + dHome.toFixed(2) + ') → 该界面未真正打开');
     // 顺手量一下这一屏的「有效内容占比」：非背景色像素比例（越低越空）
@@ -155,7 +179,8 @@ for (const s of STEPS) {
         return { w: c.width, h: c.height, distinct: buckets.size, dominantPct: +(top / n * 100).toFixed(1) };
       } catch (e) { return { err: String(e).slice(0, 80) }; }
     });
-    shots.push({ name: s.name, hook: s.call, dens, dup, hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null, sameAsHome });
+    shots.push({ name: s.name, hook: s.call, dens, dup, hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null, sameAsHome,
+      state: stGot ? stGot.name : null, stateOk });
   } catch (e) {
     shots.push({ name: s.name, error: String(e).slice(0, 150) });
   }
@@ -212,7 +237,12 @@ try {
   prevHash = crypto.createHash('sha1').update(fs.readFileSync(path.join(OUT, '11-battle.png'))).digest('hex').slice(0, 12);
   {
     const dHome = sigDiff(await screenSig(), homeSig);
-    shots.push({ name: '11-battle', hook: 'mouse', hash: prevHash, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
+    // 【v1.167】战斗是**最容易假成功**的一屏（此前拍到的是没关掉的每日面板）→ 硬断言 PLAYING
+    const st = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.state(); } catch (e) { return null; } });
+    const stateOk = !!(st && st.playing === true);
+    if (!stateOk) console.log('  ⚠ 11-battle 目标屏断言不通过：实测 state=' + (st ? st.name : 'null') + ' / 期望 PLAYING');
+    shots.push({ name: '11-battle', hook: 'mouse', hash: prevHash, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
+      state: st ? st.name : null, stateOk });
   }
   // ⚠ 已知坑：
   //  · `levelup` 是**快照查询**（返回 {ready,armed,state,cards}）→ 不能用来"打开升级"，
@@ -257,7 +287,11 @@ try {
     if (h !== before) {
       prevHash = h;
       const dHome = sigDiff(await screenSig(), homeSig);
-      shots.push({ name: '13-pause', hook: 'pause(true) 轮询成功', hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
+      const st2 = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.state(); } catch (e) { return null; } });
+      const ok2 = !!(st2 && st2.pause === true);
+      if (!ok2) console.log('  ⚠ 13-pause 目标屏断言不通过：实测 state=' + (st2 ? st2.name : 'null') + ' / 期望 PAUSED_MENU');
+      shots.push({ name: '13-pause', hook: 'pause(true) 轮询成功', hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
+        state: st2 ? st2.name : null, stateOk: ok2 });
       paused = true;
     }
   }
@@ -273,12 +307,13 @@ const md = [
   '- 可用界面钩子: ' + available.length + ' 个',
   '- 未捕获异常: ' + errs.length,
   '',
-  '| 截图 | 钩子 | 画布 | 独特色数 | 主色占比 | 与大厅Δ | 备注 |',
-  '|---|---|---|---|---|---|---|',
+  '| 截图 | 钩子 | 画布 | 独特色数 | 主色占比 | 与大厅Δ | 实测状态 | 备注 |',
+  '|---|---|---|---|---|---|---|---|',
   ...shots.map((s) => '| ' + s.name + ' | ' + (s.hook || '-') + ' | ' +
     (s.dens && s.dens.w ? s.dens.w + '×' + s.dens.h : '-') + ' | ' + (s.dens && s.dens.distinct || '-') + ' | ' +
     (s.dens && s.dens.dominantPct !== undefined ? s.dens.dominantPct + '%' : '-') + ' | ' +
     (s.dHome !== undefined && s.dHome !== null ? s.dHome : '-') + ' | ' +
+    (s.state || '-') + (s.stateOk === false ? ' ❌' : '') + ' | ' +
     (s.dup ? '⚠ **与上一屏完全相同（未真正打开）**'
       : (s.sameAsHome ? '⚠ **仍是大厅（与大厅基线 Δ=' + s.dHome + '，未真正打开）**'
         : (s.skipped || s.error || ''))) + ' |'),
@@ -294,7 +329,7 @@ const md = [
   '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'screens.md'), md);
-const dupList = shots.filter((s) => s.dup || s.sameAsHome).map((s) => s.name);
+const dupList = shots.filter((s) => s.dup || s.sameAsHome || s.stateOk === false).map((s) => s.name);
 fs.writeFileSync(path.join(OUT, 'screens.json'),
   JSON.stringify({ available, shots, errs, distinctScreens: shots.length - dupList.length, dups: dupList }, null, 2));
 console.log(md);
