@@ -55,35 +55,37 @@ def contrast(a, b):
 def text_pairs(im, step=1):
     """返回 [(文字色, 局部背景色, 对比度)]。
 
-    文字判定：像素所在 3x3 邻域的**亮度极差**足够大（细结构 = 笔画特征，排除渐变/大色块）。
-    ⚠ 单位坑：lum() 返回 0..1，阈值必须按 0..1 设（曾用 60 当"级"判 → 全灭）。
+    ⚠ 两条曾踩过的坑（都靠对照实验才发现，务必保留）：
+      1. **单位混用**：lum() 返回 0..1，早期按"0..255 级"设阈值 60 → 判据全灭。
+      2. **背景取错**：早期取"窗口内第一个亮度差 ≥ 阈值的颜色"当背景
+         → 对比度被**阈值本身钉死**（所有"最差样本"亮度差恰好 = 阈值 20.2）。
+         正确做法：背景 = 窗口内**出现次数最多**的颜色（真正的底色），
+         中心像素则是笔画。这样对比度才反映真实"字压底"关系。
+
+    文字判定：中心像素相对其**主要背景色**亮度差足够大，且 3x3 邻域够"锐"。
     """
     W, H = im.size
     px = im.load()
 
-    # 预取亮度网格（0..1）
     L = [[lum(px[x, y]) for x in range(W)] for y in range(H)]
-    SPREAD = 40 / 255.0     # 3x3 亮度极差 ≥ 40 级（0..255 口径）
-    BGDIFF = 20 / 255.0     # 文字与其背景亮度差 ≥ 20 级
+    SPREAD = 40 / 255.0      # 3x3 亮度极差 ≥ 40 级 → 有笔画结构
+    MINDIF = 45 / 255.0      # 笔画与底色差 ≥ 45 级 → 才算"真文字"（排除抗锯齿斜坡）
     out = []
     for y in range(2, H - 2, step):
         for x in range(2, W - 2, step):
-            c = L[y][x]
             vals = [L[y + dy][x + dx] for dy in (-1, 0, 1) for dx in (-1, 0, 1)]
-            if max(vals) - min(vals) < SPREAD:      # 不够"锐" → 不是笔画
+            if max(vals) - min(vals) < SPREAD:
                 continue
+            # 背景 = 5x5 窗口内**出现最多**的颜色（真底色），而非"第一个够差的"
             win = Counter()
             for dy in range(-2, 3):
                 for dx in range(-2, 3):
                     win[px[x + dx, y + dy]] += 1
-            best = None
-            for col, n in win.most_common(8):
-                if abs(lum(col) - c) >= BGDIFF:
-                    best = col
-                    break
-            if best is None:
+            bg = win.most_common(1)[0][0]
+            fg = px[x, y]
+            if abs(lum(fg) - lum(bg)) < MINDIF:    # 只是底色的微小起伏 → 不是文字
                 continue
-            out.append((px[x, y], best, contrast(px[x, y], best)))
+            out.append((fg, bg, contrast(fg, bg)))
     return out
 
 
@@ -107,33 +109,68 @@ def canvas_box(im):
 # ---------- 阴性对照自测 ----------
 
 def selftest():
-    """用合成图验证判据有效性：已知对比度的两组文字必须被正确区分。"""
+    """用合成图验证判据有效性。
+
+    必须能拦住两类"判据自身失效"（本项目都真实发生过）：
+      A. 判据全灭（单位混用：按 0..255 设阈值而 lum() 返回 0..1）
+      B. 判据把**阈值当答案**（背景取"第一个够差的色" → 所有对比度恰等于阈值常数）
+    """
     from PIL import ImageDraw
 
     IMG = Image.new("RGB", (400, 200), (238, 244, 220))   # 浅面板底
     d = ImageDraw.Draw(IMG)
-    # 上：深字压浅底 → 高对比（应通过）
-    d.text((20, 20), "MMMM", fill=(40, 48, 30))
-    # 下：浅灰字压浅底 → 低对比（应不通过）
-    d.text((20, 120), "MMMM", fill=(215, 220, 205))
+    d.text((20, 20), "MMMM", fill=(40, 48, 30))       # 深字压浅底 → 高对比（应通过）
+    d.text((20, 120), "MMMM", fill=(215, 220, 205))   # 浅灰字压浅底 → 低对比（应不通过）
 
     pairs = text_pairs(IMG, step=1)
     if not pairs:
-        print("[自测] ❌ 判据未检出任何文字像素 → 判据本身失效")
+        print("[自测 A] ❌ 判据未检出任何文字像素 → 判据全灭（检查阈值单位）")
         return False
 
     hi = [c for c in pairs if c[2] >= 4.5]
     lo = [c for c in pairs if c[2] < 2.0]
-    # 期望：存在高对比样本（读到深字），也存在低对比样本（读到浅字）
-    ok = len(hi) > 0 and len(lo) > 0
-    print("[自测] 检出文字像素 %d 个：高对比(≥4.5) %d 个 / 低对比(<2.0) %d 个" % (len(pairs), len(hi), len(lo)))
-    print("[自测] 期望两者都 >0（判据能区分深字与浅字）→ " + ("✅ 有效" if ok else "❌ 无效"))
+    ok_a = len(hi) > 0 and len(lo) > 0
+    print("[自测 A] 检出文字像素 %d 个：高对比(≥4.5) %d / 低对比(<2.0) %d → %s"
+          % (len(pairs), len(hi), len(lo), "✅ 能区分深字与浅字" if ok_a else "❌ 判别力不足"))
 
-    # 第二项：纯平坦图必须检出 0 个文字像素（不高估）
+    # 自测 B：对比度必须**有分布**，不能全钉在一个常数上（= 阈值当答案）
+    cs = sorted(c[2] for c in pairs)
+    uniq = len(set(round(c, 2) for c in cs))
+    span = cs[-1] - cs[0]
+    ok_b = uniq >= 5 and span > 1.0
+    print("[自测 B] 对比度取值 %d 种，跨度 %.2f（期望多样且跨度大）→ %s"
+          % (uniq, span, "✅ 非阈值常数" if ok_b else "❌ 疑似'阈值当答案'"))
+
+    # 自测 C：纯平坦图必须检出 0 个（不高估）
     flat = Image.new("RGB", (200, 120), (238, 244, 220))
     fp = text_pairs(flat, step=1)
-    print("[自测] 纯平坦图检出 %d 个文字像素（期望 0）→ %s" % (len(fp), "✅" if len(fp) == 0 else "❌ 高估"))
-    return ok and len(fp) == 0
+    ok_c = len(fp) == 0
+    print("[自测 C] 纯平坦图检出 %d 个（期望 0）→ %s" % (len(fp), "✅" if ok_c else "❌ 高估"))
+
+    # 自测 D：**真实失效场景复现** —— 浅底 + 大面积柔和抗锯齿斜坡。
+    #   合成字（crisp stroke）测不出"背景取第一个够差的色"这个 bug（实测：合成图仍通过）；
+    #   必须在**浅底 + 高通量柔和边缘**下检验 —— 这正是真实截图的条件。
+    soft = Image.new("RGB", (200, 160), (238, 244, 220))
+    ds = ImageDraw.Draw(soft)
+    for k in range(8):                       # 多段柔和斜坡：每条跨越 ~20 级
+        y0 = 8 + k * 18
+        for t in range(10):
+            v = 238 - t * 2                  # 238 → 220，只有 18 级
+            ds.rectangle([10, y0 + t, 190, y0 + t + 1], fill=(v, v + 4, v - 8))
+    sp = text_pairs(soft, step=1)
+    # 期望：柔和斜坡（< 45 级差）不应被当成文字 → 检出量必须很少
+    ok_d = len(sp) <= 20
+    print("[自测 D] 浅底柔和斜坡检出 %d 个（期望 ≤20，柔和边缘不该算文字）→ %s"
+          % (len(sp), "✅" if ok_d else "❌ 把抗锯齿斜坡误当文字"))
+
+    return ok_a and ok_b and ok_c and ok_d
+    # ⚠ **已知盲区（诚实记录）**：自测 A~D 用的是合成图（crisp 笔画 + 简单斜坡），
+    #   而真实失效场景是"真实截图里的高频细节（图标/描边/抖动）"，
+    #   实测旧逻辑（背景取"第一个够差的色"）在**四项目测自测里全部通过**，
+    #   只在真实截图上暴露（所有"最差样本"亮度差恰好=阈值 20.2）。
+    #   → 结论：**合成自测不足以验证这类判据**。必须外加"真实数据合理性检查"：
+    #     若输出的对比度取值高度集中在某一个常数附近 → 说明判据在报阈值而不是在测画面。
+    #   本脚本主流程已加该检查（见末尾「合理性自检」）。
 
 
 # ---------- 主流程 ----------
@@ -172,7 +209,7 @@ for f in sorted(glob(SHOTS + "/*.png")):
 
 rows.sort(key=lambda r: -r["pct"])
 md = ["# 文字级可读性体检（CI 端，局部文字-背景对口径）", "",
-      "判据：文字像素 vs **局部邻域背景**，按 WCAG 算对比度；阈值 %.1f:1（AA 正文）。" % THRESH,
+      "判据：文字像素 vs **局部邻域背景（窗口内众数色）**，按 WCAG 算对比度；阈值 %.1f:1（AA 正文）。" % THRESH,
       "> 与 `screen-analyze.py` 的 `lowct%` 不同：那个用全屏 min/max，会因深 HUD + 浅面板并存而虚高。", "",
       "| 屏 | 文字像素 | <%.1f:1 的占比%% | 最差样本（文字/背景/对比度） |" % THRESH,
       "|---|---|---|---|"]
@@ -182,7 +219,26 @@ for r in rows:
         continue
     ws = " ｜ ".join("%s / %s / %.2f" % (t, b, c) for t, b, c in r["worst"])
     md.append("| %s | %d | %.1f | %s |" % (r["s"], r["n"], r["pct"], ws))
-md += ["", "> ⚠ 本表也可能有假阳性（抗锯齿边缘、图标描边会被算作文字），",
+
+# ---- 合理性自检：判据输出不能"全都钉在一个常数上"（那是判据在报阈值，不是在测画面）----
+_cls = []
+for f in sorted(glob(SHOTS + "/*.png")):
+    nm = Path(f).name
+    if nm.startswith((".", "z-", "overview", "sheet", "cmp", "sim", "fx-")):
+        continue
+    for _t, _b, _c in text_pairs(canvas_box(Image.open(f).convert("RGB")), step=4):
+        _cls.append(round(_c, 1))
+_sanity = "未采样到数据"
+if _cls:
+    _u = len(set(_cls))
+    _top = Counter(_cls).most_common(1)[0]
+    _share = _top[1] * 100.0 / len(_cls)
+    _sanity = ("取值 %d 种 / 众数 %.1f 占 %.1f%%" % (_u, _top[0], _share))
+    if _share > 60:
+        _sanity += "  ← ⚠ 过度集中，判据可能在报阈值而非测画面，结论不可信"
+
+md += ["", "## 判据合理性自检", "", "- " + _sanity, "",
+       "> ⚠ 本表也会有假阳性（抗锯齿边缘、图标描边可能被算作文字），",
        "> 但**跨屏横向比较**是稳的：占比显著偏高的屏值得人工看一眼。"]
 Path(OUT).write_text("\n".join(md), encoding="utf-8")
 print("\n".join(md))
