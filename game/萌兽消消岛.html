@@ -31265,8 +31265,16 @@ function onTapOpenChapters() {
 
 function drawSettingsPanel(ctx, m) {
   var c = CONFIG.colors;
+  // 【v1.167】面板高度自适应 —— 原固定 1060，但 `py + 556` 处预留了高 216 的"导出存档码"框，
+  //   而它**只在复制失败降级时才出现**(uiExportCode !== "") → 默认态面板中部留出 **~330px 空白带**
+  //   (实测占屏高 22.5%，是设置页最大的观感问题: 空占比 36.1%、主色占比 57.9%)。
+  //   默认态: 面板 1060→880、底部说明与返回键各上移 216; 出现导出码时**与改动前完全一致**(零回归)。
+  var setBoxOn = (uiExportCode !== "");
+  m.panelH = setBoxOn ? 1060 : 880;
   var py = (CONFIG.viewH - m.panelH) / 2;
   var px = (CONFIG.viewW - m.panelW) / 2;
+  if (uiSetClose) uiSetClose.rect.y = py + (setBoxOn ? 970 : 754);
+  var setFootY = py + (setBoxOn ? 890 : 674);
   // 【v1.155】设置页字阶对齐暂停/结算: 标题 40→34 + 细墨分隔线 + 音频分区小签, 导出码落苔纸盘
   ctx.fillStyle = c.cardTitle;
   ctx.textAlign = "center";
@@ -31304,7 +31312,7 @@ function drawSettingsPanel(ctx, m) {
   }
   ctx.fillStyle = uiSettingsMsg !== "" ? "#c0392b" : c.cardDesc;
   ctx.font = FONT_UI_S;
-  ctx.fillText(uiSettingsMsg !== "" ? uiSettingsMsg : "三档独立：BGM 只管垫乐 · 音效管开火/节点 · 静音关全部", CONFIG.viewW / 2, py + 890);
+  ctx.fillText(uiSettingsMsg !== "" ? uiSettingsMsg : "三档独立：BGM 只管垫乐 · 音效管开火/节点 · 静音关全部", CONFIG.viewW / 2, setFootY);
 }
 
 function onTapOpenSettings() {
