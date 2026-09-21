@@ -132,10 +132,11 @@ block = block.replace(ANCHOR, ANCHOR + prefix, 1)
 for e, (k, _) in zip([x for x in entries if "bytes" in x], injections):
     e["mode"] = "前缀插入"
 
-# 自检：键数应等于注入数，且每个键都必须带引号
-quoted = len(re.findall('"[A-Za-z0-9_]+_dead":"data:image', block))
+# 自检：键数应等于注入数，且每个键都必须带引号（**按当前 SUFFIX 计数**，
+# 写死 "_dead" 会在受击帧那趟误报：它会把已有的 21 个 _dead 键当成目标数去比 → 实测踩过）
+quoted = len(re.findall('"[A-Za-z0-9_]+' + re.escape(SUFFIX) + '":"data:image', block))
 if quoted != len(injections):
-    print("FAIL: 带引号的 _dead 键 %d 个，期望 %d 个" % (quoted, len(injections)))
+    print("FAIL: 带引号的 %s 键 %d 个，期望 %d 个" % (SUFFIX, quoted, len(injections)))
     sys.exit(4)
 
 new_html = html[:start] + block + html[end:]
