@@ -566,12 +566,9 @@ var CONFIG = {
   worldH: 2400,                     // 世界高 px
   camLerp: 8,                       // 摄像机指数平滑系数(1/s): cam+=(target-cam)*(1-exp(-dt*camLerp))
   groundTile: 512,                  // 地面预渲染瓦片逻辑边长 px(@2x 离屏 1024)
-  groundGrain: 12,                  // 【v1.167g】地表颗粒层: **亮度偏移(0~255)**, 0=关闭。
-                                    //   改按偏移取色而非 alpha 混合: 实测 alpha=0.055 时实际偏移仅 1.8 级,
-                                    //   **指标变好但人眼看不见**(3bit 量化指标比眼睛灵敏)。
-                                    //   实测战场仅 22 色、最高频占 59.7% → 地面缺的是质感而非物体;
-                                    //   故补"细颗粒"而不补"色斑"(v1.152~162 已连否四次成团装饰)。
-  // v2.0 R2 章节系统【R2】
+  groundGrain: 12,                  // 【v1.167g3】地表纹理幅度(**亮度级** 0~255), 0=关闭。
+                                    //   逐像素平滑噪声(粗/细倍频 26/104)：填方块会成棋盘、必须平滑；
+                                    //   幅度离线定标: 6 看不见 / **12 刚好** / 18 起像云团(云团已被否四次)。
   groundTintAlpha: 0.22,            // 六档场景 tint 叠色透明度(source-atop 一次性, 载入/开局各至多一次)
   themeBgWashAlpha: 0.25,           // 【R27】章节主题底色罩染透明度(theme.bgColor 罩在地面瓦片上/实体下; 瓦片不透明致兜底 fill 不可见, 罩染保证六色底实际可达)
   mapWashAlpha: 0.06,               // 【v1.98】罩染再收一档, 星径/星井留下来; 后段不抢单位剪影
@@ -23436,33 +23433,55 @@ function stampChapterDecos(c2, w, h, mt) {
 //   成因: v1.162 为"不读作占位云"砍掉星巅的 6 团大色斑(只留海军底+厚土路); drawChapterFarLayer 连四代减弱。
 //   本层刻意**不成团**: 8px(@2x) 细点 + 低对比 + 只撒约 45% 的格 → 读作"地表颗粒",
 //   不会被读作灰斑/占位云。烘焙进瓦片(一次性), 运行期零成本, 零新增资产。CONFIG.groundGrain=0 关闭。
-function grainHexShift(hex, d) {
-  var h = String(hex || "#000000").replace("#", "");
-  if (h.length === 3) h = h.charAt(0) + h.charAt(0) + h.charAt(1) + h.charAt(1) + h.charAt(2) + h.charAt(2);
-  function ch(v) { v = v < 0 ? 0 : (v > 255 ? 255 : v | 0); var s = v.toString(16); return s.length < 2 ? "0" + s : s; }
-  return "#" + ch(parseInt(h.substr(0, 2), 16) + d) + ch(parseInt(h.substr(2, 2), 16) + d) +
-         ch(parseInt(h.substr(4, 2), 16) + d);
+var GROUND_NOISE_LUT = null;
+function groundNoiseLUT(n, seed) {
+  if (GROUND_NOISE_LUT && GROUND_NOISE_LUT.n === n && GROUND_NOISE_LUT.seed === seed) return GROUND_NOISE_LUT.arr;
+  var arr = new Float32Array(n * n);
+  var st = seed | 0, i;
+  for (i = 0; i < n * n; i++) { st = (st * 1664525 + 1013904223) | 0; arr[i] = ((st >>> 8) & 0xffff) / 65536; }
+  GROUND_NOISE_LUT = { n: n, seed: seed, arr: arr };
+  return arr;
 }
+// 双线性 + smoothstep 采样；索引取模 → 瓦片四边天然无缝(可平铺)
+function groundNoise(arr, n, u, v) {
+  var x0 = u | 0, y0 = v | 0;
+  var tx = u - x0, ty = v - y0;
+  tx = tx * tx * (3 - 2 * tx);
+  ty = ty * ty * (3 - 2 * ty);
+  var x1 = (x0 + 1) % n, y1 = (y0 + 1) % n;
+  var a = arr[y0 * n + x0] * (1 - tx) + arr[y0 * n + x1] * tx;
+  var b = arr[y1 * n + x0] * (1 - tx) + arr[y1 * n + x1] * tx;
+  return a * (1 - ty) + b * ty;
+}
+// 【v1.167g3】地表纹理：**逐像素平滑噪声**。
+//   演进：v1 alpha 混合(实际仅偏移 1.8 级, 肉眼不可见) → v2 填方块(±12, 但呈粗棋盘格)
+//         → v3 本版(逐像素 value noise, 自然肌理, 缩放下无方格)
+//   两个倍频：粗(结构/纵深) + 细(颗粒)。取模采样保证 1024² 瓦片无缝平铺。
+//   烘焙期一次(约 1M 像素)，运行期零成本、零新增资产。CONFIG.groundGrain=0 关闭。
 function stampGroundGrain(c2, w, h, mt) {
-  var d = CONFIG.groundGrain;                       // **亮度偏移**(0~255), 不是 alpha
-  if (!d || !mt) return;
-  var step = 8;                                     // @2x 8px = 逻辑 4px 颗粒
-  var seed = (((mt.mapId || "m").charCodeAt(0) * 7919) + 104729) | 0;
-  function rnd() { seed = (seed * 1664525 + 1013904223) | 0; return ((seed >>> 8) & 0xffff) / 65536; }
-  var base = mt.tileA || mt.bgColor || "#000000";
-  var hi = grainHexShift(base, d);
-  var lo = grainHexShift(base, -d);
-  var x, y, u;
-  for (y = 0; y < h; y += step) {
-    for (x = 0; x < w; x += step) {
-      u = rnd();
-      if (u < 0.62) continue;                       // 约 38% 覆盖 → 颗粒感, 不成团
-      c2.globalAlpha = 0.55 + 0.45 * u;             // 深浅不一, 避免读作规则网格
-      c2.fillStyle = (u > 0.815) ? hi : lo;
-      c2.fillRect(x, y, step, step);
+  var d = CONFIG.groundGrain;
+  if (!d || !mt || !c2) return;
+  var img;
+  try { img = c2.getImageData(0, 0, w, h); } catch (eG) { return; }   // 跨域/异常时静默跳过
+  var data = img.data;
+  var NC = 26, NF = 104;                       // 整张瓦片上的粗/细倍频格数
+  var s = ((mt.mapId || "m").charCodeAt(0) * 7919 + 104729) | 0;
+  var Lc = groundNoiseLUT(NC, s), Lf = groundNoiseLUT(NF, s + 77);
+  var x, y, i, u, v, n, k;
+  for (y = 0; y < h; y++) {
+    v = y / h;
+    for (x = 0; x < w; x++) {
+      i = (y * w + x) * 4;
+      if (data[i + 3] === 0) continue;         // 全透明像素不动
+      u = x / w;
+      n = 0.62 * groundNoise(Lc, NC, u * NC, v * NC) + 0.38 * groundNoise(Lf, NF, u * NF, v * NF);
+      k = d * (n - 0.5) * 2;
+      data[i] = data[i] + k < 0 ? 0 : (data[i] + k > 255 ? 255 : data[i] + k);
+      data[i + 1] = data[i + 1] + k < 0 ? 0 : (data[i + 1] + k > 255 ? 255 : data[i + 1] + k);
+      data[i + 2] = data[i + 2] + k < 0 ? 0 : (data[i + 2] + k > 255 ? 255 : data[i + 2] + k);
     }
   }
-  c2.globalAlpha = 1;
+  c2.putImageData(img, 0, 0);
 }
 
 // 【v1.167】底色罩染改为**预渲染渐变条**(1x256) ——
