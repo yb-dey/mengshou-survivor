@@ -4,3 +4,9 @@ ci/out/
 *.log
 .DS_Store
 Thumbs.db
+
+# CI 脚本自带的音频备份目录（体积大且非交付物）
+ci/audio-backup/
+ci/audio-backup-22050/
+__pycache__/
+*.pyc

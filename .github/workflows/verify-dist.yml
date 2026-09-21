@@ -30,6 +30,9 @@ jobs:
       - name: 跟宠贴图入库体检（接线级：7 只必须在 AI_ART_TABLE 里且值非空）
         run: TABLE_MODE=1 node ci/beast-art-audit.mjs
 
+      - name: 内容缺口全维度扫描（12 维度，GATE=1 有缺口即失败）
+        run: GATE=1 node ci/content-gap-scan.mjs
+
       - name: 安装 Playwright
         run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
 
