@@ -14667,6 +14667,9 @@ var coinFxQueue = [];
 var deathMarks = [];
 var deathMarksSpawned = 0;                        // 累计生成数（供 MENGSHOU_DEBUG 读取，作为"确实触发过"的证据）
 var deathMarksDrawn = 0;                          // 累计绘制次数（证明真的画出来过）
+// 【v1.167】受击白闪证据口（照 deathMarks 范式）：0.07s 瞬时效果没有计数口就无法验证
+var hitFlashSpawned = 0;                          // 累计触发次数
+var hitFlashDrawn = 0;                            // 累计绘制次数
 function spawnDeathMark(e) {
   if (!e || !e.type) return;
   if (!SPRITES[e.type + "_dead"]) return;          // 没有死亡帧的怪直接跳过（零副作用）
@@ -20743,6 +20746,7 @@ function hitEnemy(e, dmg, quiet, src) {
   }
   e.hp -= dmg;
   e.flashT = CONFIG.hitFlashDur;    // 受击白闪(R1)
+  hitFlashSpawned++;                // 【v1.167】证据口：确实触发过
   // 【R6-R2】普通怪受击逐怪停顿(非时钟冻结): 只冻结该怪追击移动, 击退位移(kbVx/kbVy)仍执行。
   //   取代 R6-1A 的"全局 hitstop"(与引擎时序硬门冲突)。精英/BOSS 不适用(其受击已有白闪+震屏)。
   if (!e.isSpecial) e.staggerT = CONFIG.hitStaggerDur;
@@ -24617,6 +24621,7 @@ function renderGame() {
       ctx.lineWidth = 1;
     }
     if (e.flashT > 0 && SPRITES.hitFlash) {
+      hitFlashDrawn++;                // 【v1.167】证据口：确实画出来过
       // 【v1.98】命中刮跟可视半径走, 不再贴碰撞豆点。
       // 【v1.153】刮痕墨线 4.4→3.0 且收短, 白闪随寿命平方淡出, 命中反馈干净不抹英雄剪影
       // 【v1.162】命中火花改短软墨烟+一条细墨刮, 不再硬黄方/白方盘
@@ -34417,6 +34422,10 @@ function init() {
   window.MENGSHOU_DEBUG = {
     // 【v1.166】死亡帧证据口：闭包内的 deathMarks 从外部探不到（AI_ART_READY 同类坑已踩过），
     //   必须经此接口读取 —— 验证脚本用 spawned>0 证明"确实触发过"，用 drawn>0 证明"确实画出来过"。
+    hitFlash: function () {
+      return { spawned: hitFlashSpawned, drawn: hitFlashDrawn,
+               sec: CONFIG.hitFlashDur, sprite: !!(SPRITES && SPRITES.hitFlash) };
+    },
     deathMarks: function () {
       return { live: deathMarks.length, spawned: deathMarksSpawned, drawn: deathMarksDrawn,
                sprites: (function () { var n = 0, k; for (k in SPRITES) if (k.slice(-5) === "_dead") n++; return n; })() };
