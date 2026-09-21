@@ -99,9 +99,20 @@ async function enterBattle() {
   await page.waitForTimeout(7000);
 }
 /** ⚠ 存活检测：连拍两帧若几乎完全一致 → 画面已冻结（暂停/结算/弹窗），必须先恢复，
- *  否则后续所有特效都会量到 0（实测踩过：第一次 killDemo 后状态漂移，后面三项全是 0.00）。 */
+ *  否则后续所有特效都会量到 0（实测踩过：第一次 killDemo 后状态漂移，后面三项全是 0.00）。
+ *  ⚠ 另一个坑：killDemo 会打死怪 → **触发升级三选一 → 游戏暂停**，
+ *  此时 magnetDemo 因 `state !== PLAYING` 直接返回 0（实测 03-gemrush 因此判"未见效"）
+ *  → 所以恢复动作里必须**把升级卡点掉**，而不只是解暂停。 */
 async function ensureLive(label) {
-  for (let t = 0; t < 3; t++) {
+  for (let t = 0; t < 4; t++) {
+    // 先看有没有升级卡开着（cards 是"可见卡"的权威来源）
+    const cards = await page.evaluate(() => { try { const s = window.MENGSHOU_DEBUG.levelup(); return (s && s.cards) ? s.cards.length : 0; } catch (e) { return 0; } });
+    if (cards > 0) {
+      console.log('  · ' + label + ' 前清掉 ' + cards + ' 张升级卡（否则游戏处于暂停态，特效不会生效）');
+      await page.evaluate(() => { const D = window.MENGSHOU_DEBUG || {}; try { if (D.levelupTap) D.levelupTap(); } catch (e) { void e; } });
+      await page.waitForTimeout(500);
+      continue;
+    }
     const a = await sig();
     await page.waitForTimeout(150);
     const b = await sig();
