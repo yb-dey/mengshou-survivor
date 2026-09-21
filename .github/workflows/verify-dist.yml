@@ -86,6 +86,16 @@ jobs:
           VERIFY_DIR: dist
         run: node ci/verify.mjs
 
+      # 【v1.171】重载帧时体检：verify.mjs 只量**开局轻载** fps；本作最重场景是**怪潮**
+      #   (ch6 无尽可达 maxEnemy=200 同屏) —— 轻载 60fps 不能证明重载不卡。
+      #   判据量**帧时间尾部**(p95) 而非 fps 均值，且**先断言"确实有怪"**再判帧率
+      #   (否则"帧率好"可能只是"没怪" = 假阴性)；并内置阴性对照(注入阻塞必须报 FAIL)。
+      - name: 重载帧时体检（怪潮：先证有怪，再判帧时间 p95）
+        continue-on-error: true
+        env:
+          VERIFY_DIR: dist
+        run: node ci/stress-perf.mjs
+
       - name: 上传验证产物
         if: always()
         uses: actions/upload-artifact@v4
