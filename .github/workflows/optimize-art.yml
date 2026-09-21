@@ -42,6 +42,16 @@ jobs:
         continue-on-error: true
         run: node ci/verify.mjs
 
+      # 【v1.172】⚠ 收口步骤 —— 否则上面那句「抠图后**必须**仍然 PASS」是**空话**：
+      #   `continue-on-error: true` 让验证失败**不影响 job 结论**，job 照样打绿勾。
+      #   （与 verify-dist.yml 同型缺陷；那边 3 个门禁此前也全是永久绿。）
+      - name: 门禁收口（验证结论必须为 success，否则本步骤失败）
+        if: always()
+        run: |
+          out="${{ steps.verify.outcome }}"
+          if [ "$out" = "success" ]; then echo "✅ verify = success";
+          else echo "::error::抠图后验证未通过（verify=$out）—— 见产物 cutout-result 里的 report.md"; exit 1; fi
+
       - name: 上传抠图结果与验证产物
         if: always()
         uses: actions/upload-artifact@v4
