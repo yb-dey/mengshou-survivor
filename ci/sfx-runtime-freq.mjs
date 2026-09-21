@@ -133,9 +133,16 @@ async function driveTick() {
       let s = null, ex = null;
       try { s = D.state(); } catch (e) { void e; }
       try { ex = D.exclusive ? D.exclusive() : null; } catch (e) { void e; }
-      const out = { name: s ? s.name : '?', act: '' };
+      const out = { name: s ? s.name : '?', act: '', before: ex ? !!ex.levelup : false };
       if (ex && ex.revive) { try { D.revive(); out.act = 'revive'; } catch (e) { out.act = 'revive-fail'; } }
-      else if (ex && ex.levelup) { try { D.levelupTap(0); out.act = 'pick'; } catch (e) { out.act = 'pick-fail'; } }
+      else if (ex && ex.levelup) {
+        // ⚠ 选卡是**两拍制**：第一拍 arm（发 cardlock/SFX_UI），第二拍才 applyUpgrade（发 levelup）。
+        //   只点一次会停在 arm 态，游戏卡在 LEVELUP_MODAL 不再刷怪 → 采样归零。
+        //   所以这里**连点两次**：tick1 arm、tick2 apply（applyUpgrade 内部 resumeAfterModal 回 PLAYING）。
+        try { D.levelupTap(0); out.act = 'arm'; } catch (e) { out.act = 'arm-fail'; }
+        try { D.levelupTap(0); out.act = 'pick'; } catch (e) { out.act = 'pick-fail'; }
+        try { out.after = !!(D.exclusive && D.exclusive().levelup); } catch (e) { out.after = null; }
+      }
       else if (ex && ex.result) { try { D.confirm ? D.confirm() : null; out.act = 'confirm'; } catch (e) { out.act = 'confirm-fail'; } }
       return out;
     });
