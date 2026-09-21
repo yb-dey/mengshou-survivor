@@ -34673,6 +34673,11 @@ function init() {
       for (i = 0; i < schemaKeys.length; i++) if (!has[schemaKeys[i]]) missing.push(schemaKeys[i]);
       for (i = 0; i < keys.length; i++) if (schemaKeys.indexOf(keys[i]) < 0) extra.push(keys[i]);
       // 往返自检：导出→导入必须语义等价（此处只算摘要，不动真实存档）
+      //   ⚠ 判据必须是**两条同形状的路径**（本轮踩到的坑）：
+      //   exportSaveText 会往 body 里**注入 schemaVersion**，而运行时 saveData **从不存**该键
+      //   （它只在写档/导出时补上）。若直接拿"导出的 d"与"运行时 saveData"对比，
+      //   两者形状差一个键 → 永远 semEq=false。正确做法：**两侧都先过 validateSave**
+      //   （validateSave 会补齐 schemaVersion 之外的字段），再比。
       var rt = { ok: null, err: "" };
       try {
         var txt = exportSaveText();
@@ -34680,8 +34685,13 @@ function init() {
         var pw = JSON.parse(back);
         var okChk = (djb2(JSON.stringify(pw.d)) === pw.chk);
         var clean = JSON.parse(JSON.stringify(d));
-        delete clean.chk;
-        var same = (JSON.stringify(validateSave(JSON.parse(JSON.stringify(pw.d)))) === JSON.stringify(validateSave(clean)));
+        var norm = function (o) {
+          var c = JSON.parse(JSON.stringify(o));
+          delete c.chk;
+          c.schemaVersion = SAVE_SCHEMA.schemaVersion;   // 两侧同形状：都补上版本键
+          return JSON.stringify(validateSave(c));
+        };
+        var same = (norm(pw.d) === norm(clean));
         rt = { ok: (okChk && same), chkOk: okChk, semEq: same, len: txt ? txt.length : 0 };
       } catch (e) { rt = { ok: false, err: String((e && e.message) || e) }; }
       return {
