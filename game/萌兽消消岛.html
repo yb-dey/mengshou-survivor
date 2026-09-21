@@ -12148,6 +12148,12 @@ var Audio = {
         var ei = len - fadeN + xf;
         out[ei] = out[ei] * (1 - w) + out[xf] * w;
       }
+      // 【v1.167i】bgmTailFade：末拍旋律音 release 被缓冲硬截断 → wrap 点仍跳 0.35×峰值（实测咔哒）。
+      //   补 40ms 短尾淡出把循环点拉回 ~0（与垫层"从 0 起音"对齐）；40ms 气口每 16s 一次不可闻。
+      var tailN = Math.min(Math.round(sr * 0.04), len >> 3);
+      for (var tf = 0; tf < tailN; tf++) {
+        out[len - 1 - tf] *= (tf / tailN);
+      }
     }
     return out;
   },
