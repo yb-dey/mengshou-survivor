@@ -29,7 +29,8 @@ import http from 'node:http';
 const OUT = path.join('ci', 'out');
 fs.mkdirSync(OUT, { recursive: true });
 const gameDir = path.resolve('game');
-const entryName = fs.readdirSync(gameDir).filter((f) => f.toLowerCase().endsWith('.html'))[0];
+// PICK_ENTRY_FILTERED: 排除 _ 前缀（_ = 临时/备份），防审计到备份文件（v1.187 实测）
+const entryName = fs.readdirSync(gameDir).filter((f) => f.toLowerCase().endsWith('.html') && !f.startsWith('_')).sort()[0];
 if (!entryName) { console.log('SKIP 找不到 game/*.html'); process.exit(0); }
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.png': 'image/png', '.webp': 'image/webp', '.wav': 'audio/wav', '.jpg': 'image/jpeg', '.json': 'application/json' };
 const server = http.createServer((req, res) => {
