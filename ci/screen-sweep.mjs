@@ -44,7 +44,7 @@ const available = await page.evaluate(() => {
     'openPetCard', 'codex', 'about', 'lore', 'pause', 'levelup', 'resultBuild', 'win', 'lose', 'daily',
     'startDaily', 'enterRoom', 'enterSkip', 'upgradeView', 'forgeView', 'vaultTapCraft', 'vaultTapTalent',
     'openVault', 'showGearPick', 'heroSheet', 'openUp', 'gearPreview',
-    'codexTab', 'openSettings', 'closeSettings', 'dailyPick'];   // 【2026-09-21】补齐真实动作型钩子
+    'codexTab', 'openSettings', 'closeSettings', 'dailyPick', 'levelupTap', 'pauseBuildChip'];   // 【2026-09-21】补齐真实动作型钩子
   return want.filter((k) => typeof D[k] === 'function');
 });
 
@@ -161,28 +161,32 @@ for (const s of STEPS) {
   }
 }
 
-/** 依次尝试多个钩子，直到画面真的变化；返回 {name, hook, dup} —— 避免"钩子没生效"被当成成功 */
+/** 依次尝试多个钩子，直到画面真的变化；候选可写 `'name'` 或 `{ n:'name', a:参数 }`
+ *  —— 避免"钩子没生效"被当成成功。⚠ 有的动作**必须带参数**（如 `pause(open)`），
+ *  无参调用等于空操作；也有的名字像动作其实是快照查询（`levelup` vs `levelupTap`）。 */
 async function tryShoot(outName, candidates) {
   const p = path.join(OUT, outName + '.png');
   let base = prevHash;
   for (const c of candidates) {
-    if (!available.includes(c)) continue;
-    await page.evaluate((k) => { try { window.MENGSHOU_DEBUG[k](); } catch (e) { void e; } }, c);
+    const nm = (typeof c === 'string') ? c : c.n;
+    const arg = (typeof c === 'string') ? undefined : c.a;
+    if (!available.includes(nm)) continue;
+    await page.evaluate((o) => { try { window.MENGSHOU_DEBUG[o.n](o.a); } catch (e) { void e; } }, { n: nm, a: arg });
     await page.waitForTimeout(1300);
     await page.screenshot({ path: p });
     const h = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 12);
     if (h !== base) {
       prevHash = h;
       const dHome = sigDiff(await screenSig(), homeSig);
-      shots.push({ name: outName, hook: c, hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
+      shots.push({ name: outName, hook: nm + (arg === undefined ? '' : '(' + arg + ')'), hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
       return;
     }
   }
   await page.screenshot({ path: p });
   const h = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 12);
   prevHash = h;
-  console.log('  ⚠ ' + outName + ' 试过 [' + candidates.join(', ') + '] 画面均未变化 → 该界面可能无法用钩子打开');
-  shots.push({ name: outName, hook: candidates.join('/'), dup: true, hash: h });
+  console.log('  ⚠ ' + outName + ' 试过 [' + candidates.map((c) => (typeof c === 'string' ? c : c.n + '(' + c.a + ')')).join(', ') + '] 画面均未变化 → 该界面可能无法用钩子打开');
+  shots.push({ name: outName, hook: candidates.map((c) => (typeof c === 'string' ? c : c.n)).join('/'), dup: true, hash: h });
 }
 
 // 战斗内：升级三选一 + 暂停（每个都试多个钩子，画面没变就如实标记，不当成成功）
@@ -198,8 +202,9 @@ try {
     const dHome = sigDiff(await screenSig(), homeSig);
     shots.push({ name: '11-battle', hook: 'mouse', hash: prevHash, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
   }
-  await tryShoot('12-levelup', ['levelup', 'upgradeView', 'showGearPick']);
-  await tryShoot('13-pause', ['pause', 'resultBuild']);
+  // ⚠ 已知坑：`levelup` 是**快照查询**（真动作 `levelupTap`）；`pause` 必须带参数 `pause(true)`。
+  await tryShoot('12-levelup', ['levelupTap', 'upgradeView', 'showGearPick']);
+  await tryShoot('13-pause', [{ n: 'pause', a: true }, 'pauseBuildChip', 'resultBuild']);
 } catch (e) { shots.push({ name: 'battle-series', error: String(e).slice(0, 150) }); }
 
 const md = [
