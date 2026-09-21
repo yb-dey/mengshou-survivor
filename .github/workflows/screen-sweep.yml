@@ -27,6 +27,11 @@ jobs:
       - name: 文字可读性判据自测（阴性对照）
         if: always()
         run: python ci/text-legibility.py --selftest
+      # ⚠【v1.172 复核】此处的 continue-on-error 是**有意保留、不要"修"**：
+      #   该判据已在真实截图上被**证伪**（见文件名中的"已证伪"与 text-legibility.py 文件头横幅），
+      #   步骤名也写明"仅留痕，不影响门禁"。它**不作为门禁**，所以**不应**加收口步骤。
+      #   → 区分标准：`continue-on-error` 的步骤若**声称自己是门禁**（名字里有"门禁/必须 PASS"）
+      #     就**必须**有收口步骤；若明确声明"仅提示/仅留痕"则**不应**加，否则会误伤正常构建。
       - name: 文字级可读性体检（⛔ 判据已证伪，仅留痕，不影响门禁）
         if: always()
         continue-on-error: true
