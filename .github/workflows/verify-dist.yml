@@ -24,6 +24,15 @@ jobs:
       - name: 断言 dist 自包含（音频必须随包，不许静默降级到程序化）
         run: node ci/assert-dist-audio.mjs
 
+      # 【2026-09-21】音频映射一致性：CONFIG.audio.gains(会被渲染) vs AUDIO_ASSET.sfxFiles(会被加载)
+      #   vs 磁盘文件，三者必须严格一致。实测抓到 4 个键（CARDSHOW/CHEST/EVENT/REVIVE）
+      #   只有合成器、没有映射 → 永远拿不到外采文件，**覆盖 10 个埋点**且无任何报错。
+      #   两张表各自自洽、只有交叉比才看得出来的缺口 = 静默降级的温床。
+      - name: 音频映射断言自测（阴性对照：四种错法都要报）
+        run: node ci/assert-audio-map.mjs --selftest
+      - name: 音频映射一致性断言（GATE：不一致即失败）
+        run: node ci/assert-audio-map.mjs
+
       - name: 三形态内容级复核（音频哈希一致 + 贴图键一致 + 体积口径）
         run: node ci/final-audit.mjs
 
