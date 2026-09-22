@@ -25,7 +25,8 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.187 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.188 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.188 美术】大厅装/强/鉴看板软抬唇+2px 苔外墨(makeHallBoardCell); 复活盘奶油填+约 2px 橄榄描边、按钮去金闪(makeModal/drawRevivePanel/comfort); 倒下暗角只压四边 alpha≤0.35(drawDeathCine); 结算小字对比抬一档; 擦入后走路极淡软尘(drawMoveDust); SFX_REVIVE 软 notch。1.187 叠层外墨/擦入/仓库行/脚环 0.18 保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.187 美术】开局奶油径向擦入 drawEntranceWipe(≤0.42s, 跳过钮/空格同收, 不另加输入锁); 擦入结束脚下 2–3 墨点 drawEntranceDust; 叠层早波(≥2 只交叠)仅先画的那只换 stackInk(正交约 +1px 外墨, 填体 α≥0.92); 仓库行卡 vaultRowChrome 锁定闷填/可打造 2px 软墨, 斑马奶油再静; 睡莲垫下台唇再清一档; SFX_START 软 notch。1.186 脚环/辉光/xN/名牌/鸡腿/强化去金保持。数值/掉落/进化/10 分钟轴不动。
 // 【v1.186 美术】脚环/焦点辉光再静(playerRingAlpha≤0.2, heroGlowAlpha≤0.035); 连击 xN 改软墨小标(drawSoftComboBadge); 头顶名牌细墨少黄; 鸡腿世界脉冲更细更淡; 永久强化花费钮/路径格去金霓虹改苔奶油; 升级卡锁定改苔墨缘; SFX_LEVELUP 软 notch。早波实心/风纹/咆哮/仓库 crumb 保持 1.185。数值/掉落/进化/10 分钟轴不动。
 // 【v1.185 美术】早波杂兵填体 alpha≥0.92(solidifyEarlyTrashAlpha)+PLAYING vignette 改边框不压中场, 奶油/灰/橙/绿再可指名; 星巅远脊 quiet wind-grain(paintStarRidge); 「咆哮」skill 圆盘外墨收静+苔橄榄填; 珠拾取薄 UL 受光抬一档(无鸡腿橙晕); 仓库兑换 strip 短获取 crumb; SFX_FIRE 软 notch。命中墨星/击杀 puff 尺寸保持 1.184。1.175–1.184 大厅草簇/选章获取条/苔碗/脚环/怎么玩/粉彩杂兵/咆哮/HP 同步保留。数值/掉落/进化/10 分钟轴不动。
@@ -617,7 +618,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.187",                   // 【v1.187】奶油擦入; 叠层早波外墨; 仓库行对比; 台唇; SFX_START 软。1.186 脚环/辉光/xN/名牌/鸡腿/强化去金保持。不改掉率/价格/锻造/进化/10 分钟轴
+  version: "1.188",                   // 【v1.188】看板脊; 复活盘去眩光; 倒下边暗角; 结算小字; 走路软尘; SFX_REVIVE 软。1.187 叠层外墨/擦入/仓库行/脚环保持。不改掉率/价格/锻造/进化/复活次数/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -3736,6 +3737,29 @@ function drawEntranceDust(ctx) {
     y = player.y + (player.r || 14) * 0.85 + dot.oy + dot.vy * k + 22 * k * k;
     drawInkPuff(ctx, x, y, dot.r * (1 + u * 0.35), dot.r * 0.7, "#2a3818", 0.78 * a);
   }
+}
+function drawMoveDust(ctx) {
+  // 【v1.188】擦入结束后走路软尘: 两粒极淡墨点, 不挡脚环, 不改走速
+  var t, i, u, x, y, a, back;
+  if (!player || !player.active || !player.moving) return;
+  if (!GAME || GAME.state !== GAME.flow.PLAYING) return;
+  if (GAME.entranceWipeT > 0 || enterCineLive() || GAME.reduceMotion) return;
+  t = GAME.time || 0;
+  back = player.face < 0 ? 1 : -1;
+  ctx.save();
+  ctx.fillStyle = "#2a3818";
+  for (i = 0; i < 2; i++) {
+    u = (t * 3.1 + i * 0.5) % 1;
+    x = player.x + back * (7 + u * 14);
+    y = player.y + (player.r || 14) * 0.82 + Math.sin(t * 5 + i) * 1.4;
+    a = 0.07 + 0.07 * (1 - u);
+    ctx.globalAlpha = a;
+    ctx.beginPath();
+    if (typeof ctx.ellipse === "function") ctx.ellipse(x, y, 2.1, 1.05, 0, 0, CONFIG.TWO_PI);
+    else ctx.arc(x, y, 1.5, 0, CONFIG.TWO_PI);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 function enterCineDurOf(kind, key) {
   var seen = GAME.enterSeen || (GAME.enterSeen = {});
@@ -12251,10 +12275,11 @@ var Audio = {
     } else if (id === "SFX_REVIVE") { len = 0.58; out = this._alloc(len, sr);
       // 【v1.160】复活起音再缓一档(正弦层 10→22ms, 三角层 8→18ms), 起身不炸耳; 层增益/音高轮廓/时长不动,
       //   起音放缓后峰值略降, 配套 SFX_REVIVE 总线 0.70→0.62(见 gains 表)使归一后响度不升
-      this._tone(out, sr, { wave: "sine", f0: 329.63, t0: 0, dur: 0.28, a: 0.022, d: 0.12, s: 0.25, r: 0.12, gain: 1 });
-      this._tone(out, sr, { wave: "sine", f0: 392.0, t0: 0.12, dur: 0.3, a: 0.022, d: 0.12, s: 0.22, r: 0.12, gain: 0.9 });
-      this._tone(out, sr, { wave: "sine", f0: 523.25, t0: 0.24, dur: 0.32, a: 0.022, d: 0.12, s: 0.18, r: 0.16, gain: 0.8 });
-      this._tone(out, sr, { wave: "triangle", f0: 659.26, t0: 0.32, dur: 0.26, a: 0.018, d: 0.1, s: 0.1, r: 0.14, gain: 0.5 });
+      // 【v1.188】软 notch: 起音 22/18→34/28ms, 顶层三角 0.50→0.38; 音高/时长/总线 gain 不动
+      this._tone(out, sr, { wave: "sine", f0: 329.63, t0: 0, dur: 0.28, a: 0.034, d: 0.12, s: 0.25, r: 0.12, gain: 1 });
+      this._tone(out, sr, { wave: "sine", f0: 392.0, t0: 0.12, dur: 0.3, a: 0.034, d: 0.12, s: 0.22, r: 0.12, gain: 0.9 });
+      this._tone(out, sr, { wave: "sine", f0: 523.25, t0: 0.24, dur: 0.32, a: 0.034, d: 0.12, s: 0.18, r: 0.16, gain: 0.8 });
+      this._tone(out, sr, { wave: "triangle", f0: 659.26, t0: 0.32, dur: 0.26, a: 0.028, d: 0.1, s: 0.1, r: 0.14, gain: 0.38 });
     } else if (id === "SFX_EVO") { len = 0.46; out = this._alloc(len, sr);
       this._tone(out, sr, { wave: "triangle", f0: 523.25, t0: 0, dur: 0.18, a: 0.004, d: 0.08, s: 0.12, r: 0.08, gain: 0.85 });
       this._tone(out, sr, { wave: "sine", f0: 659.26, t0: 0.08, dur: 0.22, a: 0.004, d: 0.1, s: 0.18, r: 0.1, gain: 1 });
@@ -13014,6 +13039,13 @@ var Audio = {
         var gEnd = g.gain.value;
         g.gain.setValueAtTime(gEnd * 0.5, tS);
         g.gain.linearRampToValueAtTime(gEnd, tS + 0.012);
+      }
+      // 【v1.188】SFX_REVIVE 软 notch 盖住已加载 wav: 16ms 从半增益爬到同一峰值, 不改总线 gain
+      if (sid === "SFX_REVIVE") {
+        var tRv = this.ctx.currentTime + (delay || 0);
+        var gRv = g.gain.value;
+        g.gain.setValueAtTime(gRv * 0.52, tRv);
+        g.gain.linearRampToValueAtTime(gRv, tRv + 0.016);
       }
       src.connect(g);
       if (!this.sfxGain) this._initSfxGain();
@@ -26244,6 +26276,7 @@ function renderGame() {
   drawParticles(ctx);
   drawKillFx(ctx);
   drawEntranceDust(ctx);   // 【v1.187】擦入收束后的脚下墨点, 世界坐标
+  drawMoveDust(ctx);       // 【v1.188】走路极淡软尘, 擦入结束后才出现
   drawHazardReadOverlay(ctx);
   // 飘字(0-9 数字图集拼图, 禁每帧 fillText; R1: 高伤走橙色 1.3x 大图集)
   // v2.0 R1: 飘字坐标本就是世界坐标(击杀/受击位置), 世界变换下自动随镜头滚动【V2R1】
@@ -28006,6 +28039,27 @@ function makeButton(id, x, y, w, h, label, onTap) {
         endWidgetPress(ctx, pressed);
         return;
       }
+      if (skin === "comfort") {
+        // 【v1.188】复活继续/放弃: 奶油或闷橄榄填, 约 2px 橄榄描边, 无金无奶白闪
+        var quietBtn = this.tone === "quiet";
+        ctx.fillStyle = "rgba(36, 48, 24, 0.12)";
+        fillRoundRect(ctx, r.x + 1, r.y + 3, r.w, r.h, rr);
+        ctx.fillStyle = quietBtn ? "#f3efe2" : "#d5e0c2";
+        fillRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
+        ctx.fillStyle = quietBtn ? "rgba(255,252,240,0.42)" : "rgba(255,252,240,0.22)";
+        fillRoundRect(ctx, r.x + 8, r.y + 4, r.w - 16, Math.max(10, r.h * 0.26), Math.min(rr, 10));
+        ctx.strokeStyle = quietBtn ? "#5a6a44" : "#3e5230";
+        ctx.lineWidth = 2;
+        strokeRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
+        ctx.lineWidth = 1;
+        ctx.fillStyle = quietBtn ? "#3c4a30" : "#f6f3e6";
+        ctx.font = r.h >= 64 ? FONT_UI : FONT_UI_S;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(this.label, r.x + r.w / 2, r.y + r.h / 2);
+        endWidgetPress(ctx, pressed);
+        return;
+      }
       if (tone === "ok") { fill = "#2e8b47"; stroke = "#fff7e0"; ink = "#ffffff"; }
       else if (tone === "locked") { /* 【v1.167e】vaultLockedQuiet：锁住的状态该“安静”——原深灰实心(#5a5348)+浅字比可操作态还重，且与卡内“未解锁”小签重复喊话；改浅色描边 ghost 样式（墨字 4.74:1 达标），响亮留给可操作态。回退：fill=#5a5348 / stroke=#8a7a58 / ink=#efe6c8 */ fill = "rgba(16,20,14,0.06)"; stroke = "rgba(42,58,24,0.35)"; ink = "#6a6a58"; }
       // 【v1.157】done 档(满级/已入仓/静音关)去金盘: 苔纸+细墨缘+深墨字, 对齐仓库行卡状态签; 按下态仍走 widgetPressed 加粗
@@ -28483,6 +28537,21 @@ function makeModal(id, panelW, panelH, drawPanel) {
       var px = (CONFIG.viewW - this.panelW) / 2;
       var py = (CONFIG.viewH - this.panelH) / 2;
       var mossG;
+      // 【v1.188】复活盘单独走奶油填 + 约 2px 橄榄描边, 不吃通用苔盘的亮顶光
+      if (this.id === "revivemodal") {
+        ctx.fillStyle = "rgba(22, 28, 18, 0.42)";
+        ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
+        ctx.fillStyle = "rgba(36, 48, 24, 0.16)";
+        fillRoundRect(ctx, px + 2, py + 4, this.panelW, this.panelH, 18);
+        ctx.fillStyle = "#f4efe2";
+        fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
+        ctx.strokeStyle = "#4e6240";
+        ctx.lineWidth = 2;
+        strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
+        ctx.lineWidth = 1;
+        if (drawPanel) drawPanel(ctx, this);
+        return;
+      }
       ctx.fillStyle = c.modalMask;
       ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
       // 【v1.153】模态盘统一圆角+一块柔影, 不再是硬边纸块
@@ -29787,6 +29856,9 @@ function registerUi() {
   uiReviveModal = makeModal("revivemodal", CONFIG.revivePanelW || 540, CONFIG.revivePanelH || 660, drawRevivePanel);
   uiBtnRevive = makeButton("btnrevive", CONFIG.viewW / 2 - 160, CONFIG.reviveBtnY || 720, 320, 70, "复活继续", onTapReviveBtn);
   uiBtnGiveUp = makeButton("btngiveup", CONFIG.viewW / 2 - 160, CONFIG.reviveGiveY || 810, 320, 70, "放弃结算", onTapGiveUpBtn);
+  uiBtnRevive.skin = "comfort";
+  uiBtnGiveUp.skin = "comfort";
+  uiBtnGiveUp.tone = "quiet";
   // 首页=总部基地: 主 CTA / 选章 / 今日 / 四主题地图 / 六部位框 / 底栏养成
   uiHomeStart = makeButton("homestart", 20, CONFIG.homeStartY || 536, CONFIG.homeStartW || 492, CONFIG.homeStartH || 104, "正片出击", onTapStart);
   uiHomeStart.skin = "cta";
@@ -30519,45 +30591,46 @@ function drawRevivePanel(ctx, m) {
   var peek = peekSettleCoins(false);
   var gearN = (run.gearGot && run.gearGot.length) || 0;
   var used = run.revivesUsed | 0;
-  ctx.fillStyle = c.cardTitle;
+  // 【v1.188】字阶收进橄榄/奶油, 金黄与警报红退出复活盘
+  ctx.fillStyle = "#2e3c1c";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = "bold 40px " + FONT_STACK;
   ctx.fillText("倒下了!", cx, py + 58);
   if (runReviveUnlimited()) {
-    ctx.fillStyle = "#2e8b47";
+    ctx.fillStyle = "#3d6844";
     ctx.font = "bold 22px " + FONT_STACK;
     ctx.fillText("倒下可再战 · 不限次数", cx, py + 124);
-    ctx.fillStyle = "#8a7a40";
+    ctx.fillStyle = "#5c6848";
     ctx.font = "bold 16px " + FONT_STACK;
     ctx.fillText(used ? ("本局已再战 " + used + " 次") : "无广告 · 点继续即可", cx, py + 152);
   } else {
     drawRevivePips(ctx, cx, py + 108, left, maxN);
-    ctx.fillStyle = "#8a2a2a";
+    ctx.fillStyle = "#3e4e32";
     ctx.font = "bold 22px " + FONT_STACK;
     ctx.fillText("还可复活 " + left + " / " + maxN + " 次", cx, py + 140);
   }
-  ctx.fillStyle = "#8a2a2a";
+  ctx.fillStyle = "#5a4038";
   ctx.font = "bold 20px " + FONT_STACK;
   ctx.fillText(run.lastDamageSrc || "被怪群击倒", cx, py + 176);
   drawSoftCard(ctx, cx - 230, py + 200, 460, 86, "#6a8a4a");
-  ctx.fillStyle = c.cardTitle;
+  ctx.fillStyle = "#2e3c1c";
   ctx.font = "bold 20px " + FONT_STACK;
   ctx.fillText(fmtClock(GAME.runTime) + " · 击杀 " + (player.killCount | 0) + " · 掉落 " + (run.coinsGained | 0) + " 金", cx, py + 228);
-  ctx.fillStyle = c.cardDesc;
+  ctx.fillStyle = "#555548";
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText("满血再战 · 无敌 " + CONFIG.reviveInvSec + " 秒 · 击退近敌", cx, py + 258);
-  ctx.fillStyle = c.cardDesc;
+  ctx.fillStyle = "#555548";
   ctx.font = "bold 18px " + FONT_STACK;
   ctx.fillText("放弃将结算约 " + peek.total + " 金", cx, py + 312);
-  ctx.fillStyle = c.cardDesc;
+  ctx.fillStyle = "#555548";
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText(gearN ? ("局内装备 " + gearN + " 件已入账, 放弃也会带回大厅") : "局内还没拿到装备", cx, py + 338);
-  ctx.fillStyle = "#8a7a40";
+  ctx.fillStyle = "#5c6848";
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText("放弃无通关礼 / 首通金币 / 锻纹", cx, py + 362);
   if (!saveData.guideFlags.revive) {
-    ctx.fillStyle = "#2e8b47";
+    ctx.fillStyle = "#3d6844";
     ctx.font = "bold 18px " + FONT_STACK;
     ctx.fillText("别慌, 点继续再战或放弃结算都行", cx, py + 392);
   }
@@ -30736,22 +30809,34 @@ function drawEnterCine(ctx) {
 }
 
 function drawDeathCine(ctx) {
-  var a;
+  var a, edgeA, px, py;
   if (GAME.deathCineT <= 0) return;
   a = Math.min(1, GAME.deathCineT / 0.14);
+  // 【v1.188】倒下暗角只压四边, 峰值 alpha≤0.35, 中场不黑死
+  edgeA = Math.min(0.35, 0.32 * a);
   ctx.save();
-  ctx.globalAlpha = 0.5 * a;
-  ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
+  if (SPRITES.vignette && SPRITES.vignette.width > 0) {
+    ctx.globalAlpha = edgeA;
+    ctx.drawImage(SPRITES.vignette, 0, 0, CONFIG.viewW, CONFIG.viewH);
+  }
+  px = CONFIG.viewW / 2;
+  py = CONFIG.viewH * 0.40;
+  ctx.globalAlpha = 0.92 * a;
+  ctx.fillStyle = "rgba(244, 239, 226, 0.94)";
+  fillRoundRect(ctx, px - 150, py - 52, 300, 112, 16);
+  ctx.strokeStyle = "#4e6240";
+  ctx.lineWidth = 2;
+  strokeRoundRect(ctx, px - 150, py - 52, 300, 112, 16);
+  ctx.lineWidth = 1;
   ctx.globalAlpha = a;
-  ctx.fillStyle = "#fff7e0";
-  ctx.font = "bold 64px " + FONT_STACK;
+  ctx.fillStyle = "#2e3c1c";
+  ctx.font = "bold 48px " + FONT_STACK;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("倒下了", CONFIG.viewW / 2, CONFIG.viewH * 0.40);
-  ctx.font = "bold 22px " + FONT_STACK;
-  ctx.fillStyle = "#e8b0a0";
-  ctx.fillText(run.lastDamageSrc || "", CONFIG.viewW / 2, CONFIG.viewH * 0.40 + 56);
+  ctx.fillText("倒下了", px, py - 8);
+  ctx.font = "bold 20px " + FONT_STACK;
+  ctx.fillStyle = "#5c6848";
+  ctx.fillText(run.lastDamageSrc || "", px, py + 32);
   ctx.restore();
 }
 
@@ -30883,6 +30968,7 @@ function drawResultPanel(ctx, m) {
     + " · 击杀 " + runSummary.kills
     + (runSummary.roomClears ? (" · 挑战房" + runSummary.roomClears + "次") : ""), cx, py + 118);
   ctx.font = "bold 15px " + FONT_STACK;
+  ctx.fillStyle = "#555548";   // 【v1.188】结算小字对比抬一档, 字号不放大
   if (runSummary.win && runSummary.prevBest) {
     var pbm = (runSummary.prevBest.bestSec / 60) | 0, pbs = runSummary.prevBest.bestSec % 60;
     ctx.fillText("此章最佳 胜" + runSummary.prevBest.wins + " · 击杀 " + runSummary.prevBest.bestKills
@@ -30911,7 +30997,7 @@ function drawResultPanel(ctx, m) {
     } else {
       _line += "   首度无尽";
     }
-    ctx.fillStyle = (_ee && ((runSummary.endlessTime | 0) > (_ee.time | 0) || (runSummary.endlessKills | 0) > (_ee.kills | 0))) ? "#7a6220" : c.cardDesc;
+    ctx.fillStyle = (_ee && ((runSummary.endlessTime | 0) > (_ee.time | 0) || (runSummary.endlessKills | 0) > (_ee.kills | 0))) ? "#7a6220" : "#555548";
     ctx.fillText(_line, cx, py + 132);
     /* 【v1.194c】章历史最高(落盘持久记录)常驻行。
        上面那行读的是 runSummary.prevEndless —— enterResult 时刻的**临时快照**, 只服务
@@ -30921,7 +31007,7 @@ function drawResultPanel(ctx, m) {
     if (_pe2 && ((_pe2.endlessTime | 0) > 0 || (_pe2.endlessKills | 0) > 0)) {
       var _pm = ((_pe2.endlessTime | 0) / 60) | 0, _ps = (_pe2.endlessTime | 0) % 60;
       ctx.font = "bold 14px " + FONT_STACK;
-      ctx.fillStyle = "#6a6a5a";
+      ctx.fillStyle = "#555548";
       ctx.fillText(runSummary.chName + " 无尽最高 · 存活 " + (_pm + ":" + (_ps < 10 ? "0" : "") + _ps)
         + " · 击杀 " + (_pe2.endlessKills | 0), cx, py + 158);
     }
@@ -30935,13 +31021,13 @@ function drawResultPanel(ctx, m) {
   ctx.fillStyle = c.cardTitle;
   ctx.font = "bold 18px " + FONT_STACK;
   ctx.fillText(runSummary.doubled ? "本局入账 · 已再领一份" : "本局入账", cx, goldY + 22);
-  ctx.fillStyle = c.cardDesc;
+  ctx.fillStyle = "#555548";
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText(resultCoinParts(), cx, goldY + 46);
   ctx.fillStyle = "#b8860b";
   ctx.font = "bold 44px " + FONT_STACK;
   ctx.fillText("" + resultPayoutTotal(), cx, goldY + 84);
-  ctx.fillStyle = c.cardDesc;
+  ctx.fillStyle = "#555548";
   ctx.font = "bold 14px " + FONT_STACK;
   ctx.fillText("点「入账回大厅」才进钱包  " + runSummary.walletBefore + "→" + (runSummary.walletBefore + resultPayoutTotal()), cx, goldY + (CONFIG.resultGoldH || 128) - 16);
 
@@ -30957,7 +31043,7 @@ function drawResultPanel(ctx, m) {
     ctx.fillStyle = view.giftRarColorText || view.giftRarColor || "#c9a24b";  // 【v1.192】亮底用 textDark
     ctx.fillText("通关礼在上方三格 · " + (view.giftWear || "入账") + (view.giftStat ? (" · " + view.giftStat) : ""), cx, cardY + 96);
   } else {
-    ctx.fillStyle = c.cardDesc;
+    ctx.fillStyle = "#555548";
     ctx.fillText(GAME.dailyMode
       ? (runSummary.win ? "加菜无章礼 · 正片才有" : "加菜失败无章礼")
       : (runSummary.win ? "本关没有通关礼" : "失败无通关礼 · 局内装已带回"), cx, cardY + 96);
@@ -30992,12 +31078,12 @@ function drawResultPanel(ctx, m) {
       ctx.textAlign = "left";
       ctx.fillText(hudFitText(ctx, rSec.title, m.panelW - 48), rPx + 18, rSec.y + 10);
       if (rSec.empty) {
-        ctx.fillStyle = "#6a7a50";
+        ctx.fillStyle = "#556444";
         ctx.font = "bold 12px " + FONT_STACK;
         ctx.fillText(rSec.empty, rPx + 72, rSec.y + 10);
       }
     } else if (rSec.kind === "unlit") {
-      ctx.fillStyle = "#8a8470";
+      ctx.fillStyle = "#6a6454";
       ctx.font = "bold 12px " + FONT_STACK;
       ctx.textAlign = "left";
       ctx.fillText(hudFitText(ctx, rSec.text, m.panelW - 36), rPx + 18, rSec.y + 10);
@@ -31006,7 +31092,7 @@ function drawResultPanel(ctx, m) {
     }
   }
   rHint = GAME.resultHint || rView.hook || "点条目看怎么来的 · 入账回大厅";
-  ctx.fillStyle = GAME.resultHint ? "#8a5a10" : (rView.hook ? "#5a6a40" : c.cardTitle);
+  ctx.fillStyle = GAME.resultHint ? "#8a5a10" : (rView.hook ? "#465838" : c.cardTitle);
   ctx.font = "bold 13px " + FONT_STACK;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -33103,12 +33189,17 @@ function makeHallBoardCell(i, x, y, w, h) {
       pressed = beginWidgetPress(ctx, this);
       // 【v1.157】大厅装/强/鉴战力看板去金: 深盘+金框+金hint → 柔影+苔纸+细墨框+细圆色签(对齐 drawBuildChip/dockGold);
       //   金/绿/蓝只留左侧细签, 战力数字改深墨仍可读; 尺寸/热区/文案不动。
-      ctx.fillStyle = "rgba(16,20,14,0.14)";
-      fillRoundRect(ctx, r.x + 1, r.y + 3, r.w, r.h, 10);
-      ctx.fillStyle = pulse ? "rgba(226,236,198,0.97)" : "rgba(222,232,198,0.94)";
+      // 【v1.188】软抬唇 + 2px 苔外墨: 正面多出一截苔脊, 备案截图能读出三条结构。热区/文案不动。
+      ctx.fillStyle = "rgba(36, 48, 24, 0.30)";
+      fillRoundRect(ctx, r.x + 1, r.y + 5, r.w, r.h, 10);
+      ctx.fillStyle = "#3a4e28";
+      fillRoundRect(ctx, r.x - 2, r.y - 1, r.w + 4, r.h + 5, 12);
+      ctx.fillStyle = pulse ? "#e8f2d6" : "#e3ecd0";
       fillRoundRect(ctx, r.x, r.y, r.w, r.h, 10);
-      ctx.strokeStyle = widgetPressed(this) ? "#2a3a18" : "rgba(42,58,24,0.62)";
-      ctx.lineWidth = widgetPressed(this) ? 2.5 : 1.5;
+      ctx.fillStyle = "rgba(255, 252, 238, 0.90)";
+      fillRoundRect(ctx, r.x + 10, r.y + 2, r.w - 20, 3, 1.5);
+      ctx.strokeStyle = widgetPressed(this) ? "#243218" : "#3a4e28";
+      ctx.lineWidth = 2;
       strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 10);
       ctx.lineWidth = 1;
       ctx.fillStyle = accent;
