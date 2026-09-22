@@ -1,6 +1,5 @@
 // 构建自包含展示页：把 sprites_alpha/*.webp 以 base64 内联进单文件 HTML。
-// 这样 showcase.html 双击即开、不依赖外部路径，真正"用上"资产；
-// 同时 sprites_alpha/ 原始文件保留供游戏接入。
+// 区分「焦点角色」(Boss/Hero，大卡) 与「萌兽图鉴」(敌人/宠物，网格) 两个分区。
 import fs from "node:fs";
 import path from "node:path";
 
@@ -8,7 +7,15 @@ const root = path.resolve(".");
 const alphaDir = path.join(root, "sprites_alpha");
 const out = path.join(root, "showcase.html");
 
-const creatures = [
+const bosses = [
+  { key: "forest_ancient", cn: "森林古木", en: "Forest Ancient", elem: "木 / 土", type: "敌方·BOSS", rarity: "传说", hp: "极高", spd: "极低",
+    trait: "召唤藤蔓：周期性召唤小藤蔓掩护自身，并释放范围践踏震退玩家。", c1: "#a6d9b0", c2: "#3f7d52" },
+];
+const heroes = [
+  { key: "spirit_deer", cn: "灵鹿祭司", en: "Spirit Deer", elem: "光", type: "可玩英雄", rarity: "史诗", hp: "中", spd: "中",
+    trait: "星辉治疗：持续为附近友军回复生命，并可施放净化驱散负面状态。", c1: "#e8d6ff", c2: "#b48bff" },
+];
+const enemies = [
   { key: "sprout_bunny", cn: "芽芽兔", en: "Sprout Bunny", elem: "木", type: "敌方·小兵", rarity: "普通", hp: "低", spd: "中",
     trait: "分裂：被击杀时原地留下一颗芽，短暂后萌出小兔继续袭扰。", c1: "#c7f3d2", c2: "#79cf94" },
   { key: "flame_fox", cn: "火苗狐", en: "Flame Fox", elem: "火", type: "敌方·快速", rarity: "普通", hp: "低", spd: "高",
@@ -23,16 +30,18 @@ const creatures = [
     trait: "掉落羊毛：被抚摸或击败概率掉落回血羊毛，是可养成伙伴。", c1: "#ffe9f2", c2: "#ffb3d1" },
 ];
 
-const rarityColor = { 普通: "#9fb4c9", 稀有: "#6aa6ff", 史诗: "#ff9ed6" };
+const rarityColor = { 普通: "#9fb4c9", 稀有: "#6aa6ff", 史诗: "#ff9ed6", 传说: "#ffb14e" };
 
-const cards = creatures.map((c, i) => {
+function card(c, big) {
   const fp = path.join(alphaDir, c.key + ".webp");
   const b64 = fs.readFileSync(fp).toString("base64");
   const uri = `data:image/webp;base64,${b64}`;
   const rc = rarityColor[c.rarity] || "#9fb4c9";
+  const artH = big ? 280 : 200;
+  const imgS = big ? 220 : 160;
   return `
     <article class="card" style="--c1:${c.c1};--c2:${c.c2}">
-      <div class="art"><img src="${uri}" alt="${c.cn}" loading="lazy"/></div>
+      <div class="art" style="height:${artH}px"><img src="${uri}" alt="${c.cn}" loading="lazy" style="width:${imgS}px;height:${imgS}px"/></div>
       <div class="meta">
         <div class="name-zh">${c.cn}</div>
         <div class="name-en">${c.en}</div>
@@ -48,7 +57,10 @@ const cards = creatures.map((c, i) => {
         <p class="trait">${c.trait}</p>
       </div>
     </article>`;
-}).join("\n");
+}
+
+const featured = [...bosses, ...heroes].map(c => card(c, true)).join("\n");
+const gallery = enemies.map(c => card(c, false)).join("\n");
 
 const html = `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -67,9 +79,12 @@ const html = `<!DOCTYPE html>
   header{max-width:1080px;margin:0 auto 28px;text-align:center}
   header .kicker{letter-spacing:.32em;font-size:12px;color:#7f8db0;text-transform:uppercase}
   header h1{font-size:34px;margin:8px 0 6px;background:linear-gradient(90deg,#9fe6c0,#7fb0ff,#ff9ed6);-webkit-background-clip:text;background-clip:text;color:transparent}
-  header p{color:var(--sub);font-size:14px;line-height:1.7;max-width:720px;margin:0 auto}
+  header p{color:var(--sub);font-size:14px;line-height:1.7;max-width:760px;margin:0 auto}
   .badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
   .badge{font-size:12px;padding:5px 12px;border-radius:999px;background:#ffffff10;border:1px solid #ffffff1a;color:#cdd6ea}
+  .section-title{max-width:1080px;margin:34px auto 16px;font-size:18px;font-weight:700;color:#cdd6ea;display:flex;align-items:center;gap:10px}
+  .section-title::before{content:"";width:6px;height:18px;border-radius:3px;background:linear-gradient(#7fb0ff,#ff9ed6)}
+  .featured{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:20px}
   .grid{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
   .card{
     background:linear-gradient(180deg,#1c2030,#161924);
@@ -79,12 +94,12 @@ const html = `<!DOCTYPE html>
   }
   .card:hover{transform:translateY(-6px);box-shadow:0 18px 44px #00000066}
   .art{
-    height:200px;display:flex;align-items:center;justify-content:center;
+    display:flex;align-items:center;justify-content:center;
     background:radial-gradient(circle at 50% 40%,var(--c1),var(--c2));
     position:relative;overflow:hidden;
   }
   .art::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 120%,#00000033,transparent 60%)}
-  .art img{width:160px;height:160px;object-fit:contain;animation:float 3.4s ease-in-out infinite;filter:drop-shadow(0 8px 14px #00000055);position:relative;z-index:1}
+  .art img{object-fit:contain;animation:float 3.4s ease-in-out infinite;filter:drop-shadow(0 8px 14px #00000055);position:relative;z-index:1}
   @keyframes float{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-10px) rotate(1deg)}}
   .card:nth-child(2n) .art img{animation-delay:.5s}
   .card:nth-child(3n) .art img{animation-delay:1s}
@@ -106,18 +121,30 @@ const html = `<!DOCTYPE html>
 <header>
   <div class="kicker">INDEPENDENT CONTENT PACK</div>
   <h1>森灵萌兽 · 内容包展示</h1>
-  <p>一套统一 chibi 画风的新萌兽（云端 Miora 生成 · 边缘洪水填充抠图透底），可作文敌小兵、快速单位、远程、坦克、飞行与可捕捉友方宠物。本包为<strong>独立命名空间</strong>，不与主游戏文件冲突，待主文件释放后即可接入。</p>
+  <p>一套统一 chibi 画风的新萌兽 / Boss / 可玩英雄（云端 Miora 生成 · 边缘洪水填充抠图透底），可在割草幸存者玩法中作 Boss、英雄、敌兵与可捕捉伙伴。本包为<strong>独立命名空间</strong>，不与主游戏文件冲突，待主文件释放后即可接入。</p>
   <div class="badges">
-    <span class="badge">6 只萌兽</span>
-    <span class="badge">512² RGBA 透明</span>
+    <span class="badge">8 个角色</span>
+    <span class="badge">512²/1024² RGBA 透明</span>
     <span class="badge">PNG + WebP 双格式</span>
     <span class="badge">已透底抠图</span>
     <span class="badge">非 GROK 文件</span>
   </div>
 </header>
-<main class="grid">
-${cards}
-</main>
+
+<section>
+  <div class="section-title">焦点角色 · Boss &amp; Hero</div>
+  <main class="featured">
+${featured}
+  </main>
+</section>
+
+<section>
+  <div class="section-title">萌兽图鉴 · 敌人 &amp; 伙伴</div>
+  <main class="grid">
+${gallery}
+  </main>
+</section>
+
 <footer>
   资产目录：<code>_content_pack/sprites_alpha/</code>（透明 PNG/WebP） · 原始生成图：<code>sprites/</code><br/>
   接入说明见 <a href="README.md">README.md</a> · 本页为自包含单文件（精灵已内联）。
@@ -126,4 +153,4 @@ ${cards}
 </html>`;
 
 fs.writeFileSync(out, html, "utf-8");
-console.log("已生成", out, (fs.statSync(out).size / 1024).toFixed(1) + "KB", "包含 6 张内联精灵");
+console.log("已生成", out, (fs.statSync(out).size / 1024).toFixed(1) + "KB");
