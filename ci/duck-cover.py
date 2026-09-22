@@ -55,6 +55,18 @@ import sys
 
 AUD = os.path.join('game', 'audio')
 HTML = os.environ.get('GAME_HTML', os.path.join('game', '萌兽消消岛.html'))
+
+# 音频目录：优先跟随 GAME_HTML 所在仓库（支持 GAME_HTML=dist/xxx.html 之类）
+# 否则退回 CWD 下的 game/audio。二者都找不到时再报 B（判据 B 会给出明确路径）。
+if not os.path.isdir(AUD):
+    _cand = os.path.join(os.path.dirname(os.path.abspath(HTML)), 'audio')
+    if os.path.isdir(_cand):
+        AUD = _cand
+    else:
+        _repo = os.path.dirname(os.path.dirname(os.path.abspath(HTML)))
+        _cand2 = os.path.join(_repo, 'game', 'audio')
+        if os.path.isdir(_cand2):
+            AUD = _cand2
 WIN = 0.05              # 50ms 分析窗
 AUDIBLE_PCT = 0.20      # >= 峰值 20%（约 -14dB）视为在 BGM 之上仍可辨
 TAIL_TOL = 0.05         # 可听尾段容差（一个分析窗）
