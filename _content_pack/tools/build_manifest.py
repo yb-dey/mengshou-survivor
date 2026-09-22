@@ -40,6 +40,7 @@ def wav_info(path):
 sprites = uniq_keys(os.path.join(ROOT, 'sprites_alpha'), ('.png',))
 vfx = uniq_keys(os.path.join(ROOT, 'vfx'), ('.png',))
 icons = uniq_keys(os.path.join(ROOT, 'icons'), ('.png',))
+skill = uniq_keys(os.path.join(ROOT, 'skill_icons'), ('.png',))
 audio = uniq_keys(os.path.join(ROOT, 'audio'), ('.wav',))
 bgm = [k for k in audio if k.startswith('cp_bgm_')]
 sfx = [k for k in audio if k.startswith('cp_sfx_')]
@@ -68,6 +69,11 @@ ICON_CN = {
     'st_bleed': '流血', 'st_slow': '减速', 'st_mark': '标记', 'st_atk_up': '攻击强化',
     'st_def_up': '防御强化', 'st_haste': '急速', 'st_heal': '持续治疗', 'st_shield': '护盾',
 }
+SKILL_CN = {
+    'el_fire': '火', 'el_water': '水', 'el_earth': '土', 'el_light': '光', 'el_wood': '木',
+    'ab_fireball': '火球术', 'ab_heal': '治疗', 'ab_frost': '霜冻', 'ab_chain': '链雷',
+    'ab_vine': '藤缚', 'ab_quake': '地震', 'ab_dash': '瞬步', 'ab_summon': '召唤',
+}
 
 sprite_list = []
 for k in sprites:
@@ -92,6 +98,13 @@ for k in icons:
     w, h = png_size(p)
     icon_list.append({'key': k, 'cn': ICON_CN.get(k, ''), 'w': w, 'h': h, 'bytes': os.path.getsize(p)})
 
+skill_list = []
+for k in skill:
+    p = os.path.join(ROOT, 'skill_icons', k + '.png')
+    w, h = png_size(p)
+    skill_list.append({'key': k, 'cn': SKILL_CN.get(k, ''), 'group': 'element' if k.startswith('el_') else 'ability',
+                       'w': w, 'h': h, 'bytes': os.path.getsize(p)})
+
 audio_list = []
 for k in audio:
     p = os.path.join(ROOT, 'audio', k + '.wav')
@@ -106,13 +119,15 @@ manifest = {
     'namespace': '_content_pack',
     'counts': {
         'sprites': len(sprites), 'vfx': len(vfx), 'icons': len(icons),
-        'audio': len(audio), 'bgm': len(bgm), 'sfx': len(sfx),
+        'skill_icons': len(skill), 'audio': len(audio), 'bgm': len(bgm), 'sfx': len(sfx),
     },
-    'sprites': sprite_list, 'vfx': vfx_list, 'icons': icon_list, 'audio': audio_list,
+    'sprites': sprite_list, 'vfx': vfx_list, 'icons': icon_list,
+    'skill_icons': skill_list, 'audio': audio_list,
 }
 
 out = os.path.join(ROOT, 'manifest.json')
 with open(out, 'w', encoding='utf-8') as f:
     json.dump(manifest, f, ensure_ascii=False, indent=2)
 print('manifest.json written:', os.path.getsize(out), 'bytes;',
-      len(sprites), 'sprites /', len(vfx), 'vfx /', len(icons), 'icons /', len(audio), 'audio')
+      len(sprites), 'sprites /', len(vfx), 'vfx /', len(icons), 'icons /',
+      len(skill), 'skill /', len(audio), 'audio')

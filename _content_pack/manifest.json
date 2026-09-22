@@ -1,10 +1,11 @@
 {
-  "generated_at": "2026-09-23 01:47:35",
+  "generated_at": "2026-09-23 01:59:59",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
     "vfx": 24,
     "icons": 12,
+    "skill_icons": 13,
     "audio": 30,
     "bgm": 6,
     "sfx": 24
@@ -329,6 +330,112 @@
       "w": 64,
       "h": 64,
       "bytes": 2503
+    }
+  ],
+  "skill_icons": [
+    {
+      "key": "ab_chain",
+      "cn": "链雷",
+      "group": "ability",
+      "w": 64,
+      "h": 64,
+      "bytes": 4783
+    },
+    {
+      "key": "ab_dash",
+      "cn": "瞬步",
+      "group": "ability",
+      "w": 64,
+      "h": 64,
+      "bytes": 4406
+    },
+    {
+      "key": "ab_fireball",
+      "cn": "火球术",
+      "group": "ability",
+      "w": 64,
+      "h": 64,
+      "bytes": 3549
+    },
+    {
+      "key": "ab_frost",
+      "cn": "霜冻",
+      "group": "ability",
+      "w": 64,
+      "h": 64,
+      "bytes": 4247
+    },
+    {
+      "key": "ab_heal",
+      "cn": "治疗",
+      "group": "ability",
+      "w": 64,
+      "h": 64,
+      "bytes": 3597
+    },
+    {
+      "key": "ab_quake",
+      "cn": "地震",
+      "group": "ability",
+      "w": 64,
+      "h": 64,
+      "bytes": 3870
+    },
+    {
+      "key": "ab_summon",
+      "cn": "召唤",
+      "group": "ability",
+      "w": 64,
+      "h": 64,
+      "bytes": 4451
+    },
+    {
+      "key": "ab_vine",
+      "cn": "藤缚",
+      "group": "ability",
+      "w": 64,
+      "h": 64,
+      "bytes": 3670
+    },
+    {
+      "key": "el_earth",
+      "cn": "土",
+      "group": "element",
+      "w": 64,
+      "h": 64,
+      "bytes": 2692
+    },
+    {
+      "key": "el_fire",
+      "cn": "火",
+      "group": "element",
+      "w": 64,
+      "h": 64,
+      "bytes": 2085
+    },
+    {
+      "key": "el_light",
+      "cn": "光",
+      "group": "element",
+      "w": 64,
+      "h": 64,
+      "bytes": 2814
+    },
+    {
+      "key": "el_water",
+      "cn": "水",
+      "group": "element",
+      "w": 64,
+      "h": 64,
+      "bytes": 2073
+    },
+    {
+      "key": "el_wood",
+      "cn": "木",
+      "group": "element",
+      "w": 64,
+      "h": 64,
+      "bytes": 2315
     }
   ],
   "audio": [
