@@ -188,6 +188,23 @@ jobs:
         run: |
           node ci/fork-feel-count.mjs --selftest
           node ci/fork-feel-count.mjs
+      # 装备跨表一致性审计：第 26 个"无人守"的维度。
+      # 【v1.201】病根=**三张表各写一份事实，无一处比它们**（`DATA_GEAR` × `DATA_GEAR_SLOT` × `DATA_GEAR_RARITY`）。
+      #   判据 A per 数组长度 === 稀有度档数（短了会 undefined）· B slot 必须存在于 SLOT 表
+      #        C per 必须**单调递增**（"史诗 > 普通"是玩家直觉；回落 = 高稀有度反而更差 = 反直觉）
+      #        D **同 slot+stat**（真正的替代关系）内 chMin 大的应更强 · E 同 slot+stat 不应 per 完全相同
+      #   ⚠ 三个坑（本轮连踩）：
+      #     第十六类 **前缀命名冲突** `indexOf('var DATA_GEAR')` 命中 `var DATA_GEAR_SLOT` ⇒ 解析 0 条却全绿
+      #       ⇒ 修法 `var[ \t]+NAME[ \t]*=` 词边界锚点 + 解析条数下界断言。
+      #     第十七类 **判据作用域失控** D 判据首版按 `stat` 单键分组，把**跨 slot 可同时装备**的
+      #       `dewdrop(@necklace)` 与 `seedbelt(@belt)` 当替代品 ⇒ **假红 1 条** ⇒ 分组键改 `slot|stat`。
+      #     第十三类变体 **变异没施加 ⇒ 假绿** selftest 的变异正则 ① 锚点用对象键（实为数组）② `[` `]` 未转义
+      #       ③ **手抄常量对不上**（源码 `0.10` 抄成 `0.1`）⇒ 改为**从文件读真实值再变异** + `out !== base` 前置断言。
+      #   **硬门禁**（发现跨表不一致即 exit 1）。
+      - name: 装备跨表一致性审计（GATE）
+        run: |
+          node ci/gear-cross.mjs --selftest
+          node ci/gear-cross.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
