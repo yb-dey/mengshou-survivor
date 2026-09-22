@@ -50,7 +50,7 @@
 <body>
   <h1>🌿 森灵萌兽 · 音频试听</h1>
   <div class="sub">独立内容包专属原声 · 纯参数化合成 · 双击即听</div>
-  <div class="hint">共 14 条：3 首 BGM（可循环）+ 11 个游戏事件音效</div>
+  <div class="hint">共 19 条：3 首 BGM（可循环）+ 16 个游戏事件音效</div>
   <div class="grid" id="grid"></div>
 
   <footer>萌兽消消岛 · 森灵内容包 · 音频资产（独立命名空间，不改动主游戏文件）<br>全部由 tools/synth_audio.py 纯标准库合成，峰值统一 85%，零削波</footer>
@@ -86,6 +86,16 @@ const TRACKS = [
    desc:'下行小调叹息（G-E-C-G）+ 低沉余音，失落感，适用失败/撤退。', dur:'0.99s'},
   {key:'cp_sfx_ui', ico:'🔘', title:'UI 点击', loop:false,
    desc:'极短柔 tick，克制不抢戏，适用按钮/菜单交互。', dur:'0.06s'},
+  {key:'cp_sfx_explosion', ico:'🔥', title:'爆炸 / 范围冲击', loop:false,
+   desc:'低频 boom + 噪声爆破 + 碎片脆响，适用大爆裂 / AoE 释放（配套 fx_explosion / fx_shockwave）。', dur:'0.40s'},
+  {key:'cp_sfx_dash', ico:'💨', title:'位移 / 闪避', loop:false,
+   desc:'快速上行扫频 + 风噪 whoosh，适用冲刺 / 闪避（配套 fx_dash_trail）。', dur:'0.22s'},
+  {key:'cp_sfx_portal', ico:'🌀', title:'召唤门 / 传送', loop:false,
+   desc:'失谐正弦琶音 + 缓慢调制漩涡感，适用召唤 / 传送（配套 fx_portal）。', dur:'0.70s'},
+  {key:'cp_sfx_coin', ico:'💰', title:'金币 / 得分', loop:false,
+   desc:'经典双音叮（B5→E6），适用金币 / 得分拾取（配套 fx_coin_burst）。', dur:'0.18s'},
+  {key:'cp_sfx_warning', ico:'⚠️', title:'预警 / 警示', loop:false,
+   desc:'紧张双音警报（小二度叠置），急促，适用 Boss AoE 地面预警（配套 fx_telegraph）。', dur:'0.44s'},
 ];
 
 const grid = document.getElementById('grid');

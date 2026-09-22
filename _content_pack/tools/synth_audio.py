@@ -333,6 +333,107 @@ def synth_ui(path):
     add(0, total, midi_freq(84), 0.16, 'sine', a=0.001, d=0.015, s=0.2, r=0.015)
     write_wav(path, buf); return total
 
+# ---------------- 5 个「音画配对」事件音效（round-10 · 与 VFX 配套） ----------------
+def synth_explosion(path):
+    """爆炸 / 范围冲击（配套 fx_explosion / fx_shockwave）：低频 boom + 噪声爆破 + 碎片脆响。"""
+    total = 0.40
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.002, d=0.05, s=0.4, r=0.10):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    add(0, 0.22, midi_freq(40), 0.55, 'sine', a=0.001, d=0.10, s=0.3, r=0.10)
+    add(0, 0.14, midi_freq(33), 0.40, 'triangle', a=0.001, d=0.08, s=0.2, r=0.06)
+    r = _noise_rng(); nb = int(0.18 * SR)
+    for i in range(nb):
+        if i < N: buf[i] += (r.random() * 2 - 1) * 0.45 * (1 - i / nb) ** 1.3
+    for k in range(6):
+        s = 0.12 + k * 0.03
+        add(s, 0.05, midi_freq(84 + k * 2), 0.12, 'square', a=0.001, d=0.02, s=0.2, r=0.03)
+    write_wav(path, buf); return total
+
+def synth_dash(path):
+    """位移 / 闪避 whoosh（配套 fx_dash_trail）：快速上行扫频 + 风噪。"""
+    total = 0.22
+    N = int(total * SR); buf = [0.0] * N
+    def sweep(start, dur, m0, m1, amp, wave, a=0.002, d=0.05, s=0.4, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; prog = i / cnt
+            freq = midi_freq(m0 + (m1 - m0) * prog)
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    sweep(0, 0.18, 50, 78, 0.30, 'sawtooth', a=0.002, d=0.10, s=0.2, r=0.06)
+    r = _noise_rng(); nb = int(0.16 * SR)
+    for i in range(nb):
+        if i < N:
+            p = i / nb
+            buf[i] += (r.random() * 2 - 1) * 0.18 * (1 - p) * (0.5 + 0.5 * math.sin(2 * math.pi * 30 * p))
+    write_wav(path, buf); return total
+
+def synth_portal(path):
+    """召唤 / 传送（配套 fx_portal）：失谐正弦琶音 + 缓慢调制的漩涡感。"""
+    total = 0.70
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.01, d=0.10, s=0.6, r=0.30):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    notes = [60, 63, 67, 70, 74]
+    step = 0.07
+    for k, m in enumerate(notes):
+        add(k * step, 0.30, midi_freq(m), 0.16, 'sine', a=0.01, d=0.08, s=0.5, r=0.20)
+        add(k * step, 0.24, midi_freq(m + 0.5), 0.08, 'triangle', a=0.01, d=0.06, s=0.4, r=0.15)
+    tail0 = len(notes) * step
+    for i in range(N):
+        t = i / SR
+        if t > tail0:
+            f = 1 - (t - tail0) / 0.30
+            if f > 0:
+                buf[i] += 0.06 * math.sin(2 * math.pi * midi_freq(72) * t) * f
+                buf[i] += 0.04 * math.sin(2 * math.pi * midi_freq(72.5) * t) * f
+    write_wav(path, buf); return total
+
+def synth_coin(path):
+    """金币 / 得分拾取（配套 fx_coin_burst）：经典双音叮（B5→E6）。"""
+    total = 0.18
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.001, d=0.02, s=0.3, r=0.06):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    add(0, 0.06, midi_freq(83), 0.26, 'square', a=0.001, d=0.01, s=0.2, r=0.02)
+    add(0.05, 0.12, midi_freq(88), 0.26, 'square', a=0.001, d=0.03, s=0.3, r=0.06)
+    add(0.05, 0.10, midi_freq(100), 0.08, 'sine', a=0.001, d=0.02, s=0.2, r=0.04)
+    write_wav(path, buf); return total
+
+def synth_warning(path):
+    """预警 / 地面警示（配套 fx_telegraph）：紧张双音警报（小二度叠置，急促）。"""
+    total = 0.44
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.002, d=0.03, s=0.5, r=0.05):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    for k in range(2):
+        s = k * 0.20
+        add(s, 0.16, midi_freq(69), 0.24, 'square', a=0.002, d=0.02, s=0.6, r=0.04)
+        add(s, 0.16, midi_freq(70), 0.24, 'square', a=0.002, d=0.02, s=0.6, r=0.04)
+    write_wav(path, buf); return total
+
 # ---------------- 战斗 BGM（本轮新增 · 探索/秘境的对立项） ----------------
 def synth_bgm_battle(path, bars=16, bpm=128, fade=0.08):
     """战斗主题 BGM：更快的节奏（128 BPM）、驱动贝斯、 energetic 琶音 lead、
@@ -497,6 +598,11 @@ if __name__ == '__main__':
         ('cp_sfx_win.wav', synth_win),
         ('cp_sfx_lose.wav', synth_lose),
         ('cp_sfx_ui.wav', synth_ui),
+        ('cp_sfx_explosion.wav', synth_explosion),
+        ('cp_sfx_dash.wav', synth_dash),
+        ('cp_sfx_portal.wav', synth_portal),
+        ('cp_sfx_coin.wav', synth_coin),
+        ('cp_sfx_warning.wav', synth_warning),
     ]
     for name, fn in jobs:
         d = fn(f'{out_dir}/{name}')
