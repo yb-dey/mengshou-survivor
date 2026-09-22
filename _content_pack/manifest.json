@@ -1,0 +1,397 @@
+{
+  "generated_at": "2026-09-23 00:42:07",
+  "namespace": "_content_pack",
+  "counts": {
+    "sprites": 8,
+    "vfx": 18,
+    "audio": 19,
+    "bgm": 3,
+    "sfx": 16
+  },
+  "sprites": [
+    {
+      "key": "cotton_sheep",
+      "cn": "棉花羊",
+      "w": 512,
+      "h": 512,
+      "png": 259542,
+      "webp": 23280
+    },
+    {
+      "key": "flame_fox",
+      "cn": "火苗狐",
+      "w": 512,
+      "h": 512,
+      "png": 344967,
+      "webp": 21702
+    },
+    {
+      "key": "forest_ancient",
+      "cn": "森林古木",
+      "w": 1024,
+      "h": 1024,
+      "png": 1646280,
+      "webp": 122358
+    },
+    {
+      "key": "spirit_deer",
+      "cn": "灵鹿祭司",
+      "w": 1024,
+      "h": 1024,
+      "png": 1700321,
+      "webp": 91240
+    },
+    {
+      "key": "sprout_bunny",
+      "cn": "芽芽兔",
+      "w": 512,
+      "h": 512,
+      "png": 249487,
+      "webp": 22730
+    },
+    {
+      "key": "star_bird",
+      "cn": "星羽鸟",
+      "w": 512,
+      "h": 512,
+      "png": 314398,
+      "webp": 18670
+    },
+    {
+      "key": "stone_turtle",
+      "cn": "石甲龟",
+      "w": 512,
+      "h": 512,
+      "png": 221540,
+      "webp": 20560
+    },
+    {
+      "key": "water_frog",
+      "cn": "水滴蛙",
+      "w": 512,
+      "h": 512,
+      "png": 354868,
+      "webp": 19030
+    }
+  ],
+  "vfx": [
+    {
+      "key": "fx_coin_burst",
+      "cn": "金币迸发",
+      "w": 96,
+      "h": 96,
+      "bytes": 6411
+    },
+    {
+      "key": "fx_dash_trail",
+      "cn": "冲刺残影",
+      "w": 128,
+      "h": 128,
+      "bytes": 6093
+    },
+    {
+      "key": "fx_explosion",
+      "cn": "大爆裂",
+      "w": 128,
+      "h": 128,
+      "bytes": 18289
+    },
+    {
+      "key": "fx_fireball",
+      "cn": "火球",
+      "w": 96,
+      "h": 96,
+      "bytes": 5660
+    },
+    {
+      "key": "fx_frost",
+      "cn": "霜晶",
+      "w": 96,
+      "h": 96,
+      "bytes": 3598
+    },
+    {
+      "key": "fx_heal",
+      "cn": "治疗光环",
+      "w": 128,
+      "h": 128,
+      "bytes": 3627
+    },
+    {
+      "key": "fx_heal_burst",
+      "cn": "治疗爆发",
+      "w": 128,
+      "h": 128,
+      "bytes": 12027
+    },
+    {
+      "key": "fx_hit_spark",
+      "cn": "命中火花",
+      "w": 96,
+      "h": 96,
+      "bytes": 5010
+    },
+    {
+      "key": "fx_levelup",
+      "cn": "升级星环",
+      "w": 128,
+      "h": 128,
+      "bytes": 7724
+    },
+    {
+      "key": "fx_lightning",
+      "cn": "雷击",
+      "w": 96,
+      "h": 96,
+      "bytes": 6082
+    },
+    {
+      "key": "fx_pickup",
+      "cn": "拾取闪光",
+      "w": 96,
+      "h": 96,
+      "bytes": 2080
+    },
+    {
+      "key": "fx_poison",
+      "cn": "毒云",
+      "w": 96,
+      "h": 96,
+      "bytes": 6928
+    },
+    {
+      "key": "fx_portal",
+      "cn": "召唤门",
+      "w": 128,
+      "h": 128,
+      "bytes": 18425
+    },
+    {
+      "key": "fx_shield",
+      "cn": "护盾泡",
+      "w": 128,
+      "h": 128,
+      "bytes": 8588
+    },
+    {
+      "key": "fx_shockwave",
+      "cn": "冲击波环",
+      "w": 128,
+      "h": 128,
+      "bytes": 9993
+    },
+    {
+      "key": "fx_slash",
+      "cn": "斩击弧",
+      "w": 128,
+      "h": 128,
+      "bytes": 2094
+    },
+    {
+      "key": "fx_star",
+      "cn": "星爆",
+      "w": 96,
+      "h": 96,
+      "bytes": 2333
+    },
+    {
+      "key": "fx_telegraph",
+      "cn": "预警圈",
+      "w": 128,
+      "h": 128,
+      "bytes": 8529
+    }
+  ],
+  "audio": [
+    {
+      "key": "cp_bgm_battle",
+      "cn": "战斗主题",
+      "kind": "bgm",
+      "bytes": 2646044,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 30.0
+    },
+    {
+      "key": "cp_bgm_boss",
+      "cn": "BOSS 主题",
+      "kind": "bgm",
+      "bytes": 2761086,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 31.3
+    },
+    {
+      "key": "cp_bgm_forest",
+      "cn": "森林主题",
+      "kind": "bgm",
+      "bytes": 3136044,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 35.56
+    },
+    {
+      "key": "cp_sfx_coin",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 15920,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.18
+    },
+    {
+      "key": "cp_sfx_dash",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 19448,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.22
+    },
+    {
+      "key": "cp_sfx_evolve",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 92654,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 1.05
+    },
+    {
+      "key": "cp_sfx_explosion",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 35324,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.4
+    },
+    {
+      "key": "cp_sfx_heal",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 121758,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 1.38
+    },
+    {
+      "key": "cp_sfx_hit",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 14156,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.16
+    },
+    {
+      "key": "cp_sfx_hurt",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 22976,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.26
+    },
+    {
+      "key": "cp_sfx_kill",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 30032,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.34
+    },
+    {
+      "key": "cp_sfx_levelup",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 53846,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.61
+    },
+    {
+      "key": "cp_sfx_lose",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 87362,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.99
+    },
+    {
+      "key": "cp_sfx_pickup",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 15920,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.18
+    },
+    {
+      "key": "cp_sfx_portal",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 61782,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.7
+    },
+    {
+      "key": "cp_sfx_summon",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 81188,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.92
+    },
+    {
+      "key": "cp_sfx_ui",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 5336,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.06
+    },
+    {
+      "key": "cp_sfx_warning",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 38852,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.44
+    },
+    {
+      "key": "cp_sfx_win",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 97064,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 1.1
+    }
+  ]
+}
