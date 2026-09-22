@@ -25,7 +25,8 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.178 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.179 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.179 美术】局内主角改 drawPlayerInRun: 无敌半透明闪不再隔帧整只消失、drawScale 抬一档、立绘外墨加厚, 截图能认出浣熊/龟/熊; 开场前几只杂兵拉进镜头; 图鉴敌人页本色软墨剪影(跟宠同档); 星巅台地脚下接路不再悬空深板; SFX_HURT 持音再收一档。1.175–1.178 获取条/跟宠软墨/咆哮/大厅舞台保留。数值/掉落/进化/10 分钟轴不动。
 // 【v1.178 美术】图鉴跟宠锁定格改本色软墨剪影(左上受光+外墨, 不再近黑死剪影墙)、敌人空格兜底软盘、星巅程序化远脊/近台再加一档受光与台地; 缺 TEX/地面 PNG 不再 fetch 刷 404(程序化路径); 英雄 webp 失败回落 assets/hero_*.png; 道具页鸡腿/炸/磁走可爱剪影; SFX_UI 持音再收。1.175–1.177 获取条/咆哮/大厅舞台保留。数值/掉落/进化/10 分钟轴不动。
 // 【v1.177 美术】局内杂兵外墨加厚(叠在一起仍能点名)、星巅远脊+近台左上受光(出战地面预览同一套)、图鉴选中苔盘 #c8ecc8/#2f5a3a + 页眉获取行。英雄立绘不重采样。1.175–1.176 获取条保留。数值/掉落/进化/10 分钟轴不动。
 // 【v1.176 美术】大厅地面草簇+路唇(左上受光)、六部位墨线剪影、三角色苔纸选边、落地台暗唇收成台缘、强化/图鉴苔盘、局内拾取墨缘。1.175 获取路径保留。数值/掉落/进化/10 分钟轴不动。
@@ -607,7 +608,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.178",                   // 【v1.178】图鉴跟宠软墨剪影+星巅程序化台地加档+缺 TEX 不刷 404+英雄 png 回落+道具页剪影+SFX_UI 持音收。1.175–1.177 获取条/咆哮保留。不改掉率/价格/锻造/进化/10 分钟轴
+  version: "1.179",                   // 【v1.179】局内主角可读(半透明闪+放大+外墨)+开场近景杂兵+敌人图鉴软墨+星巅台地接路+SFX_HURT 持音收。1.175–1.178 获取条/跟宠软墨/咆哮保留。不改掉率/价格/锻造/进化/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -10476,6 +10477,8 @@ function codexEnemyOf(id) {
 }
 function codexEnemySprite(id) {
   var d = DATA_ENEMY[id];
+  // 【v1.179】图鉴优先本色软墨剪影(跟宠 locked 同档), 备案截图可点名; 无剪影再回落到彩色本体
+  if (id && SPRITES["enemysil_" + id] && SPRITES["enemysil_" + id].width > 0) return SPRITES["enemysil_" + id];
   // 【v1.96】本种剪影优先, 不再把狐/蟾读成兔皮。
   if (id && SPRITES[id] && SPRITES[id].width > 0) return SPRITES[id];
   if (d && d.skin && SPRITES[d.skin]) return SPRITES[d.skin];
@@ -10576,20 +10579,21 @@ function setCodexEnemyGroup(group) {
 }
 
 // 【v1.16】可玩角色表: 弹壳结构=选角色改开局武/体格。本仓三名, 复用既有剪影, 不新开立绘。
-// 【v1.147】drawScale 只放大局内贴图四边形(1.45–1.52), 面罩/耳/环尾在 390 宽上一眼可读; 碰撞 playerR/敌 r 不动, 大厅走 drawSpriteFit 不受此值影响。
+// 【v1.147】drawScale 只放大局内贴图四边形, 面罩/耳/环尾在 390 宽上一眼可读; 碰撞 playerR/敌 r 不动, 大厅走 drawSpriteFit 不受此值影响。
+// 【v1.179】drawScale 1.82–1.92: 局内立绘再抬一档, 开场截图能认出冒险者浣熊; 碰撞仍不动。
 // schema: {id, name, startWeapon, sprite SPRITES 键, hpMul/moveMul/aspdMul, armorPct, regen, roarNova/roarSlam, aoeMul/sizeMul, drawScale, tagline, trait, accent}
 var DATA_HERO = [
   { id: "raccoon", name: "浣熊特工", startWeapon: "pinecone", sprite: "player",
     hpMul: 1, moveMul: 1, aspdMul: 1.06, armorPct: 0, regen: 0, roarNova: false, roarSlam: false,
-    aoeMul: 1, sizeMul: 1, drawScale: 1.45, accent: "#e6c24a",
+    aoeMul: 1, sizeMul: 1, drawScale: 1.82, accent: "#e6c24a",
     tagline: "风筝直射", trait: "开局松果连弩 · 攻速微加" },
   { id: "shell", name: "壳壳龟", startWeapon: "beeswarm", sprite: "hero_shell",
     hpMul: 1.24, moveMul: 0.84, aspdMul: 1, armorPct: 0.10, regen: 0.35, roarNova: true, roarSlam: false,
-    aoeMul: 1, sizeMul: 1, drawScale: 1.48, accent: "#5ec8e0",
+    aoeMul: 1, sizeMul: 1, drawScale: 1.88, accent: "#5ec8e0",
     tagline: "厚甲近身", trait: "开局蜂群环体 · 咆哮带伤" },
   { id: "grizz", name: "莽莽熊", startWeapon: "bombnut", sprite: "hero_grizz",
     hpMul: 1.14, moveMul: 0.90, aspdMul: 0.97, armorPct: 0.06, regen: 0.12, roarNova: false, roarSlam: true,
-    aoeMul: 1.16, sizeMul: 1.10, drawScale: 1.52, accent: "#e08a3a",
+    aoeMul: 1.16, sizeMul: 1.10, drawScale: 1.92, accent: "#e08a3a",
     tagline: "近身爆裂", trait: "开局爆爆橡果 · 咆哮砸地" }
 ];
 function heroDef(id) {
@@ -10613,7 +10617,7 @@ function heroSprite(h) {
 }
 function heroDrawScale(h) {
   h = h || heroOf();
-  return h.drawScale || 1.45;   // 【v1.147】缺省跟浣熊档, 只影响局内贴图, 不改碰撞
+  return h.drawScale || 1.82;   // 【v1.179】缺省跟浣熊档(1.82), 只影响局内贴图, 不改碰撞; 大厅仍走 drawSpriteFit
 }
 function heroStartWeaponName(h) {
   var w = DATA_WEAPON[(h || heroOf()).startWeapon];
@@ -12036,9 +12040,10 @@ var Audio = {
       this._tone(out, sr, { wave: "triangle", f0: 784, t0: 0, dur: 0.14, a: 0.002, d: 0.1, s: 0, r: 0.06, gain: 0.22 });
     } else if (id === "SFX_HURT") { len = 0.20; out = this._alloc(len, sr);
       // 【v1.154】受击起音再缓一档+各层增益略收, 蹭血不炸耳(闷响性格/0.20s 时长不动)
-      this._tone(out, sr, { wave: "sine", f0: 148, f1: 82, t0: 0, dur: 0.16, a: 0.010, d: 0.11, s: 0, r: 0.08, gain: 0.70 });
-      this._tone(out, sr, { wave: "triangle", f0: 196, f1: 98, t0: 0, dur: 0.12, a: 0.008, d: 0.08, s: 0, r: 0.06, gain: 0.26 });
-      this._noise(out, sr, { t0: 0, dur: 0.05, a: 0.004, r: 0.04, gain: 0.06, seed: 33 });
+      // 【v1.179】持音再收一档: 主体/三角 release 略短、噪声更淡; 音高/时长/性格不动, 无旋律改写
+      this._tone(out, sr, { wave: "sine", f0: 148, f1: 82, t0: 0, dur: 0.16, a: 0.012, d: 0.10, s: 0, r: 0.062, gain: 0.66 });
+      this._tone(out, sr, { wave: "triangle", f0: 196, f1: 98, t0: 0, dur: 0.11, a: 0.009, d: 0.07, s: 0, r: 0.048, gain: 0.22 });
+      this._noise(out, sr, { t0: 0, dur: 0.042, a: 0.004, r: 0.032, gain: 0.05, seed: 33 });
     } else if (id === "SFX_CARDSHOW") { len = 0.30; out = this._alloc(len, sr);
       // 【v1.176】⚠ 与 SFX_START 结构去同构（起因是**可量化**的感知缺陷，不是主观听感）:
       //   `beginRun` 里 `Audio.play("start")` 之后**同一 tick** 就 `armEnterCine("chapter")`
@@ -16372,7 +16377,8 @@ function makeEnemySprite(r, color, id) {
     aiC2.drawImage(aiA, size / 2 - vis, size / 2 + vis * 0.06 - vis, aiD, aiD);
     aiC2.restore();
     aiCv.half = vis + pad * 0.22;
-    if (idBase !== "player" && idBase !== "hero_shell" && idBase !== "hero_grizz") bakeOuterInk(aiCv, Math.max(6, Math.round(aiK * 3.2)));
+    // 【v1.179】英雄 AI 兜底也叠外墨; 杂兵保持原外墨
+    bakeOuterInk(aiCv, Math.max(6, Math.round(aiK * 3.2)));
     return cacheSpriteBox(aiCv);
   }
   var cv = document.createElement("canvas");
@@ -16383,7 +16389,12 @@ function makeEnemySprite(r, color, id) {
   var cx = size / 2, cy = size / 2 + vis * 0.06;
   paintEnemySilhouette(c2, cx, cy, vis, color, idBase || "rabbit");   // 【v1.165】回退也按本体 id 出形状
   cv.half = vis + pad * 0.22;
-  if (idBase !== "player" && idBase !== "hero_shell" && idBase !== "hero_grizz") bakeOuterInk(cv, Math.max(6, Math.round(scale * 3.0)));
+  // 【v1.179】英雄程序化兜底也叠外墨(星巅海军底可读); 杂兵仍走原粗外墨
+  if (idBase === "player" || idBase === "hero_shell" || idBase === "hero_grizz") {
+    bakeOuterInk(cv, Math.max(6, Math.round(scale * 3.2)));
+  } else {
+    bakeOuterInk(cv, Math.max(6, Math.round(scale * 3.0)));
+  }
   return cacheSpriteBox(cv);
 }
 function cacheSpriteBox(cv) {
@@ -17866,6 +17877,7 @@ function buildSprites() {
   SPRITES.rabbit = makeEnemySprite(DATA_ENEMY.rabbit.r, c.enemyRabbit, "rabbit");
   SPRITES.bear = makeEnemySprite(DATA_ENEMY.bear.r, c.enemyBear, "bear");
   SPRITES.mouse = makeEnemySprite(DATA_ENEMY.mouse.r, c.enemyMouse, "mouse");
+  // 【v1.179】兔/熊/鼠图鉴软墨先落一档(循环里会再覆盖同键)
   // 精英/BOSS 与 BOSS 弹贴图(步骤8): 遍历 DATA_ENEMY 补齐, 弹用 bs_<id> 键
   var ecol;
   for (var eid in DATA_ENEMY) {
@@ -17914,6 +17926,12 @@ function buildSprites() {
         bsSpr = bsCv;
       }
       SPRITES["bs_" + eid] = bsSpr;
+    }
+  }
+  // 【v1.179】敌人图鉴本色软墨剪影(左上受光+外墨), 跟宠 locked 同档; 局内彩色本体不动
+  for (var esid in DATA_ENEMY) {
+    if (SPRITES[esid] && SPRITES[esid].width > 0) {
+      SPRITES["enemysil_" + esid] = makeSoftInkGlyph(SPRITES[esid], (DATA_ENEMY[esid] && DATA_ENEMY[esid].tint) || CONFIG.colors["enemy" + esid] || "#8a9a6a");
     }
   }
   SPRITES.bullet = makeNatureBulletSprite("pinecone", DATA_WEAPON.pinecone.bulletR, "#6b4a2b");
@@ -18402,8 +18420,15 @@ function pickSpawnPos() {
   // v2.0 R1: 圆环心从屏中心改为玩家【V2R1】(世界坐标语义; 摄像机跟随下玩家≈屏心, 行为连续;
   // 世界边缘处圆环可伸出世界界外, 由扩容后的空间哈希网格覆盖, 见 initGrid)
   var a = Math.random() * CONFIG.TWO_PI;
-  spawnPos.x = player.x + Math.cos(a) * CONFIG.spawnRingR;
-  spawnPos.y = player.y + Math.sin(a) * CONFIG.spawnRingR;
+  // 【v1.179】开场数秒内前几只杂兵拉进镜头(约 150–250px), 截图能看见带外墨的单位;
+  //   波次 count/interval/hp/spd 不动, 只改出生环半径。
+  var ring = CONFIG.spawnRingR;
+  var earlyN = (waveState.spawned || 0);
+  if ((GAME.runTime || 0) < 3.2 && earlyN < 5) {
+    ring = 148 + earlyN * 26;
+  }
+  spawnPos.x = player.x + Math.cos(a) * ring;
+  spawnPos.y = player.y + Math.sin(a) * ring;
 }
 
 // 生成一只怪: 找空闲槽位, 从 DATA_ENEMY 抄数值。池满/上限满返回 false(停刷等补位)。
@@ -23345,9 +23370,9 @@ function loadItemPack() {
 }
 // 局内逻辑半宽(碰撞半径不动)。对标弹壳: 剪影必须一眼可读, 不再缩成 48px 色块。
 var SKIN_DRAW_HALF = {
-  player: 55, rabbit: 40, mouse: 36, bear: 44, hedgehog: 40,
+  player: 62, rabbit: 40, mouse: 36, bear: 44, hedgehog: 40,
   badger: 48, boar: 48, monkey: 46, boss1: 80, boss2: 86, boss3: 98,
-  hero_shell: 55, hero_grizz: 55   // 【v1.149】英雄立绘半宽对齐 v1.146 程序化烘焙(≈55.5), 大厅/局内尺寸口径不变
+  hero_shell: 62, hero_grizz: 62   // 【v1.179】英雄立绘半宽 55→62, 配合 drawScale 抬档, 局内更可指名
 };
 var SKIN_LOCKED = {};
 function skinGrayBackdropPixel(r, g, b, a) {
@@ -23456,9 +23481,13 @@ function applySkinImage(target, img) {
   cv.half = drawHalf;
   var rimSpec = actorRimOf(target, DATA_ENEMY[target]);
   cv = strokeActorCanvas(cv, rimSpec.ink, rimSpec.rim, rimSpec.offMul);
+  // 【v1.179】英雄立绘再叠一圈外墨, 星巅海军底上勾得住形; 不重采样糊 PNG(仍走 physResample 1:1 显示)
+  if (target === "player" || target === "hero_shell" || target === "hero_grizz") {
+    bakeOuterInk(cv, Math.max(5, Math.round((drawHalf || 55) * 0.09)));
+  }
   // 【v1.164】立绘按需降分辨率：原 cvSize = drawHalf*4，而实际显示只有 drawHalf*2 逻辑 px
   // （再乘 CSS 缩放比）→ 约 3.1 倍超采样。重采样到 1:1，肉眼看不出差别。
-  SPRITES[target] = physResample(cv, null);
+  SPRITES[target] = cacheSpriteBox(physResample(cv, null));
   SKIN_LOCKED[target] = true;
   if (DATA_ENEMY[target]) {
     // 【v1.164】镜像/狂暴变体从"已降分辨率的本体"派生，避免又按原 cvSize 复制一份大图
@@ -23794,9 +23823,30 @@ function paintInkFruit(c2, x, y, s) {
 function paintMesaButte(c2, x, y, bw, bh) {
   // 【v1.177】平顶台地: 左上受光顶面、暗正面、细墨缘。不是灰斑云。
   // 【v1.178】圆顶柔丘+台阶层叠: 缺 PNG 时仍读作夜石台地, 避免硬直角梯形占位。
-  var top, face, mid;
+  // 【v1.179】脚下加软接路/接触影, 不再像悬空深板; 台身造型不动。
+  var top, face, mid, foot;
   c2.lineJoin = "round";
   c2.lineCap = "round";
+  // 接触影: 台脚压在土路上
+  c2.globalAlpha = 0.34;
+  c2.fillStyle = "rgba(8, 12, 22, 0.55)";
+  c2.beginPath();
+  if (typeof c2.ellipse === "function") c2.ellipse(x + bw * 0.50, y + bh * 1.02, bw * 0.42, bh * 0.16, 0, 0, CONFIG.TWO_PI);
+  else c2.arc(x + bw * 0.50, y + bh * 0.98, bw * 0.28, 0, CONFIG.TWO_PI);
+  c2.fill();
+  c2.globalAlpha = 1;
+  // 软接坡: 台身下缘连到路面色
+  foot = c2.createLinearGradient(x, y + bh * 0.72, x + bw * 0.5, y + bh * 1.12);
+  foot.addColorStop(0, "rgba(42, 52, 78, 0.55)");
+  foot.addColorStop(0.55, "rgba(120, 98, 72, 0.38)");
+  foot.addColorStop(1, "rgba(20, 24, 36, 0)");
+  c2.fillStyle = foot;
+  c2.beginPath();
+  c2.moveTo(x + bw * 0.14, y + bh * 0.78);
+  c2.quadraticCurveTo(x + bw * 0.50, y + bh * 0.70, x + bw * 0.86, y + bh * 0.80);
+  c2.quadraticCurveTo(x + bw * 0.78, y + bh * 1.08, x + bw * 0.22, y + bh * 1.10);
+  c2.closePath();
+  c2.fill();
   face = c2.createLinearGradient(x, y + bh * 0.22, x + bw * 0.4, y + bh);
   face.addColorStop(0, "#2a3348");
   face.addColorStop(1, "#12182c");
@@ -23971,7 +24021,7 @@ function paintChapterGround(c2, w, h, mt) {
     c2.lineWidth = 1;
     // 单座远柔丘点缀(左上受光), 不堆多座以免平铺成桶阵
     paintMesaButte(c2, w * 0.62, h * 0.58, w * 0.26, h * 0.11);
-  } else if (kind === "mist") {  } else if (kind === "mist") {
+  } else if (kind === "mist") {
     // 【v1.153】雾泽苇簇 8→5 且整体 0.8 alpha, 路径像星巅一样干净(石章不动)
     // 【v1.160】再静半档: 苇簇 5→4 + alpha 0.8→0.72, 向星巅留白看齐, 苇簇身份保留
     c2.globalAlpha = 0.72;
@@ -24551,6 +24601,110 @@ function drawActorSpr(ctx, spr, x, y, faceLeft, t, moving, extra, dpr, wtx, wty)
   ctx.setTransform(sx * dpr, 0, 0, dpr * sy, dpr * (x + wtx), dpr * (y + wty + bob));
   ctx.drawImage(spr, -spr.half, -spr.half, spr.half * 2, spr.half * 2);
   ctx.setTransform(dpr, 0, 0, dpr, dpr * wtx, dpr * wty);
+}
+
+// 【v1.179】局内主角绘制入口: 命名便于验收。无敌改半透明闪(不再隔帧整只不画),
+//   立绘缺失时仍走程序化 SPRITES.player/hero_*; 环/短条/特效仍在本函数内按原序。
+function drawPlayerInRun(ctx, dpr, wtx, wty) {
+  var inv, blinkSoft, spr, hbA, nrA, nrFill, nrKind, rrA;
+  if (!player.active) return;
+  inv = GAME.time < player.invUntil;
+  blinkSoft = inv && (GAME.frame & 1) === 0;
+  if (blinkSoft) ctx.globalAlpha = 0.52;
+  drawHeroFocusGlow(ctx, player.x, player.y, player.r * heroDrawScale());
+  spr = heroSprite();
+  if (spr && spr.width > 0 && spr.half > 0) {
+    drawActorSpr(ctx, spr, player.x, player.y, player.face < 0, GAME.time, !!player.moving, heroDrawScale(), dpr, wtx, wty);
+  }
+  ctx.globalAlpha = 1;
+  if (GAME.novaRingT > 0 && GAME.novaRingR > 0) {
+    nrA = Math.min(1, GAME.novaRingT / 0.12);
+    nrFill = hazardWarnLive() ? 0.02 : (fxTideQuiet() ? 0.04 : 0.06);
+    nrKind = GAME.novaRingKind || "drop";
+    if (nrKind === "diamond") {
+      ctx.globalAlpha = 0.3 * nrA;
+      ctx.strokeStyle = "#1c1810";
+      ctx.lineWidth = 3.2;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, GAME.novaRingR, 0, CONFIG.TWO_PI);
+      ctx.stroke();
+      ctx.globalAlpha = 0.5 * nrA;
+      ctx.strokeStyle = GAME.novaRingColor || "#4a8a5a";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, Math.max(2, GAME.novaRingR - 2.5), 0, CONFIG.TWO_PI);
+      ctx.stroke();
+    } else {
+      ctx.globalAlpha = 0.22 * nrA;
+      ctx.strokeStyle = GAME.novaRingColor || "#3aa0c8";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, GAME.novaRingR, 0, CONFIG.TWO_PI);
+      ctx.stroke();
+      ctx.globalAlpha = nrFill * nrA;
+      ctx.fillStyle = GAME.novaRingColor || "#3aa0c8";
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, GAME.novaRingR, 0, CONFIG.TWO_PI);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1;
+    drawNovaKindMarks(ctx, player.x, player.y, GAME.novaRingR, nrKind, GAME.novaRingColor, nrA);
+    if (!hazardWarnLive() && nrA > 0.4 && !(GAME.evoToastT > 0) && !fxCrowdQuiet()) {
+      drawFxGlyph(ctx, wpnFxOf(GAME.novaRingKind === "root" ? "rootwell" : (GAME.novaRingKind === "petal" ? "tideshield" : "dewpulse")).glyph,
+        player.x, player.y - GAME.novaRingR * 0.12, "#fff7e0", 16);
+    }
+  }
+  if (GAME.roarRingT > 0 && GAME.roarRingR > 0) {
+    rrA = Math.min(1, GAME.roarRingT / 0.10);
+    ctx.globalAlpha = 0.34 * rrA;
+    ctx.strokeStyle = "#1c1810";
+    ctx.lineWidth = 3.2;
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, GAME.roarRingR, 0, CONFIG.TWO_PI);
+    ctx.stroke();
+    ctx.globalAlpha = 0.55 * rrA;
+    ctx.strokeStyle = GAME.roarRingColor || "#4a8a5a";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, Math.max(2, GAME.roarRingR - 2.5), 0, CONFIG.TWO_PI);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1;
+  }
+  drawCastFx(ctx);
+  drawMuzzle(ctx);
+  ctx.globalAlpha = CONFIG.playerRingAlpha;
+  ctx.strokeStyle = "#1c1810";
+  ctx.lineWidth = CONFIG.playerRingWidth;
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, player.r + CONFIG.playerRingRAdd, 0, CONFIG.TWO_PI);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  if (GAME.heroBriefT > 0) {
+    hbA = Math.min(1, GAME.heroBriefT / 0.4);
+    ctx.save();
+    ctx.globalAlpha = 0.92 * hbA;
+    ctx.fillStyle = "rgba(16,20,14,0.78)";
+    fillRoundRect(ctx, player.x - 54, player.y - player.r - 36, 108, 22, 6);
+    ctx.strokeStyle = heroAccent();
+    ctx.lineWidth = 1.5;
+    strokeRoundRect(ctx, player.x - 54, player.y - player.r - 36, 108, 22, 6);
+    ctx.fillStyle = heroAccent();
+    ctx.font = "bold 13px " + FONT_STACK;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(heroOf().name, player.x, player.y - player.r - 25);
+    ctx.restore();
+  }
+  drawMagnetHalo(ctx);
+  drawGaleMarks(ctx);
+  drawDewArmor(ctx);
+  drawHoardBurst(ctx);
+  drawRootField(ctx);
+  drawSpiceBurst(ctx);
+  drawMistSweep(ctx);
+  drawHearthNest(ctx);
 }
 
 function renderGame() {
@@ -25323,108 +25477,8 @@ function renderGame() {
   }
   // 跟随萌兽: 【v1.84】先画在玩家身后, 特效/剪影不挡主角环; 技能短句仍走 drawPetReadFx
   if (follower.active) drawFollowerWorld(ctx);
-  // 玩家(预渲染贴图; 受击无敌期隔帧闪烁)
-  if (player.active) {
-    var blink = GAME.time < player.invUntil && (GAME.frame & 1) === 0;
-    if (!blink) {
-      // 【v1.167】焦点辉光画在贴图之下（不遮判定）
-      drawHeroFocusGlow(ctx, player.x, player.y, player.r * heroDrawScale());
-      spr = heroSprite();
-      drawActorSpr(ctx, spr, player.x, player.y, player.face < 0, GAME.time, !!player.moving, heroDrawScale(), dpr, wtx, wty);
-    }
-    if (GAME.novaRingT > 0 && GAME.novaRingR > 0) {
-      var nrA = Math.min(1, GAME.novaRingT / 0.12);
-      var nrFill = _hazardLive ? 0.02 : (_fxQuiet ? 0.04 : 0.06);
-      var nrKind = GAME.novaRingKind || "drop";
-      if (nrKind === "diamond") {
-        // 【v1.160】炸弹爆环对齐咆哮环墨+苔双圈: 墨外缘+本色细内环, 无填盘无金闪; 其它 kind 环语言不动
-        ctx.globalAlpha = 0.3 * nrA;
-        ctx.strokeStyle = "#1c1810";
-        ctx.lineWidth = 3.2;
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, GAME.novaRingR, 0, CONFIG.TWO_PI);
-        ctx.stroke();
-        ctx.globalAlpha = 0.5 * nrA;
-        ctx.strokeStyle = GAME.novaRingColor || "#4a8a5a";
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, Math.max(2, GAME.novaRingR - 2.5), 0, CONFIG.TWO_PI);
-        ctx.stroke();
-      } else {
-        ctx.globalAlpha = 0.22 * nrA;
-        ctx.strokeStyle = GAME.novaRingColor || "#3aa0c8";
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, GAME.novaRingR, 0, CONFIG.TWO_PI);
-        ctx.stroke();
-        ctx.globalAlpha = nrFill * nrA;
-        ctx.fillStyle = GAME.novaRingColor || "#3aa0c8";
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, GAME.novaRingR, 0, CONFIG.TWO_PI);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-      ctx.lineWidth = 1;
-      drawNovaKindMarks(ctx, player.x, player.y, GAME.novaRingR, nrKind, GAME.novaRingColor, nrA);
-      if (!_hazardLive && nrA > 0.4 && !(GAME.evoToastT > 0) && !fxCrowdQuiet()) {
-        drawFxGlyph(ctx, wpnFxOf(GAME.novaRingKind === "root" ? "rootwell" : (GAME.novaRingKind === "petal" ? "tideshield" : "dewpulse")).glyph,
-          player.x, player.y - GAME.novaRingR * 0.12, "#fff7e0", 16);
-      }
-    }
-    // 【v1.159】咆哮环: 墨外缘+苔色细内环双圈(对齐技能圆盘苔语), 无填盘无金闪无符号, 寿命更短
-    if (GAME.roarRingT > 0 && GAME.roarRingR > 0) {
-      var rrA = Math.min(1, GAME.roarRingT / 0.10);
-      ctx.globalAlpha = 0.34 * rrA;
-      ctx.strokeStyle = "#1c1810";
-      ctx.lineWidth = 3.2;
-      ctx.beginPath();
-      ctx.arc(player.x, player.y, GAME.roarRingR, 0, CONFIG.TWO_PI);
-      ctx.stroke();
-      ctx.globalAlpha = 0.55 * rrA;
-      ctx.strokeStyle = GAME.roarRingColor || "#4a8a5a";
-      ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      ctx.arc(player.x, player.y, Math.max(2, GAME.roarRingR - 2.5), 0, CONFIG.TWO_PI);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-      ctx.lineWidth = 1;
-    }
-    drawCastFx(ctx);
-    drawMuzzle(ctx);
-    // 【R9】玩家持久标识环: 贴图路径此前零描边(playerRing 仅矢量兜底生效), 且无敌闪烁帧连玩家都不画
-    // -> 混战中"找不到自己"。环不放进 if(!blink): 闪烁帧仍可见; 【v1.47】内环跟角色色, 外细白边不跟地面糊。
-    ctx.globalAlpha = CONFIG.playerRingAlpha;
-    ctx.strokeStyle = "#1c1810";
-    ctx.lineWidth = CONFIG.playerRingWidth;
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, player.r + CONFIG.playerRingRAdd, 0, CONFIG.TWO_PI);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-    if (GAME.heroBriefT > 0) {
-      var hbA = Math.min(1, GAME.heroBriefT / 0.4);
-      ctx.save();
-      ctx.globalAlpha = 0.92 * hbA;
-      ctx.fillStyle = "rgba(16,20,14,0.78)";
-      fillRoundRect(ctx, player.x - 54, player.y - player.r - 36, 108, 22, 6);
-      ctx.strokeStyle = _heroAccent;
-      ctx.lineWidth = 1.5;
-      strokeRoundRect(ctx, player.x - 54, player.y - player.r - 36, 108, 22, 6);
-      ctx.fillStyle = _heroAccent;
-      ctx.font = "bold 13px " + FONT_STACK;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(heroOf().name, player.x, player.y - player.r - 25);
-      ctx.restore();
-    }
-    drawMagnetHalo(ctx);
-    drawGaleMarks(ctx);
-    drawDewArmor(ctx);
-    drawHoardBurst(ctx);
-    drawRootField(ctx);
-    drawSpiceBurst(ctx);
-    drawMistSweep(ctx);
-    drawHearthNest(ctx);
-  }
+  // 【v1.179】局内主角走 drawPlayerInRun(半透明闪+立绘绑定), 不再隔帧整只消失
+  drawPlayerInRun(ctx, dpr, wtx, wty);
   // 弹幕(预渲染贴图, 按 extra.tex 分武器); 【v1.11】自然物剪影按速度旋转, 蜂/石萌脸不转。
   // 【v1.78】尾迹+超武金边+分叉字形, 预警/后段潮汐减密。
   var quietFx = _fxQuiet || _hazardLive;
@@ -31644,8 +31698,10 @@ function makeCodexEnemyCell(idx, x, y, w, h) {
       // 【v1.178】缺贴图时盘内画本色软圆+墨缘兜底, 不留空黑格(不逐帧烘焙)
       drawCodexBeastPlate(ctx, r.x + 10, r.y + 6, 96, 96, def && def.tint);
       spr = codexEnemySprite(entry.id);
-      if (spr && spr.width > 0) ctx.drawImage(spr, r.x + 18, r.y + 10, 80, 88);
-      else {
+      if (spr && spr.width > 0) {
+        // 【v1.179】与跟宠行同走 drawSpriteFit(含 box 裁切), 软墨剪影占满井格可读
+        drawSpriteFit(ctx, spr, r.x + 18, r.y + 10, 80, 88);
+      } else {
         var ex = r.x + 58, ey = r.y + 54, er = 28;
         ctx.fillStyle = silLift((def && def.tint) || grp.tint || "#8a9a6a", 0.55);
         ctx.beginPath();
