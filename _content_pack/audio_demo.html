@@ -50,7 +50,7 @@
 <body>
   <h1>🌿 森灵萌兽 · 音频试听</h1>
   <div class="sub">独立内容包专属原声 · 纯参数化合成 · 双击即听</div>
-  <div class="hint">共 19 条：3 首 BGM（可循环）+ 16 个游戏事件音效</div>
+  <div class="hint">共 22 条：3 首 BGM（可循环）+ 19 个游戏事件音效</div>
   <div class="grid" id="grid"></div>
 
   <footer>萌兽消消岛 · 森灵内容包 · 音频资产（独立命名空间，不改动主游戏文件）<br>全部由 tools/synth_audio.py 纯标准库合成，峰值统一 85%，零削波</footer>
@@ -96,6 +96,12 @@ const TRACKS = [
    desc:'经典双音叮（B5→E6），适用金币 / 得分拾取（配套 fx_coin_burst）。', dur:'0.18s'},
   {key:'cp_sfx_warning', ico:'⚠️', title:'预警 / 警示', loop:false,
    desc:'紧张双音警报（小二度叠置），急促，适用 Boss AoE 地面预警（配套 fx_telegraph）。', dur:'0.44s'},
+  {key:'cp_sfx_freeze', ico:'❄️', title:'冻结 / 碎冰', loop:false,
+   desc:'高频玻璃质碎裂叮 + 冷色下扫 + 霜噪微闪，适用冰冻命中 / 碎冰解控（配套 fx_freeze_shatter）。', dur:'0.34s'},
+  {key:'cp_sfx_buff', ico:'🟢', title:'增益 / 强化', loop:false,
+   desc:'明亮上行大三和弦 + 金光泛音，比治疗更「赋能」，适用攻防增益 / 强化生效（配套 fx_buff）。', dur:'0.54s'},
+  {key:'cp_sfx_debuff', ico:'🟣', title:'减益 / 诅咒', loop:false,
+   desc:'下行阴郁小调 + 低频闷响，适用减速 / 虚弱 / 诅咒生效（配套 fx_debuff）。', dur:'0.70s'},
 ];
 
 const grid = document.getElementById('grid');

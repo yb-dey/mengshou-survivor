@@ -92,6 +92,29 @@
 - **试看页**：`vfx_demo.html`（21 张 base64 内联，深色背景 + CSS 动效，双击即看）。
 - **校验**：21/21 均为 `colorType=6` RGBA；非空白像素占比 8%–64%（锐利型如斩击/星爆稀疏、辉光型饱满），透明区域正确保留；涵盖命中/弹道/护盾/治疗/斩击/星爆/霜/升级/拾取/毒/爆炸/雷/群疗/位移/预警/冲击波/召唤门/金币/冰碎/增益/减益等全机制。
 
+## 2.3 状态图标（本轮新增 · 常驻 HUD 指示）
+
+> 与 §2.2 的「瞬时爆发特效」互补：状态图标是**常驻在角色头顶/角落的 HUD 指示**（debuff/buff/控制），需要清晰可读的徽章轮廓（实心圆盘 + 白色符号），而非柔光。统一 64² 真透底 RGBA，纯程序化生成。
+
+| 文件 | 中文名 | 类别 | 用途 |
+|---|---|---|---|
+| `icons/st_freeze.png` | 冰冻 | 控制 | 冻结 / 定身 |
+| `icons/st_stun.png` | 眩晕 | 控制 | 短时无法行动 |
+| `icons/st_burn.png` | 灼烧 | 持续伤害 | 每秒扣血（火） |
+| `icons/st_poison.png` | 中毒 | 持续伤害 | 每秒扣血（毒） |
+| `icons/st_bleed.png` | 流血 | 持续伤害 | 叠加层数持续掉血 |
+| `icons/st_slow.png` | 减速 | 负面 | 移动 / 攻速下降 |
+| `icons/st_mark.png` | 标记 | 负面 | 受击增伤 / 易伤 |
+| `icons/st_atk_up.png` | 攻击强化 | 增益 | 伤害提升 |
+| `icons/st_def_up.png` | 防御强化 | 增益 | 减伤提升 |
+| `icons/st_haste.png` | 急速 | 增益 | 攻速 / 移速提升 |
+| `icons/st_heal.png` | 持续治疗 | 增益 | 每秒回血 |
+| `icons/st_shield.png` | 护盾 | 增益 | 吸收伤害的护盾 |
+
+- **生成器**：`tools/gen_icons.py`（纯标准库，复用 `gen_vfx.Canvas`；自写 `disc` 徽章底盘 + 12 个 `g_*` 符号函数），`tools/build_icons_demo.py` 产出内联分组展示页。
+- **试看页**：`icons_demo.html`（12 张 base64 内联，按 控制 / 持续伤害 / 负面 / 增益 四组彩色标签分类，双击即看）。
+- **校验**：12/12 均为 `colorType=6` RGBA（64×64），文件体积 1.46KB–2.52KB（实心徽章 + 符号，内容饱满非空白）；与 vfx/ 的 21 个爆发特效共同构成「状态机制」的完整视觉闭环（图标=常驻指示，特效=触发瞬间，音效=听觉反馈）。
+
 ## 3. 目录结构
 
 ```
@@ -104,6 +127,7 @@ _content_pack/
 ├── audio_demo.html        # 音频试听页（引用 audio/*.wav）
 ├── codex.html             # 图鉴页（8 角色 背景/属性/对策 + 元素克制环）
 ├── vfx_demo.html          # VFX 试看页（PNG base64 内联，21 个）
+├── icons_demo.html         # 状态图标试看页（PNG base64 内联，12 个，按类别分组）
 ├── sprites/               # 原始生成图（RGB，未抠）
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
@@ -128,14 +152,18 @@ _content_pack/
 │   └── cp_sfx_debuff.wav  # 减益 / 诅咒（配套 fx_debuff）
 ├── vfx/                   # 程序化特效精灵（RGBA 真透底）
 │   └── fx_*.png（21 个）
+├── icons/                 # 状态图标（RGBA 真透底，常驻 HUD 指示）
+│   └── st_*.png（12 个）
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
     ├── build_index.py     # 生成 index.html（扫描真实目录，零依赖）
     ├── build_manifest.py  # 生成 manifest.json（扫描真实目录，零依赖）
-    ├── synth_audio.py     # 音频合成（3 首 BGM：森林/战斗/BOSS + 16 个游戏事件音效）
+    ├── synth_audio.py     # 音频合成（3 首 BGM：森林/战斗/BOSS + 19 个游戏事件音效）
     ├── gen_vfx.py         # VFX 特效生成（纯标准库）
-    └── build_vfx_demo.py  # 构建 VFX 内联展示页
+    ├── build_vfx_demo.py  # 构建 VFX 内联展示页
+    ├── gen_icons.py       # 状态图标生成（纯标准库，复用 gen_vfx.Canvas）
+    └── build_icons_demo.py# 构建状态图标内联展示页
 ```
 
 ## 4. 接入游戏路径（待主文件释放后）
@@ -167,12 +195,13 @@ _content_pack/
 - 贴图：8/8 生成成功（6 萌兽 + Boss 森林古木 + Hero 灵鹿祭司）；8/8 透底为 RGBA；小兵/宠物 512²、Boss/Hero 1024²；展示页内联校验通过（8 张 `data:image/webp`）。
 - 音频：22/22 合成成功并校验——峰值均 85%（未削波），RMS 13.4%–30.0%（非空非静音）；试听页 `audio_demo.html` 数据驱动网格覆盖全部 22 条（3 BGM + 19 SFX），引用相对路径可双击播放。
 - VFX：21/21 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（21 张 `data:image/png`）。
-- 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、21 VFX（尺寸 / 体积）、19 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
+- 状态图标：12/12 程序化生成成功并校验——均为 `colorType=6` RGBA（64×64），体积 1.46KB–2.52KB（实心徽章 + 白色符号，内容饱满非空白）；按 控制 / 持续伤害 / 负面 / 增益 四组分类，与 21 个 VFX 爆发特效共同构成「状态机制」视觉闭环；试看页 `icons_demo.html` 内联校验通过（12 张 `data:image/png`）。
+- 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、21 VFX（尺寸 / 体积）、12 状态图标（尺寸 / 体积）、22 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张精灵）+ 音乐（3 首 BGM + 19 SFX）+ 特效（21 个 VFX）+ 图鉴（codex）**四支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张精灵）+ 音乐（3 首 BGM + 19 SFX）+ 特效（21 个 VFX）+ 状态图标（12 个）+ 图鉴（codex）**五支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -185,5 +214,6 @@ _content_pack/
 9. ~~**机器可读资产清单 manifest.json**~~ ✅ 已交付 `manifest.json`（tools/build_manifest.py 扫描生成，含贴图尺寸 / 双格式体积、VFX 尺寸、音频格式与时长，零依赖），为 §4 接入步骤提供脚本化索引。
 10. ~~**实战演练场 playground.html**~~ ✅ 已交付 `playground.html`（纯前端，用真实资产搭的迷你战斗场景：点击萌兽触发 fx_hit_spark/fx_slash/fx_star + cp_sfx_hit/kill、击杀播 fx_explosion/fx_coin_burst + cp_sfx_kill/coin/win、可开 cp_bgm_forest 循环；验证内容包「美术+音乐+特效」三支柱可用性，规避死资产）。
 11. ~~**状态机制音画闭环**~~ ✅ 已交付 `cp_sfx_freeze / buff / debuff.wav`（3 条），与 Round-14 的 `fx_freeze_shatter / fx_buff / fx_debuff` 三特效成套；`synth_audio.py` 加 3 合成函数、`audio_demo.html` 加 3 试听卡（共 22 条）、README/manifest 同步；VFX↔SFX 全机制配对补齐。
+12. ~~**状态图标（常驻 HUD 指示）**~~ ✅ 已交付 12 个程序化 RGBA 状态图标（`st_freeze / st_stun / st_burn / st_poison / st_bleed / st_slow / st_mark / st_atk_up / st_def_up / st_haste / st_heal / st_shield`），覆盖 控制 / 持续伤害 / 负面 / 增益 四组；`tools/gen_icons.py`（复用 gen_vfx.Canvas）+ `tools/build_icons_demo.py` 产出分组展示页；与 VFX（触发瞬间）+ SFX（听觉反馈）共同补全「状态机制」的视觉闭环，使内容包从「爆发特效」升级到「持续状态可视化」。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

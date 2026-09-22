@@ -14,6 +14,7 @@ def uniq_keys(folder, exts):
 
 sprites = uniq_keys(os.path.join(ROOT, 'sprites_alpha'), ('.png', '.webp'))
 vfx = uniq_keys(os.path.join(ROOT, 'vfx'), ('.png',))
+icons = uniq_keys(os.path.join(ROOT, 'icons'), ('.png',))
 audio = uniq_keys(os.path.join(ROOT, 'audio'), ('.wav',))
 
 bgm = [k for k in audio if k.startswith('cp_bgm_')]
@@ -39,6 +40,11 @@ BGM_CN = {
 }
 SFX_CN = {
     'cp_sfx_freeze': '冻结碎冰', 'cp_sfx_buff': '增益强化', 'cp_sfx_debuff': '减益诅咒',
+}
+ICON_CN = {
+    'st_freeze': '冰冻', 'st_stun': '眩晕', 'st_burn': '灼烧', 'st_poison': '中毒',
+    'st_bleed': '流血', 'st_slow': '减速', 'st_mark': '标记', 'st_atk_up': '攻击强化',
+    'st_def_up': '防御强化', 'st_haste': '急速', 'st_heal': '持续治疗', 'st_shield': '护盾',
 }
 
 def chips(keys, cn):
@@ -90,6 +96,7 @@ html = f'''<!DOCTYPE html>
   <div class="stats">
     <div class="stat"><b>{len(sprites)}</b><span>角色精灵</span></div>
     <div class="stat"><b>{len(vfx)}</b><span>特效精灵</span></div>
+    <div class="stat"><b>{len(icons)}</b><span>状态图标</span></div>
     <div class="stat"><b>{len(audio)}</b><span>音频（{len(bgm)} BGM + {len(sfx)} SFX）</span></div>
   </div>
   <div class="nav">
@@ -99,6 +106,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="vfx_demo.html" target="_blank">
       <div class="ico">✨</div><div class="t">特效试看</div>
       <div class="d">{len(vfx)} 个程序化 RGBA 特效（真透底），带 CSS 动效。</div></a>
+    <a class="ncard" href="icons_demo.html" target="_blank">
+      <div class="ico">🛡️</div><div class="t">状态图标</div>
+      <div class="d">{len(icons)} 个常驻 HUD 状态指示（控制 / 持续伤害 / 负面 / 增益），真透底。</div></a>
     <a class="ncard" href="audio_demo.html" target="_blank">
       <div class="ico">🎵</div><div class="t">音频试听</div>
       <div class="d">{len(audio)} 条音频（{len(bgm)} BGM 可循环 + {len(sfx)} SFX），单击即听。</div></a>
@@ -111,6 +121,8 @@ html = f'''<!DOCTYPE html>
       {chips(sprites, SPRITE_CN)}</div>
     <div class="blk"><h2>✨ 特效精灵 <small>{len(vfx)} 个</small></h2>
       {chips(vfx, VFX_CN)}</div>
+    <div class="blk"><h2>🛡️ 状态图标 <small>{len(icons)} 个 key</small></h2>
+      {chips(icons, ICON_CN)}</div>
     <div class="blk"><h2>🎵 音频 <small>{len(bgm)} BGM + {len(sfx)} SFX</small></h2>
       {chips(bgm, BGM_CN)}{chips(sfx, SFX_CN)}</div>
     <div class="blk"><h2>📖 图鉴 <small>1 页</small></h2>
