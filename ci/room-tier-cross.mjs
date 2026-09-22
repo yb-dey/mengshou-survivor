@@ -151,7 +151,7 @@ export function audit(srcRaw) {
 }
 
 function selftest() {
-  const HTML = process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
+  const HTML = process.env.GAME_HTML || process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
   const base = fs.readFileSync(HTML, 'utf8');
   const cases = [];
 
@@ -210,7 +210,7 @@ if (isMain) {
   if (process.argv.includes('--selftest')) {
     process.exit(selftest() ? 0 : 1);
   } else {
-    const HTML = process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
+    const HTML = process.env.GAME_HTML || process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
     const r = audit(fs.readFileSync(HTML, 'utf8'));
     console.log(`ci/room-tier-cross.mjs — GATE — ${HTML}`);
     console.log(`DATA_ROOM_TIER ${r.stats.nTier} 档 · 稀有度 ${r.stats.rarityLen} 档 · DATA_FIELD ${r.stats.nField} · 单调轴 ${r.stats.monoChecked} 条 · field 检查 ${r.stats.fieldChecked} · gems 检查 ${r.stats.gemsChecked || 0}`);
