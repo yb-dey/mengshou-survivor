@@ -49,6 +49,13 @@ function tone(out, o) {
 // ---- 逐字复刻游戏 DATA_BGM 中这 4 条的定义 ----
 const DEFS = {
   march: { bpm: 118, beats: 32 },      // 【v1.180】纳入本脚本(第十八类病根修复需重渲)
+  // 【2026-09-22】ridge: 后期章节(岩岩坡/雾雾泽/星星巅)战斗曲。
+  //   背景: DATA_CHAPTER 6 章的 bgmId **全是 march**(表里预留了分曲字段却没用) ⇒ 六章一个调, 打久了单调。
+  //   设计: A 小调五声四句 vs march 的 G 大调五声 —— 同族同源(五声/四句/脉冲鼓骨架一致), 但调式转暗、
+  //   BPM 118→126 更推进, 用于后三章与前三章拉开"世界在变冷"的色差。
+  //   ⚠ 接线待办(需动 HTML, 避开 GROK): DATA_CHAPTER 4/5/6 的 bgmId 改 ridge + CONFIG.audio.bgmTrim 补一条
+  //   + 门禁 bgm-lane-loudness.py 的 TRACK_TRIM 同步补 bgm_ridge。
+  ridge: { bpm: 126, beats: 32 },
   horde: { bpm: 147, beats: 32 },
   abyss: { bpm: 84,  beats: 16 },
   win:   { jingle: true, refSmp: 94500 },
@@ -117,6 +124,32 @@ function renderTrack(tid) {
       if ((k & 1) === 0) tone(out, { wave: "sine", f0: 73.42, t0: k * beat, dur: beat * 0.22, a: 0.004, d: 0.08, s: 0, r: 0.08, gain: 0.11 });
       if (phrase >= 1 && (k & 1)) tone(out, { wave: "triangle", f0: hook * 0.5, t0: k * beat, dur: beat * 1.35, a: 0.02, d: 0.22, s: 0.08, r: 0.4, gain: 0.045 });
       if (phrase >= 2 && (k % 4) === 0) tone(out, { wave: "sine", f0: 196.0, t0: k * beat, dur: beat * 1.6, a: 0.02, d: 0.2, s: 0.08, r: 0.4, gain: 0.032 });
+    }
+
+  } else if (tid === "ridge") {
+    // 【2026-09-22】A 小调五声四句(后期章节): 与 march 同骨架(垫层/钩句/脉冲鼓/八度花/回声),
+    //   只换调式(G大调→A小调)+ 提速(118→126), 保证"同一款音乐的冷色版", 不会像换了一款游戏。
+    const rPad = [220.0, 261.63, 329.63];
+    for (i = 0; i < rPad.length; i++) tone(out, { wave: "triangle", f0: rPad[i], t0: 0, dur: loopSec, a: 0.08, d: 0.4, s: 0.28, r: 0.5, gain: 0.072 });
+    tone(out, { wave: "sine", f0: 110.0, t0: 0, dur: loopSec, a: 0.04, d: 0.3, s: 0.55, r: 0.4, gain: 0.155 });
+    tone(out, { wave: "sine", f0: 164.81, t0: 0, dur: loopSec, a: 0.06, d: 0.4, s: 0.32, r: 0.5, gain: 0.044 });
+    tone(out, { wave: "sine", f0: 329.63, t0: 0, dur: loopSec, a: 0.08, d: 0.45, s: 0.22, r: 0.5, gain: 0.030 });
+    tone(out, { wave: "triangle", f0: 440.0, t0: 0, dur: loopSec, a: 0.10, d: 0.5, s: 0.16, r: 0.55, gain: 0.019 });
+    const rHookA = [440.0, 523.25, 587.33, 659.25, 587.33, 523.25, 440.0, 329.63];
+    const rHookB = [523.25, 440.0, 329.63, 261.63, 329.63, 440.0, 523.25, 587.33];
+    const rHookC = [587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 440.0, 329.63];
+    const rHookD = [329.63, 440.0, 523.25, 587.33, 659.25, 587.33, 523.25, 440.0];
+    const rShape = [0.88, 0.94, 1.0, 1.04, 1.0, 0.96, 0.92, 0.72];
+    for (k = 0; k < def.beats; k++) {
+      const phrase = (k / 8) | 0;
+      const hook = phrase === 0 ? rHookA[k % 8] : (phrase === 1 ? rHookB[k % 8] : (phrase === 2 ? rHookC[k % 8] : rHookD[k % 8]));
+      const gHook = phrase === 0 ? 0.24 : (phrase === 1 ? 0.32 : (phrase === 2 ? 0.30 : 0.40));
+      const rCad = (k & 7) === 7;
+      tone(out, { wave: "triangle", f0: hook, t0: k * beat, dur: rCad ? beat * 0.62 : beat * 0.92, a: 0.016, d: 0.2, s: 0.1, r: 0.32, gain: gHook * rShape[k & 7] });
+      if (!rCad) tone(out, { wave: "sine", f0: hook * 2, t0: k * beat, dur: beat * 0.45, a: 0.008, d: 0.12, s: 0, r: 0.18, gain: phrase < 2 ? 0.040 : 0.066 });
+      if ((k & 1) === 0) tone(out, { wave: "sine", f0: 82.41, t0: k * beat, dur: beat * 0.22, a: 0.004, d: 0.08, s: 0, r: 0.08, gain: 0.105 });
+      if (phrase >= 1 && (k & 1)) tone(out, { wave: "triangle", f0: hook * 0.5, t0: k * beat, dur: beat * 1.35, a: 0.02, d: 0.22, s: 0.08, r: 0.4, gain: 0.043 });
+      if (phrase >= 2 && (k % 4) === 0) tone(out, { wave: "sine", f0: 220.0, t0: k * beat, dur: beat * 1.6, a: 0.02, d: 0.2, s: 0.08, r: 0.4, gain: 0.031 });
     }
 
   } else if (tid === "abyss") {
@@ -217,7 +250,11 @@ console.log(`模式: ${APPLY ? 'APPLY' : 'DRY-RUN'}  →  ${outDir}`);
 console.log('| 轨道 | 时长s | 峰值 | 接缝(xP95) | RMS | 输出 |');
 console.log('|---|---|---|---|---|---|');
 const results = {};
-for (const tid of ['march', 'horde', 'abyss', 'win', 'lose']) {
+// 【2026-09-22】支持"只渲指定曲目": node ci/render-missing-bgm.mjs ridge --apply
+//   （默认全渲会覆盖既有 wav；曾因回退过 abyss，必须能单曲重渲而不动其它）
+const _only = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+const RENDER_LIST = _only.length ? _only : ['march', 'horde', 'abyss', 'win', 'lose', 'ridge'];
+for (const tid of RENDER_LIST) {
   const { out, jingle } = renderTrack(tid);
   const rawPeak = normalize(out);
   tailFade(out);
