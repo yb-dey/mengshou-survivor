@@ -25,7 +25,8 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.186 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.187 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.187 美术】开局奶油径向擦入 drawEntranceWipe(≤0.42s, 跳过钮/空格同收, 不另加输入锁); 擦入结束脚下 2–3 墨点 drawEntranceDust; 叠层早波(≥2 只交叠)仅先画的那只换 stackInk(正交约 +1px 外墨, 填体 α≥0.92); 仓库行卡 vaultRowChrome 锁定闷填/可打造 2px 软墨, 斑马奶油再静; 睡莲垫下台唇再清一档; SFX_START 软 notch。1.186 脚环/辉光/xN/名牌/鸡腿/强化去金保持。数值/掉落/进化/10 分钟轴不动。
 // 【v1.186 美术】脚环/焦点辉光再静(playerRingAlpha≤0.2, heroGlowAlpha≤0.035); 连击 xN 改软墨小标(drawSoftComboBadge); 头顶名牌细墨少黄; 鸡腿世界脉冲更细更淡; 永久强化花费钮/路径格去金霓虹改苔奶油; 升级卡锁定改苔墨缘; SFX_LEVELUP 软 notch。早波实心/风纹/咆哮/仓库 crumb 保持 1.185。数值/掉落/进化/10 分钟轴不动。
 // 【v1.185 美术】早波杂兵填体 alpha≥0.92(solidifyEarlyTrashAlpha)+PLAYING vignette 改边框不压中场, 奶油/灰/橙/绿再可指名; 星巅远脊 quiet wind-grain(paintStarRidge); 「咆哮」skill 圆盘外墨收静+苔橄榄填; 珠拾取薄 UL 受光抬一档(无鸡腿橙晕); 仓库兑换 strip 短获取 crumb; SFX_FIRE 软 notch。命中墨星/击杀 puff 尺寸保持 1.184。1.175–1.184 大厅草簇/选章获取条/苔碗/脚环/怎么玩/粉彩杂兵/咆哮/HP 同步保留。数值/掉落/进化/10 分钟轴不动。
 // 【v1.184 美术】大厅奶油地板草簇加密+台下软土路纹(备案 HALL); 命中四尖墨星抬到手机可读(~12px/0.22s); 击杀软墨点多留 ~0.05s; 鸡腿/珠世界辉光收薄减橙晕; PLAYING 静边 vignette 托英雄; 选章入袋→现在→下一步获取条+卡外墨抬; SFX_CHEST 软 notch。1.175–1.183 睡莲垫/苔碗/脚环/怎么玩/粉彩杂兵/咆哮/HP 同步保留。数值/掉落/进化/10 分钟轴不动。
@@ -616,7 +617,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.186",                   // 【v1.186】脚环/辉光再静; xN 软墨; 名牌少黄; 鸡腿脉冲收; 强化页去亮; 升级卡苔缘; SFX_LEVELUP 软。实心杂兵/风纹/咆哮保持 1.185。不改掉率/价格/锻造/进化/10 分钟轴
+  version: "1.187",                   // 【v1.187】奶油擦入; 叠层早波外墨; 仓库行对比; 台唇; SFX_START 软。1.186 脚环/辉光/xN/名牌/鸡腿/强化去金保持。不改掉率/价格/锻造/进化/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -834,6 +835,7 @@ var CONFIG = {
   hallThemeQuickSec: 0.12,       // 【v1.37】减动/点已选时短确认
   hallThemeToastSec: 2.6,        // 【v1.37】「出战地面」横幅秒(够读完扫过)
   hallThemePopSec: 0.42,         // 【v1.37】选中地图卡回弹秒
+  entranceWipeSec: 0.42,            // 【v1.187】开局奶油擦入上限 ≤0.45s, 纯表现; 减动再收到 0.20s
   enterCineFirstSec: 1.72,         // 【v1.74】首次进章过场秒(够扫章名+地貌+一句碎刀子, 仍可跳过)
   enterCineRepeatSec: 0.88,        // 【v1.62】重复进同一章更短
   enterCineRoomFirstSec: 1.22,     // 【v1.62】首次进该档房
@@ -3615,6 +3617,108 @@ function drawLoreEmber(ctx, x, y, s) {
 function enterCineLive() {
   return !!(GAME.enterCine && GAME.enterCine.t > 0);
 }
+function armEntranceWipe() {
+  // 【v1.187】开局奶油擦入。不暂停战斗、不吞点击; 章卡跳过会把剩余擦入一起收掉。
+  var dur = GAME.reduceMotion ? 0.20 : (CONFIG.entranceWipeSec || 0.42);
+  if (dur > 0.45) dur = 0.45;
+  if (dur < 0) dur = 0;
+  GAME.entranceWipeDur = dur;
+  GAME.entranceWipeT = dur;
+  GAME.entranceDust = null;
+}
+function armEntranceDust() {
+  var dots;
+  if (GAME.entranceDust) return;
+  dots = [
+    { ox: -12, oy: 10, vx: -18, vy: -12, r: 2.3 },
+    { ox: 1, oy: 14, vx: 5, vy: -16, r: 1.6 },
+    { ox: 13, oy: 9, vx: 16, vy: -9, r: 2.0 }
+  ];
+  GAME.entranceDust = { hold: true, t: 0, life: 0.34, n: GAME.reduceMotion ? 2 : 3, dots: dots };
+}
+function endEntranceWipe() {
+  if (!(GAME.entranceWipeT > 0)) return;
+  GAME.entranceWipeT = 0;
+  armEntranceDust();
+}
+function updateEntranceWipe(rawDt) {
+  var d;
+  if (!GAME || GAME.state !== GAME.flow.PLAYING) {
+    if (GAME) { GAME.entranceWipeT = 0; GAME.entranceDust = null; }
+    return;
+  }
+  if (GAME.entranceWipeT > 0) {
+    GAME.entranceWipeT -= rawDt;
+    if (GAME.entranceWipeT <= 0) {
+      GAME.entranceWipeT = 0;
+      armEntranceDust();
+    }
+  }
+  d = GAME.entranceDust;
+  if (!d) return;
+  if (enterCineLive()) return;
+  d.hold = false;
+  d.t += rawDt;
+  if (d.t >= d.life) GAME.entranceDust = null;
+}
+function drawEntranceWipe(ctx) {
+  var dur, u, px, py, maxR, r, edge;
+  if (!(GAME.entranceWipeT > 0) || GAME.state !== GAME.flow.PLAYING) return;
+  dur = GAME.entranceWipeDur || CONFIG.entranceWipeSec || 0.42;
+  if (dur < 0.001) dur = 0.001;
+  u = 1 - GAME.entranceWipeT / dur;
+  if (u < 0) u = 0;
+  if (u > 1) u = 1;
+  px = player.x - (GAME.cam ? GAME.cam.x : 0);
+  py = player.y - (GAME.cam ? GAME.cam.y : 0) + (player.r || 14) * 0.45;
+  if (!isFinite(px)) px = CONFIG.viewW * 0.5;
+  if (!isFinite(py)) py = CONFIG.viewH * 0.55;
+  ctx.save();
+  if (GAME.reduceMotion) {
+    ctx.globalAlpha = 0.90 * (1 - u);
+    ctx.fillStyle = "#f4ead4";
+    ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
+    ctx.restore();
+    return;
+  }
+  maxR = Math.sqrt(CONFIG.viewW * CONFIG.viewW + CONFIG.viewH * CONFIG.viewH) * 0.62;
+  r = 40 + (maxR - 40) * (u * (2 - u));
+  ctx.beginPath();
+  ctx.rect(0, 0, CONFIG.viewW, CONFIG.viewH);
+  ctx.moveTo(px + r, py);
+  ctx.arc(px, py, r, 0, CONFIG.TWO_PI, true);
+  ctx.fillStyle = "rgba(244, 234, 212, 0.94)";
+  ctx.fill("evenodd");
+  edge = 0.62 * (1 - u * 0.8);
+  ctx.strokeStyle = "rgba(42, 58, 24, " + edge + ")";
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.arc(px, py, r, 0, CONFIG.TWO_PI);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(255, 250, 236, " + (0.40 * (1 - u)) + ")";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.arc(px, py, Math.max(6, r - 3.5), 0, CONFIG.TWO_PI);
+  ctx.stroke();
+  ctx.restore();
+}
+function drawEntranceDust(ctx) {
+  var d, i, dot, u, a, x, y, k;
+  d = GAME.entranceDust;
+  if (!d || d.hold || enterCineLive() || GAME.state !== GAME.flow.PLAYING) return;
+  u = d.life > 0 ? d.t / d.life : 1;
+  if (u < 0) u = 0;
+  if (u > 1) u = 1;
+  a = u < 0.18 ? (u / 0.18) : (1 - (u - 0.18) / 0.82);
+  if (a <= 0.02) return;
+  for (i = 0; i < d.n; i++) {
+    dot = d.dots[i];
+    k = d.t;
+    x = player.x + dot.ox + dot.vx * k;
+    y = player.y + (player.r || 14) * 0.85 + dot.oy + dot.vy * k + 22 * k * k;
+    drawInkPuff(ctx, x, y, dot.r * (1 + u * 0.35), dot.r * 0.7, "#2a3818", 0.78 * a);
+  }
+}
 function enterCineDurOf(kind, key) {
   var seen = GAME.enterSeen || (GAME.enterSeen = {});
   var first = !seen[key];
@@ -3718,6 +3822,7 @@ function skipEnterCine() {
   if (!enterCineLive()) return false;
   GAME.enterCine.skipped = true;
   GAME.enterCine.t = 0;
+  endEntranceWipe();                 // 【v1.187】跳过章卡同时收掉奶油擦入
   Audio.play("select");
   finishEnterCine();
   if (typeof Audio !== "undefined" && Audio.syncDuck) Audio.syncDuck(false);
@@ -12157,9 +12262,10 @@ var Audio = {
       this._tone(out, sr, { wave: "sine", f0: 1175, t0: 0.018, dur: 0.055, a: 0.003, d: 0.03, s: 0, r: 0.022, gain: 0.22 });
     } else if (id === "SFX_START") { len = 0.38; out = this._alloc(len, sr);
       // 【v1.183】开局 notch 再软一档: 起音略缓、顶层增益收淡, 仍可爱; 音高/时长/性格不动
-      this._tone(out, sr, { wave: "triangle", f0: 392.0, t0: 0, dur: 0.18, a: 0.006, d: 0.08, s: 0.14, r: 0.08, gain: 0.84 });
-      this._tone(out, sr, { wave: "sine", f0: 523.25, t0: 0.08, dur: 0.22, a: 0.005, d: 0.1, s: 0.16, r: 0.1, gain: 0.92 });
-      this._tone(out, sr, { wave: "triangle", f0: 659.26, t0: 0.16, dur: 0.22, a: 0.005, d: 0.08, s: 0.10, r: 0.12, gain: 0.58 });
+      // 【v1.187】擦入伴音再软一档: 起音 6/5→12/10ms, 顶层 659Hz 0.58→0.46, 中层 0.92→0.84; 三音/0.38s/性格不动
+      this._tone(out, sr, { wave: "triangle", f0: 392.0, t0: 0, dur: 0.18, a: 0.012, d: 0.08, s: 0.14, r: 0.08, gain: 0.80 });
+      this._tone(out, sr, { wave: "sine", f0: 523.25, t0: 0.08, dur: 0.22, a: 0.010, d: 0.1, s: 0.16, r: 0.1, gain: 0.84 });
+      this._tone(out, sr, { wave: "triangle", f0: 659.26, t0: 0.16, dur: 0.22, a: 0.010, d: 0.08, s: 0.10, r: 0.12, gain: 0.46 });
     } else if (id === "SFX_BOSS_WARN") { len = 0.8; out = this._alloc(len, sr);
       // 三短一长脉冲(四段包络); 【v1.158】起音 5→13ms+各段增益收一档, 预警不喊仍清; 节奏/音高/时长不动
       this._tone(out, sr, { wave: "triangle", f0: 392, t0: 0,    dur: 0.10, a: 0.013, d: 0.08, s: 0, r: 0.03, gain: 0.88 });
@@ -12884,6 +12990,13 @@ var Audio = {
       //     导致"声明更响的实测更轻"(rho=0.491)。修好后 19 条 SFX 峰值统一 (ls: 0.7000)。
       //   ⚠ 不要在任何离线渲染脚本里按 id 缩放 —— 层级只在这里乘一次。
       g.gain.value = CONFIG.audio.gains[sid] * gainMul;
+      // 【v1.187】SFX_START 软 notch 也盖住已加载的 wav: 12ms 从半增益爬到同一峰值, 不改总线 gain
+      if (sid === "SFX_START") {
+        var tS = this.ctx.currentTime + (delay || 0);
+        var gEnd = g.gain.value;
+        g.gain.setValueAtTime(gEnd * 0.5, tS);
+        g.gain.linearRampToValueAtTime(gEnd, tS + 0.012);
+      }
       src.connect(g);
       if (!this.sfxGain) this._initSfxGain();
       if (this.sfxGain) g.connect(this.sfxGain); else if (this.master) g.connect(this.master); else g.connect(this.ctx.destination);
@@ -16530,8 +16643,9 @@ function preloadAiArt() {
     img.src = AI_ART_TABLE[key];
   });
 }
-function bakeOuterInk(cv, px) {
+function bakeOuterInk(cv, px, cardinalOnly) {
   // 【v1.177】叠怪外墨: 用剪影 alpha 扩一圈纯墨, 原图像素原样盖回。不模糊、不改填色。
+  // 【v1.187】cardinalOnly 时只扩上下左右, 叠层加墨停在正好约 1px, 对角不再多出去。
   var w, h, src, mask, m, c, dirs, i;
   if (!cv || !(px >= 1)) return cv;
   w = cv.width;
@@ -16551,7 +16665,9 @@ function bakeOuterInk(cv, px) {
   c = cv.getContext("2d");
   c.setTransform(1, 0, 0, 1, 0, 0);
   c.clearRect(0, 0, w, h);
-  dirs = [[px, 0], [-px, 0], [0, px], [0, -px], [px, px], [-px, px], [px, -px], [-px, -px]];
+  dirs = cardinalOnly
+    ? [[px, 0], [-px, 0], [0, px], [0, -px]]
+    : [[px, 0], [-px, 0], [0, px], [0, -px], [px, px], [-px, px], [px, -px], [-px, -px]];
   for (i = 0; i < dirs.length; i++) c.drawImage(mask, dirs[i][0], dirs[i][1]);
   c.drawImage(src, 0, 0);
   return cv;
@@ -16573,6 +16689,60 @@ function solidifyEarlyTrashAlpha(cv) {
     c2.putImageData(data, 0, 0);
   } catch (e) { /* 跨域/stub 忽略 */ }
   return cv;
+}
+function attachEarlyTrashStackInk(cv) {
+  // 【v1.187】叠层变体: 在已实心的早波贴图上再扩约 1 世界 px 正交外墨(cardinal, 对角不额外鼓出)。
+  //   px = 画布宽 / (half*2), 夹在 1.2–3.4 canvas px。只在绘制顺序里被后一只盖住时换上;
+  //   常态贴图线宽不动, 填体再走 solidify 保持 α≥0.92。
+  var copy;
+  if (!cv || !(cv.width > 0)) return cv;
+  copy = document.createElement("canvas");
+  copy.width = cv.width;
+  copy.height = cv.height;
+  copy.getContext("2d").drawImage(cv, 0, 0);
+  // 显示宽度 = half*2 世界像素, 画布宽 = cv.width → 1 世界 px 对应的画布像素
+  var half = cv.half || 16;
+  var px = cv.width / (half * 2);
+  if (px < 1.2) px = 1.2;
+  if (px > 3.4) px = 3.4;
+  bakeOuterInk(copy, px, true);
+  solidifyEarlyTrashAlpha(copy);
+  copy.half = cv.half;
+  if (cv.box) copy.box = { x: cv.box.x, y: cv.box.y, w: cv.box.w, h: cv.box.h };
+  cv.stackInk = copy;
+  return cv;
+}
+function earlyTrashOverlapR(e) {
+  var spr, half, sc;
+  spr = e && SPRITES[e.type];
+  if (!spr && e && DATA_ENEMY[e.type] && DATA_ENEMY[e.type].skin) spr = SPRITES[DATA_ENEMY[e.type].skin];
+  half = (spr && spr.half) ? spr.half : ((e && e.r) || 12) * 2.6;
+  sc = (typeof unitDrawScale === "function") ? unitDrawScale(e) : (CONFIG.trashDrawScale || 1.1);
+  return half * sc * 0.50;
+}
+function markStackedEarlyTrash() {
+  // 【v1.187】只给绘制顺序更早、且与后一只早波交叠的杂兵打标。后画的那只保持原外墨。
+  var i, j, a, b, dx, dy, ra, rb, rr, n;
+  n = enemyTotal | 0;
+  for (i = 0; i < n; i++) if (enemyPool[i]) enemyPool[i]._stackInk = 0;
+  for (i = 0; i < n; i++) {
+    a = enemyPool[i];
+    if (!a || !a.active || !isEarlyTrashId(a.type)) continue;
+    ra = earlyTrashOverlapR(a);
+    for (j = i + 1; j < n; j++) {
+      b = enemyPool[j];
+      if (!b || !b.active || !isEarlyTrashId(b.type)) continue;
+      rb = earlyTrashOverlapR(b);
+      dx = a.x - b.x;
+      dy = a.y - b.y;
+      rr = ra + rb;
+      if (dx * dx + dy * dy < rr * rr) { a._stackInk = 1; break; }
+    }
+  }
+}
+function earlyTrashDrawSprite(e, spr) {
+  if (e && e._stackInk && spr && spr.stackInk) return spr.stackInk;
+  return spr;
 }
 // 【v1.182】早波命名色杂兵: 强制 procedural 奶油/灰/橙/绿填体, 跳过近黑 AI 贴图
 function isEarlyTrashId(id) {
@@ -16658,7 +16828,9 @@ function makeEnemySprite(r, color, id) {
   } else {
     bakeOuterInk(cv, Math.max(6, Math.round(scale * 3.0)));
   }
-  return cacheSpriteBox(cv);
+  cv = cacheSpriteBox(cv);
+  if (isEarlyTrashId(idBase)) attachEarlyTrashStackInk(cv);
+  return cv;
 }
 function cacheSpriteBox(cv) {
   // 【v1.144】烘焙后记下不透明包围盒, 大厅卡/舞台按盒裁, 局内仍走 half
@@ -24553,7 +24725,8 @@ function drawHallStageAccent(ctx) {
   var i, clumps, mx, my, mr, gx, gy;
   ctx.save();
   // 路唇软椭圆影
-  ctx.fillStyle = "rgba(168, 120, 78, 0.48)";
+  // 【v1.187】台唇再清一档, 睡莲垫下能读出正面
+  ctx.fillStyle = "rgba(168, 120, 78, 0.60)";
   ctx.beginPath();
   if (typeof ctx.ellipse === "function") ctx.ellipse(360, 334, 208, 22, 0, 0, CONFIG.TWO_PI);
   else ctx.arc(360, 334, 116, 0, CONFIG.TWO_PI);
@@ -24584,13 +24757,13 @@ function drawHallStageAccent(ctx) {
     ctx.fill();
   }
   ctx.strokeStyle = "#2a3818";
-  ctx.lineWidth = 2.8;
+  ctx.lineWidth = 3.15;
   ctx.beginPath();
   if (typeof ctx.ellipse === "function") ctx.ellipse(360, 334, 208, 22, 0, 0, CONFIG.TWO_PI);
   else ctx.arc(360, 334, 116, 0, CONFIG.TWO_PI);
   ctx.stroke();
-  ctx.strokeStyle = "rgba(244,248,228,0.72)";
-  ctx.lineWidth = 2.0;
+  ctx.strokeStyle = "rgba(244,248,228,0.86)";
+  ctx.lineWidth = 2.25;
   ctx.beginPath();
   if (typeof ctx.ellipse === "function") ctx.ellipse(348, 322, 150, 10, 0, Math.PI * 1.15, Math.PI * 1.75);
   else ctx.arc(348, 322, 86, Math.PI * 1.15, Math.PI * 1.75);
@@ -25030,6 +25203,7 @@ function drawEarlyTrashSolidPass(ctx, dpr, wtx, wty, camX, camY) {
     spr = SPRITES[e.type];
     if (!spr && edraw && edraw.skin) spr = SPRITES[edraw.skin];
     if (!spr) continue;
+    spr = earlyTrashDrawSprite(e, spr);
     tid = String(e.type || "").replace(/_hit$/, "");
     uScale = unitDrawScale(e);
     // 只重画立绘本体(不叠脚影), 与主循环 bob/squash 同式对齐
@@ -25701,6 +25875,7 @@ function renderGame() {
   // 步骤14a: AI 贴图替换; R4 性能③: 朝向翻转优先取预渲染镜像贴图直接 drawImage,
   // 免逐帧负 scale setTransform 往返; 镜像缺失时回退负 scale 绘制(规格 5.2, 禁 save/restore)。
   var i, e, spr;
+  markStackedEarlyTrash();   // 【v1.187】本帧叠层早波打标, 实心重绘同用
   var cm = CONFIG.cullMargin + (GAME.shakeT > 0 ? GAME.shakeAmp : 0);   // 震动时剔除边界外扩 shakeAmp 防露边(R1)
   var vx0 = camX - cm, vy0 = camY - cm, vx1 = camX + CONFIG.viewW + cm, vy1 = camY + CONFIG.viewH + cm;
   for (i = 0; i < enemyTotal; i++) {
@@ -25716,6 +25891,7 @@ function renderGame() {
     // 【v1.165】受击帧切换: 同样走**预渲染贴图**（非逐帧绘制/染色），符合 R2 的"禁逐帧"口径。
     //   与 _enraged 互斥（狂暴期优先，保持 BOSS 表现语义）；无该帧的敌人自动回落本体。
     if (!isEnr && e.staggerT > 0 && SPRITES[e.type + "_hit"]) spr = SPRITES[e.type + "_hit"];
+    spr = earlyTrashDrawSprite(e, spr);
     var visY = e.y, hopU = 0, burrowDig = edraw && edraw.ai === "burrow" && e.aiPhase === 2;
     var uKind = unitReadKind(e);
     var uScale = unitDrawScale(e);
@@ -26049,6 +26225,7 @@ function renderGame() {
   // 粒子层(有效上限随画质档; 【v1.81】按色合并绘制, 只扫 used 槽)
   drawParticles(ctx);
   drawKillFx(ctx);
+  drawEntranceDust(ctx);   // 【v1.187】擦入收束后的脚下墨点, 世界坐标
   drawHazardReadOverlay(ctx);
   // 飘字(0-9 数字图集拼图, 禁每帧 fillText; R1: 高伤走橙色 1.3x 大图集)
   // v2.0 R1: 飘字坐标本就是世界坐标(击杀/受击位置), 世界变换下自动随镜头滚动【V2R1】
@@ -26595,6 +26772,7 @@ function renderGame() {
     ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
     ctx.globalAlpha = 1;
   }
+  drawEntranceWipe(ctx);   // 【v1.187】奶油擦入画在章卡之下, 跳过钮仍可点
   drawEnterCine(ctx);
 }
 
@@ -27329,12 +27507,13 @@ function drawHomeBase(ctx) {
   //   近缘一整圈深苔当台身, 左上受光盘只盖上半, 卡沿前留下一截深色正面。墨线勾外轮廓。不改英雄贴图。
   // 【v1.176】暗唇收成台缘: 近缘改苔褐而不是近黑椭圆, 读成立体垫唇而不是脚下黑洞。左上受光保留。
   // 【v1.183】睡莲垫: ~3px 外墨 + 叶脉左上受光 + 软椭圆影, 备案 HALL 成品感
-  ctx.fillStyle = "rgba(42, 52, 28, 0.28)";
+  // 【v1.187】垫下暗唇再清一档, 外墨仍约 3px
+  ctx.fillStyle = "rgba(42, 52, 28, 0.42)";
   ctx.beginPath();
   if (typeof ctx.ellipse === "function") ctx.ellipse(368, 348, 178, 16, 0, 0, CONFIG.TWO_PI);
   else ctx.arc(368, 348, 92, 0, CONFIG.TWO_PI);
   ctx.fill();
-  ctx.fillStyle = "rgba(58, 70, 38, 0.34)";
+  ctx.fillStyle = "rgba(58, 70, 38, 0.50)";
   ctx.beginPath();
   if (typeof ctx.ellipse === "function") ctx.ellipse(372, 340, 170, 12, 0, 0, CONFIG.TWO_PI);
   else ctx.arc(372, 340, 84, 0, CONFIG.TWO_PI);
@@ -27388,8 +27567,8 @@ function drawHomeBase(ctx) {
     ctx.fill();
   }
   // 近缘苔唇亮带: 台身与卡托之间留一截可读正面, 不再整块暗死
-  ctx.strokeStyle = "rgba(200, 236, 200, 0.44)";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgba(200, 236, 200, 0.62)";
+  ctx.lineWidth = 2.4;
   ctx.beginPath();
   if (typeof ctx.ellipse === "function") ctx.ellipse(360, 298, 148, 22, 0, Math.PI * 0.12, Math.PI * 0.88);
   else ctx.arc(360, 298, 90, Math.PI * 0.12, Math.PI * 0.88);
@@ -31714,12 +31893,47 @@ function petUnlockStep(d) {
   if (getCombatPetId() === d.id) return "已解锁 · 协战中 · 下局带着出";
   return "已解锁 · 点右边设为协战";
 }
+function vaultRowChrome(i, mode) {
+  // 【v1.187】斑马奶油只差一档, 卡墨抬起来。可打造/焦点/待确认 2px 软墨; 锁定填色闷一档。
+  var odd = (i & 1) === 1;
+  var fill, stroke, lw;
+  if (mode === "locked") {
+    fill = odd ? "rgba(176, 172, 156, 0.20)" : "rgba(154, 150, 134, 0.34)";
+    stroke = "rgba(74, 82, 64, 0.40)";
+    lw = 1.35;
+  } else if (mode === "focusLock") {
+    fill = odd ? "rgba(186, 182, 166, 0.28)" : "rgba(168, 164, 148, 0.40)";
+    stroke = "rgba(36, 52, 24, 0.78)";
+    lw = 2;
+  } else if (mode === "armed") {
+    fill = odd ? "rgba(220, 232, 196, 0.88)" : "rgba(210, 228, 186, 0.96)";
+    stroke = "rgba(36, 52, 24, 0.86)";
+    lw = 2;
+  } else if (mode === "focus") {
+    fill = odd ? "rgba(226, 236, 204, 0.86)" : "rgba(214, 232, 190, 0.96)";
+    stroke = "rgba(36, 52, 24, 0.84)";
+    lw = 2;
+  } else if (mode === "craft") {
+    fill = odd ? "rgba(248, 244, 228, 0.78)" : "rgba(255, 250, 236, 0.94)";
+    stroke = "rgba(36, 52, 24, 0.80)";
+    lw = 2;
+  } else if (mode === "maxed") {
+    fill = odd ? "rgba(232, 236, 214, 0.52)" : "rgba(236, 240, 220, 0.70)";
+    stroke = "rgba(42, 58, 24, 0.62)";
+    lw = 1.7;
+  } else {
+    fill = odd ? "rgba(236, 226, 206, 0.40)" : "rgba(240, 230, 210, 0.55)";
+    stroke = "rgba(140, 56, 40, 0.68)";
+    lw = 1.6;
+  }
+  return { fill: fill, stroke: stroke, lw: lw };
+}
 function drawVaultPanel(ctx, m) {
   var c = CONFIG.colors;
   var lay = vaultPanelMetrics();
   var py = lay.py;
   var tab = GAME.hallVaultTab === "talent" ? "talent" : "craft";
-  var deal, i, rec, v, rowY, sel, armed, coins, marks, chip, fill, stroke, hint, hintCol;
+  var deal, i, rec, v, rowY, sel, armed, coins, marks, chip, fill, stroke, hint, hintCol, rowMode, chrome;
   coins = (saveData.coins | 0);
   marks = (saveData.forgeMarks | 0);
   refreshHallUnlocks();
@@ -31767,16 +31981,21 @@ function drawVaultPanel(ctx, m) {
       sel = GAME.hallVaultSel === rec.id;
       armed = vaultIsArmed("craft", rec.id);
       chip = vaultCraftChip(v, armed);
-      // 【v1.156】行卡收细墨: 选中/待确认 2px, 其余 1.5px; 已入仓金框改淡墨框, 锁定灰墨更淡
-      if (armed) fill = "rgba(184,106,16,0.14)";
-      else if (sel) fill = "rgba(46,139,71,0.12)";
-      else if (v.locked) fill = "rgba(16,20,14,0.06)";
-      else fill = "rgba(16,20,14,0.05)";
-      stroke = armed ? "#b86a10" : (v.ok ? "#2e8b47" : (v.locked ? "rgba(90,98,84,0.55)" : (v.maxed ? "rgba(42,58,24,0.45)" : "#c0392b")));
+      // 【v1.187】行卡: 锁定闷填, 可打造/焦点 2px 软墨; 奇偶奶油只差一档
+      if (armed) rowMode = "armed";
+      else if (sel && v.locked) rowMode = "focusLock";
+      else if (sel) rowMode = "focus";
+      else if (v.locked) rowMode = "locked";
+      else if (v.ok) rowMode = "craft";
+      else if (v.maxed) rowMode = "maxed";
+      else rowMode = "short";
+      chrome = vaultRowChrome(i, rowMode);
+      fill = chrome.fill;
+      stroke = chrome.stroke;
       ctx.fillStyle = fill;
       fillRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
       ctx.strokeStyle = stroke;
-      ctx.lineWidth = sel || armed ? 2 : 1.5;
+      ctx.lineWidth = chrome.lw;
       strokeRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
       ctx.lineWidth = 1;
       // 【v1.156】图标井改苔纸+细墨框(对齐强化面板图标盘), 不再裸绿晕
@@ -31808,15 +32027,19 @@ function drawVaultPanel(ctx, m) {
       sel = GAME.hallVaultSel === rec.id;
       armed = vaultIsArmed("talent", rec.id);
       chip = vaultTalentChip(v, armed);
-      // 【v1.156】天赋行同打造行: 细墨框+淡填充, 满级金框改淡墨框
-      if (armed) fill = "rgba(184,106,16,0.14)";
-      else if (sel) fill = "rgba(46,139,71,0.12)";
-      else fill = "rgba(16,20,14,0.05)";
-      stroke = armed ? "#b86a10" : (v.canBuy ? "#2e8b47" : (v.maxed ? "rgba(42,58,24,0.45)" : "#c0392b"));
+      // 【v1.187】天赋行与打造行同一套卡墨
+      if (armed) rowMode = "armed";
+      else if (sel) rowMode = "focus";
+      else if (v.canBuy) rowMode = "craft";
+      else if (v.maxed) rowMode = "maxed";
+      else rowMode = "locked";
+      chrome = vaultRowChrome(i, rowMode);
+      fill = chrome.fill;
+      stroke = chrome.stroke;
       ctx.fillStyle = fill;
       fillRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
       ctx.strokeStyle = stroke;
-      ctx.lineWidth = sel || armed ? 2 : 1.5;
+      ctx.lineWidth = chrome.lw;
       strokeRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
       ctx.lineWidth = 1;
       ctx.fillStyle = "rgba(222,232,198,0.94)";
@@ -35269,6 +35492,9 @@ var GAME = {
   roomPortal: { active: false, x: 0, y: 0, t: 0, tierIdx: 0 },
   roomFight: { active: false, cx: 0, cy: 0, t: 0, need: 0, got: 0, trashNeed: 0, rewarded: false, tierIdx: 0, fightSec: 20, speedSec: 11, rarMin: 1 },
   enterCine: null,                  // 【v1.62】进场过场快照
+  entranceWipeT: 0,                 // 【v1.187】开局奶油擦入剩余秒(纯表现, 不另加输入锁)
+  entranceWipeDur: 0,
+  entranceDust: null,               // 【v1.187】擦入结束脚下墨点; 章卡还在时先按住, 露出台面再放
   enterSeen: {},                    // 【v1.62】本会话已看过的章/房键(重复更短)
   aboutLoreOpen: false,             // 【v1.74】关于页薄设定展开(默认收起, 可跳过)
   bossKnifeSeen: {},                // 【v1.74】本局已出过碎刀子的首领 type
@@ -36174,6 +36400,7 @@ function startRun(chapterIdx) {
   armPetSortie("start");
   GAME.setState(GAME.flow.PLAYING);
   armEnterCine("chapter");
+  armEntranceWipe();                // 【v1.187】奶油擦入与开局音同一拍, 不延长章卡
   syncBgmForState(true);
   Audio.play("start");
   syncUiVisibility();
@@ -36217,6 +36444,8 @@ function goHome() {
   leaveDailyMode();                 // 【v1.76】回大厅卸加菜规则(禁珠/潮汐/精英倍率/时长套/回礼标记)
   resetChallengeRoom("idle");       // 【v1.21】回大厅收试炼光环, 避免世界层状态残留
   GAME.enterCine = null;
+  GAME.entranceWipeT = 0;
+  GAME.entranceDust = null;
   GAME.heroBriefT = 0;
   resetPetRead();
   GAME.setState(GAME.flow.HOME);
@@ -36275,6 +36504,7 @@ function frame(t) {
     }
   }
   updateEnterCine(rawDt);          // 【v1.62】进场过场走 rawDt(开战冻结 GAME.time)
+  updateEntranceWipe(rawDt);       // 【v1.187】奶油擦入/脚下墨点走 rawDt, 不冻战斗时钟
   Audio.pumpBgm();                  // 【R3】五曲分帧渲染泵(解锁后 ~5 帧铺满, 队列空零开销)
   if (GAME.cardPopT > 0) { GAME.cardPopT -= rawDt; if (GAME.cardPopT < 0) GAME.cardPopT = 0; }
   if (GAME.resultPopT > 0) { GAME.resultPopT -= rawDt; if (GAME.resultPopT < 0) GAME.resultPopT = 0; }
@@ -36447,6 +36677,29 @@ function init() {
     },
     version: CONFIG.version,
     gameName: CONFIG.gameName,
+    entrance: function () {
+      var d = GAME.entranceDust;
+      var live = 0, stacked = 0, i, e;
+      for (i = 0; i < enemyTotal; i++) {
+        e = enemyPool[i];
+        if (!e || !e.active || !isEarlyTrashId(e.type)) continue;
+        live++;
+        if (e._stackInk) stacked++;
+      }
+      return {
+        version: CONFIG.version,
+        wipeT: +((GAME.entranceWipeT || 0).toFixed(3)),
+        wipeDur: +((GAME.entranceWipeDur || 0).toFixed(3)),
+        dust: !!d,
+        dustHold: !!(d && d.hold),
+        dustT: d ? +d.t.toFixed(3) : 0,
+        early: live,
+        stacked: stacked,
+        rabbitStack: !!(SPRITES.rabbit && SPRITES.rabbit.stackInk),
+        ring: CONFIG.playerRingAlpha,
+        glow: CONFIG.heroGlowAlpha
+      };
+    },
     // 【v1.172】存档证据口(只读)：SAVE_SCHEMA/validateSave/clampSaveRanges/migrateChain 是本作
     //   唯一持久化通道，损坏会**静默**摧毁玩家全部进度，而 ci/ 下此前零覆盖 —— 属第七类病根
     //   ("验证覆盖不到 ≠ 验证通过")的又一实例。此口只做**读**：不写档、不改 saveData，
