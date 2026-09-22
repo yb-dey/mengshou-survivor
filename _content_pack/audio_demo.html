@@ -50,7 +50,7 @@
 <body>
   <h1>🌿 森灵萌兽 · 音频试听</h1>
   <div class="sub">独立内容包专属原声 · 纯参数化合成 · 双击即听</div>
-  <div class="hint">共 12 条：1 首森林 BGM（可循环）+ 11 个游戏事件音效</div>
+  <div class="hint">共 14 条：3 首 BGM（可循环）+ 11 个游戏事件音效</div>
   <div class="grid" id="grid"></div>
 
   <footer>萌兽消消岛 · 森灵内容包 · 音频资产（独立命名空间，不改动主游戏文件）<br>全部由 tools/synth_audio.py 纯标准库合成，峰值统一 85%，零削波</footer>
@@ -62,6 +62,8 @@ const TRACKS = [
    desc:'柔美 pad + 三角波旋律 + 轻贝斯与铃音，I–vi–IV–V 进行，无缝循环，适合探索/秘境场景。', dur:'35.6s · 循环'},
   {key:'cp_bgm_battle', ico:'⚔️', title:'战斗主题 BGM', loop:true,
    desc:'更快节奏（128 BPM）+ 驱动贝斯 + 能量琶音 + kick/snare/hi-hat 鼓组，Am–F–C–G 进行，无缝循环，适合潮次/精英战。', dur:'30.0s · 循环'},
+  {key:'cp_bgm_boss', ico:'👹', title:'BOSS 主题 BGM', loop:true,
+   desc:'更慢更沉重的史诗小调（92 BPM）+ 厚低频 + 铜管感锯齿 lead + 定音鼓 kick + 不祥钟声，Am–F–C–G 进行，无缝循环，适合 Boss/首领战。', dur:'31.3s · 循环'},
   {key:'cp_sfx_summon', ico:'✨', title:'召唤音效', loop:false,
    desc:'上行魔法琶音叠加微光泛音，明亮短促，适用召唤萌兽/释放技能。', dur:'0.92s'},
   {key:'cp_sfx_heal', ico:'💚', title:'治疗音效', loop:false,

@@ -234,6 +234,91 @@ def fx_poison(path, size=96):
         c.glow(x, y, size*0.05, (0.25, 0.55, 0.15), 0.7, soft=1.6)
     save(c, path)
 
+def fx_explosion(path, size=128):
+    """大爆裂 / 范围伤害：橙红外焰 + 亮核 + 冲击环 + 放射碎片。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.42, (1.0, 0.45, 0.10), 0.70, soft=1.2)
+    c.glow(cx, cy, size*0.22, (1.0, 0.90, 0.50), 1.00, soft=2.0)
+    c.ring(cx, cy, size*0.30, size*0.40, (1.0, 0.70, 0.25), 0.6)
+    rng = random.Random(9)
+    for _ in range(12):
+        ang = rng.uniform(0, 2*math.pi)
+        r = size*(0.30 + rng.random()*0.34)
+        c.line(cx, cy, cx+math.cos(ang)*r, cy+math.sin(ang)*r, (1.0, 0.85, 0.40), 0.9, width=size*0.02)
+    for _ in range(10):
+        ang = rng.uniform(0, 2*math.pi)
+        r = size*(0.20 + rng.random()*0.30)
+        x = cx + math.cos(ang)*r; y = cy + math.sin(ang)*r
+        c.glow(x, y, size*0.04, (1.0, 0.80, 0.30), 0.8, soft=1.8)
+    save(c, path)
+
+def fx_lightning(path, size=96):
+    """雷击 / 雷元素：锯齿状闪电 + 冷蓝辉光包裹。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    rng = random.Random(21)
+    pts = [(cx + size*0.04, size*0.10)]
+    y = size*0.10
+    while y < size*0.92:
+        y += size*rng.uniform(0.10, 0.16)
+        x = cx + rng.uniform(-size*0.16, size*0.16)
+        pts.append((x, min(y, size*0.92)))
+    for i in range(len(pts)-1):
+        c.line(pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1], (0.70, 0.90, 1.0), 0.95, width=size*0.035)
+    for (x, y) in pts:
+        c.glow(x, y, size*0.10, (0.60, 0.85, 1.0), 0.6, soft=1.6)
+    c.glow(cx, cy, size*0.30, (0.40, 0.70, 1.0), 0.18, soft=1.2)
+    save(c, path)
+
+def fx_heal_burst(path, size=128):
+    """治疗爆发（比 fx_heal 更张扬）：绿辉光 + 双环 + 向上星芒。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.40, (0.30, 1.0, 0.55), 0.50, soft=1.5)
+    c.ring(cx, cy, size*0.16, size*0.26, (0.50, 1.0, 0.70), 0.7)
+    c.ring(cx, cy, size*0.30, size*0.40, (0.50, 1.0, 0.70), 0.45)
+    rng = random.Random(13)
+    for _ in range(10):
+        ang = -math.pi/2 + rng.uniform(-0.9, 0.9)
+        r = size*(0.28 + rng.random()*0.18)
+        c.line(cx, cy, cx+math.cos(ang)*r, cy+math.sin(ang)*r, (0.70, 1.0, 0.80), 0.85, width=size*0.016)
+    c.glow(cx, cy, size*0.10, (0.85, 1.0, 0.90), 1.0, soft=2.0)
+    save(c, path)
+
+def fx_dash_trail(path, size=128):
+    """冲刺残影 / 位移：斜向渐隐弧线残影。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    rng = random.Random(17)
+    for k in range(5):
+        off = (k-2)*size*0.05
+        a0 = -math.pi*0.78
+        r = size*0.40
+        for s in range(30):
+            t = s/30.0
+            ang = a0 + t*math.pi*0.56
+            x = cx + math.cos(ang)*r
+            y = cy + math.sin(ang)*r*0.8 - off
+            a = 0.7*(1-t)*(1 - abs(k-2)/4.0)
+            c.glow(x, y, size*0.04, (0.60, 0.95, 1.0), a, soft=1.7)
+    save(c, path)
+
+def fx_telegraph(path, size=128):
+    """Boss 预警圈 / 地面警示（AoE 指示）：橙红警示环 + 内淡填充 + 中心危机符。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.42, (1.0, 0.35, 0.20), 0.12, soft=1.1)
+    c.ring(cx, cy, size*0.30, size*0.44, (1.0, 0.45, 0.25), 0.85)
+    c.ring(cx, cy, size*0.24, size*0.27, (1.0, 0.60, 0.35), 0.5)
+    for y in range(int(cy-size*0.11), int(cy-size*0.01)):
+        for ox in range(int(-size*0.03), int(size*0.03)+1):
+            c.blend(cx+ox, y, 1.0, 0.85, 0.40, 0.9)
+    for y in range(int(cy+size*0.05), int(cy+size*0.09)):
+        for ox in range(int(-size*0.03), int(size*0.03)+1):
+            c.blend(cx+ox, y, 1.0, 0.85, 0.40, 0.9)
+    save(c, path)
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/vfx'
     import os
@@ -248,6 +333,13 @@ if __name__ == '__main__':
     fx_levelup(f'{out_dir}/fx_levelup.png')
     fx_pickup(f'{out_dir}/fx_pickup.png')
     fx_poison(f'{out_dir}/fx_poison.png')
-    for f in ['fx_hit_spark','fx_fireball','fx_shield','fx_heal','fx_slash','fx_star','fx_frost','fx_levelup','fx_pickup','fx_poison']:
+    fx_explosion(f'{out_dir}/fx_explosion.png')
+    fx_lightning(f'{out_dir}/fx_lightning.png')
+    fx_heal_burst(f'{out_dir}/fx_heal_burst.png')
+    fx_dash_trail(f'{out_dir}/fx_dash_trail.png')
+    fx_telegraph(f'{out_dir}/fx_telegraph.png')
+    for f in ['fx_hit_spark','fx_fireball','fx_shield','fx_heal','fx_slash','fx_star','fx_frost',
+              'fx_levelup','fx_pickup','fx_poison','fx_explosion','fx_lightning','fx_heal_burst',
+              'fx_dash_trail','fx_telegraph']:
         print('PNG OK:', f)
 

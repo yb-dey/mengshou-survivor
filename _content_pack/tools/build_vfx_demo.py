@@ -16,6 +16,11 @@ meta = [
     ('fx_levelup',   '升级星环', '升级 / 强化',         'pop'),
     ('fx_pickup',    '拾取闪光', '宝石 / 金币拾取',     'pulse'),
     ('fx_poison',    '毒云',     '中毒 / 持续伤害',     'breathe'),
+    ('fx_explosion', '大爆裂',   '范围伤害 / 爆炸',     'pop'),
+    ('fx_lightning', '雷击',     '雷元素 / 链击',       'pop'),
+    ('fx_heal_burst','治疗爆发', '群体治疗 / 回血爆发', 'pulse'),
+    ('fx_dash_trail','冲刺残影', '位移 / 闪避',         'swing'),
+    ('fx_telegraph', '预警圈',   'Boss AoE / 地面警示', 'breathe'),
 ]
 
 def b64(name):

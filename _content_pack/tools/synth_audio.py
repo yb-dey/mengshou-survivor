@@ -409,6 +409,75 @@ def synth_bgm_battle(path, bars=16, bpm=128, fade=0.08):
     write_wav(path, buf)
     return total
 
+# ---------------- Boss BGM（本轮新增 · 战斗主题的更沉重对立项） ----------------
+def synth_bgm_boss(path, bars=12, bpm=92, fade=0.08):
+    """Boss 主题 BGM：更慢（92 BPM）、更沉重的史诗小调，厚低频 + 铜管感锯齿 lead +
+    定音鼓式 kick + 不祥钟声动机，i–VI–III–VII（Am–F–C–G），无缝循环。"""
+    beat = 60.0 / bpm
+    bar_dur = beat * 4
+    total = bars * bar_dur
+    N = int(total * SR)
+    buf = [0.0] * N
+    rng = random.Random(20260924)
+    prog = [(45, [57, 60, 64]), (41, [53, 57, 60]), (48, [60, 64, 67]), (43, [55, 59, 62])]
+
+    def add(start, dur, freq, amp, wave, a=0.01, d=0.05, s=0.7, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+
+    def kick(start):
+        cnt = int(0.16 * SR); i0 = int(start * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            p = i / float(cnt)
+            buf[idx] += 0.38 * (1 - p) ** 2 * math.sin(2 * math.pi * 58.0 * p * 0.16)
+
+    def bell(start, m):
+        cnt = int(0.7 * SR); i0 = int(start * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; p = i / float(cnt)
+            a = 0.10 * (1 - p) ** 1.6
+            buf[idx] += a * tone(t, midi_freq(m), 'sine') + a * 0.4 * tone(t, midi_freq(m + 7), 'sine')
+
+    for bar in range(bars):
+        root, chord = prog[(bar // 4) % 4]
+        s0 = bar * bar_dur
+        # 低沉铺底 pad（暗色正弦）
+        for c in chord:
+            add(s0, bar_dur * 0.98, midi_freq(c), 0.09, 'sine', a=0.30, d=0.10, s=0.8, r=0.5)
+        # 厚重贝斯：二分音符根音
+        add(s0, beat * 1.8, midi_freq(root), 0.26, 'triangle', a=0.01, d=0.10, s=0.7, r=0.10)
+        add(s0 + 2 * beat, beat * 1.8, midi_freq(root), 0.24, 'triangle', a=0.01, d=0.10, s=0.7, r=0.10)
+        # 铜管感锯齿 lead：稀疏英雄动机
+        motif = [chord[0] + 12, chord[1] + 12, chord[2] + 12]
+        lead = [(0, beat * 0.9, motif[0]), (beat, beat * 0.9, motif[1]),
+                (2 * beat, beat * 0.9, motif[0]), (3 * beat, beat * 1.5, motif[2])]
+        for off, dur, m in lead:
+            add(s0 + off, dur, midi_freq(m), 0.12, 'sawtooth', a=0.02, d=0.08, s=0.6, r=0.15)
+        # 定音鼓式 kick（每小节头，奇数小节加 3 拍）
+        kick(s0)
+        if bar % 2 == 1:
+            kick(s0 + 2 * beat)
+        # 不祥钟声动机（高八度泛音）
+        bell(s0, chord[2] + 24)
+
+    # 无缝循环：末尾 fade 段与开头交叉淡入
+    fc = int(fade * SR)
+    head = buf[:fc]
+    for i in range(fc):
+        w = i / float(fc)
+        buf[i] = buf[i] * w + head[i] * (1 - w)
+        buf[N - fc + i] = buf[N - fc + i] * (1 - w) + head[i] * w
+    write_wav(path, buf)
+    return total
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/audio'
     import os
@@ -416,6 +485,7 @@ if __name__ == '__main__':
     jobs = [
         ('cp_bgm_forest.wav', synth_bgm),
         ('cp_bgm_battle.wav', synth_bgm_battle),
+        ('cp_bgm_boss.wav', synth_bgm_boss),
         ('cp_sfx_summon.wav', synth_summon),
         ('cp_sfx_heal.wav', synth_heal),
         ('cp_sfx_hit.wav', synth_hit),
