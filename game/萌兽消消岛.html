@@ -17816,31 +17816,32 @@ function bakeCuteItemIcons() {
 }
 
 function makeSoftInkGlyph(src, tint) {
-  // 【v1.178】图鉴锁定/缺 PNG 软墨剪影: 本色抬亮+苔纸淡晕+左上受光+外墨。
-  //   形状仍走原剪影 alpha(水豚/兔耳/熊/鼠尾/猪/龟壳/羊绒各不同), 不再整块 #5a6a52 近黑死墙。
+  // 【v1.178】图鉴锁定/缺 PNG 软墨剪影: 保留本色体积与五官, 再叠苔纸柔晕+左上受光+外墨。
+  //   不再 source-in 整块抹成近黑/平涂死墙; 水豚/兔耳/熊/鼠尾/猪/龟壳/羊绒仍可点名。
   var cv, c2, soft, g, inkPx;
   if (!src || !(src.width > 0)) return src;
   cv = document.createElement("canvas");
   cv.width = src.width;
   cv.height = src.height;
   c2 = cv.getContext("2d");
-  soft = mixHex(silLift(tint || "#8a9a6a", 0.62), "#eef4dc", 0.30);
   c2.drawImage(src, 0, 0);
-  c2.globalCompositeOperation = "source-in";
+  c2.globalCompositeOperation = "source-atop";
+  soft = mixHex(silLift(tint || "#8a9a6a", 0.55), "#eef4dc", 0.38);
+  c2.globalAlpha = 0.38;
   c2.fillStyle = soft;
   c2.fillRect(0, 0, cv.width, cv.height);
-  c2.globalCompositeOperation = "source-atop";
+  c2.globalAlpha = 1;
   try {
     g = c2.createRadialGradient(
       cv.width * 0.28, cv.height * 0.22, 2,
       cv.width * 0.55, cv.height * 0.58, Math.max(cv.width, cv.height) * 0.74
     );
-    g.addColorStop(0, "rgba(255,252,238,0.62)");
+    g.addColorStop(0, "rgba(255,252,238,0.55)");
     g.addColorStop(0.42, "rgba(255,252,238,0)");
-    g.addColorStop(1, "rgba(18,22,14,0.24)");
+    g.addColorStop(1, "rgba(18,22,14,0.20)");
     c2.fillStyle = g;
     c2.fillRect(0, 0, cv.width, cv.height);
-  } catch (eSil) { /* keep flat soft fill */ }
+  } catch (eSil) { /* keep wash only */ }
   c2.globalCompositeOperation = "source-over";
   inkPx = Math.max(3, Math.round(Math.min(cv.width, cv.height) * 0.030));
   bakeOuterInk(cv, inkPx);
@@ -23792,7 +23793,7 @@ function paintInkFruit(c2, x, y, s) {
 }
 function paintMesaButte(c2, x, y, bw, bh) {
   // 【v1.177】平顶台地: 左上受光顶面、暗正面、细墨缘。不是灰斑云。
-  // 【v1.178】加台阶层叠+顶缘高光: 缺 PNG 时仍读作夜石台地, 不是随机梯形占位。
+  // 【v1.178】圆顶柔丘+台阶层叠: 缺 PNG 时仍读作夜石台地, 避免硬直角梯形占位。
   var top, face, mid;
   c2.lineJoin = "round";
   c2.lineCap = "round";
@@ -23801,10 +23802,11 @@ function paintMesaButte(c2, x, y, bw, bh) {
   face.addColorStop(1, "#12182c");
   c2.fillStyle = face;
   c2.beginPath();
-  c2.moveTo(x + bw * 0.08, y + bh * 0.24);
-  c2.lineTo(x + bw * 0.92, y + bh * 0.30);
-  c2.lineTo(x + bw * 0.82, y + bh);
-  c2.lineTo(x + bw * 0.14, y + bh);
+  c2.moveTo(x + bw * 0.10, y + bh * 0.28);
+  c2.quadraticCurveTo(x + bw * 0.50, y + bh * 0.22, x + bw * 0.90, y + bh * 0.32);
+  c2.quadraticCurveTo(x + bw * 0.86, y + bh * 0.72, x + bw * 0.78, y + bh);
+  c2.lineTo(x + bw * 0.18, y + bh);
+  c2.quadraticCurveTo(x + bw * 0.12, y + bh * 0.70, x + bw * 0.10, y + bh * 0.28);
   c2.closePath();
   c2.fill();
   mid = c2.createLinearGradient(x, y + bh * 0.18, x + bw * 0.5, y + bh * 0.55);
@@ -23812,10 +23814,9 @@ function paintMesaButte(c2, x, y, bw, bh) {
   mid.addColorStop(1, "#1a2238");
   c2.fillStyle = mid;
   c2.beginPath();
-  c2.moveTo(x + bw * 0.14, y + bh * 0.28);
-  c2.lineTo(x + bw * 0.86, y + bh * 0.34);
-  c2.lineTo(x + bw * 0.78, y + bh * 0.58);
-  c2.lineTo(x + bw * 0.20, y + bh * 0.54);
+  c2.moveTo(x + bw * 0.16, y + bh * 0.30);
+  c2.quadraticCurveTo(x + bw * 0.50, y + bh * 0.26, x + bw * 0.84, y + bh * 0.34);
+  c2.quadraticCurveTo(x + bw * 0.78, y + bh * 0.50, x + bw * 0.22, y + bh * 0.52);
   c2.closePath();
   c2.fill();
   top = c2.createLinearGradient(x, y, x + bw * 0.72, y + bh * 0.42);
@@ -23824,35 +23825,34 @@ function paintMesaButte(c2, x, y, bw, bh) {
   top.addColorStop(1, "#2a365c");
   c2.fillStyle = top;
   c2.beginPath();
-  c2.moveTo(x + bw * 0.06, y + bh * 0.18);
-  c2.lineTo(x + bw * 0.94, y + bh * 0.10);
-  c2.lineTo(x + bw * 0.92, y + bh * 0.30);
-  c2.lineTo(x + bw * 0.08, y + bh * 0.24);
+  c2.moveTo(x + bw * 0.08, y + bh * 0.22);
+  c2.quadraticCurveTo(x + bw * 0.50, y + bh * 0.04, x + bw * 0.92, y + bh * 0.18);
+  c2.quadraticCurveTo(x + bw * 0.90, y + bh * 0.30, x + bw * 0.50, y + bh * 0.28);
+  c2.quadraticCurveTo(x + bw * 0.14, y + bh * 0.30, x + bw * 0.08, y + bh * 0.22);
   c2.closePath();
   c2.fill();
   c2.fillStyle = "rgba(236, 242, 255, 0.48)";
   c2.beginPath();
-  c2.moveTo(x + bw * 0.14, y + bh * 0.16);
-  c2.lineTo(x + bw * 0.50, y + bh * 0.12);
-  c2.lineTo(x + bw * 0.36, y + bh * 0.22);
+  c2.moveTo(x + bw * 0.18, y + bh * 0.14);
+  c2.quadraticCurveTo(x + bw * 0.40, y + bh * 0.08, x + bw * 0.52, y + bh * 0.14);
+  c2.quadraticCurveTo(x + bw * 0.36, y + bh * 0.22, x + bw * 0.18, y + bh * 0.14);
   c2.closePath();
   c2.fill();
   c2.strokeStyle = "#0c1020";
   c2.lineWidth = Math.max(4.5, bh * 0.07);
   c2.beginPath();
-  c2.moveTo(x + bw * 0.06, y + bh * 0.18);
-  c2.lineTo(x + bw * 0.94, y + bh * 0.10);
-  c2.lineTo(x + bw * 0.92, y + bh * 0.30);
-  c2.lineTo(x + bw * 0.82, y + bh);
-  c2.lineTo(x + bw * 0.14, y + bh);
-  c2.lineTo(x + bw * 0.08, y + bh * 0.24);
+  c2.moveTo(x + bw * 0.08, y + bh * 0.22);
+  c2.quadraticCurveTo(x + bw * 0.50, y + bh * 0.04, x + bw * 0.92, y + bh * 0.18);
+  c2.quadraticCurveTo(x + bw * 0.88, y + bh * 0.55, x + bw * 0.78, y + bh);
+  c2.lineTo(x + bw * 0.18, y + bh);
+  c2.quadraticCurveTo(x + bw * 0.10, y + bh * 0.55, x + bw * 0.08, y + bh * 0.22);
   c2.closePath();
   c2.stroke();
   c2.strokeStyle = "rgba(220, 230, 255, 0.42)";
   c2.lineWidth = Math.max(2.2, bh * 0.035);
   c2.beginPath();
-  c2.moveTo(x + bw * 0.12, y + bh * 0.17);
-  c2.lineTo(x + bw * 0.72, y + bh * 0.12);
+  c2.moveTo(x + bw * 0.16, y + bh * 0.14);
+  c2.quadraticCurveTo(x + bw * 0.48, y + bh * 0.08, x + bw * 0.70, y + bh * 0.14);
   c2.stroke();
   c2.lineWidth = 1;
 }
@@ -23942,28 +23942,50 @@ function paintChapterGround(c2, w, h, mt) {
     // 【v1.152】星巅地面只留夜海军蓝+厚土石路: 星井/夜石块杂物移除, 战场不再撒碎块抢英雄戏
     // 【v1.162】去掉 5 团 #3a4258 灰斑(读作占位云); 海军底保持安静, 土路墨边再厚一档
     // 【v1.177】左上受光。远脊(冷)与近台(暖、暗崖)分层; 软边保留, 不回 20px 硬墨条, 不回灰斑。
+    // 【v1.178】缺 ground_star.png 时: 远脊横铺+近路暖唇+柔丘(非散乱梯形占位)。平铺仍读作一夜石路。
     var skyG = c2.createLinearGradient(0, 0, w * 0.72, h * 0.9);
     skyG.addColorStop(0, "rgba(148, 168, 220, 0.28)");
     skyG.addColorStop(0.42, "rgba(40, 52, 96, 0.06)");
     skyG.addColorStop(1, "rgba(4, 6, 16, 0.18)");
     c2.fillStyle = skyG;
     c2.fillRect(0, 0, w, h);
-    paintStarRidge(c2, w, h * 0.04, h * 0.14);
-    // 【v1.178】中距第二道冷脊: 缺 ground_star.png 时仍有纵深层次, 不是单条平海军
-    paintStarRidge(c2, w, h * 0.16, h * 0.09);
+    paintStarRidge(c2, w, h * 0.02, h * 0.16);
+    paintStarRidge(c2, w, h * 0.14, h * 0.10);
     pathH = Math.max(104, h * 0.17);
     var mesaY = h * 0.42;
-    c2.fillStyle = "#1a1610";
-    c2.fillRect(0, mesaY + pathH * 0.42, w, pathH * 0.72);
+    // 近路暗崖→暖土: 圆角丘带替代硬直角梯形, 平铺接缝不读作乱梯形
+    c2.fillStyle = "#141821";
+    c2.beginPath();
+    c2.moveTo(0, mesaY + pathH * 0.55);
+    c2.quadraticCurveTo(w * 0.28, mesaY + pathH * 0.92, w * 0.55, mesaY + pathH * 0.62);
+    c2.quadraticCurveTo(w * 0.78, mesaY + pathH * 0.48, w, mesaY + pathH * 0.72);
+    c2.lineTo(w, mesaY + pathH * 1.15);
+    c2.lineTo(0, mesaY + pathH * 1.15);
+    c2.closePath();
+    c2.fill();
     c2.fillStyle = "#6a5844";
-    c2.fillRect(0, mesaY, w, pathH * 0.62);
+    c2.beginPath();
+    c2.moveTo(0, mesaY + pathH * 0.08);
+    c2.quadraticCurveTo(w * 0.32, mesaY - pathH * 0.06, w * 0.58, mesaY + pathH * 0.10);
+    c2.quadraticCurveTo(w * 0.82, mesaY + pathH * 0.18, w, mesaY + pathH * 0.06);
+    c2.lineTo(w, mesaY + pathH * 0.58);
+    c2.quadraticCurveTo(w * 0.7, mesaY + pathH * 0.48, w * 0.4, mesaY + pathH * 0.62);
+    c2.quadraticCurveTo(w * 0.18, mesaY + pathH * 0.70, 0, mesaY + pathH * 0.55);
+    c2.closePath();
+    c2.fill();
     var lipG = c2.createLinearGradient(0, mesaY, w * 0.78, mesaY + pathH * 0.42);
-    lipG.addColorStop(0, "rgba(248, 232, 198, 0.82)");
-    lipG.addColorStop(0.34, "rgba(190, 156, 112, 0.38)");
+    lipG.addColorStop(0, "rgba(248, 232, 198, 0.86)");
+    lipG.addColorStop(0.34, "rgba(190, 156, 112, 0.40)");
     lipG.addColorStop(1, "rgba(92, 74, 56, 0)");
     c2.fillStyle = lipG;
-    c2.fillRect(0, mesaY, w, pathH * 0.42);
-    // 【v1.167d】软边仍在: 路缘渐回海军, 不画 20px 硬条。细墨与受光高光画在软边之后, 台缘才读得出。
+    c2.beginPath();
+    c2.moveTo(0, mesaY + pathH * 0.06);
+    c2.quadraticCurveTo(w * 0.35, mesaY - pathH * 0.04, w * 0.7, mesaY + pathH * 0.08);
+    c2.lineTo(w, mesaY + pathH * 0.05);
+    c2.lineTo(w, mesaY + pathH * 0.36);
+    c2.quadraticCurveTo(w * 0.55, mesaY + pathH * 0.30, 0, mesaY + pathH * 0.34);
+    c2.closePath();
+    c2.fill();
     var edge = Math.min(26, pathH * 0.26);
     var gTop = c2.createLinearGradient(0, mesaY - edge, 0, mesaY + edge * 0.55);
     gTop.addColorStop(0, a);
@@ -23975,23 +23997,22 @@ function paintChapterGround(c2, w, h, mt) {
     gBot.addColorStop(1, a);
     c2.fillStyle = gBot;
     c2.fillRect(0, mesaY + pathH - edge * 0.35, w, edge * 1.35);
-    c2.strokeStyle = "rgba(8, 6, 4, 0.92)";
-    c2.lineWidth = Math.max(4.2, h * 0.0065);
+    c2.strokeStyle = "rgba(8, 6, 4, 0.88)";
+    c2.lineWidth = Math.max(4.0, h * 0.006);
     c2.beginPath();
-    c2.moveTo(0, mesaY + 1.4);
-    c2.lineTo(w, mesaY + 1.4);
+    c2.moveTo(0, mesaY + pathH * 0.07);
+    c2.quadraticCurveTo(w * 0.4, mesaY - 2, w, mesaY + pathH * 0.06);
     c2.stroke();
-    c2.strokeStyle = "rgba(255, 240, 214, 0.62)";
+    c2.strokeStyle = "rgba(255, 240, 214, 0.66)";
     c2.lineWidth = Math.max(2.4, h * 0.0036);
     c2.beginPath();
-    c2.moveTo(0, mesaY + pathH * 0.08);
-    c2.lineTo(w * 0.62, mesaY + pathH * 0.10);
+    c2.moveTo(0, mesaY + pathH * 0.14);
+    c2.quadraticCurveTo(w * 0.45, mesaY + pathH * 0.06, w * 0.72, mesaY + pathH * 0.12);
     c2.stroke();
     c2.lineWidth = 1;
-    // 【v1.178】近台三座分层台地(左近/中小/右远), 左上受光一致, 读作星巅夜石而不是散乱梯形
-    paintMesaButte(c2, w * 0.04, h * 0.18, w * 0.20, h * 0.12);
-    paintMesaButte(c2, w * 0.36, h * 0.26, w * 0.14, h * 0.07);
-    paintMesaButte(c2, w * 0.60, h * 0.66, w * 0.22, h * 0.11);
+    // 柔丘台地(圆顶+暗崖), 左上受光; 避免硬直角梯形占位感
+    paintMesaButte(c2, w * 0.03, h * 0.17, w * 0.22, h * 0.13);
+    paintMesaButte(c2, w * 0.58, h * 0.64, w * 0.24, h * 0.12);
   } else if (kind === "mist") {
     // 【v1.153】雾泽苇簇 8→5 且整体 0.8 alpha, 路径像星巅一样干净(石章不动)
     // 【v1.160】再静半档: 苇簇 5→4 + alpha 0.8→0.72, 向星巅留白看齐, 苇簇身份保留
