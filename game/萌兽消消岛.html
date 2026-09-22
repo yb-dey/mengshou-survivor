@@ -3642,13 +3642,17 @@ function endEntranceWipe() {
   armEntranceDust();
 }
 function updateEntranceWipe(rawDt) {
-  var d;
+  var d, step;
   if (!GAME || GAME.state !== GAME.flow.PLAYING) {
     if (GAME) { GAME.entranceWipeT = 0; GAME.entranceDust = null; }
     return;
   }
+  // 出击当帧常被音频/进场卡撑到 >0.42s。不封顶的话擦入在第一次绘制前就被减完。
+  step = rawDt;
+  if (!(step > 0)) step = 0;
+  if (step > 0.05) step = 0.05;
   if (GAME.entranceWipeT > 0) {
-    GAME.entranceWipeT -= rawDt;
+    GAME.entranceWipeT -= step;
     if (GAME.entranceWipeT <= 0) {
       GAME.entranceWipeT = 0;
       armEntranceDust();
@@ -3658,8 +3662,26 @@ function updateEntranceWipe(rawDt) {
   if (!d) return;
   if (enterCineLive()) return;
   d.hold = false;
-  d.t += rawDt;
+  d.t += step;
   if (d.t >= d.life) GAME.entranceDust = null;
+}
+function clipEntranceWipe(ctx, px, py, r) {
+  var card, pad;
+  ctx.beginPath();
+  ctx.rect(0, 0, CONFIG.viewW, CONFIG.viewH);
+  if (r > 0) {
+    ctx.moveTo(px + r, py);
+    ctx.arc(px, py, r, 0, CONFIG.TWO_PI, true);
+  }
+  ctx.clip("evenodd");
+  card = GAME.hudSnap && GAME.hudSnap.enter;
+  if (card && card.w > 0 && card.h > 0) {
+    pad = 10;
+    ctx.beginPath();
+    ctx.rect(0, 0, CONFIG.viewW, CONFIG.viewH);
+    ctx.rect(card.x - pad, card.y - pad, card.w + pad * 2, card.h + pad * 2);
+    ctx.clip("evenodd");
+  }
 }
 function drawEntranceWipe(ctx) {
   var dur, u, px, py, maxR, r, edge;
@@ -3674,7 +3696,10 @@ function drawEntranceWipe(ctx) {
   if (!isFinite(px)) px = CONFIG.viewW * 0.5;
   if (!isFinite(py)) py = CONFIG.viewH * 0.55;
   ctx.save();
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
   if (GAME.reduceMotion) {
+    clipEntranceWipe(ctx, px, py, 0);
     ctx.globalAlpha = 0.90 * (1 - u);
     ctx.fillStyle = "#f4ead4";
     ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
@@ -3683,22 +3708,15 @@ function drawEntranceWipe(ctx) {
   }
   maxR = Math.sqrt(CONFIG.viewW * CONFIG.viewW + CONFIG.viewH * CONFIG.viewH) * 0.62;
   r = 40 + (maxR - 40) * (u * (2 - u));
-  ctx.beginPath();
-  ctx.rect(0, 0, CONFIG.viewW, CONFIG.viewH);
-  ctx.moveTo(px + r, py);
-  ctx.arc(px, py, r, 0, CONFIG.TWO_PI, true);
+  // 章卡 scrim 画在世界层之上。奶油必须盖在 scrim 上, 同时让开章卡和跳过钮。
+  clipEntranceWipe(ctx, px, py, r);
   ctx.fillStyle = "rgba(244, 234, 212, 0.94)";
-  ctx.fill("evenodd");
-  edge = 0.62 * (1 - u * 0.8);
+  ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
+  edge = 0.72 * (1 - u * 0.75);
   ctx.strokeStyle = "rgba(42, 58, 24, " + edge + ")";
-  ctx.lineWidth = 2.4;
+  ctx.lineWidth = 2.6;
   ctx.beginPath();
   ctx.arc(px, py, r, 0, CONFIG.TWO_PI);
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(255, 250, 236, " + (0.40 * (1 - u)) + ")";
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.arc(px, py, Math.max(6, r - 3.5), 0, CONFIG.TWO_PI);
   ctx.stroke();
   ctx.restore();
 }
@@ -26772,8 +26790,8 @@ function renderGame() {
     ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
     ctx.globalAlpha = 1;
   }
-  drawEntranceWipe(ctx);   // 【v1.187】奶油擦入画在章卡之下, 跳过钮仍可点
   drawEnterCine(ctx);
+  drawEntranceWipe(ctx);   // 【v1.187】奶油擦入盖在章卡 scrim 上, 让开章卡与跳过钮
 }
 
 // 0-9 数字图集: 离屏 canvas 一次性渲染, 飘字 drawImage 拼图。
