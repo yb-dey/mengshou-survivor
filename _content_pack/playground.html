@@ -80,7 +80,7 @@
     <div class="enemies" id="enemies"></div>
   </div>
   <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>
-  资产：8 张透底精灵 + 24 个程序化 VFX + 30 条音频；本页为「资产可用性 + 元素克制机制」演示，伤害按 data/element_matrix.json 倍率结算并启用技能冷却，不修改也不依赖主游戏文件，与 GROK 路线零冲突。</footer>
+  资产：8 张透底精灵 + 24 个程序化 VFX + 35 条音频（含 5 条五元素主题动机）；本页为「资产可用性 + 元素克制机制」演示，伤害按 data/element_matrix.json 倍率结算并启用技能冷却，选攻击元素时播对应元素主题动机；不修改也不依赖主游戏文件，与 GROK 路线零冲突。</footer>
 
 <script>
   // 敌种花名册（数据取自 README / manifest，HP 按稀有度设定；element 取自五元素系统）
@@ -118,6 +118,7 @@
   const scoreEl = document.getElementById('score');
 
   function audio(src){ const a = new Audio(src); a.volume = 0.6; return a; }
+  function playElemMotif(k){ audio('audio/cp_sfx_elem_' + k + '.wav').play().catch(()=>{}); }
 
   function spawnVfx(card, file){
     const img = document.createElement('img');

@@ -1016,6 +1016,111 @@ def synth_hit_wood(path):
         if i < N: buf[i] += (r.random() * 2 - 1) * 0.14 * (1 - i / nb) ** 1.5
     write_wav(path, buf); return total
 
+# ---------------- 五元素主题动机（Round-22 · 元素身份听觉签名 + 演练场选元素提示） ----------------
+# 每个动机为 ~2s 无缝短循环（交叉淡入），音色/音高贴合元素身份色（见 data/element_matrix.json）：
+# 火=明亮跃动、水=流动涟漪、土=厚重脉冲、光=闪烁铃音、木=有机叩击。
+def _loop_crossfade(buf, fade):
+    N = len(buf); fc = int(fade * SR); head = buf[:fc]
+    for i in range(fc):
+        w = i / float(fc)
+        buf[i] = buf[i] * w + head[i] * (1 - w)
+        buf[N - fc + i] = buf[N - fc + i] * (1 - w) + head[i] * w
+
+def synth_motif_fire(path, bars=2, bpm=120, fade=0.05):
+    """火：明亮上行五声 sparkle（方波 + 高频泛音 + 快速颤音）+ 低频脉冲，跃动炽烈。"""
+    beat = 60.0 / bpm; total = bars * beat * 4; N = int(total * SR); buf = [0.0] * N
+    rng = random.Random(20260930)
+    notes = [72, 75, 79, 82, 86]
+    def add(st, dur, m, amp, wave, a=0.003, d=0.03, s=0.5, r=0.06):
+        i0 = int(st * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, midi_freq(m), wave)
+    seq = [0, 2, 1, 3, 4, 2]
+    for e in range(8):
+        m = notes[seq[e % len(seq)]]
+        add(e * (beat / 2), beat * 0.45, m, 0.18, 'square', a=0.003, d=0.03, s=0.5, r=0.06)
+        add(e * (beat / 2), beat * 0.30, m + 12, 0.06, 'sine', a=0.002, d=0.02, s=0.3, r=0.05)
+    for e in range(4):
+        add(e * beat, beat * 0.5, 45, 0.14, 'triangle', a=0.01, d=0.10, s=0.6, r=0.10)
+    _loop_crossfade(buf, fade); write_wav(path, buf); return total
+
+def synth_motif_water(path, bars=2, bpm=100, fade=0.05):
+    """水：柔 sine 涟漪滑音（下行回弹）+ 气泡点缀，流动清润。"""
+    beat = 60.0 / bpm; total = bars * beat * 4; N = int(total * SR); buf = [0.0] * N
+    rng = random.Random(20260931)
+    def sweep(st, dur, m0, m1, amp, wave='sine', a=0.004, d=0.08, s=0.5, r=0.10):
+        i0 = int(st * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; p = i / cnt; buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, midi_freq(m0 + (m1 - m0) * p), wave)
+    ripples = [(0, 79, 67), (beat, 74, 62), (2 * beat, 81, 69), (3 * beat, 76, 64)]
+    for st, m0, m1 in ripples:
+        sweep(st, beat * 0.9, m0, m1, 0.22, 'sine', a=0.01, d=0.12, s=0.6, r=0.18)
+    r = _noise_rng(); nb = int(0.5 * SR)
+    for i in range(nb):  # 气泡点缀
+        if i < N and rng.random() < 0.04:
+            p = i / nb; buf[i] += (r.random() * 2 - 1) * 0.10 * (1 - p) * (0.6 + 0.4 * math.sin(2 * math.pi * 40 * p))
+    _loop_crossfade(buf, fade); write_wav(path, buf); return total
+
+def synth_motif_earth(path, bars=2, bpm=84, fade=0.05):
+    """土：厚重低频脉冲（三角根音 + 正弦 sub）+ 闷响，稳固大地感。"""
+    beat = 60.0 / bpm; total = bars * beat * 4; N = int(total * SR); buf = [0.0] * N
+    rng = random.Random(20260932)
+    def add(st, dur, m, amp, wave, a=0.01, d=0.10, s=0.7, r=0.12):
+        i0 = int(st * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, midi_freq(m), wave)
+    for e in range(4):  # 二分音符重拍根音
+        add(e * beat, beat * 1.7, 40, 0.26, 'triangle', a=0.01, d=0.12, s=0.7, r=0.14)
+        add(e * beat, beat * 1.7, 28, 0.18, 'sine', a=0.02, d=0.15, s=0.7, r=0.14)  # sub
+    for e in range(8):  # 八分颗粒
+        add(e * (beat / 2), beat * 0.4, 47, 0.10, 'square', a=0.004, d=0.03, s=0.4, r=0.05)
+    _loop_crossfade(buf, fade); write_wav(path, buf); return total
+
+def synth_motif_light(path, bars=2, bpm=110, fade=0.05):
+    """光：闪亮铃音琶音（高正弦 + 七度泛音）+ 长 shimmer，圣辉清越。"""
+    beat = 60.0 / bpm; total = bars * beat * 4; N = int(total * SR); buf = [0.0] * N
+    rng = random.Random(20260933)
+    notes = [84, 88, 91, 96]
+    def add(st, dur, m, amp, wave, a=0.004, d=0.10, s=0.5, r=0.20):
+        i0 = int(st * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, midi_freq(m), wave)
+    seq = [0, 2, 1, 3, 2, 1]
+    for e in range(8):
+        m = notes[seq[e % len(seq)]]
+        add(e * (beat / 2), beat * 0.5, m, 0.18, 'sine', a=0.003, d=0.08, s=0.5, r=0.18)
+        add(e * (beat / 2), beat * 0.4, m + 7, 0.06, 'sine', a=0.002, d=0.05, s=0.3, r=0.14)  # 泛音
+    add(0, total, 100, 0.04, 'sine', a=0.05, d=0.2, s=0.4, r=0.3)  # shimmer 长音
+    _loop_crossfade(buf, fade); write_wav(path, buf); return total
+
+def synth_motif_wood(path, bars=2, bpm=104, fade=0.05):
+    """木：有机叩击（木鱼式 knock + 干裂噪声 rustle）的切分律动，自然生机。"""
+    beat = 60.0 / bpm; total = bars * beat * 4; N = int(total * SR); buf = [0.0] * N
+    rng = random.Random(20260934)
+    def add(st, dur, m, amp, wave, a=0.001, d=0.03, s=0.3, r=0.04):
+        i0 = int(st * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, midi_freq(m), wave)
+    knock = [(0, 64), (beat * 0.5, 67), (beat, 60), (2 * beat, 64), (2 * beat * 0.5, 67), (3 * beat, 60), (3 * beat * 0.5, 62)]
+    for st, m in knock:
+        add(st, 0.06, m, 0.28, 'square', a=0.001, d=0.02, s=0.2, r=0.03)
+        add(st, 0.10, m - 5, 0.16, 'triangle', a=0.001, d=0.04, s=0.3, r=0.04)
+    r = _noise_rng(); nb = int(total * SR)
+    for i in range(nb):  # 干裂 rustle（稀疏）
+        if i < N and rng.random() < 0.015:
+            p = i / nb; buf[i] += (r.random() * 2 - 1) * 0.10 * (1 - p) ** 1.5
+    _loop_crossfade(buf, fade); write_wav(path, buf); return total
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/audio'
     import os
@@ -1051,6 +1156,11 @@ if __name__ == '__main__':
         ('cp_sfx_hit_earth.wav', synth_hit_earth),
         ('cp_sfx_hit_light.wav', synth_hit_light),
         ('cp_sfx_hit_wood.wav', synth_hit_wood),
+        ('cp_sfx_elem_fire.wav', synth_motif_fire),
+        ('cp_sfx_elem_water.wav', synth_motif_water),
+        ('cp_sfx_elem_earth.wav', synth_motif_earth),
+        ('cp_sfx_elem_light.wav', synth_motif_light),
+        ('cp_sfx_elem_wood.wav', synth_motif_wood),
     ]
     for name, fn in jobs:
         d = fn(f'{out_dir}/{name}')

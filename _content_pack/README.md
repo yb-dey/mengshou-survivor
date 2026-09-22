@@ -61,7 +61,7 @@
 
 - **合成方式**：`tools/synth_audio.py`（纯 Python 标准库，零依赖、零生成额度、不卡机），确定性种子可复现；复用 `midi_freq / env_adsr / tone / write_wav` 四个基础件，新增 `sawtooth` 波形与 `sweep` 扫频原语。
 - **试听页**：`audio_demo.html` 引用相对路径 `audio/*.wav`，双击即听，同样规避死资产；现已改为数据驱动网格，覆盖全部 25 条（6 BGM + 19 SFX）。
-- **校验**：30/30 峰值均 = 85%（未削波），RMS 13.4%–30.0%（非空、非静音）；6 首 BGM（35.6s / 30.0s / 31.3s / 33.1s / 31.0s / 23.2s）无缝循环，24 个 SFX 0.06s–1.38s 覆盖战斗全事件、五元素命中与音画配套特效。
+- **校验**：35/35 峰值均 = 85%（未削波），RMS 13.4%–30.0%（非空、非静音）；6 首 BGM（35.6s / 30.0s / 31.3s / 33.1s / 31.0s / 23.2s）无缝循环，29 个 SFX 0.06s–1.38s 覆盖战斗全事件、五元素命中与音画配套特效，另含 5 条五元素主题动机 4.00s–5.71s（元素身份听觉签名，无缝短循环）。
 
 ## 2.2 VFX 特效精灵（本轮新增 · 程序化真透底）
 
@@ -179,7 +179,7 @@ _content_pack/
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
 │   └── <key>.png / <key>.webp
-├── audio/                 # 本包专属音频原型（独立命名空间，零接线，25 条）
+├── audio/                 # 本包专属音频原型（独立命名空间，零接线，35 条）
 │   ├── cp_bgm_forest.wav  # 森林主题 BGM（无缝循环）
 │   ├── cp_bgm_battle.wav  # 战斗主题 BGM（128 BPM，无缝循环）
 │   ├── cp_bgm_boss.wav    # BOSS 主题 BGM（92 BPM，无缝循环）
@@ -199,7 +199,12 @@ _content_pack/
 │   ├── cp_sfx_ui.wav      # UI 点击
 │   ├── cp_sfx_freeze.wav  # 冻结 / 碎冰（配套 fx_freeze_shatter）
 │   ├── cp_sfx_buff.wav    # 增益 / 强化（配套 fx_buff）
-│   └── cp_sfx_debuff.wav  # 减益 / 诅咒（配套 fx_debuff）
+│   ├── cp_sfx_debuff.wav  # 减益 / 诅咒（配套 fx_debuff）
+│   ├── cp_sfx_elem_fire.wav  # 火元素主题动机（听觉签名，无缝短循环）
+│   ├── cp_sfx_elem_water.wav # 水元素主题动机（听觉签名，无缝短循环）
+│   ├── cp_sfx_elem_earth.wav # 土元素主题动机（听觉签名，无缝短循环）
+│   ├── cp_sfx_elem_light.wav # 光元素主题动机（听觉签名，无缝短循环）
+│   └── cp_sfx_elem_wood.wav  # 木元素主题动机（听觉签名，无缝短循环）
 ├── vfx/                   # 程序化特效精灵（RGBA 真透底）
 │   └── fx_*.png（24 个）
 ├── icons/                 # 状态图标（RGBA 真透底，常驻 HUD 指示）
@@ -282,5 +287,7 @@ _content_pack/
 15. ~~**技能 / 元素图标（英雄技能栏 + 五元素身份 UI）**~~ ✅ 已交付 13 个程序化 RGBA 图标（`skill_icons/`）：5 个元素徽章（`el_fire/water/earth/light/wood`，六边符印底盘，与 R18 元素命中 VFX/SFX 构成「元素身份→命中反馈」闭环）+ 8 个技能按钮（`ab_fireball/heal/frost/chain/vine/quake/dash/summon`，圆角方面板底盘，覆盖 火球/治疗/霜冻/链雷/藤缚/地震/瞬步/召唤）；`tools/gen_skill_icons.py`（hexplate + panel 双底盘 + 4 新符号）+ `tools/build_skill_icons_demo.py` 分组展示页；与状态图标（圆牌）形成「圆牌=状态 / 六边=元素 / 方板=技能」三系 UI 语言；生成期发现 el_fire 与 st_burn 同盘同色同符号的视觉重复，已通过底盘去重解决。
 16. ~~**元素克制与技能数值（设计规格）**~~ ✅ 已交付 2 份设计数值 JSON（`data/element_matrix.json` 五元素 5 环克制链 + 倍率 + 配色 + 克制理由；`data/skill_cooldowns.json` 8 技能冷却/法力/元素/类型）+ 数据驱动可视化参考页 `element_chart.html`（五边形克制环 SVG + 5×5 倍率矩阵 + 8 技能冷却条）；`tools/build_element_chart.py` 读 JSON 纯标准库渲染，零依赖、不卡机；与 §2.4 元素身份 UI、R18 元素命中反馈三件套在规则与视觉层对齐，为 §4 接入主游戏时的伤害公式与技能节奏提供数据底座。
 17. ~~**演练场机制深化（playground 接入元素系统）**~~ ✅ `playground.html` 已升级为「机制演示」：6 敌种带 `element` 属性 + 元素徽章；玩家选攻击元素 → 伤害按 `element_matrix.json` 倍率结算（强克 ×1.6 / 被克 ×0.6 / 同元素 ×0.85 / 中性 ×1.0）并显示克制飘字；启用该元素代表技能冷却（`skill_cooldowns.json` 数据，按钮带实时倒计时遮罩）；`node --check` 语法校验通过，内联数据保证 file:// 双击可用。内容包从「资产可用性演示」进化为「元素克制规则可玩预览」。
+
+18. ~~**五元素主题动机（元素身份听觉签名 · 音乐侧闭合）**~~ ✅ 已交付 5 条五元素主题动机（`cp_sfx_elem_fire/water/earth/light/wood`，4.00s–5.71s，纯标准库合成，无缝短循环）：火=明亮上行五声 sparkle、水=柔 sine 涟漪滑音+气泡、土=厚重低频脉冲、光=闪亮铃音琶音+shimmer、木=有机叩击 rustle。它们与 R18 的「元素命中 SFX（cp_sfx_hit_*）」定位不同——命中 SFX 是战斗瞬时反馈，主题动机是**元素身份的长期听觉签名**；二者共同构成「五元素听觉系统」的层次。`synth_audio.py` 加 `_loop_crossfade` 辅助 + 5 合成函数、`audio_demo.html` 加 5 试听卡（共 35 条）、`playground.html` 在选攻击元素时播对应动机作提示、`README/manifest/index` 同步；audio 30→35（6 BGM + 29 SFX），为 §4 接入主游戏时按元素分发 BGM/提示音提供素材底座。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。
