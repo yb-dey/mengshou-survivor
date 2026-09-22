@@ -99,6 +99,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="audio_demo.html" target="_blank">
       <div class="ico">🎵</div><div class="t">音频试听</div>
       <div class="d">{len(audio)} 条音频（{len(bgm)} BGM 可循环 + {len(sfx)} SFX），单击即听。</div></a>
+    <a class="ncard" href="playground.html" target="_blank">
+      <div class="ico">⚔️</div><div class="t">实战演练场</div>
+      <div class="d">用真实资产搭的迷你战斗场景：点击萌兽触发特效+音效，验证内容包可用性。</div></a>
   </div>
   <div class="inv">
     <div class="blk"><h2>🐾 角色精灵 <small>{len(sprites)} 个 key</small></h2>

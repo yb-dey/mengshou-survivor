@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 实战演练场</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; --ink:#0f2f1f; }
+  *{ box-sizing:border-box;margin:0;padding:0; }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:24px 16px; display:flex; flex-direction:column; align-items:center; }
+  h1{ font-size:26px; letter-spacing:2px; margin-bottom:6px; text-shadow:0 2px 10px rgba(0,0,0,.45) }
+  .hint{ opacity:.78; font-size:13px; max-width:760px; text-align:center; line-height:1.6; margin-bottom:16px }
+  .bar{ display:flex; gap:12px; align-items:center; margin-bottom:18px; flex-wrap:wrap; justify-content:center }
+  .btn{ background:linear-gradient(160deg,#1f5c3a,#143e28); border:1px solid rgba(232,196,99,.4);
+    color:var(--cream); padding:9px 16px; border-radius:10px; cursor:pointer; font-size:14px;
+    transition:transform .15s, box-shadow .15s }
+  .btn:hover{ transform:translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,.4) }
+  .btn.on{ background:linear-gradient(160deg,#e8c463,#caa23f); color:var(--ink); border-color:var(--cream) }
+  .score{ font-size:15px; opacity:.9 }
+  .score b{ color:var(--gold); font-size:20px }
+  #stage{ width:100%; max-width:900px; background:rgba(15,47,31,.5); border:1px solid rgba(159,224,180,.25);
+    border-radius:18px; padding:18px; display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap }
+  .hero{ flex:0 0 150px; display:flex; flex-direction:column; align-items:center; gap:8px }
+  .hero .ring{ width:130px; height:130px; border-radius:50%; background:radial-gradient(circle at 50% 40%, rgba(232,196,99,.25), rgba(63,166,106,.1));
+    display:flex; align-items:center; justify-content:center; border:2px solid rgba(232,196,99,.5) }
+  .hero img{ width:118px; height:118px; animation:bob 1.8s ease-in-out infinite }
+  .hero .nm{ font-weight:700; color:var(--gold) }
+  .hero .tag{ font-size:12px; opacity:.7 }
+  .enemies{ flex:1 1 420px; display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:12px }
+  .enemy{ position:relative; background:rgba(15,47,31,.6); border:1px solid rgba(159,224,180,.22);
+    border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; gap:6px;
+    cursor:pointer; transition:transform .12s, box-shadow .12s; overflow:hidden }
+  .enemy:hover{ transform:translateY(-3px); box-shadow:0 10px 22px rgba(0,0,0,.4) }
+  .enemy.dead{ opacity:0; transform:scale(.6); pointer-events:none; transition:opacity .5s, transform .5s }
+  .enemy.boss{ border-color:rgba(232,99,99,.6); box-shadow:0 0 0 1px rgba(232,99,99,.3) inset }
+  .enemy img{ width:84px; height:84px; animation:bob 2.1s ease-in-out infinite }
+  .enemy .nm{ font-size:13px; font-weight:600 }
+  .enemy .hpwrap{ width:100%; height:7px; background:rgba(0,0,0,.35); border-radius:4px; overflow:hidden }
+  .enemy .hp{ height:100%; width:100%; background:linear-gradient(90deg,#6fe39a,#3fa66a); transition:width .25s }
+  .enemy .hp.low{ background:linear-gradient(90deg,#f0a04b,#e06a2c) }
+  .vfx{ position:absolute; left:50%; top:42%; width:96px; height:96px; margin:-48px 0 0 -48px;
+    pointer-events:none; animation:pop .5s ease-out forwards; z-index:5 }
+  .dmg{ position:absolute; left:50%; top:20%; transform:translateX(-50%); color:#fff; font-weight:800;
+    font-size:18px; text-shadow:0 1px 3px #000; pointer-events:none; animation:rise .7s ease-out forwards; z-index:6 }
+  .dmg.crit{ color:var(--gold); font-size:24px }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-7px) } }
+  @keyframes pop{ 0%{ transform:scale(.4); opacity:0 } 25%{ transform:scale(1.15); opacity:1 } 100%{ transform:scale(.9); opacity:0 } }
+  @keyframes rise{ 0%{ opacity:0; transform:translate(-50%,6px) } 20%{ opacity:1 } 100%{ opacity:0; transform:translate(-50%,-26px) } }
+  footer{ margin-top:22px; font-size:12px; opacity:.5; text-align:center; line-height:1.7; max-width:760px }
+</style>
+</head>
+<body>
+  <h1>⚔️ 森灵萌兽 · 实战演练场</h1>
+  <div class="hint">用内容包真实资产搭的迷你战斗场景：点击萌兽发动攻击（触发对应特效与音效），击败它们得分；点「森林 BGM」开启循环主题曲。本页纯前端，直接双击打开即可，资产经相对路径加载（sprites_alpha / vfx / audio）。</div>
+  <div class="bar">
+    <button class="btn" id="bgm">🎵 森林 BGM</button>
+    <button class="btn" id="reset">🔄 重置演练</button>
+    <div class="score">得分 <b id="score">0</b></div>
+  </div>
+  <div id="stage">
+    <div class="hero">
+      <div class="ring"><img src="sprites_alpha/spirit_deer.png" alt="灵鹿祭司"></div>
+      <div class="nm">灵鹿祭司</div>
+      <div class="tag">你的英雄 · 星辉治疗</div>
+    </div>
+    <div class="enemies" id="enemies"></div>
+  </div>
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>
+  资产：8 张透底精灵 + 18 个程序化 VFX + 19 条音频；本页为「资产可用性」演示，不修改也不依赖主游戏文件，与 GROK 路线零冲突。</footer>
+
+<script>
+  // 敌种花名册（数据取自 README / manifest，HP 按稀有度设定）
+  const ROSTER = [
+    { key:'sprout_bunny',   cn:'芽芽兔',   hp:30,  boss:false },
+    { key:'flame_fox',      cn:'火苗狐',   hp:36,  boss:false },
+    { key:'water_frog',     cn:'水滴蛙',   hp:50,  boss:false },
+    { key:'star_bird',      cn:'星羽鸟',   hp:44,  boss:false },
+    { key:'stone_turtle',   cn:'石甲龟',   hp:90,  boss:false },
+    { key:'forest_ancient', cn:'森林古木', hp:200, boss:true  },
+  ];
+  const HIT_VFX = ['fx_hit_spark.png','fx_slash.png','fx_star.png'];
+  const HIT_SFX = ['cp_sfx_hit.wav','cp_sfx_kill.wav'];
+  const KILL_VFX = ['fx_explosion.png','fx_coin_burst.png'];
+
+  let score = 0, total = ROSTER.length, alive = total;
+  const enemiesEl = document.getElementById('enemies');
+  const scoreEl = document.getElementById('score');
+
+  function audio(src){ const a = new Audio(src); a.volume = 0.6; return a; }
+
+  function spawnVfx(card, file){
+    const img = document.createElement('img');
+    img.className = 'vfx'; img.src = 'vfx/' + file;
+    img.onanimationend = () => img.remove();
+    card.appendChild(img);
+  }
+  function floatDmg(card, txt, crit){
+    const d = document.createElement('div');
+    d.className = 'dmg' + (crit ? ' crit' : ''); d.textContent = txt;
+    d.onanimationend = () => d.remove();
+    card.appendChild(d);
+  }
+
+  function attack(card, e){
+    if (card.classList.contains('dead')) return;
+    const crit = Math.random() < 0.22;
+    const dmg = (crit ? 1.8 : 1) * (8 + Math.floor(Math.random()*9)) | 0;
+    e.hp -= dmg;
+    spawnVfx(card, HIT_VFX[Math.floor(Math.random()*HIT_VFX.length)]);
+    floatDmg(card, '-' + dmg, crit);
+    audio('audio/' + HIT_SFX[Math.floor(Math.random()*HIT_SFX.length)]).play().catch(()=>{});
+    const hpEl = card.querySelector('.hp');
+    const pct = Math.max(0, e.hp / e.max) * 100;
+    hpEl.style.width = pct + '%';
+    if (pct < 40) hpEl.classList.add('low');
+    if (e.hp <= 0){
+      card.classList.add('dead');
+      KILL_VFX.forEach(f => spawnVfx(card, f));
+      const sfx = e.boss ? 'cp_sfx_win.wav' : 'cp_sfx_kill.wav';
+      audio('audio/' + sfx).play().catch(()=>{});
+      setTimeout(() => audio('audio/cp_sfx_coin.wav').play().catch(()=>{}), 120);
+      score += e.boss ? 50 : 10;
+      alive--;
+      if (alive === 0) setTimeout(() => { score += 100; scoreEl.textContent = score; banner('🏆 全灭！+100 通关奖励'); }, 700);
+    }
+    scoreEl.textContent = score;
+  }
+
+  function banner(txt){
+    const b = document.createElement('div');
+    b.style.cssText = 'position:fixed;left:50%;top:30%;transform:translateX(-50%);background:rgba(15,47,31,.92);border:1px solid var(--gold);color:var(--gold);padding:14px 26px;border-radius:12px;font-size:20px;font-weight:800;z-index:99';
+    b.textContent = txt; document.body.appendChild(b);
+    setTimeout(() => b.remove(), 2200);
+  }
+
+  function build(){
+    enemiesEl.innerHTML = ''; score = 0; alive = total; scoreEl.textContent = 0;
+    ROSTER.forEach(e => {
+      e.hp = e.max = e.hp;
+      const card = document.createElement('div');
+      card.className = 'enemy' + (e.boss ? ' boss' : '');
+      card.innerHTML =
+        '<img src="sprites_alpha/' + e.key + '.png" alt="' + e.cn + '">' +
+        '<div class="nm">' + e.cn + (e.boss ? ' 👑' : '') + '</div>' +
+        '<div class="hpwrap"><div class="hp"></div></div>';
+      card.addEventListener('click', () => attack(card, e));
+      enemiesEl.appendChild(card);
+    });
+  }
+  build();
+
+  document.getElementById('reset').addEventListener('click', () => { document.querySelectorAll('.enemy').forEach(c => c.classList.remove('dead')); build(); });
+
+  let bgmOn = false, bgmAudio = null;
+  document.getElementById('bgm').addEventListener('click', (ev) => {
+    const btn = ev.currentTarget;
+    if (!bgmOn){ bgmAudio = new Audio('audio/cp_bgm_forest.wav'); bgmAudio.loop = true; bgmAudio.volume = 0.5; bgmAudio.play().catch(()=>{}); btn.classList.add('on'); btn.textContent = '🎵 停止 BGM'; bgmOn = true; }
+    else { bgmAudio.pause(); btn.classList.remove('on'); btn.textContent = '🎵 森林 BGM'; bgmOn = false; }
+  });
+</script>
+</body>
+</html>
