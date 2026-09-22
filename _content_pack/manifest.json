@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-09-23 01:17:25",
+  "generated_at": "2026-09-23 01:47:35",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
-    "vfx": 21,
+    "vfx": 24,
     "icons": 12,
-    "audio": 22,
-    "bgm": 3,
-    "sfx": 19
+    "audio": 30,
+    "bgm": 6,
+    "sfx": 24
   },
   "sprites": [
     {
@@ -78,7 +78,7 @@
   "vfx": [
     {
       "key": "fx_buff",
-      "cn": "",
+      "cn": "增益光环",
       "w": 96,
       "h": 96,
       "bytes": 5554
@@ -99,10 +99,17 @@
     },
     {
       "key": "fx_debuff",
-      "cn": "",
+      "cn": "减益光环",
       "w": 96,
       "h": 96,
       "bytes": 5542
+    },
+    {
+      "key": "fx_earth_shard",
+      "cn": "碎石",
+      "w": 128,
+      "h": 128,
+      "bytes": 17523
     },
     {
       "key": "fx_explosion",
@@ -120,7 +127,7 @@
     },
     {
       "key": "fx_freeze_shatter",
-      "cn": "",
+      "cn": "冰碎",
       "w": 96,
       "h": 96,
       "bytes": 5288
@@ -152,6 +159,13 @@
       "w": 96,
       "h": 96,
       "bytes": 5010
+    },
+    {
+      "key": "fx_leaf_burst",
+      "cn": "叶爆",
+      "w": 128,
+      "h": 128,
+      "bytes": 9180
     },
     {
       "key": "fx_levelup",
@@ -222,6 +236,13 @@
       "w": 128,
       "h": 128,
       "bytes": 8529
+    },
+    {
+      "key": "fx_water_splash",
+      "cn": "水花",
+      "w": 128,
+      "h": 128,
+      "bytes": 13707
     }
   ],
   "icons": [
@@ -332,6 +353,26 @@
       "duration": 31.3
     },
     {
+      "key": "cp_bgm_boss2",
+      "cn": "BOSS 二阶段",
+      "kind": "bgm",
+      "bytes": 2048560,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 23.23
+    },
+    {
+      "key": "cp_bgm_elite",
+      "cn": "精英遭遇",
+      "kind": "bgm",
+      "bytes": 2731398,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 30.97
+    },
+    {
       "key": "cp_bgm_forest",
       "cn": "森林主题",
       "kind": "bgm",
@@ -340,6 +381,16 @@
       "bits": 16,
       "channels": 1,
       "duration": 35.56
+    },
+    {
+      "key": "cp_bgm_tide",
+      "cn": "潮次涌动",
+      "kind": "bgm",
+      "bytes": 2919768,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 33.1
     },
     {
       "key": "cp_sfx_buff",
@@ -430,6 +481,56 @@
       "bits": 16,
       "channels": 1,
       "duration": 0.16
+    },
+    {
+      "key": "cp_sfx_hit_earth",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 30032,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.34
+    },
+    {
+      "key": "cp_sfx_hit_fire",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 26504,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.3
+    },
+    {
+      "key": "cp_sfx_hit_light",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 26504,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.3
+    },
+    {
+      "key": "cp_sfx_hit_water",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 22976,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.26
+    },
+    {
+      "key": "cp_sfx_hit_wood",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 19448,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.22
     },
     {
       "key": "cp_sfx_hurt",

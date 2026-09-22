@@ -36,6 +36,9 @@
 | `audio/cp_bgm_forest.wav` | 森林主题 BGM（循环） | 44.1k/16bit 单声道，柔 pad+三角波 lead+轻贝斯+铃+软底鼓，无缝循环 | 35.6s |
 | `audio/cp_bgm_battle.wav` | 战斗主题 BGM（循环） | 同上规格，128 BPM 驱动贝斯+能量琶音+鼓组(kick/snare/hi-hat)，Am–F–C–G 进行，无缝循环 | 30.0s |
 | `audio/cp_bgm_boss.wav`   | BOSS 主题 BGM（循环） | 同上规格，92 BPM 厚低频+铜管感锯齿 lead+定音鼓 kick+不祥钟声，Am–F–C–G 进行，无缝循环 | 31.3s |
+| `audio/cp_bgm_tide.wav`  | 潮次涌动 BGM（循环） | 同上规格，116 BPM 森林主题升级层：滚动八分贝斯+十六分水花琶音+4/4 轻底鼓+拍手军鼓+八分 hi-hat，叠加「潮涌」幅度 LFO，I–vi–IV–V 进行，无缝循环 | 33.1s |
+| `audio/cp_bgm_elite.wav` | 精英遭遇 BGM（循环） | 同上规格，124 BPM 紧张对立项：持续低音 drone+小二度摩擦 ostinato+16 分 hi-hat 织体+每小节警报 ping，Am–F–C–G 进行，无缝循环 | 31.0s |
+| `audio/cp_bgm_boss2.wav` | BOSS 二阶段 BGM（循环） | 同上规格，124 BPM 狂暴对立项：四踩底鼓+双倍驱动贝斯+八度叠加锯齿英雄动机+切分军鼓+整体升半音「狂暴」转调，Am–F–C–G（+1 半音）进行，无缝循环 | 23.2s |
 | `audio/cp_sfx_summon.wav` | 召唤音效 | 上行魔法琶音 + 微光泛音（三角波+正弦泛音） | 0.92s |
 | `audio/cp_sfx_heal.wav`  | 治疗音效 | 暖色上行和弦 swell（正弦） | 1.38s |
 | `audio/cp_sfx_hit.wav`    | 受击·命中 | 低频 thump + 噪声瞬态 + 高频 square click | 0.16s |
@@ -57,8 +60,8 @@
 | `audio/cp_sfx_debuff.wav`| 减益 / 诅咒 | 下行阴郁小调 + 低频闷响（配套 fx_debuff） | 0.70s |
 
 - **合成方式**：`tools/synth_audio.py`（纯 Python 标准库，零依赖、零生成额度、不卡机），确定性种子可复现；复用 `midi_freq / env_adsr / tone / write_wav` 四个基础件，新增 `sawtooth` 波形与 `sweep` 扫频原语。
-- **试听页**：`audio_demo.html` 引用相对路径 `audio/*.wav`，双击即听，同样规避死资产；现已改为数据驱动网格，覆盖全部 22 条（3 BGM + 19 SFX）。
-- **校验**：22/22 峰值均 = 85%（未削波），RMS 13.4%–30.0%（非空、非静音）；3 首 BGM（35.6s / 30.0s / 31.3s）无缝循环，19 个 SFX 0.06s–1.38s 覆盖战斗全事件与音画配套特效。
+- **试听页**：`audio_demo.html` 引用相对路径 `audio/*.wav`，双击即听，同样规避死资产；现已改为数据驱动网格，覆盖全部 25 条（6 BGM + 19 SFX）。
+- **校验**：30/30 峰值均 = 85%（未削波），RMS 13.4%–30.0%（非空、非静音）；6 首 BGM（35.6s / 30.0s / 31.3s / 33.1s / 31.0s / 23.2s）无缝循环，24 个 SFX 0.06s–1.38s 覆盖战斗全事件、五元素命中与音画配套特效。
 
 ## 2.2 VFX 特效精灵（本轮新增 · 程序化真透底）
 
@@ -87,10 +90,13 @@
 | `vfx/fx_freeze_shatter.png` | 冰碎 | 冻结命中 / 碎冰解控 | 96² |
 | `vfx/fx_buff.png` | 增益光环 | 攻防增益 / 强化生效 | 96² |
 | `vfx/fx_debuff.png` | 减益光环 | 减速 / 虚弱 / 诅咒 | 96² |
+| `vfx/fx_water_splash.png` | 水花 | 水元素命中 / 水弹溅落 | 128² |
+| `vfx/fx_earth_shard.png` | 碎石 | 土元素命中 / 地震冲击 | 128² |
+| `vfx/fx_leaf_burst.png` | 叶爆 | 木元素命中 / 藤蔓迸发 | 128² |
 
 - **生成器**：`tools/gen_vfx.py`（仅标准库：自写 PNG 写出 + 加性辉光/柔边环/放射尖刺），`tools/build_vfx_demo.py` 产出内联展示页。
-- **试看页**：`vfx_demo.html`（21 张 base64 内联，深色背景 + CSS 动效，双击即看）。
-- **校验**：21/21 均为 `colorType=6` RGBA；非空白像素占比 8%–64%（锐利型如斩击/星爆稀疏、辉光型饱满），透明区域正确保留；涵盖命中/弹道/护盾/治疗/斩击/星爆/霜/升级/拾取/毒/爆炸/雷/群疗/位移/预警/冲击波/召唤门/金币/冰碎/增益/减益等全机制。
+- **试看页**：`vfx_demo.html`（24 张 base64 内联，深色背景 + CSS 动效，双击即看）。
+- **校验**：24/24 均为 `colorType=6` RGBA；非空白像素占比 8%–64%（锐利型如斩击/星爆稀疏、辉光型饱满），透明区域正确保留；涵盖命中/弹道/护盾/治疗/斩击/星爆/霜/升级/拾取/毒/爆炸/雷/群疗/位移/预警/冲击波/召唤门/金币/冰碎/增益/减益/水花/碎石/叶爆等全机制。
 
 ## 2.3 状态图标（本轮新增 · 常驻 HUD 指示）
 
@@ -132,10 +138,13 @@ _content_pack/
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
 │   └── <key>.png / <key>.webp
-├── audio/                 # 本包专属音频原型（独立命名空间，零接线，22 条）
+├── audio/                 # 本包专属音频原型（独立命名空间，零接线，25 条）
 │   ├── cp_bgm_forest.wav  # 森林主题 BGM（无缝循环）
 │   ├── cp_bgm_battle.wav  # 战斗主题 BGM（128 BPM，无缝循环）
 │   ├── cp_bgm_boss.wav    # BOSS 主题 BGM（92 BPM，无缝循环）
+│   ├── cp_bgm_tide.wav    # 潮次涌动 BGM（116 BPM，森林主题升级层，无缝循环）
+│   ├── cp_bgm_elite.wav   # 精英遭遇 BGM（124 BPM，紧张对立项，无缝循环）
+│   ├── cp_bgm_boss2.wav   # BOSS 二阶段 BGM（124 BPM，狂暴对立项，无缝循环）
 │   ├── cp_sfx_summon.wav  # 召唤
 │   ├── cp_sfx_heal.wav    # 治疗
 │   ├── cp_sfx_hit.wav     # 受击·命中
@@ -151,7 +160,7 @@ _content_pack/
 │   ├── cp_sfx_buff.wav    # 增益 / 强化（配套 fx_buff）
 │   └── cp_sfx_debuff.wav  # 减益 / 诅咒（配套 fx_debuff）
 ├── vfx/                   # 程序化特效精灵（RGBA 真透底）
-│   └── fx_*.png（21 个）
+│   └── fx_*.png（24 个）
 ├── icons/                 # 状态图标（RGBA 真透底，常驻 HUD 指示）
 │   └── st_*.png（12 个）
 └── tools/
@@ -159,7 +168,7 @@ _content_pack/
     ├── build_showcase.mjs # 构建自包含展示页
     ├── build_index.py     # 生成 index.html（扫描真实目录，零依赖）
     ├── build_manifest.py  # 生成 manifest.json（扫描真实目录，零依赖）
-    ├── synth_audio.py     # 音频合成（3 首 BGM：森林/战斗/BOSS + 19 个游戏事件音效）
+    ├── synth_audio.py     # 音频合成（6 首 BGM：森林/战斗/BOSS/潮次涌动/精英遭遇/BOSS二阶段 + 24 个游戏事件音效）
     ├── gen_vfx.py         # VFX 特效生成（纯标准库）
     ├── build_vfx_demo.py  # 构建 VFX 内联展示页
     ├── gen_icons.py       # 状态图标生成（纯标准库，复用 gen_vfx.Canvas）
@@ -193,15 +202,15 @@ _content_pack/
 ## 6. 验证记录
 
 - 贴图：8/8 生成成功（6 萌兽 + Boss 森林古木 + Hero 灵鹿祭司）；8/8 透底为 RGBA；小兵/宠物 512²、Boss/Hero 1024²；展示页内联校验通过（8 张 `data:image/webp`）。
-- 音频：22/22 合成成功并校验——峰值均 85%（未削波），RMS 13.4%–30.0%（非空非静音）；试听页 `audio_demo.html` 数据驱动网格覆盖全部 22 条（3 BGM + 19 SFX），引用相对路径可双击播放。
-- VFX：21/21 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（21 张 `data:image/png`）。
+- 音频：30/30 合成成功并校验——峰值均 85%（未削波），RMS 13.4%–30.0%（非空非静音）；试听页 `audio_demo.html` 数据驱动网格覆盖全部 30 条（6 BGM + 24 SFX），引用相对路径可双击播放。
+- VFX：24/24 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（24 张 `data:image/png`）。
 - 状态图标：12/12 程序化生成成功并校验——均为 `colorType=6` RGBA（64×64），体积 1.46KB–2.52KB（实心徽章 + 白色符号，内容饱满非空白）；按 控制 / 持续伤害 / 负面 / 增益 四组分类，与 21 个 VFX 爆发特效共同构成「状态机制」视觉闭环；试看页 `icons_demo.html` 内联校验通过（12 张 `data:image/png`）。
-- 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、21 VFX（尺寸 / 体积）、12 状态图标（尺寸 / 体积）、22 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
+- 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、24 VFX（尺寸 / 体积）、12 状态图标（尺寸 / 体积）、30 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张精灵）+ 音乐（3 首 BGM + 19 SFX）+ 特效（21 个 VFX）+ 状态图标（12 个）+ 图鉴（codex）**五支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张精灵）+ 音乐（6 首 BGM + 19 SFX）+ 特效（21 个 VFX）+ 状态图标（12 个）+ 图鉴（codex）**五支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -215,5 +224,7 @@ _content_pack/
 10. ~~**实战演练场 playground.html**~~ ✅ 已交付 `playground.html`（纯前端，用真实资产搭的迷你战斗场景：点击萌兽触发 fx_hit_spark/fx_slash/fx_star + cp_sfx_hit/kill、击杀播 fx_explosion/fx_coin_burst + cp_sfx_kill/coin/win、可开 cp_bgm_forest 循环；验证内容包「美术+音乐+特效」三支柱可用性，规避死资产）。
 11. ~~**状态机制音画闭环**~~ ✅ 已交付 `cp_sfx_freeze / buff / debuff.wav`（3 条），与 Round-14 的 `fx_freeze_shatter / fx_buff / fx_debuff` 三特效成套；`synth_audio.py` 加 3 合成函数、`audio_demo.html` 加 3 试听卡（共 22 条）、README/manifest 同步；VFX↔SFX 全机制配对补齐。
 12. ~~**状态图标（常驻 HUD 指示）**~~ ✅ 已交付 12 个程序化 RGBA 状态图标（`st_freeze / st_stun / st_burn / st_poison / st_bleed / st_slow / st_mark / st_atk_up / st_def_up / st_haste / st_heal / st_shield`），覆盖 控制 / 持续伤害 / 负面 / 增益 四组；`tools/gen_icons.py`（复用 gen_vfx.Canvas）+ `tools/build_icons_demo.py` 产出分组展示页；与 VFX（触发瞬间）+ SFX（听觉反馈）共同补全「状态机制」的视觉闭环，使内容包从「爆发特效」升级到「持续状态可视化」。
+13. ~~**BGM 升级变体（音乐深化·wave→elite→boss 听觉层次）**~~ ✅ 已交付 3 首升级层 BGM：`cp_bgm_tide.wav`（116 BPM 森林主题升级层，潮涌 LFO，常规波次涌动感）、`cp_bgm_elite.wav`（124 BPM 紧张对立项，低音 drone+小二度摩擦 ostinato+警报 ping，精英来袭不安张力）、`cp_bgm_boss2.wav`（124 BPM 狂暴对立项，四踩底鼓+双倍贝斯+八度叠加锯齿 lead+升半音转调，Boss 二阶段狂暴）；`synth_audio.py` 加 3 合成函数（复用 kick/clap/snare/hat 鼓组与 bass/lead/pad 骨架并提升紧张度）、`audio_demo.html` 加 3 试听卡（共 25 条）、README/manifest/index 同步；6 首 BGM 形成「探索→交战→首领→潮次涌动→精英→二阶段」完整情绪曲线。
+14. ~~**元素克制听觉/视觉签名（五元素系统补全）**~~ ✅ 已交付 3 个缺失元素的命中 VFX（水花 / 碎石 / 叶爆，128² RGBA 真透底，程序化生成）与 5 个元素命中音效（火/水/土/光/木，0.22s–0.34s，纯标准库合成），补足原 fx_fireball/fx_lightning/fx_frost 仅覆盖火/光/冰、缺 水/土/木 的空白；`gen_vfx.py` 加 3 特效函数、`synth_audio.py` 加 5 合成函数、`audio_demo.html` 加 5 试听卡（共 30 条）、`vfx_demo.html` 加 3 展示卡、README/manifest/index 同步；五元素命中反馈（视觉 VFX + 听觉 SFX）全配对，为后续按元素分发伤害与克制倍率提供素材基础。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

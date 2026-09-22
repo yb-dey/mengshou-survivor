@@ -27,6 +27,9 @@ meta = [
     ('fx_freeze_shatter','冰碎', '冻结命中 / 碎冰解控',  'spin'),
     ('fx_buff',      '增益光环', '攻防增益 / 强化',     'float'),
     ('fx_debuff',    '减益光环', '减速 / 虚弱 / 诅咒',  'breathe'),
+    ('fx_water_splash','水花',   '水元素命中 / 水弹溅落','pulse'),
+    ('fx_earth_shard','碎石',    '土元素命中 / 地震',    'pop'),
+    ('fx_leaf_burst', '叶爆',    '木元素命中 / 藤蔓迸发','pulse'),
 ]
 
 def b64(name):

@@ -426,6 +426,63 @@ def fx_debuff(path, size=96):
         c.glow(x, y, size*0.04, (0.85, 0.35, 0.75), 0.7, soft=1.6)
     save(c, path)
 
+def fx_water_splash(path, size=128):
+    """水元素迸溅 / 水弹命中：青蓝水花 + 同心涟漪 + 放射水滴（水元素命中 / 水弹溅落）。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.40, (0.35, 0.75, 1.0), 0.28, soft=1.3)   # 青蓝水晕
+    c.ring(cx, cy, size*0.26, size*0.38, (0.55, 0.88, 1.0), 0.7)   # 主涟漪
+    c.ring(cx, cy, size*0.12, size*0.18, (0.70, 0.95, 1.0), 0.55)  # 内涟漪
+    rng = random.Random(71)
+    for _ in range(11):                                            # 放射水滴 + 拖尾
+        ang = rng.uniform(0, 2*math.pi)
+        r = size*(0.24 + rng.random()*0.24)
+        x = cx + math.cos(ang)*r; y = cy + math.sin(ang)*r
+        c.line(cx + math.cos(ang)*size*0.12, cy + math.sin(ang)*size*0.12, x, y, (0.55, 0.88, 1.0), 0.5, width=size*0.012)
+        c.glow(x, y, size*0.05, (0.65, 0.92, 1.0), 0.8, soft=1.7)
+    c.glow(cx, cy, size*0.08, (0.85, 1.0, 1.0), 0.9, soft=2.0)    # 高光核
+    save(c, path)
+
+def fx_earth_shard(path, size=128):
+    """土元素碎裂 / 岩石冲击：土褐碎石 + 放射岩片 + 中央岩核（土元素命中 / 地震）。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.40, (0.55, 0.42, 0.25), 0.30, soft=1.2)  # 土褐晕
+    rng = random.Random(73)
+    for _ in range(12):                                            # 放射岩片 + 端头亮点
+        ang = rng.uniform(0, 2*math.pi)
+        r = size*(0.22 + rng.random()*0.28)
+        x = cx + math.cos(ang)*r; y = cy + math.sin(ang)*r
+        c.line(cx + math.cos(ang)*size*0.10, cy + math.sin(ang)*size*0.10, x, y, (0.62, 0.48, 0.28), 0.85, width=size*0.03)
+        c.glow(x, y, size*(0.06 + rng.random()*0.05), (0.72, 0.58, 0.35), 0.8, soft=1.5)
+    for k in range(6):                                            # 中央岩核（六边）
+        a2 = k*math.pi/3
+        c.line(cx, cy, cx+math.cos(a2)*size*0.15, cy+math.sin(a2)*size*0.15, (0.78, 0.62, 0.38), 0.9, width=size*0.025)
+    c.glow(cx, cy, size*0.12, (0.85, 0.68, 0.42), 0.85, soft=1.8)
+    save(c, path)
+
+def fx_leaf_burst(path, size=128):
+    """木元素迸发 / 草木冲击：翠绿叶簇 + 放射叶脉 + 上升光点（木元素命中 / 藤蔓迸发）。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.40, (0.40, 0.85, 0.35), 0.28, soft=1.4)  # 翠绿晕
+    rng = random.Random(79)
+    for _ in range(9):                                            # 放射叶脉 + 叶尖点
+        ang = rng.uniform(0, 2*math.pi)
+        r = size*(0.20 + rng.random()*0.26)
+        x = cx + math.cos(ang)*r; y = cy + math.sin(ang)*r
+        c.line(cx, cy, x, y, (0.50, 0.88, 0.40), 0.7, width=size*0.018)
+        c.glow(x, y, size*0.05, (0.65, 0.95, 0.45), 0.8, soft=1.7)
+    thick = size*0.05                                            # 中央叶簇十字
+    for y in range(int(cy-size*0.20), int(cy+size*0.20)):
+        for ox in range(int(-thick), int(thick)+1):
+            c.blend(cx+ox, y, 0.55, 0.92, 0.45, 0.85)
+    for x in range(int(cx-size*0.20), int(cx+size*0.20)):
+        for oy in range(int(-thick), int(thick)+1):
+            c.blend(x, cy+oy, 0.55, 0.92, 0.45, 0.85)
+    c.glow(cx, cy, size*0.08, (0.80, 1.0, 0.65), 1.0, soft=2.0)
+    save(c, path)
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/vfx'
     import os
@@ -451,9 +508,12 @@ if __name__ == '__main__':
     fx_freeze_shatter(f'{out_dir}/fx_freeze_shatter.png')
     fx_buff(f'{out_dir}/fx_buff.png')
     fx_debuff(f'{out_dir}/fx_debuff.png')
+    fx_water_splash(f'{out_dir}/fx_water_splash.png')
+    fx_earth_shard(f'{out_dir}/fx_earth_shard.png')
+    fx_leaf_burst(f'{out_dir}/fx_leaf_burst.png')
     for f in ['fx_hit_spark','fx_fireball','fx_shield','fx_heal','fx_slash','fx_star','fx_frost',
               'fx_levelup','fx_pickup','fx_poison','fx_explosion','fx_lightning','fx_heal_burst',
               'fx_dash_trail','fx_telegraph','fx_shockwave','fx_portal','fx_coin_burst',
-              'fx_freeze_shatter','fx_buff','fx_debuff']:
+              'fx_freeze_shatter','fx_buff','fx_debuff','fx_water_splash','fx_earth_shard','fx_leaf_burst']:
         print('PNG OK:', f)
 

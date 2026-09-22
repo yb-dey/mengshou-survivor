@@ -647,6 +647,375 @@ def synth_bgm_boss(path, bars=12, bpm=92, fade=0.08):
     write_wav(path, buf)
     return total
 
+# ---------------- 潮次涌动 BGM（本轮新增 · 森林主题升级层） ----------------
+def synth_bgm_tide(path, bars=16, bpm=116, fade=0.08):
+    """潮次涌动 BGM：森林主题的升级层 —— 稍快（116 BPM）、滚动八分贝斯 + 十六分水花琶音 +
+    4/4 轻底鼓 + 拍手式军鼓 + 八分 hi-hat，叠加「潮涌」幅度 LFO，让常规波次有涌动推进感。
+    I–vi–IV–V（C Am F G），无缝循环。"""
+    beat = 60.0 / bpm
+    bar_dur = beat * 4
+    total = bars * bar_dur
+    N = int(total * SR)
+    buf = [0.0] * N
+    rng = random.Random(20260925)
+    prog = [(60, [60,64,67]), (57, [57,60,64]), (53, [53,57,60]), (55, [55,59,62])]
+    penta = [72,74,76,79,81,84,86,88]
+
+    def add(start, dur, freq, amp, wave, a=0.01, d=0.05, s=0.7, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+
+    def kick(start):
+        cnt = int(0.11 * SR); i0 = int(start * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            p = i / float(cnt)
+            buf[idx] += 0.24 * (1 - p) ** 2 * math.sin(2 * math.pi * 64.0 * p * 0.11)
+
+    def clap(start):
+        cnt = int(0.12 * SR); i0 = int(start * SR)
+        r = _noise_rng()
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            p = i / float(cnt)
+            buf[idx] += (r.random() * 2 - 1) * 0.13 * (1 - p) ** 1.4
+
+    def hat(start):
+        cnt = int(0.035 * SR); i0 = int(start * SR)
+        r = _noise_rng()
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            p = i / float(cnt)
+            buf[idx] += (r.random() * 2 - 1) * 0.05 * (1 - p)
+
+    deg = 3
+    for bar in range(bars):
+        root_midi, chord = prog[(bar // 4) % 4]
+        s0 = bar * bar_dur
+        # pad：整小节柔 sine（高八度铺底）
+        for c in chord:
+            add(s0, bar_dur * 0.98, midi_freq(c + 12), 0.08, 'sine', a=0.20, d=0.1, s=0.8, r=0.4)
+        # 滚动八分贝斯（带潮涌 LFO 调制）
+        for e in range(8):
+            st = s0 + e * (beat / 2)
+            lfo = 0.55 + 0.45 * math.sin(2 * math.pi * 0.5 * st)  # 0.5 Hz 潮涌
+            add(st, beat * 0.46, midi_freq(root_midi - 24), 0.18 * lfo, 'triangle',
+                a=0.005, d=0.03, s=0.6, r=0.06)
+        # 十六分水花琶音（soft sine，潮涌起伏）
+        for e in range(16):
+            st = s0 + e * (beat / 4)
+            lfo = 0.5 + 0.5 * math.sin(2 * math.pi * (e / 16.0))  # 每小节潮涌一次
+            note = chord[e % 3] + 12
+            add(st, beat * 0.22, midi_freq(note), 0.05 * lfo, 'sine', a=0.004, d=0.03, s=0.3, r=0.05)
+        # 铃 + 八度跳动机（小节头）
+        add(s0, 0.4, midi_freq(chord[2] + 12), 0.06, 'sine', a=0.005, d=0.2, s=0.0, r=0.3)
+        add(s0, 0.4, midi_freq(chord[2] + 24), 0.04, 'triangle', a=0.005, d=0.2, s=0.0, r=0.3)
+        # lead：八分音符游走五声
+        for e in range(8):
+            if rng.random() < 0.20:
+                continue
+            t = s0 + e * (beat / 2)
+            deg = max(0, min(len(penta) - 1, deg + rng.choice([0,1,1,2,-1,-2])))
+            add(t, beat * 0.45, midi_freq(penta[deg]), 0.14, 'triangle', a=0.01, d=0.03, s=0.6, r=0.06)
+        # 鼓组
+        kick(s0); kick(s0 + 2 * beat)
+        clap(s0 + beat); clap(s0 + 3 * beat)
+        for e in range(8):
+            hat(s0 + e * (beat / 2))
+
+    # 无缝循环：末尾 fade 段与开头交叉淡入
+    fc = int(fade * SR)
+    head = buf[:fc]
+    for i in range(fc):
+        w = i / float(fc)
+        buf[i] = buf[i] * w + head[i] * (1 - w)
+        buf[N - fc + i] = buf[N - fc + i] * (1 - w) + head[i] * w
+    write_wav(path, buf)
+    return total
+
+# ---------------- 精英遭遇 BGM（本轮新增 · 战斗主题紧张对立项） ----------------
+def synth_bgm_elite(path, bars=16, bpm=124, fade=0.08):
+    """精英遭遇 BGM：战斗主题的紧张对立项 —— 124 BPM、持续低音 drone + 小二度摩擦 ostinato +
+    16 分 hi-hat 织体 + 每小节警报 ping，制造「精英来袭」的不安张力。
+    Am–F–C–G 进行，无缝循环。"""
+    beat = 60.0 / bpm
+    bar_dur = beat * 4
+    total = bars * bar_dur
+    N = int(total * SR)
+    buf = [0.0] * N
+    rng = random.Random(20260926)
+    prog = [(45, [57, 60, 64]), (41, [53, 57, 60]), (48, [60, 64, 67]), (43, [55, 59, 62])]
+
+    def add(start, dur, freq, amp, wave, a=0.01, d=0.05, s=0.7, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+
+    def kick(start):
+        cnt = int(0.11 * SR); i0 = int(start * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            p = i / float(cnt)
+            buf[idx] += 0.28 * (1 - p) ** 2 * math.sin(2 * math.pi * 66.0 * p * 0.11)
+
+    def snare(start):
+        cnt = int(0.13 * SR); i0 = int(start * SR)
+        r = _noise_rng()
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            p = i / float(cnt)
+            buf[idx] += (r.random() * 2 - 1) * 0.18 * (1 - p) ** 1.5
+
+    def hat(start):
+        cnt = int(0.03 * SR); i0 = int(start * SR)
+        r = _noise_rng()
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            p = i / float(cnt)
+            buf[idx] += (r.random() * 2 - 1) * 0.06 * (1 - p)
+
+    for bar in range(bars):
+        root, chord = prog[(bar // 4) % 4]
+        s0 = bar * bar_dur
+        # 持续低音 drone（整小节）
+        add(s0, bar_dur * 0.98, midi_freq(root - 12), 0.14, 'sine', a=0.10, d=0.10, s=0.8, r=0.30)
+        # 暗色 pad（高八度）
+        for c in chord:
+            add(s0, bar_dur * 0.98, midi_freq(c + 12), 0.05, 'sine', a=0.20, d=0.10, s=0.7, r=0.40)
+        # 紧张 ostinato：根音 + 小二度摩擦（八分），制造不安
+        for e in range(8):
+            st = s0 + e * (beat / 2)
+            n = root if e % 2 == 0 else root + 1  # 小二度摩擦
+            add(st, beat * 0.40, midi_freq(n), 0.12, 'square', a=0.004, d=0.03, s=0.35, r=0.05)
+        # 八分贝斯（颗粒三角）
+        for e in range(8):
+            add(s0 + e * (beat / 2), beat * 0.42, midi_freq(root), 0.16, 'triangle',
+                a=0.005, d=0.03, s=0.5, r=0.05)
+        # 每小节警报 ping（方波 staccato，紧张）
+        add(s0, 0.10, midi_freq(chord[2] + 24), 0.10, 'square', a=0.002, d=0.02, s=0.2, r=0.05)
+        add(s0 + beat, 0.10, midi_freq(chord[2] + 24), 0.10, 'square', a=0.002, d=0.02, s=0.2, r=0.05)
+        # 鼓组
+        kick(s0); kick(s0 + 2 * beat)
+        snare(s0 + beat); snare(s0 + 3 * beat)
+        for e in range(16):  # 16 分 hi-hat 织体
+            hat(s0 + e * (beat / 4))
+
+    # 无缝循环：末尾 fade 段与开头交叉淡入
+    fc = int(fade * SR)
+    head = buf[:fc]
+    for i in range(fc):
+        w = i / float(fc)
+        buf[i] = buf[i] * w + head[i] * (1 - w)
+        buf[N - fc + i] = buf[N - fc + i] * (1 - w) + head[i] * w
+    write_wav(path, buf)
+    return total
+
+# ---------------- BOSS 二阶段 BGM（本轮新增 · Boss 主题狂暴对立项） ----------------
+def synth_bgm_boss2(path, bars=12, bpm=124, fade=0.08):
+    """BOSS 二阶段 BGM：Boss 主题的狂暴对立项 —— 更快（124 BPM）+ 四踩底鼓 + 双倍驱动贝斯 +
+    八度叠加锯齿英雄动机（比一阶段高八度更尖锐）+ 切分军鼓 + 整体升半音「狂暴」转调，
+    Am–F–C–G（+1 半音）进行，无缝循环。"""
+    beat = 60.0 / bpm
+    bar_dur = beat * 4
+    total = bars * bar_dur
+    N = int(total * SR)
+    buf = [0.0] * N
+    rng = random.Random(20260927)
+    # 整体升半音（狂暴转调）：保留相同功能音级
+    prog = [(46, [58, 61, 65]), (42, [54, 58, 61]), (49, [61, 65, 68]), (44, [56, 60, 63])]
+
+    def add(start, dur, freq, amp, wave, a=0.01, d=0.05, s=0.7, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+
+    def kick(start):
+        cnt = int(0.13 * SR); i0 = int(start * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            p = i / float(cnt)
+            buf[idx] += 0.34 * (1 - p) ** 2 * math.sin(2 * math.pi * 60.0 * p * 0.13)
+
+    def snare(start):
+        cnt = int(0.13 * SR); i0 = int(start * SR)
+        r = _noise_rng()
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            p = i / float(cnt)
+            buf[idx] += (r.random() * 2 - 1) * 0.20 * (1 - p) ** 1.5
+
+    def bell(start, m):
+        cnt = int(0.50 * SR); i0 = int(start * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; p = i / float(cnt)
+            a = 0.08 * (1 - p) ** 1.6
+            buf[idx] += a * tone(t, midi_freq(m), 'sine') + a * 0.4 * tone(t, midi_freq(m + 7), 'sine')
+
+    for bar in range(bars):
+        root, chord = prog[(bar // 4) % 4]
+        s0 = bar * bar_dur
+        # 低沉铺底 pad
+        for c in chord:
+            add(s0, bar_dur * 0.98, midi_freq(c), 0.09, 'sine', a=0.30, d=0.10, s=0.8, r=0.50)
+        # 双倍驱动贝斯（八分）
+        for e in range(8):
+            add(s0 + e * (beat / 2), beat * 0.42, midi_freq(root), 0.22, 'triangle',
+                a=0.005, d=0.03, s=0.6, r=0.05)
+        # 八度叠加锯齿英雄动机（比一阶段高八度 + octave doubling，更尖锐）
+        motif = [chord[0] + 12, chord[1] + 12, chord[2] + 12]
+        lead = [(0, beat * 0.8, motif[0]), (beat, beat * 0.8, motif[1]),
+                (2 * beat, beat * 0.8, motif[0]), (3 * beat, beat * 1.2, motif[2])]
+        for off, dur, m in lead:
+            add(s0 + off, dur, midi_freq(m), 0.12, 'sawtooth', a=0.02, d=0.08, s=0.6, r=0.12)
+            add(s0 + off, dur, midi_freq(m + 12), 0.06, 'sawtooth', a=0.02, d=0.08, s=0.5, r=0.12)
+        # 四踩底鼓（每拍）+ 双踩 ghost
+        for e in range(4):
+            kick(s0 + e * beat)
+        kick(s0 + beat * 1.5)
+        kick(s0 + beat * 3.5)
+        # 切分军鼓（2、4 拍）
+        snare(s0 + beat); snare(s0 + 3 * beat)
+        # 不祥钟声动机（更短促）
+        bell(s0, chord[2] + 24)
+
+    # 无缝循环：末尾 fade 段与开头交叉淡入
+    fc = int(fade * SR)
+    head = buf[:fc]
+    for i in range(fc):
+        w = i / float(fc)
+        buf[i] = buf[i] * w + head[i] * (1 - w)
+        buf[N - fc + i] = buf[N - fc + i] * (1 - w) + head[i] * w
+    write_wav(path, buf)
+    return total
+
+# ---------------- 元素命中音效（本轮新增 · 五元素听觉签名） ----------------
+def synth_hit_fire(path):
+    """火元素命中：噼啪噪声爆发 + 高频爆裂 pop + 下行火苗扫频。"""
+    total = 0.30
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.002, d=0.04, s=0.4, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    def sweep(start, dur, m0, m1, amp, wave, a=0.002, d=0.05, s=0.4, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; prog = i / cnt
+            freq = midi_freq(m0 + (m1 - m0) * prog)
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    r = _noise_rng(); nb = int(0.18 * SR)
+    for i in range(nb):  # 噼啪噪声爆发
+        if i < N: buf[i] += (r.random() * 2 - 1) * 0.30 * (1 - i / nb) ** 1.2
+    add(0, 0.08, midi_freq(88), 0.25, 'square', a=0.001, d=0.03, s=0.2, r=0.04)  # 高频爆裂 pop
+    sweep(0.04, 0.20, 72, 50, 0.30, 'sawtooth', a=0.002, d=0.10, s=0.3, r=0.05)  # 下行火苗扫频
+    write_wav(path, buf); return total
+
+def synth_hit_water(path):
+    """水元素命中：下滑水音 blip + 气泡噪声 + 清亮叮。"""
+    total = 0.26
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.002, d=0.05, s=0.4, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    def sweep(start, dur, m0, m1, amp, wave, a=0.002, d=0.05, s=0.4, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; prog = i / cnt
+            freq = midi_freq(m0 + (m1 - m0) * prog)
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    sweep(0, 0.18, 80, 58, 0.32, 'sine', a=0.002, d=0.10, s=0.4, r=0.06)  # 下滑水音
+    r = _noise_rng(); nb = int(0.10 * SR)
+    for i in range(nb):  # 气泡噪声
+        if i < N: buf[i] += (r.random() * 2 - 1) * 0.16 * (1 - i / nb) * (0.6 + 0.4 * math.sin(2 * math.pi * 50 * i / nb))
+    add(0, 0.06, midi_freq(91), 0.20, 'sine', a=0.001, d=0.03, s=0.2, r=0.04)  # 清亮叮
+    write_wav(path, buf); return total
+
+def synth_hit_earth(path):
+    """土元素命中：沉重 thud + 低频隆隆 + 碎石噪声。"""
+    total = 0.34
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.002, d=0.05, s=0.4, r=0.10):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    add(0, 0.12, midi_freq(40), 0.55, 'sine', a=0.001, d=0.06, s=0.2, r=0.06)  # 沉重 thud
+    add(0, 0.10, midi_freq(33), 0.40, 'triangle', a=0.001, d=0.05, s=0.2, r=0.05)
+    add(0, total, midi_freq(31), 0.25, 'sine', a=0.01, d=0.20, s=0.6, r=0.10)  # 低频隆隆（持续）
+    r = _noise_rng(); nb = int(0.16 * SR)
+    for i in range(nb):  # 碎石噪声
+        if i < N: buf[i] += (r.random() * 2 - 1) * 0.18 * (1 - i / nb) ** 1.3
+    write_wav(path, buf); return total
+
+def synth_hit_light(path):
+    """光元素命中：清亮钟铃 + 高频微光泛音 + 闪烁 shimmer。"""
+    total = 0.30
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.002, d=0.08, s=0.5, r=0.18):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    notes = [84, 88, 91]
+    for k, m in enumerate(notes):  # 钟铃三连
+        add(k * 0.02, 0.24, midi_freq(m), 0.20, 'sine', a=0.002, d=0.06, s=0.5, r=0.16)
+        add(k * 0.02, 0.18, midi_freq(m + 12), 0.06, 'sine', a=0.001, d=0.04, s=0.3, r=0.12)
+    add(0.06, total - 0.06, midi_freq(96), 0.05, 'sine', a=0.04, d=0.2, s=0.5, r=0.4)  # shimmer 长音
+    write_wav(path, buf); return total
+
+def synth_hit_wood(path):
+    """木元素命中：木鱼式 knock + 干裂噪声 + 轻 rustle。"""
+    total = 0.22
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.001, d=0.03, s=0.3, r=0.05):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    add(0, 0.05, midi_freq(64), 0.30, 'square', a=0.001, d=0.02, s=0.2, r=0.03)  # 木鱼 knock
+    add(0, 0.08, midi_freq(58), 0.22, 'triangle', a=0.001, d=0.04, s=0.3, r=0.04)
+    r = _noise_rng(); nb = int(0.10 * SR)
+    for i in range(nb):  # 干裂噪声（枯枝）
+        if i < N: buf[i] += (r.random() * 2 - 1) * 0.14 * (1 - i / nb) ** 1.5
+    write_wav(path, buf); return total
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/audio'
     import os
@@ -655,6 +1024,9 @@ if __name__ == '__main__':
         ('cp_bgm_forest.wav', synth_bgm),
         ('cp_bgm_battle.wav', synth_bgm_battle),
         ('cp_bgm_boss.wav', synth_bgm_boss),
+        ('cp_bgm_tide.wav', synth_bgm_tide),
+        ('cp_bgm_elite.wav', synth_bgm_elite),
+        ('cp_bgm_boss2.wav', synth_bgm_boss2),
         ('cp_sfx_summon.wav', synth_summon),
         ('cp_sfx_heal.wav', synth_heal),
         ('cp_sfx_hit.wav', synth_hit),
@@ -674,6 +1046,11 @@ if __name__ == '__main__':
         ('cp_sfx_freeze.wav', synth_freeze),
         ('cp_sfx_buff.wav', synth_buff),
         ('cp_sfx_debuff.wav', synth_debuff),
+        ('cp_sfx_hit_fire.wav', synth_hit_fire),
+        ('cp_sfx_hit_water.wav', synth_hit_water),
+        ('cp_sfx_hit_earth.wav', synth_hit_earth),
+        ('cp_sfx_hit_light.wav', synth_hit_light),
+        ('cp_sfx_hit_wood.wav', synth_hit_wood),
     ]
     for name, fn in jobs:
         d = fn(f'{out_dir}/{name}')

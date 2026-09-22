@@ -34,12 +34,17 @@ VFX_CN = {
     'fx_dash_trail': '冲刺残影', 'fx_telegraph': '预警圈', 'fx_shockwave': '冲击波环',
     'fx_portal': '召唤门', 'fx_coin_burst': '金币迸发',
     'fx_freeze_shatter': '冰碎', 'fx_buff': '增益光环', 'fx_debuff': '减益光环',
+    'fx_water_splash': '水花', 'fx_earth_shard': '碎石', 'fx_leaf_burst': '叶爆',
 }
 BGM_CN = {
     'cp_bgm_forest': '森林主题', 'cp_bgm_battle': '战斗主题', 'cp_bgm_boss': 'BOSS 主题',
+    'cp_bgm_tide': '潮次涌动', 'cp_bgm_elite': '精英遭遇', 'cp_bgm_boss2': 'BOSS 二阶段',
 }
 SFX_CN = {
     'cp_sfx_freeze': '冻结碎冰', 'cp_sfx_buff': '增益强化', 'cp_sfx_debuff': '减益诅咒',
+    'cp_sfx_hit_fire': '火元素命中', 'cp_sfx_hit_water': '水元素命中',
+    'cp_sfx_hit_earth': '土元素命中', 'cp_sfx_hit_light': '光元素命中',
+    'cp_sfx_hit_wood': '木元素命中',
 }
 ICON_CN = {
     'st_freeze': '冰冻', 'st_stun': '眩晕', 'st_burn': '灼烧', 'st_poison': '中毒',

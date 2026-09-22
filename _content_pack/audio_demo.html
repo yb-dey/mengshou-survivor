@@ -50,7 +50,7 @@
 <body>
   <h1>🌿 森灵萌兽 · 音频试听</h1>
   <div class="sub">独立内容包专属原声 · 纯参数化合成 · 双击即听</div>
-  <div class="hint">共 22 条：3 首 BGM（可循环）+ 19 个游戏事件音效</div>
+  <div class="hint">共 30 条：6 首 BGM（可循环）+ 24 个游戏事件音效</div>
   <div class="grid" id="grid"></div>
 
   <footer>萌兽消消岛 · 森灵内容包 · 音频资产（独立命名空间，不改动主游戏文件）<br>全部由 tools/synth_audio.py 纯标准库合成，峰值统一 85%，零削波</footer>
@@ -64,6 +64,12 @@ const TRACKS = [
    desc:'更快节奏（128 BPM）+ 驱动贝斯 + 能量琶音 + kick/snare/hi-hat 鼓组，Am–F–C–G 进行，无缝循环，适合潮次/精英战。', dur:'30.0s · 循环'},
   {key:'cp_bgm_boss', ico:'👹', title:'BOSS 主题 BGM', loop:true,
    desc:'更慢更沉重的史诗小调（92 BPM）+ 厚低频 + 铜管感锯齿 lead + 定音鼓 kick + 不祥钟声，Am–F–C–G 进行，无缝循环，适合 Boss/首领战。', dur:'31.3s · 循环'},
+  {key:'cp_bgm_tide', ico:'🌊', title:'潮次涌动 BGM', loop:true,
+   desc:'森林主题的升级层（116 BPM）：滚动八分贝斯 + 十六分水花琶音 + 4/4 轻底鼓 + 拍手军鼓 + 八分 hi-hat，叠加「潮涌」幅度 LFO，让常规波次有涌动推进感。I–vi–IV–V 进行，无缝循环，适合普通潮次/小怪波。', dur:'33.1s · 循环'},
+  {key:'cp_bgm_elite', ico:'🛡️', title:'精英遭遇 BGM', loop:true,
+   desc:'战斗主题的紧张对立项（124 BPM）：持续低音 drone + 小二度摩擦 ostinato + 16 分 hi-hat 织体 + 每小节警报 ping，制造「精英来袭」的不安张力。Am–F–C–G 进行，无缝循环，适合精英怪/特殊遭遇。', dur:'31.0s · 循环'},
+  {key:'cp_bgm_boss2', ico:'🔥', title:'BOSS 二阶段 BGM', loop:true,
+   desc:'Boss 主题的狂暴对立项（124 BPM）：四踩底鼓 + 双倍驱动贝斯 + 八度叠加锯齿英雄动机（比一阶段更尖锐）+ 切分军鼓 + 整体升半音「狂暴」转调。Am–F–C–G（+1 半音）进行，无缝循环，适合 Boss 二阶段/狂暴。', dur:'23.2s · 循环'},
   {key:'cp_sfx_summon', ico:'✨', title:'召唤音效', loop:false,
    desc:'上行魔法琶音叠加微光泛音，明亮短促，适用召唤萌兽/释放技能。', dur:'0.92s'},
   {key:'cp_sfx_heal', ico:'💚', title:'治疗音效', loop:false,
