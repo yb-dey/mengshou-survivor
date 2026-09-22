@@ -10366,7 +10366,11 @@ var DATA_CODEX_ENEMY = [
   { id: "bear", group: "trash", tell: "厚血贴脸", where: "开局后段主力", hint: "站桩会被贴死", knife: "不走开不是凶，是这块地它守了一整夜。" },
   { id: "hedgehog", group: "trash", tell: "停步喷刺", where: "中段起远程威胁", hint: "驻停窗可走位", knife: "竖起刺不是狠，是它只剩这一身能挡风。" },
   { id: "fox", group: "trash", tell: "尖耳蓬尾", where: "花花谷起混编", hint: "剪影可分, 比兔更快", knife: "尖着耳朵不是防你，是怕听漏了旧名字。" },
-  { id: "raven", group: "trash", tell: "喙翼", where: "岩岩坡起混编", hint: "剪影可分, 比鼠更快", knife: "盘旋不走不是盯猎物，是在找还亮着的窗。" },
+  // 【v1.199】⚠ hint 原文「剪影可分, 比鼠更快」与数据不符: raven.spd=148 < mouse.spd=150(实测鸦比鼠慢 2),
+  //   与同构的 fox(spd158 > rabbit120, "比兔更快"为真)形成同句式一真一假。按 v1.187 原则**让声明服从事实**:
+  //   改为「比兔更快」(148 > 120 为真, 且与"快变体"设计意图一致), 不改数值(148/150 差 2 点不影响手感,
+  //   且 mouse 150 已被 P1 密度调参大量依赖, 动它有回归风险)。门禁 `ci/codex-speed-claim.mjs` 持续守住。
+  { id: "raven", group: "trash", tell: "喙翼", where: "岩岩坡起混编", hint: "剪影可分, 比兔更快", knife: "盘旋不走不是盯猎物，是在找还亮着的窗。" },
   { id: "orbitcrab", group: "behave", tell: "绕圈后扑", where: "花花谷蟹阵起", hint: "绕完会扑, 别站圆心", knife: "绕圈不是戏耍，是想从背后护住那点暖。" },
   { id: "boomfruit", group: "behave", tell: "近身自爆", where: "果果林果雨", hint: "红圈前摇, 拉开", knife: "把自己炸开不是绝路，是熟透前最后换热。" },
   { id: "sporecap", group: "behave", tell: "死亡裂殖", where: "岩岩坡裂殖潮", hint: "先风筝再集火", knife: "裂开不是不甘，是怕自己冷透了没人接。" },
