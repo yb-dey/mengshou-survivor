@@ -61,6 +61,7 @@ SKILL_CN = {
 DATA_CN = {
     'element_matrix': '五元素克制矩阵', 'skill_cooldowns': '技能冷却数值',
     'wave_design': '关卡波次设计', 'boss_phases': 'BOSS 多阶段脚本',
+    'reactions': '元素反应系统',
 }
 
 def chips(keys, cn):
@@ -135,6 +136,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="wave_chart.html" target="_blank">
       <div class="ico">🗺️</div><div class="t">关卡波次 / BOSS 阶段</div>
       <div class="d">10 关难度曲线（单→双→五元素）+ 森林古木三阶段 Boss 状态机，设计参考。</div></a>
+    <a class="ncard" href="reaction_chart.html" target="_blank">
+      <div class="ico">⚗️</div><div class="t">元素反应系统</div>
+      <div class="d">五元素克制链延伸的可玩反应机制：10 组元素对 × 7 状态（增幅/聚变），附著(aura)→触发(trigger) 顺序决定倍率；含可玩实验室 reaction_lab.html。</div></a>
     <a class="ncard" href="boss_arena.html" target="_blank">
       <div class="ico">🌳</div><div class="t">BOSS 竞技场</div>
       <div class="d">把 boss_phases.json 三阶段真跑起来的迷你 Boss 战：阶段阈值 / 能力冷却 / 召唤增援。</div></a>

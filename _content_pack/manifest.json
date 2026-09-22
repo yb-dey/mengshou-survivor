@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-23 02:41:35",
+  "generated_at": "2026-09-23 03:25:48",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
     "vfx": 24,
     "icons": 12,
     "skill_icons": 13,
-    "design_data": 4,
+    "design_data": 5,
     "audio": 35,
     "bgm": 6,
     "sfx": 29
@@ -449,6 +449,11 @@
       "key": "element_matrix",
       "cn": "五元素克制矩阵",
       "bytes": 1110
+    },
+    {
+      "key": "reactions",
+      "cn": "元素反应系统",
+      "bytes": 7177
     },
     {
       "key": "skill_cooldowns",

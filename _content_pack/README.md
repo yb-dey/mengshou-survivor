@@ -198,6 +198,20 @@
 - **资产复用**：敌种用 `sprites_alpha`（芽芽兔/火苗狐/水滴蛙/星羽鸟/石甲龟/森林古木）；命中/击杀播 `fx_hit_spark`/`fx_slash`/`fx_star` + `fx_explosion`/`fx_coin_burst` + `cp_sfx_hit_*`/`cp_sfx_kill`/`cp_sfx_levelup`/`cp_sfx_win`/`cp_sfx_lose`，可开 `cp_bgm_battle` 循环。
 - **校验**：内联 `<script>` 经 `node --check` 语法校验通过（无 fetch，file:// 双击可用）；内联 `WAVE` 数据已与 `wave_design.json` 逐项比对一致（6 敌种 key/hp/element、10 关 id/波次数/每关总敌数 均无漂移）；11 项引用资产（6 精灵 png + 5 vfx png + 12 音频 wav）路径经 `ls` 核验存在，无断裂引用。
 
+## 2.9 元素反应系统（设计规格 + 可玩实验室 · 本轮新增）
+
+> 在 §2.5 的「五元素克制链」基础上延伸出的**战斗反应机制**（非游戏代码，纯设计数据 + 纯前端可玩校验场）。设计锚定业界成熟框架：Genshin 的 aura/trigger（附著/触发）顺序决定增幅倍率、聚变类附著状态；Soulstone Survivors 的状态基于「独立 debuff 相乘 + 递减」；Deep Rock Galactic: Survivor 的 DoT 以「叠层 + 衰减」形式。本包取其「顺序决定倍率 / 状态叠层」内核，落地为 10 组元素对 × 7 状态的自有规格。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `data/reactions.json` | 五元素反应系统规格 | `elements`(5) / `statuses`(7) / `reactions`(10 组无序对)；增幅类(蒸发)按 `multByTrigger` 放大触发那一击、聚变类附著状态；顺/逆以元素名字母序判定，逆触发 +20% 状态时长 |
+| `reaction_chart.html` | 反应矩阵 + 反应清单 + 状态图例可视化 | 由 `data/reactions.json` 数据驱动生成（5×5 反应矩阵 + 10 反应卡 + 7 状态图标图例，内联 SVG/HTML，零图片生成） |
+| `reaction_lab.html` | 元素反应可玩实验室 | 把规格真跑起来的纯前端 `file://` 校验场：先点元素附著木桩、再点另一元素触发反应；增幅/聚变按规格结算，逆触发 +20% 时长可见，状态 HUD 实时倒计时 |
+
+- **生成器**：`tools/build_reaction_chart.py`（读 `data/reactions.json`，复用 `data/element_matrix.json` 五元素配色，纯标准库渲染，零依赖、不卡机）。
+- **设计要点**：7 状态全部映射到既有 `icons/st_*.png` 图标 + `fx_*`/`cp_sfx_*` 资产（零新资产）；反应「消耗附著、需重新附著」复刻 Genshin 的 aura/trigger 循环；与 §2.5 五元素克制链、§2.3 状态图标、§2.1 状态音效在规则与素材层完全对齐。
+- **校验**：`data/reactions.json` 为合法 JSON（C(5,2)=10 对全覆盖、无多余、status 引用均存在，amplifying 的 `fire+water` 状态为 null 即无状态，符合设计）；`reaction_chart.html` 由脚本校验（0 占位符、10 反应名全在、7 状态图标路径均存在）；`reaction_lab.html` 内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `REACT`/`STATUS`/`ELEMENTS` 已与 `reactions.json` 逐项比对一致（5 元素 / 7 状态 / 10 反应 均无漂移），逆触发 +20% 时长已在 `applyStatus` 真正生效。
+
 ## 3. 目录结构
 
 ```
@@ -272,6 +286,7 @@ _content_pack/
     ├── build_skill_icons_demo.py # 构建技能 / 元素图标内联展示页
     ├── build_element_chart.py # 由 data/*.json 生成元素克制环 + 倍率矩阵 + 冷却条参考页
     ├── build_wave_chart.py   # 由 data/wave_design.json + data/boss_phases.json 生成关卡/Boss 参考页
+    └── build_reaction_chart.py # 由 data/reactions.json 生成 5×5 反应矩阵 + 反应卡 + 状态图例参考页
 ```
 
 ## 4. 接入游戏路径（待主文件释放后）
@@ -341,5 +356,7 @@ _content_pack/
 20. ~~**BOSS 竞技场（Boss 阶段脚本 · 可玩校验场）**~~ ✅ 已交付 `boss_arena.html`（纯前端，`file://` 双击即开，无 fetch）：把 §2.6 的 `data/boss_phases.json` 三阶段真跑起来的迷你 Boss 战——Boss 按 `hpLow`（66%/33%）切阶段、每阶段 `abilities` 按各自 `cooldown` 在 250ms tick 自动释放（藤蔓召唤→范围践踏→藤蔓缠绕+木刺喷射→古木狂暴，后期冷却压缩）、`summon` 在阶段登场与每 8s 周期混召（6 只上限）；玩家选攻击元素后伤害按 §2.5 `element_matrix.json` 倍率结算（火 强克 木 Boss ×1.6）。资产复用 `sprites_alpha`（灵鹿祭司/森林古木/芽芽兔/火苗狐/星羽鸟）+ `vfx/fx_telegraph` 预警圈 + `cp_sfx_hit_*`/`cp_sfx_win/lose`；内联 `<script>` 经 `node --check` 语法校验通过；`index.html` 加 🌳 导航卡、`README` §2.7/§3/§6/§7 同步。设计规格→可视化→可玩校验 闭环，为 §4 接入主游戏时的 Boss AI 提供端到端验证样本。
 
 21. ~~**战役模式（关卡波次 · 可玩校验场）**~~ ✅ 已交付 `campaign.html`（纯前端，`file://` 双击即开，无 fetch）：把 §2.6 的 `data/wave_design.json` 10 关 × 多波次真跑起来的关卡流程 demo——逐关逐波刷怪（清空一波→下一波、清空一关→下一关）、元素聚焦 HUD、弱点提示（`counterOf()` 算最强克元素，强克 ×1.6）、过关按 `lv.id*10` 计分 + levelup、失败后自动重试本关；第 10 关含 Boss（森林古木 200HP 木，弱火）按 §2.6 高 HP 木敌呈现。内联 `<script>` 经 `node --check` 语法校验通过；内联 `WAVE` 数据已与 `wave_design.json` 逐项比对一致（敌种 key/hp/element、10 关 id/波次数/每关总敌数均无漂移）；11 项引用资产（6 精灵 png + 5 vfx png + 12 音频 wav）路径核验存在，无断裂引用；`index.html` 加 🗺️ 导航卡、`README` §2.8/§3/§6/§7 同步。与 `boss_arena.html` 共同构成「设计规格→可视化→可玩校验」双闭环，为 §4 接入主游戏时的波次生成器与逐波推进状态机提供端到端验证样本。
+
+22. ~~**元素反应系统（设计规格 + 可玩实验室）**~~ ✅ 已交付 `data/reactions.json`（五元素反应系统规格：5 元素 / 7 状态 / 10 组元素对；增幅类按触发方向倍率、聚变类附著状态，顺/逆以元素名字母序判定、逆触发 +20% 状态时长）+ 数据驱动可视化 `reaction_chart.html`（5×5 反应矩阵 + 10 反应卡 + 7 状态图例）+ 可玩实验室 `reaction_lab.html`（纯前端 `file://` 双击即开，把规格真跑起来：附著→触发结算增幅/聚变、逆触发 +20% 时长可见、状态 HUD 实时倒计时）。`tools/build_reaction_chart.py` 读 JSON 纯标准库渲染（零依赖、不卡机）；7 状态全部映射到既有 `icons/st_*.png` + `fx_*`/`cp_sfx_*` 资产（零新资产）；`data/reactions.json` 合法 JSON（C(5,2)=10 对全覆盖），`reaction_lab.html` 内联数据与 JSON 逐项比对一致（5 元素 / 7 状态 / 10 反应 均无漂移）、内联脚本 `node --check` 语法校验通过；`index.html` 加 ⚗️ 导航卡、`README` §2.9/§3/§6/§7 同步。在 §2.5 五元素克制链 + §2.3 状态图标 + §2.1 状态音效 基础上接入「元素反应」新设计支柱，为 §4 接入主游戏时的反应结算与状态机提供端到端验证样本。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

@@ -1,0 +1,115 @@
+{
+  "system": "森灵五元素反应",
+  "version": 1,
+  "description": "在 data/element_matrix.json 五元素克制链基础上扩展的「元素反应」机制规格：当两个不同元素先后命中同一目标时触发反应。先施加的元素为「附著(aura)」，后施加的为「触发(trigger)」；触发方向决定倍率与状态强度。本规格为纯设计数据（非游戏代码），供 §4 接入主游戏时读取为反应结算参数与状态机。",
+  "references": [
+    "Genshin Impact 元素反应：增幅类(Vaporize/Melt)放大触发那一击、聚变类(Overload/Bloom…)造成独立伤害+状态；触发顺序(顺/逆)决定倍率（gstore.me / buffget.com / genshin-impact.fandom.com）",
+    "Soulstone Survivors 状态效果：负面/增益基于「层数」、多个独立 debuff 相乘、存在递减与抗性（soulstone-survivors.fandom.com）",
+    "Deep Rock Galactic: Survivor 元素 DoT：以「叠层 + 每跳衰减(0.5s 衰减 20%)」形式造成持续伤害（deeprockgalactic.wiki.gg）"
+  ],
+  "orderRule": "先施加元素 = 附著(aura)，后施加元素 = 触发(trigger)。增幅类反应倍率随触发方向不同而不同（顺/逆）；聚变类反应的状态时长/强度随触发方向微调（逆触发 +20% 时长）。同一元素二次施加只刷新附著、不触发反应。顺/逆以元素名首字母序判定：触发元素在两者字母序靠后者为「逆触发」（聚变类 +20% 状态时长）；该判定与 reaction_lab.html 可玩校验场一致。",
+  "elements": {
+    "fire": { "cn": "火", "color": "#ff7a3c" },
+    "water": { "cn": "水", "color": "#5ab6ff" },
+    "earth": { "cn": "土", "color": "#8c6a40" },
+    "light": { "cn": "光", "color": "#ffd740" },
+    "wood": { "cn": "木", "color": "#66d957" }
+  },
+  "statuses": {
+    "st_burn": {
+      "cn": "灼烧", "type": "dot", "icon": "st_burn.png",
+      "duration": 4, "tick": 0.5, "dmgPerSec": 8, "stackable": true, "canCrit": false,
+      "vfx": "fx_fireball.png", "sfx": "cp_sfx_hit_fire.wav",
+      "note": "持续灼烧 DoT；伤害固定、不暴击、无视护甲，附著期每跳结算。"
+    },
+    "st_poison": {
+      "cn": "中毒", "type": "dot", "icon": "st_poison.png",
+      "duration": 6, "tick": 0.5, "dmgPerSec": 5, "stackable": true, "canCrit": false,
+      "spreadsOnDeath": true, "vfx": "fx_poison.png", "sfx": "cp_sfx_debuff.wav",
+      "note": "持续中毒 DoT；目标死亡时将剩余中毒蔓延至附近一个敌人（DoT 流派核心）。"
+    },
+    "st_slow": {
+      "cn": "减速", "type": "debuff", "icon": "st_slow.png",
+      "duration": 5, "slowPct": 35, "stackable": false,
+      "vfx": null, "sfx": "cp_sfx_debuff.wav",
+      "note": "降低移动速度 35%，不与自身叠加；多个独立 debuff 相乘增强。"
+    },
+    "st_stun": {
+      "cn": "眩晕", "type": "debuff", "icon": "st_stun.png",
+      "duration": 1.5, "lock": true, "stackable": false,
+      "vfx": null, "sfx": "cp_sfx_debuff.wav",
+      "note": "使目标无法行动数秒；不可叠加，重新施加仅刷新时长；对精英/Boss 时长减半。"
+    },
+    "st_shield": {
+      "cn": "护盾", "type": "buff", "icon": "st_shield.png",
+      "duration": 6, "absorb": 40, "stackable": false,
+      "vfx": "fx_buff.png", "sfx": "cp_sfx_buff.wav",
+      "note": "为英雄吸收 40 点伤害（结晶类反应产出）；耗尽或到期消失。"
+    },
+    "st_heal": {
+      "cn": "持续治疗", "type": "buff", "icon": "st_heal.png",
+      "duration": 5, "healPerSec": 4, "stackable": false,
+      "vfx": "fx_heal.png", "sfx": "cp_sfx_heal.wav",
+      "note": "光合类反应产出，每秒回血 4 点（作用于英雄）。"
+    },
+    "st_haste": {
+      "cn": "急速", "type": "buff", "icon": "st_haste.png",
+      "duration": 5, "hastePct": 30, "stackable": false,
+      "vfx": "fx_buff.png", "sfx": "cp_sfx_buff.wav",
+      "note": "提升攻击速度/施法 30%（光合类反应副产出，作用于英雄）。"
+    }
+  },
+  "reactions": {
+    "earth+fire": {
+      "cn": "熔岩", "kind": "transformative", "status": "st_burn", "multByTrigger": { "fire": 1.0, "earth": 1.0 },
+      "vfx": "fx_fireball.png", "sfx": "cp_sfx_hit_fire.wav",
+      "note": "火焰熔化岩石，附著灼烧 DoT（顺/逆同效）。"
+    },
+    "earth+light": {
+      "cn": "结晶", "kind": "transformative", "status": "st_shield", "multByTrigger": { "light": 1.0, "earth": 1.0 },
+      "vfx": "fx_buff.png", "sfx": "cp_sfx_buff.wav",
+      "note": "光与土凝结成结晶，为英雄生成护盾（防御向反应）。"
+    },
+    "earth+water": {
+      "cn": "泥泞", "kind": "transformative", "status": "st_slow", "multByTrigger": { "water": 1.0, "earth": 1.0 },
+      "vfx": "fx_water_splash.png", "sfx": "cp_sfx_hit_water.wav",
+      "note": "水土交融成泥沼，附著减速；逆触发(土触发水)减速时长 +20%。"
+    },
+    "earth+wood": {
+      "cn": "缠绕", "kind": "transformative", "status": "st_stun", "multByTrigger": { "wood": 1.0, "earth": 1.0 },
+      "vfx": "fx_leaf_burst.png", "sfx": "cp_sfx_hit_wood.wav",
+      "note": "藤蔓缠石，短暂定身；逆触发(木触发土)定身时长 +20%。"
+    },
+    "fire+light": {
+      "cn": "爆燃", "kind": "transformative", "status": "st_burn", "multByTrigger": { "light": 1.0, "fire": 1.0 },
+      "vfx": "fx_fireball.png", "sfx": "cp_sfx_hit_light.wav",
+      "note": "光助火势，灼烧比「燃烧」更猛：附著持续 5s（比 fire+wood 长 1s），逆触发(光触发火)时长 +20%。"
+    },
+    "fire+water": {
+      "cn": "蒸发", "kind": "amplifying", "status": null,
+      "multByTrigger": { "fire": 1.5, "water": 2.0 },
+      "vfx": "fx_water_splash.png", "sfx": "cp_sfx_hit_water.wav",
+      "note": "增幅类：放大「触发那一击」的伤害——水触发火 = ×2.0，火触发水 = ×1.5；不附加状态。"
+    },
+    "fire+wood": {
+      "cn": "燃烧", "kind": "transformative", "status": "st_burn", "multByTrigger": { "wood": 1.0, "fire": 1.0 },
+      "vfx": "fx_fireball.png", "sfx": "cp_sfx_hit_fire.wav",
+      "note": "点燃木质，附著灼烧 DoT（持续 4s）；逆触发(木触发火)时长 +20%。"
+    },
+    "light+water": {
+      "cn": "折射", "kind": "transformative", "status": "st_stun", "multByTrigger": { "water": 1.0, "light": 1.0 },
+      "vfx": "fx_star.png", "sfx": "cp_sfx_hit_light.wav",
+      "note": "光透水珠致盲，短暂眩晕；逆触发(水触发光)时长 +20%。"
+    },
+    "light+wood": {
+      "cn": "光合", "kind": "transformative", "status": ["st_heal", "st_haste"], "multByTrigger": { "wood": 1.0, "light": 1.0 },
+      "vfx": "fx_heal.png", "sfx": "cp_sfx_buff.wav",
+      "note": "光合：为英雄回血 + 急速（增益向反应）；逆触发(木触发光)时长 +20%。"
+    },
+    "water+wood": {
+      "cn": "腐朽", "kind": "transformative", "status": "st_poison", "multByTrigger": { "wood": 1.0, "water": 1.0 },
+      "vfx": "fx_poison.png", "sfx": "cp_sfx_debuff.wav",
+      "note": "水腐木质，附著中毒 DoT 且目标死亡时蔓延（DoT 流派核心）；逆触发(木触发水)时长 +20%。"
+    }
+  }
+}

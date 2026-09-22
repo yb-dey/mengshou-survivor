@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 元素反应系统</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; }
+  *{ box-sizing:border-box;margin:0;padding:0 }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:40px 18px; display:flex; flex-direction:column; align-items:center; }
+  h1{ font-size:30px; letter-spacing:2px; margin-bottom:6px }
+  .sub{ opacity:.8; margin-bottom:26px; font-size:14px; text-align:center; max-width:680px; line-height:1.6 }
+  .wrap{ width:100%; max-width:900px; display:flex; flex-direction:column; gap:22px }
+  .card{ background:rgba(15,47,31,.55); border:1px solid rgba(159,224,180,.25); border-radius:16px; padding:22px 24px }
+  .card h2{ font-size:18px; margin-bottom:16px; display:flex; align-items:center; gap:8px }
+  .card h2 small{ opacity:.6; font-weight:400; font-size:13px }
+  table.grid{ border-collapse:collapse; margin:0 auto; font-size:14px }
+  table.grid th,table.grid td{ border:1px solid rgba(159,224,180,.25); padding:9px 11px; text-align:center; min-width:88px; vertical-align:middle }
+  table.grid th{ background:rgba(232,196,99,.12); font-weight:700 }
+  table.grid td .mini{ font-size:11px; opacity:.85; display:block; margin-top:3px }
+  .legend{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:14px; font-size:12px; opacity:.85 }
+  .legend span{ display:inline-flex; align-items:center; gap:6px }
+  .legend i{ width:14px;height:14px;border-radius:4px;display:inline-block }
+  .rc{ background:rgba(255,255,255,.04); border-left:4px solid var(--leaf); border-radius:10px; padding:10px 14px; margin:9px 0 }
+  .rc-h{ font-size:15px; display:flex; align-items:center; gap:8px }
+  .rc-h .kind{ font-size:11px; color:#0f2f1f; padding:2px 8px; border-radius:6px; font-weight:700 }
+  .rc-p{ font-size:13px; opacity:.8; margin:4px 0 }
+  .rc-s{ font-size:12px; margin:4px 0 }
+  .rc-s .tag{ display:inline-block; border:1px solid var(--leaf); border-radius:6px; padding:1px 7px; font-size:11px; margin-right:5px }
+  .rc-s .tag.none{ opacity:.5; border-color:rgba(243,247,238,.3) }
+  .rc-n{ font-size:12px; opacity:.7; line-height:1.5; margin-top:3px }
+  .sc{ display:inline-flex; align-items:center; gap:12px; background:rgba(255,255,255,.04);
+    border:1px solid rgba(159,224,180,.22); border-radius:12px; padding:10px 14px; margin:8px; width:calc(50%% - 16px) }
+  .sc img{ width:54px; height:54px; flex:none }
+  .sc-b{ display:flex; flex-direction:column; gap:2px }
+  .sc-b b{ font-size:15px }
+  .sc-b .sc-t{ font-size:12px; color:var(--gold) }
+  .sc-b .sc-e{ font-size:12px; opacity:.8 }
+  .sc-b .sc-n{ font-size:11px; opacity:.65; line-height:1.45; margin-top:2px }
+  footer{ margin-top:26px; font-size:12px; opacity:.5; text-align:center; line-height:1.7; max-width:780px }
+</style>
+</head>
+<body>
+  <h1>⚗️ 元素反应系统</h1>
+  <div class="sub">在 <code>data/element_matrix.json</code> 五元素克制链基础上扩展的「元素反应」机制规格（纯设计数据，非游戏代码）。先施加的元素为<b>附著(aura)</b>、后施加为<b>触发(trigger)</b>；增幅类反应的倍率随触发方向而变，聚变类反应附著状态。数据来自 <code>data/reactions.json</code>，本页由 <code>tools/build_reaction_chart.py</code> 生成。</div>
+  <div class="wrap">
+    <div class="card">
+      <h2>🔀 五元素反应矩阵 <small>行=附著先手 / 列=触发后手</small></h2>
+      <table class="grid"><tr><th></th><th style="color:#ff7a3c">火</th><th style="color:#5ab6ff">水</th><th style="color:#8c6a40">土</th><th style="color:#ffd740">光</th><th style="color:#66d957">木</th></tr><tr><th style="color:#ff7a3c">火</th><td style="background:rgba(255,255,255,.05);color:rgba(243,247,238,.4)">—</td><td style="background:rgba(232,196,99,0.16);border-color:rgba(232,196,99,0.60)"><b style="color:#e8c463">蒸发</b><br><span class="mini">增幅 · 触发水 ×2.0</span></td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">熔岩</b><br><span class="mini">聚变 · 灼烧</span></td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">爆燃</b><br><span class="mini">聚变 · 灼烧</span></td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">燃烧</b><br><span class="mini">聚变 · 灼烧</span></td></tr><tr><th style="color:#5ab6ff">水</th><td style="background:rgba(232,196,99,0.16);border-color:rgba(232,196,99,0.60)"><b style="color:#e8c463">蒸发</b><br><span class="mini">增幅 · 触发火 ×1.5</span></td><td style="background:rgba(255,255,255,.05);color:rgba(243,247,238,.4)">—</td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">泥泞</b><br><span class="mini">聚变 · 减速</span></td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">折射</b><br><span class="mini">聚变 · 眩晕</span></td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">腐朽</b><br><span class="mini">聚变 · 中毒</span></td></tr><tr><th style="color:#8c6a40">土</th><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">熔岩</b><br><span class="mini">聚变 · 灼烧</span></td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">泥泞</b><br><span class="mini">聚变 · 减速</span></td><td style="background:rgba(255,255,255,.05);color:rgba(243,247,238,.4)">—</td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">结晶</b><br><span class="mini">聚变 · 护盾</span></td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">缠绕</b><br><span class="mini">聚变 · 眩晕</span></td></tr><tr><th style="color:#ffd740">光</th><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">爆燃</b><br><span class="mini">聚变 · 灼烧</span></td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">折射</b><br><span class="mini">聚变 · 眩晕</span></td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">结晶</b><br><span class="mini">聚变 · 护盾</span></td><td style="background:rgba(255,255,255,.05);color:rgba(243,247,238,.4)">—</td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">光合</b><br><span class="mini">聚变 · 持续治疗 / 急速</span></td></tr><tr><th style="color:#66d957">木</th><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">燃烧</b><br><span class="mini">聚变 · 灼烧</span></td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">腐朽</b><br><span class="mini">聚变 · 中毒</span></td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">缠绕</b><br><span class="mini">聚变 · 眩晕</span></td><td style="background:rgba(102,217,87,0.16);border-color:rgba(102,217,87,0.60)"><b style="color:#66d957">光合</b><br><span class="mini">聚变 · 持续治疗 / 急速</span></td><td style="background:rgba(255,255,255,.05);color:rgba(243,247,238,.4)">—</td></tr></table>
+      <div class="legend">
+        <span><i style="background:#e8c463"></i>增幅（放大触发那一击）</span>
+        <span><i style="background:#66d957"></i>聚变（附加状态）</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>📜 反应清单 <small>10 组无序元素对</small></h2>
+      <div class="rc" style="border-left-color:#66d957"><div class="rc-h"><b style="color:#66d957">熔岩</b> <span class="kind" style="background:#66d957">聚变</span></div><div class="rc-p">土 + 火</div><div class="rc-s"><span class="tag" style="border-color:#66d957;color:#66d957">灼烧</span> </div><div class="rc-n">火焰熔化岩石，附著灼烧 DoT（顺/逆同效）。</div></div><div class="rc" style="border-left-color:#66d957"><div class="rc-h"><b style="color:#66d957">结晶</b> <span class="kind" style="background:#66d957">聚变</span></div><div class="rc-p">土 + 光</div><div class="rc-s"><span class="tag" style="border-color:#66d957;color:#66d957">护盾</span> </div><div class="rc-n">光与土凝结成结晶，为英雄生成护盾（防御向反应）。</div></div><div class="rc" style="border-left-color:#66d957"><div class="rc-h"><b style="color:#66d957">泥泞</b> <span class="kind" style="background:#66d957">聚变</span></div><div class="rc-p">土 + 水</div><div class="rc-s"><span class="tag" style="border-color:#66d957;color:#66d957">减速</span> </div><div class="rc-n">水土交融成泥沼，附著减速；逆触发(土触发水)减速时长 +20%。</div></div><div class="rc" style="border-left-color:#66d957"><div class="rc-h"><b style="color:#66d957">缠绕</b> <span class="kind" style="background:#66d957">聚变</span></div><div class="rc-p">土 + 木</div><div class="rc-s"><span class="tag" style="border-color:#66d957;color:#66d957">眩晕</span> </div><div class="rc-n">藤蔓缠石，短暂定身；逆触发(木触发土)定身时长 +20%。</div></div><div class="rc" style="border-left-color:#66d957"><div class="rc-h"><b style="color:#66d957">爆燃</b> <span class="kind" style="background:#66d957">聚变</span></div><div class="rc-p">火 + 光</div><div class="rc-s"><span class="tag" style="border-color:#66d957;color:#66d957">灼烧</span> </div><div class="rc-n">光助火势，灼烧比「燃烧」更猛：附著持续 5s（比 fire+wood 长 1s），逆触发 +20% 时长。</div></div><div class="rc" style="border-left-color:#e8c463"><div class="rc-h"><b style="color:#e8c463">蒸发</b> <span class="kind" style="background:#e8c463">增幅</span></div><div class="rc-p">火 + 水</div><div class="rc-s"><span class="tag none">无状态</span> 火触发 ×1.5 · 水触发 ×2.0</div><div class="rc-n">增幅类：放大「触发那一击」的伤害——水触发火 = ×2.0，火触发水 = ×1.5；不附加状态。</div></div><div class="rc" style="border-left-color:#66d957"><div class="rc-h"><b style="color:#66d957">燃烧</b> <span class="kind" style="background:#66d957">聚变</span></div><div class="rc-p">火 + 木</div><div class="rc-s"><span class="tag" style="border-color:#66d957;color:#66d957">灼烧</span> </div><div class="rc-n">点燃木质，附著灼烧 DoT（持续 4s）；逆触发(木触发火)时长 +20%。</div></div><div class="rc" style="border-left-color:#66d957"><div class="rc-h"><b style="color:#66d957">折射</b> <span class="kind" style="background:#66d957">聚变</span></div><div class="rc-p">光 + 水</div><div class="rc-s"><span class="tag" style="border-color:#66d957;color:#66d957">眩晕</span> </div><div class="rc-n">光透水珠致盲，短暂眩晕；逆触发(水触发光)时长 +20%。</div></div><div class="rc" style="border-left-color:#66d957"><div class="rc-h"><b style="color:#66d957">光合</b> <span class="kind" style="background:#66d957">聚变</span></div><div class="rc-p">光 + 木</div><div class="rc-s"><span class="tag" style="border-color:#66d957;color:#66d957">持续治疗</span><span class="tag" style="border-color:#66d957;color:#66d957">急速</span> </div><div class="rc-n">光合：为英雄回血 + 急速（增益向反应）；逆触发(木触发光)时长 +20%。</div></div><div class="rc" style="border-left-color:#66d957"><div class="rc-h"><b style="color:#66d957">腐朽</b> <span class="kind" style="background:#66d957">聚变</span></div><div class="rc-p">水 + 木</div><div class="rc-s"><span class="tag" style="border-color:#66d957;color:#66d957">中毒</span> </div><div class="rc-n">水腐木质，附著中毒 DoT 且目标死亡时蔓延（DoT 流派核心）；逆触发(木触发水)时长 +20%。</div></div>
+    </div>
+    <div class="card">
+      <h2>🩸 状态图例 <small>7 个被反应引用的状态（图标 = icons/）</small></h2>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center"><div class="sc"><img src="icons/st_burn.png" alt="灼烧"><div class="sc-b"><b>灼烧</b><span class="sc-t">持续伤害 DoT</span><span class="sc-e">每跳 8/s · 持续 4s</span><span class="sc-n">持续灼烧 DoT；伤害固定、不暴击、无视护甲，附著期每跳结算。</span></div></div><div class="sc"><img src="icons/st_haste.png" alt="急速"><div class="sc-b"><b>急速</b><span class="sc-t">增益</span><span class="sc-e">持续 5s</span><span class="sc-n">提升攻击速度/施法 30%（光合类反应副产出，作用于英雄）。</span></div></div><div class="sc"><img src="icons/st_heal.png" alt="持续治疗"><div class="sc-b"><b>持续治疗</b><span class="sc-t">增益</span><span class="sc-e">持续 5s</span><span class="sc-n">光合类反应产出，每秒回血 4 点（作用于英雄）。</span></div></div><div class="sc"><img src="icons/st_poison.png" alt="中毒"><div class="sc-b"><b>中毒</b><span class="sc-t">持续伤害 DoT</span><span class="sc-e">每跳 5/s · 持续 6s</span><span class="sc-n">持续中毒 DoT；目标死亡时将剩余中毒蔓延至附近一个敌人（DoT 流派核心）。</span></div></div><div class="sc"><img src="icons/st_shield.png" alt="护盾"><div class="sc-b"><b>护盾</b><span class="sc-t">增益</span><span class="sc-e">持续 6s</span><span class="sc-n">为英雄吸收 40 点伤害（结晶类反应产出）；耗尽或到期消失。</span></div></div><div class="sc"><img src="icons/st_slow.png" alt="减速"><div class="sc-b"><b>减速</b><span class="sc-t">减益</span><span class="sc-e">持续 5s</span><span class="sc-n">降低移动速度 35%，不与自身叠加；多个独立 debuff 相乘增强。</span></div></div><div class="sc"><img src="icons/st_stun.png" alt="眩晕"><div class="sc-b"><b>眩晕</b><span class="sc-t">减益</span><span class="sc-e">持续 1s</span><span class="sc-n">使目标无法行动数秒；不可叠加，重新施加仅刷新时长；对精英/Boss 时长减半。</span></div></div></div>
+    </div>
+  </div>
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>设计数值规格（非游戏代码），与 §2.5 五元素克制链、§2.4 元素身份 UI、R12/R14 状态图标+音效三件套对齐，为 §4 接入主游戏时的反应结算与状态机提供数据底座。</footer>
+</body>
+</html>

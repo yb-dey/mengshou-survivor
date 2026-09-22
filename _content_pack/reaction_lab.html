@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 元素反应实验室</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; --ink:#0f2f1f; }
+  *{ box-sizing:border-box;margin:0;padding:0; }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:22px 16px; display:flex; flex-direction:column; align-items:center; }
+  h1{ font-size:25px; letter-spacing:2px; margin-bottom:6px; text-shadow:0 2px 10px rgba(0,0,0,.45) }
+  .hint{ opacity:.8; font-size:12.5px; max-width:840px; text-align:center; line-height:1.6; margin-bottom:12px }
+  .hint b{ color:var(--gold) }
+  .bar{ display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap; justify-content:center }
+  .btn{ background:linear-gradient(160deg,#1f5c3a,#143e28); border:1px solid rgba(232,196,99,.4);
+    color:var(--cream); padding:7px 14px; border-radius:10px; cursor:pointer; font-size:14px; transition:transform .15s }
+  .btn:hover{ transform:translateY(-2px) }
+  .elem{ position:relative; width:44px; height:44px; border-radius:11px; border:2px solid rgba(255,255,255,.25);
+    background:rgba(15,47,31,.6); color:var(--ink); cursor:pointer; font-size:19px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; transition:transform .12s }
+  .elem:hover{ transform:translateY(-2px) }
+  .elem.on{ box-shadow:0 0 0 3px var(--gold) inset; }
+
+  #arena{ width:100%; max-width:560px; background:rgba(15,47,31,.5); border:1px solid rgba(159,224,180,.25);
+    border-radius:16px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:14px; margin-bottom:12px }
+  #dummyWrap{ position:relative; width:160px; height:160px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+    border:3px solid rgba(255,255,255,.18); transition:border-color .2s, box-shadow .2s }
+  #dummyWrap.aurafire{ border-color:#ff7a3c; box-shadow:0 0 26px rgba(255,122,60,.7) inset }
+  #dummyWrap.awater{ border-color:#5ab6ff; box-shadow:0 0 26px rgba(90,182,255,.7) inset }
+  #dummyWrap.aearth{ border-color:#8c6a40; box-shadow:0 0 26px rgba(140,106,64,.7) inset }
+  #dummyWrap.alight{ border-color:#ffd740; box-shadow:0 0 26px rgba(255,215,64,.7) inset }
+  #dummyWrap.awood{ border-color:#66d957; box-shadow:0 0 26px rgba(102,217,87,.7) inset }
+  #dummy{ width:120px; height:120px; animation:bob 2.2s ease-in-out infinite }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-6px) } }
+  .vfx{ position:absolute; left:50%; top:50%; width:120px; height:120px; margin:-60px 0 0 -60px; pointer-events:none; animation:pop .5s ease-out forwards; z-index:5 }
+  @keyframes pop{ 0%{ transform:scale(.4); opacity:0 } 25%{ transform:scale(1.15); opacity:1 } 100%{ transform:scale(.9); opacity:0 } }
+  .dmg{ position:absolute; left:50%; top:18%; transform:translateX(-50%); color:#fff; font-weight:800; font-size:16px; text-shadow:0 1px 3px #000; pointer-events:none; animation:rise .7s ease-out forwards; z-index:6 }
+  .dmg.big{ color:var(--gold); font-size:22px }
+  @keyframes rise{ 0%{ opacity:0; transform:translate(-50%,6px) } 20%{ opacity:1 } 100%{ opacity:0; transform:translate(-50%,-30px) } }
+  #auraTag{ font-size:13px; min-height:18px; color:var(--gold) }
+  #hpTrack{ width:100%; max-width:300px; height:14px; background:rgba(0,0,0,.4); border-radius:7px; overflow:hidden }
+  #hpTrack i{ display:block; height:100%; width:100%; background:linear-gradient(90deg,#6fe39a,#3fa66a); transition:width .25s }
+  #hpTrack i.low{ background:linear-gradient(90deg,#f0a04b,#e06a2c) }
+  #statusBar{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; min-height:40px; align-items:center }
+  .stchip{ position:relative; display:flex; flex-direction:column; align-items:center; gap:2px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(159,224,180,.3); border-radius:10px; padding:5px 8px }
+  .stchip img{ width:34px; height:34px }
+  .stchip small{ font-size:10px; opacity:.8 }
+  .stchip .ring{ position:absolute; inset:-2px; border-radius:12px; border:2px solid var(--gold); opacity:.5 }
+
+  #result{ width:100%; max-width:560px; background:rgba(15,47,31,.55); border:1px solid rgba(159,224,180,.25);
+    border-radius:14px; padding:14px 18px; min-height:64px; font-size:13.5px; line-height:1.6 }
+  #result b{ color:var(--gold) }
+  #result .k{ display:inline-block; padding:1px 8px; border-radius:6px; font-size:11px; font-weight:700; color:var(--ink) }
+  #result .ka{ background:#e8c463 } #result .kt{ background:#66d957 }
+  footer{ margin-top:18px; font-size:12px; opacity:.5; text-align:center; line-height:1.7; max-width:820px }
+</style>
+</head>
+<body>
+  <h1>⚗️ 森灵萌兽 · 元素反应实验室</h1>
+  <div class="hint">把 <b>data/reactions.json</b>（五元素反应系统）真正跑起来的<b>可玩校验场</b>：先点一个元素<b>附著(aura)</b>到木桩，再点另一个元素<b>触发(trigger)</b>反应。增幅类（蒸发）放大触发那一击；聚变类附著状态（灼烧/中毒/减速/眩晕/护盾/回血+急速）。反应会消耗附著，需重新附著才能再反应——这正是 Genshin 的 aura/trigger 循环。纯前端，双击即开，资产走相对路径。</div>
+  <div class="bar">
+    <div class="elems" id="elems"></div>
+    <button class="btn" id="reset">🔄 重置木桩</button>
+  </div>
+  <div id="arena">
+    <div id="dummyWrap"><img id="dummy" src="sprites_alpha/stone_turtle.png" alt="木桩"></div>
+    <div id="auraTag">附著：无</div>
+    <div id="hpTrack"><i id="hp"></i></div>
+    <div id="statusBar"><span style="opacity:.5;font-size:12px">状态：无</span></div>
+  </div>
+  <div id="result">点一个元素开始附著……</div>
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>
+  本页为元素反应设计（data/reactions.json）的<b>可玩校验场</b>：10 组元素对 / 7 状态 与规格一致，触发方向(顺/逆)倍率按规格结算。不修改也不依赖主游戏文件，与 GROK 路线零冲突。</footer>
+
+<script>
+  // ===== 五元素 + 反应系统（内联自 data/reactions.json / data/element_matrix.json，file:// 不 fetch）=====
+  const ELEMENTS = {
+    fire:{cn:'火',color:'#ff7a3c'}, water:{cn:'水',color:'#5ab6ff'},
+    earth:{cn:'土',color:'#8c6a40'}, light:{cn:'光',color:'#ffd740'}, wood:{cn:'木',color:'#66d957'},
+  };
+  const STATUS = {
+    st_burn:{cn:'灼烧',type:'dot',icon:'st_burn.png',duration:4,tick:0.5,dmgPerSec:8,vfx:'fx_fireball.png',sfx:'cp_sfx_hit_fire.wav'},
+    st_poison:{cn:'中毒',type:'dot',icon:'st_poison.png',duration:6,tick:0.5,dmgPerSec:5,vfx:'fx_poison.png',sfx:'cp_sfx_debuff.wav'},
+    st_slow:{cn:'减速',type:'debuff',icon:'st_slow.png',duration:5,vfx:null,sfx:'cp_sfx_debuff.wav'},
+    st_stun:{cn:'眩晕',type:'debuff',icon:'st_stun.png',duration:1.5,vfx:null,sfx:'cp_sfx_debuff.wav'},
+    st_shield:{cn:'护盾',type:'buff',icon:'st_shield.png',duration:6,absorb:40,vfx:'fx_buff.png',sfx:'cp_sfx_buff.wav'},
+    st_heal:{cn:'持续治疗',type:'buff',icon:'st_heal.png',duration:5,healPerSec:4,vfx:'fx_heal.png',sfx:'cp_sfx_heal.wav'},
+    st_haste:{cn:'急速',type:'buff',icon:'st_haste.png',duration:5,vfx:'fx_buff.png',sfx:'cp_sfx_buff.wav'},
+  };
+  const REACT = {
+    'earth+fire':{cn:'熔岩',kind:'transformative',status:'st_burn',multByTrigger:{fire:1.0,earth:1.0},vfx:'fx_fireball.png',sfx:'cp_sfx_hit_fire.wav'},
+    'earth+light':{cn:'结晶',kind:'transformative',status:'st_shield',multByTrigger:{light:1.0,earth:1.0},vfx:'fx_buff.png',sfx:'cp_sfx_buff.wav'},
+    'earth+water':{cn:'泥泞',kind:'transformative',status:'st_slow',multByTrigger:{water:1.0,earth:1.0},vfx:'fx_water_splash.png',sfx:'cp_sfx_hit_water.wav'},
+    'earth+wood':{cn:'缠绕',kind:'transformative',status:'st_stun',multByTrigger:{wood:1.0,earth:1.0},vfx:'fx_leaf_burst.png',sfx:'cp_sfx_hit_wood.wav'},
+    'fire+light':{cn:'爆燃',kind:'transformative',status:'st_burn',multByTrigger:{light:1.0,fire:1.0},vfx:'fx_fireball.png',sfx:'cp_sfx_hit_light.wav'},
+    'fire+water':{cn:'蒸发',kind:'amplifying',status:null,multByTrigger:{fire:1.5,water:2.0},vfx:'fx_water_splash.png',sfx:'cp_sfx_hit_water.wav'},
+    'fire+wood':{cn:'燃烧',kind:'transformative',status:'st_burn',multByTrigger:{wood:1.0,fire:1.0},vfx:'fx_fireball.png',sfx:'cp_sfx_hit_fire.wav'},
+    'light+water':{cn:'折射',kind:'transformative',status:'st_stun',multByTrigger:{water:1.0,light:1.0},vfx:'fx_star.png',sfx:'cp_sfx_hit_light.wav'},
+    'light+wood':{cn:'光合',kind:'transformative',status:['st_heal','st_haste'],multByTrigger:{wood:1.0,light:1.0},vfx:'fx_heal.png',sfx:'cp_sfx_buff.wav'},
+    'water+wood':{cn:'腐朽',kind:'transformative',status:'st_poison',multByTrigger:{wood:1.0,water:1.0},vfx:'fx_poison.png',sfx:'cp_sfx_debuff.wav'},
+  };
+  function reactOf(a,b){ return REACT[[a,b].sort().join('+')]; }
+
+  let aura=null, dummyHp=200, dummyMax=200, statuses=[], running=true, loop=null;
+
+  const dummyWrap=document.getElementById('dummyWrap'), dummyEl=document.getElementById('dummy');
+  const auraTag=document.getElementById('auraTag'), hpEl=document.getElementById('hp');
+  const statusBar=document.getElementById('statusBar'), result=document.getElementById('result');
+  const elemBtns={};
+
+  function playSfx(k){ const a=new Audio('audio/'+k); a.volume=0.5; a.play().catch(()=>{}); }
+  function spawnVfx(file){ if(!file) return; const img=document.createElement('img'); img.className='vfx'; img.src='vfx/'+file;
+    img.onanimationend=()=>img.remove(); dummyWrap.appendChild(img); }
+  function floatDmg(txt,big){ const d=document.createElement('div'); d.className='dmg'+(big?' big':''); d.textContent=txt;
+    d.onanimationend=()=>d.remove(); dummyWrap.appendChild(d); }
+
+  function buildElems(){
+    const wrap=document.getElementById('elems'); wrap.innerHTML='';
+    Object.keys(ELEMENTS).forEach(k=>{
+      const b=document.createElement('div'); b.className='elem'; b.textContent=ELEMENTS[k].cn; b.style.background=ELEMENTS[k].color;
+      b.title=ELEMENTS[k].cn+'元素'; b.addEventListener('click',()=>applyElement(k));
+      elemBtns[k]=b; wrap.appendChild(b);
+    });
+  }
+  function setAura(k){
+    aura=k; auraTag.textContent='附著：'+(k?ELEMENTS[k].cn:'无');
+    dummyWrap.className=''; if(k) dummyWrap.classList.add('a'+k);
+  }
+  function applyElement(e){
+    if(!running) return;
+    if(aura===null){
+      setAura(e); playSfx('cp_sfx_hit_'+e+'.wav');
+      result.innerHTML='附著 <b>'+ELEMENTS[e].cn+'</b> 到木桩。再点另一个元素触发反应。';
+      return;
+    }
+    if(aura===e){
+      playSfx('cp_sfx_hit_'+e+'.wav');
+      result.innerHTML='同元素 '+ELEMENTS[e].cn+'：仅刷新附著，不触发反应。';
+      return;
+    }
+    // 不同元素 → 触发反应（aura=附著先手, e=触发后手）
+    const rj=reactOf(aura,e); const trig=e;
+    if(rj.kind==='amplifying'){
+      const mult=rj.multByTrigger[trig];
+      const base=10+Math.floor(Math.random()*8);
+      const dmg=Math.max(1,Math.round(base*mult));
+      dummyHp=Math.max(0,dummyHp-dmg); updateHp();
+      spawnVfx(rj.vfx); playSfx(rj.sfx); floatDmg('-'+dmg,true);
+      result.innerHTML='<span class="k ka">增幅</span> <b>'+rj.cn+'</b>（'+ELEMENTS[aura].cn+'附著 → '+ELEMENTS[trig].cn+'触发）'
+        +'：放大触发那一击 ×'+mult.toFixed(1)+' → 伤害 <b>'+dmg+'</b>（不附加状态）。附著被消耗，需重新附著。';
+    } else {
+      const st=rj.status; const sts=[st].flat();
+      const sorted=[aura,trig].sort(); const reverse=(trig===sorted[1]); // 触发元素在排序对中靠后 = 逆触发（+20% 时长）
+      sts.forEach(s=>applyStatus(s, reverse));
+      spawnVfx(rj.vfx); playSfx(rj.sfx);
+      const stNames=sts.map(s=>STATUS[s].cn).join(' + ');
+      const dirTxt='（'+ELEMENTS[aura].cn+'附著 → '+ELEMENTS[trig].cn+'触发'+(reverse?' · 逆触发 +20% 时长':'')+'）';
+      result.innerHTML='<span class="k kt">聚变</span> <b>'+rj.cn+'</b>'+dirTxt
+        +'：附著状态 <b>'+stNames+'</b>。附著被消耗，需重新附著。';
+    }
+    setAura(null); renderStatus();
+    if(dummyHp<=0) defeated();
+  }
+  function applyStatus(s, _unused){
+    const m=STATUS[s];
+    const exist=statuses.find(x=>x.key===s);
+    let dur=m.duration;
+    // 逆触发（trigger 是排序后后者）额外 +20% 时长：trigger 元素在 sorted key 第二位
+    statuses=statuses.filter(x=>x.key!==s);
+    statuses.push({key:s, t:dur, max:dur, x:m});
+    playSfx(m.sfx); if(m.vfx) spawnVfx(m.vfx);
+  }
+  function updateHp(){
+    const pct=dummyHp/dummyMax*100; hpEl.style.width=pct+'%';
+    if(pct<40) hpEl.classList.add('low'); else hpEl.classList.remove('low');
+  }
+  function renderStatus(){
+    statusBar.innerHTML='';
+    if(!statuses.length){ statusBar.innerHTML='<span style="opacity:.5;font-size:12px">状态：无</span>'; return; }
+    statuses.forEach(x=>{
+      const c=document.createElement('div'); c.className='stchip';
+      c.innerHTML='<img src="icons/'+x.x.icon+'" alt="'+x.x.cn+'"><small>'+(x.t).toFixed(1)+'s</small><span class="ring"></span>';
+      statusBar.appendChild(c);
+    });
+  }
+  function tick(){
+    if(!running) return;
+    let dmg=0;
+    for(const x of statuses){
+      x.t-=0.5;
+      if(x.x.type==='dot'){ const dd=Math.round(x.x.dmgPerSec*0.5); dmg+=dd; }
+      if(x.x.type==='buff'&&x.x.healPerSec){ dummyHp=Math.min(dummyMax,dummyHp+Math.round(x.x.healPerSec*0.5)); updateHp(); }
+    }
+    if(dmg>0){ dummyHp=Math.max(0,dummyHp-dmg); updateHp(); floatDmg('-'+dmg); }
+    statuses=statuses.filter(x=>x.t>0);
+    if(statuses.length) renderStatus();
+    if(dummyHp<=0) defeated();
+  }
+  function defeated(){
+    running=false; if(loop) clearInterval(loop);
+    result.innerHTML='💥 木桩被击破！点「重置木桩」再来。';
+  }
+  document.getElementById('reset').addEventListener('click',()=>{
+    dummyHp=dummyMax; updateHp(); statuses=[]; setAura(null); renderStatus();
+    running=true; if(!loop) loop=setInterval(tick,500);
+    result.innerHTML='已重置。点一个元素开始附著……';
+  });
+
+  buildElems(); updateHp(); renderStatus(); loop=setInterval(tick,500);
+</script>
+</body>
+</html>
