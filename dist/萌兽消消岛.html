@@ -12749,7 +12749,11 @@ var Audio = {
       //   窗口 = max(nodeDuckSec, 本音起点 + 本音实响时长)；实响 = buf.duration / (rate*rateMul)。
       //   目的: 让"压垫乐"覆盖整条可听段, 而不是固定 0.68s 后放尾音裸奔。
       if (CONFIG.audio.nodeDuckCover && buf && buf.duration > 0) {
-        var duckNeed = (delay || 0) + buf.duration / ((rate || 1) * (this.rateMul || 1));
+        // 【v1.206】⚠ 内联音 duck 覆盖时长。原文写 `(delay || 0)` —— **漏了 `ev.`**（函数内无 delay 变量，
+        //   事件对象是 `ev`，见 L12710 `var ev = DATA_SFX[name]` 与 L12739 `ev.delay`）。
+        //   后果：每次播放 duck 类节点音即抛 `ReferenceError: delay is not defined`（CI 运行时门禁两通道均抓到），
+        //   且本行之后的 `syncDuck(false)` 不再执行 ⇒ 压垫乐覆盖失效。⇒ 修正为 `ev.delay`。
+        var duckNeed = (ev.delay || 0) + buf.duration / ((rate || 1) * (this.rateMul || 1));
         if (duckNeed > GAME.nodeDuckT) GAME.nodeDuckT = duckNeed;
       }
         this.syncDuck(false);       // 【v1.83】过场/弹层内不跟节点音再压一跳
