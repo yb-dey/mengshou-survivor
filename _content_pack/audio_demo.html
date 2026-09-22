@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 音频试听</title>
+<style>
+  :root{ --leaf:#3fa66a; --leaf-d:#1f7a47; --bark:#6b4a2b; --cream:#f3f7ee; --gold:#e8c463; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(120% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:48px 20px;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  h1{font-size:30px;letter-spacing:2px;margin-bottom:6px;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+  .sub{opacity:.8;margin-bottom:34px;font-size:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;width:100%;max-width:880px}
+  .card{
+    background:linear-gradient(160deg,#1f5c3a,#143e28);
+    border:1px solid rgba(232,196,99,.35); border-radius:18px; padding:24px 22px;
+    box-shadow:0 12px 30px rgba(0,0,0,.35); display:flex; flex-direction:column; gap:14px;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(0,0,0,.45)}
+  .ico{font-size:34px}
+  .t{font-size:18px;font-weight:700}
+  .d{font-size:13px;opacity:.78;line-height:1.5;min-height:40px}
+  .meta{font-size:12px;opacity:.6}
+  button{
+    border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:600;
+    padding:11px 16px;border-radius:12px;color:#0f2f1f;
+    background:linear-gradient(180deg,var(--gold),#d2a83f);
+    transition:filter .2s ease, transform .1s ease;
+  }
+  button:hover{filter:brightness(1.08)}
+  button:active{transform:scale(.97)}
+  button.playing{background:linear-gradient(180deg,#9fe0b4,#5cba84);color:#0f2f1f}
+  .eq{display:flex;gap:3px;height:16px;align-items:flex-end;opacity:0;transition:opacity .2s}
+  .eq.on{opacity:1}
+  .eq i{width:4px;background:var(--gold);border-radius:2px;animation:blink 0.9s infinite ease-in-out}
+  .eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}
+  .eq i:nth-child(4){animation-delay:.45s}.eq i:nth-child(5){animation-delay:.6s}
+  @keyframes blink{0%,100%{height:4px}50%{height:16px}}
+  footer{margin-top:36px;font-size:12px;opacity:.5}
+</style>
+</head>
+<body>
+  <h1>🌿 森灵萌兽 · 音频试听</h1>
+  <div class="sub">独立内容包专属原声 · 纯参数化合成 · 双击即听</div>
+  <div class="grid">
+    <div class="card">
+      <div class="ico">🌲</div>
+      <div class="t">森林主题 BGM</div>
+      <div class="d">柔美 pad + 三角波旋律 + 轻贝斯与铃音，I–vi–IV–V 进行，无缝循环，适合探索/秘境场景。</div>
+      <div class="eq" id="eq1"><i></i><i></i><i></i><i></i><i></i></div>
+      <button id="b1" onclick="toggleLoop('a1','b1','eq1')">▶ 播放循环</button>
+      <div class="meta">cp_bgm_forest.wav · 35.6s · 循环</div>
+    </div>
+    <div class="card">
+      <div class="ico">✨</div>
+      <div class="t">召唤音效</div>
+      <div class="d">上行魔法琶音叠加微光泛音，明亮而短促，适用于召唤萌兽/释放技能。</div>
+      <div class="eq" id="eq2"><i></i><i></i><i></i><i></i><i></i></div>
+      <button id="b2" onclick="playOnce('a2','b2','eq2')">▶ 试听</button>
+      <div class="meta">cp_sfx_summon.wav · 0.92s</div>
+    </div>
+    <div class="card">
+      <div class="ico">💚</div>
+      <div class="t">治疗音效</div>
+      <div class="d">暖色上行和弦 swell，舒缓悠长，适用于回复生命/增益状态。</div>
+      <div class="eq" id="eq3"><i></i><i></i><i></i><i></i><i></i></div>
+      <button id="b3" onclick="playOnce('a3','b3','eq3')">▶ 试听</button>
+      <div class="meta">cp_sfx_heal.wav · 1.38s</div>
+    </div>
+  </div>
+
+  <audio id="a1" src="audio/cp_bgm_forest.wav" loop preload="auto"></audio>
+  <audio id="a2" src="audio/cp_sfx_summon.wav" preload="auto"></audio>
+  <audio id="a3" src="audio/cp_sfx_heal.wav" preload="auto"></audio>
+
+  <footer>萌兽消消岛 · 森灵内容包 · 美术与音频资产（独立命名空间，不改动主游戏文件）</footer>
+
+<script>
+function setEq(id,on){document.getElementById(id).classList.toggle('on',on);}
+function toggleLoop(aid,bid,eqid){
+  const a=document.getElementById(aid), b=document.getElementById(bid);
+  if(a.paused){a.play();b.textContent='⏸ 停止';b.classList.add('playing');setEq(eqid,true);}
+  else{a.pause();a.currentTime=0;b.textContent='▶ 播放循环';b.classList.remove('playing');setEq(eqid,false);}
+}
+function playOnce(aid,bid,eqid){
+  const a=document.getElementById(aid);
+  a.currentTime=0; setEq(eqid,true);
+  a.play();
+  b=document.getElementById(bid); b.classList.add('playing'); b.textContent='♪ 播放中';
+  a.onended=()=>{setEq(eqid,false);b.classList.remove('playing');b.textContent='▶ 试听';};
+}
+</script>
+</body>
+</html>
