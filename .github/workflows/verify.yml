@@ -205,6 +205,21 @@ jobs:
         run: |
           node ci/gear-cross.mjs --selftest
           node ci/gear-cross.mjs
+      # 第 27 维度（v1.202）：大厅解锁/成就文案 **不得硬编码"逐章变化量"**。
+      #   病根：`DATA_HALL_UNLOCK.startbomb.condText` 写 "击破 3:00 锚点首领（巨盾龟）"，
+      #     但 `boss1` 的出场时刻在 `DATA_CHAPTER[].bossTimes` **逐章不同**（180/150/180/160/180/180），
+      #     而 `hallCondMet` 的 anchor 判定是 `saveData.hallAnchor["boss1"]` —— **任意章击破过即解锁，与章节无关**，
+      #     ⇒ 任何单一时刻都无法对所有可达章节为真（ch2=2:30 / ch4=2:40 已失真）。
+      #   **同族对照铁证**：v1.187 已把同组的 `startmag`/`mapledart` 改成章节无关表述，只有本条漏网
+      #     ⇒ 按 v1.187 范式改为 "击破锚点首领（巨盾龟）"（**文案服从事实**）。
+      #   判据：A 解析完整性（UNLOCK/ACHIEVE/TALENT 条数下界）· B `condText`/`desc` 无 `mm:ss`（**先剥注释**，
+      #     否则会把我自己写的解释性注释判成违规）· C `（专名）` 必须在已知 boss/章节名表内
+      #     · D 专名断言条数下界（**防判据被改空后恒绿**）。
+      #   **硬门禁**（发现硬编码逐章变化量即 exit 1）。
+      - name: 大厅解锁条件文案审计（GATE）
+        run: |
+          node ci/hall-cond-time.mjs --selftest
+          node ci/hall-cond-time.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
