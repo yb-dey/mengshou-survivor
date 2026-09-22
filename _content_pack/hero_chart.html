@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 英雄图鉴</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; }
+  *{ box-sizing:border-box;margin:0;padding:0 }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:40px 18px; display:flex; flex-direction:column; align-items:center; }
+  h1{ font-size:30px; letter-spacing:2px; margin-bottom:6px }
+  .sub{ opacity:.8; margin-bottom:26px; font-size:14px; text-align:center; max-width:840px; line-height:1.6 }
+  .wrap{ width:100%; max-width:920px; display:flex; flex-direction:column; gap:22px }
+  .card{ background:rgba(15,47,31,.55); border:1px solid rgba(159,224,180,.25); border-radius:16px; padding:22px 24px }
+  .tier{ border:1px solid; border-radius:12px; padding:14px 16px; margin:12px 0; background:rgba(255,255,255,.03) }
+  .tier-h{ font-size:17px; font-weight:700; display:flex; align-items:center; gap:10px; margin-bottom:10px }
+  .tier-h small{ opacity:.7; font-weight:400; font-size:12px }
+  .himg{ width:52px; height:52px; border-radius:10px; background:rgba(0,0,0,.3) }
+  .uc-e{ margin:6px 0; display:flex; flex-wrap:wrap; gap:5px }
+  .eff{ font-size:11.5px; background:rgba(255,255,255,.06); border:1px solid rgba(159,224,180,.3);
+    border-radius:6px; padding:1px 7px }
+  .eff.el{ background:transparent; border:1px solid }
+  .tb{ display:flex; align-items:center; gap:10px; margin:5px 0; font-size:12.5px }
+  .tb-n{ width:64px; flex:none; opacity:.85 }
+  .tb-bar{ flex:1; height:12px; background:rgba(255,255,255,.07); border-radius:6px; overflow:hidden }
+  .tb-bar i{ display:block; height:100% }
+  .tb-v{ width:56px; text-align:right; color:var(--gold); font-weight:700 }
+  .uc-d{ font-size:12.5px; opacity:.78; line-height:1.5 }
+  .uc-k code{ font-size:11px; opacity:.45 }
+  .note{ font-size:12.5px; opacity:.82; line-height:1.75 }
+  .note b{ color:var(--gold) }
+  footer{ margin-top:26px; font-size:12px; opacity:.5; text-align:center; line-height:1.7; max-width:820px }
+</style>
+</head>
+<body>
+  <h1>🦌 英雄图鉴</h1>
+  <div class="sub">《萌兽消消岛》英雄差异化规格（纯设计数据，非游戏代码）：4 位英雄各绑定一个元素身份、一套基础数值与一个被动天赋，主动技能从 8 技能池各取 2 个。数值天平：基础 DPS 31–53 的跨度由生命/移速/被动补偿（玻璃炮跑得快、坦克打得慢），<b>没有全方位上位替代</b>。元素口径统一：雷→light、冰→water。数据来自 <code>data/heroes.json</code>，本页由 <code>tools/build_hero_chart.py</code> 生成。</div>
+  <div class="wrap">
+    <div class="card">
+      <h2>⚖️ 数值天平 <small>差异补偿设计</small></h2>
+      <div class="note">基础 DPS：雷羽鹰 53.3 > 焰心 43.6(+灼烧≈54.5 有效) > 灵鹿 44.4 > 霜甲熊 31.4。差异由生存/机动补偿：雷羽鹰 -20% HP +25% 移速 + 闪避被动；霜甲熊 +50% HP + 15% 减伤但 DPS -29%；焰心输出上限最高但 HP -10% 无保底容错；灵鹿各项居中 + 唯一自回血。设计目标：每个英雄都有「最想选他的那局」，没有全方位上位替代。</div>
+      <div class="note" style="margin-top:8px">雷→light（雷羽·光速突袭）、冰→water（霜甲·冻结迟滞）。此映射与五元素克制链/反应系统完全兼容，meta_upgrades.json 的 unlock_eagle/unlock_bear 描述已同步修正，后续立绘与文案均以本表口径为准。</div>
+    </div>
+    <div class="card">
+      <h2>🦌 英雄对比 <small>共 4 位 · 属性条形对比</small></h2>
+      <div class="tier" style="border-color:#66d85966"><div class="tier-h" style="color:#66d859"><img src="sprites_alpha/spirit_deer.png" class="himg" alt="">灵鹿祭司 <small>木 · 初始英雄 · 均衡辅助</small></div><div class="uc-e"><span class="eff">自然祝福</span></div><div class="uc-d">每 60 秒回复 5% 最大生命（战斗中的稳定续航）</div><div class="tb"><span class="tb-n">生命</span><span class="tb-bar"><i style="width:67%;background:#66d859"></i></span><span class="tb-v">100</span></div><div class="tb"><span class="tb-n">移速</span><span class="tb-bar"><i style="width:80%;background:#66d859"></i></span><span class="tb-v">×1.00</span></div><div class="tb"><span class="tb-n">攻击</span><span class="tb-bar"><i style="width:83%;background:#66d859"></i></span><span class="tb-v">20</span></div><div class="tb"><span class="tb-n">攻速间隔</span><span class="tb-bar"><i style="width:75%;background:#66d859"></i></span><span class="tb-v">0.45s</span></div><div class="tb"><span class="tb-n">基础 DPS</span><span class="tb-bar"><i style="width:83%;background:#e8c463"></i></span><span class="tb-v">44.4</span></div><div class="uc-e"><span class="eff el" style="border-color:#66d859;color:#66d859">治疗</span><span class="eff el" style="border-color:#66d859;color:#66d859">藤缚</span></div><div class="uc-d" style="margin-top:6px"><b>玩法：</b>均衡辅助：中庸的面板 + 稳定回血被动，最适合新手熟悉走位与克制链。</div><div class="uc-k" style="margin-top:6px"><code>spirit_deer</code></div></div><div class="tier" style="border-color:#ffd83f66"><div class="tier-h" style="color:#ffd83f"><img src="sprites_alpha/star_bird.png" class="himg" alt="">雷羽鹰 <small>光 · 解锁 800 🍀 · 高速爆发</small></div><div class="uc-e"><span class="eff">风暴闪避</span></div><div class="uc-d">每 45 秒自动闪避下一次受到的伤害（被动保命，无需操作）</div><div class="tb"><span class="tb-n">生命</span><span class="tb-bar"><i style="width:53%;background:#ffd83f"></i></span><span class="tb-v">80</span></div><div class="tb"><span class="tb-n">移速</span><span class="tb-bar"><i style="width:100%;background:#ffd83f"></i></span><span class="tb-v">×1.25</span></div><div class="tb"><span class="tb-n">攻击</span><span class="tb-bar"><i style="width:67%;background:#ffd83f"></i></span><span class="tb-v">16</span></div><div class="tb"><span class="tb-n">攻速间隔</span><span class="tb-bar"><i style="width:100%;background:#ffd83f"></i></span><span class="tb-v">0.30s</span></div><div class="tb"><span class="tb-n">基础 DPS</span><span class="tb-bar"><i style="width:100%;background:#e8c463"></i></span><span class="tb-v">53.3</span></div><div class="uc-e"><span class="eff el" style="border-color:#ffd83f;color:#ffd83f">瞬步</span><span class="eff el" style="border-color:#ffd83f;color:#ffd83f">链雷</span></div><div class="uc-d" style="margin-top:6px"><b>玩法：</b>高速爆发：全队最快攻速与移速，但生命最低——玻璃大炮，靠走位风筝，失误即死。</div><div class="uc-k" style="margin-top:6px"><code>hero_eagle · 占位图（星羽鸟），待云端出图替换为雷羽鹰正式立绘</code></div></div><div class="tier" style="border-color:#59bfff66"><div class="tier-h" style="color:#59bfff"><img src="sprites_alpha/stone_turtle.png" class="himg" alt="">霜甲熊 <small>水 · 解锁 1200 🍀 · 重装坦克</small></div><div class="uc-e"><span class="eff">霜甲</span></div><div class="uc-d">受到的所有伤害固定 -15%（重装减伤，可叠加灵盾花）</div><div class="tb"><span class="tb-n">生命</span><span class="tb-bar"><i style="width:100%;background:#59bfff"></i></span><span class="tb-v">150</span></div><div class="tb"><span class="tb-n">移速</span><span class="tb-bar"><i style="width:68%;background:#59bfff"></i></span><span class="tb-v">×0.85</span></div><div class="tb"><span class="tb-n">攻击</span><span class="tb-bar"><i style="width:92%;background:#59bfff"></i></span><span class="tb-v">22</span></div><div class="tb"><span class="tb-n">攻速间隔</span><span class="tb-bar"><i style="width:33%;background:#59bfff"></i></span><span class="tb-v">0.70s</span></div><div class="tb"><span class="tb-n">基础 DPS</span><span class="tb-bar"><i style="width:59%;background:#e8c463"></i></span><span class="tb-v">31.4</span></div><div class="uc-e"><span class="eff el" style="border-color:#59bfff;color:#59bfff">霜冻</span><span class="eff el" style="border-color:#59bfff;color:#59bfff">地震</span></div><div class="uc-d" style="margin-top:6px"><b>玩法：</b>重装坦克：生命最高 + 全队唯一常驻减伤被动，但攻速最慢移速垫底——硬抗推进流。</div><div class="uc-k" style="margin-top:6px"><code>hero_bear · 占位图（石甲龟），待云端出图替换为霜甲熊正式立绘</code></div></div><div class="tier" style="border-color:#ff722666"><div class="tier-h" style="color:#ff7226"><img src="sprites_alpha/flame_fox.png" class="himg" alt="">焰心术士 <small>火 · 解锁 1500 🍀 · 法术炮台</small></div><div class="uc-e"><span class="eff">余烬</span></div><div class="uc-d">每次命中附加 2 秒灼烧（每秒 3 点，可与元素反应叠乘）</div><div class="tb"><span class="tb-n">生命</span><span class="tb-bar"><i style="width:60%;background:#ff7226"></i></span><span class="tb-v">90</span></div><div class="tb"><span class="tb-n">移速</span><span class="tb-bar"><i style="width:80%;background:#ff7226"></i></span><span class="tb-v">×1.00</span></div><div class="tb"><span class="tb-n">攻击</span><span class="tb-bar"><i style="width:100%;background:#ff7226"></i></span><span class="tb-v">24</span></div><div class="tb"><span class="tb-n">攻速间隔</span><span class="tb-bar"><i style="width:58%;background:#ff7226"></i></span><span class="tb-v">0.55s</span></div><div class="tb"><span class="tb-n">基础 DPS</span><span class="tb-bar"><i style="width:82%;background:#e8c463"></i></span><span class="tb-v">43.6</span></div><div class="uc-e"><span class="eff el" style="border-color:#ff7226;color:#ff7226">火球术</span><span class="eff el" style="border-color:#ff7226;color:#ff7226">召唤</span></div><div class="uc-d" style="margin-top:6px"><b>玩法：</b>法术炮台：单发最高伤害 + DoT 被动（有效 DPS 约 55 为全队上限），生命偏低容错最少——上限与风险最高。</div><div class="uc-k" style="margin-top:6px"><code>hero_mage · 占位图（火苗狐），待云端出图替换为焰心术士正式立绘</code></div></div>
+    </div>
+    <div class="card">
+      <h2>🔗 解锁联动 <small>与 §2.11 局外成长</small></h2>
+      <div class="note">三位新英雄对应 <code>data/meta_upgrades.json</code> 的解锁项：雷羽鹰 = <code>unlock_eagle</code>（800 🍀）· 霜甲熊 = <code>unlock_bear</code>（1200 🍀）· 焰心术士 = <code>unlock_mage</code>（1500 🍀）；立绘均为现有精灵占位，待云端出图替换。消费点：<code>endless_lab.html</code> 已挂英雄选择器，4 英雄参数与被动在无尽循环中真实生效。</div>
+    </div>
+  </div>
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>设计数值规格（非游戏代码），技能绑定 skill_cooldowns、解锁联动 meta_upgrades、元素对齐 element_matrix，零新资产；为 §4 接入主游戏时的英雄系统提供数据底座。</footer>
+</body>
+</html>

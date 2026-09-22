@@ -46,6 +46,12 @@
   .bar{ height:9px; background:rgba(255,255,255,.08); border-radius:5px; overflow:hidden; margin:4px 0 8px }
   .bar i{ display:block; height:100%; transition:width .15s }
   .bar.hp i{ background:linear-gradient(90deg,#f18b8b,#e06666) }
+  .hbtn{ cursor:pointer; border:2px solid rgba(159,224,180,.25); background:rgba(255,255,255,.05);
+    border-radius:10px; padding:5px 9px; display:flex; align-items:center; gap:6px; color:var(--cream);
+    font-size:12px; font-weight:700 }
+  .hbtn img{ width:30px; height:30px; border-radius:7px }
+  .hbtn.sel{ border-color:var(--gold); background:rgba(232,196,99,.12) }
+  .hbtn:disabled{ opacity:.45; cursor:not-allowed }
   .btn{ cursor:pointer; border:none; border-radius:8px; padding:8px 13px; font-size:13px; font-weight:700; color:#0f2f1f; background:var(--gold) }
   .btn:disabled{ background:rgba(159,224,180,.2); color:rgba(243,247,238,.4); cursor:not-allowed }
   .feed{ font-size:11.5px; line-height:1.6; max-height:150px; overflow:auto; background:rgba(0,0,0,.25); border-radius:9px; padding:8px 10px }
@@ -72,6 +78,7 @@
 
     <div class="panel">
       <h2>📊 战况</h2>
+      <div class="row" id="heroSel" style="margin-bottom:10px"></div>
       <div class="hud">
         <div class="chip"><div class="k">波次</div><div class="v" id="sWave">1</div></div>
         <div class="chip"><div class="k">下波</div><div class="v" id="sNext">20s</div></div>
@@ -86,7 +93,7 @@
       <div class="bar hp"><i id="hpBar" style="width:100%"></i></div>
       <button class="btn" id="btnStart" style="width:100%;margin:4px 0 10px">▶ 开始挑战</button>
       <div class="feed" id="feed"></div>
-      <div class="note">阶段：w1–4 单元素巡林 → w5–9 双元素 → w10–14 三元素+精英 → w15+ 五元素狂潮。精英每 5 波（HP×6 必掉宝箱）、Boss 每 10 波。玩家固定火元素：打木 ×1.6 / 被木克打 ×0.6。里程碑 5/10/20 分钟给非货币称号（20 分钟=真挑战）。</div>
+      <div class="note">英雄：开战前可切换（4 位，参数与被动真实生效——灵鹿 60s 自回 5%、雷羽鹰 45s 自动闪避、霜甲熊减伤 15%、焰心命中附灼烧）。阶段：w1–4 单元素巡林 → w5–9 双元素 → w10–14 三元素+精英 → w15+ 五元素狂潮。精英每 5 波（HP×6 必掉宝箱）、Boss 每 10 波。玩家固定火元素：打木 ×1.6 / 被木克打 ×0.6。里程碑 5/10/20 分钟给非货币称号（20 分钟=真挑战）。</div>
     </div>
   </div>
 
@@ -120,6 +127,25 @@ const ENEMIES = {
 const STRONG = { fire:"wood", wood:"earth", earth:"water", water:"light", light:"fire" };  // 强克关系
 const ELEM_CN = { fire:"火", water:"水", earth:"土", light:"光", wood:"木" };
 const MILESTONES = [ { atSec:300, reward:"称号「守林人」" }, { atSec:600, reward:"称号「无尽行者」" }, { atSec:1200, reward:"头像框「永恒纹章」" } ];
+
+/* ===== 英雄（内联子集，与 data/heroes.json 对齐）===== */
+const HEROES = {
+  spirit_deer: { cn:"灵鹿祭司", sprite:"sprites_alpha/spirit_deer.png",
+    base:{ hp:100, moveSpd:1.0, atk:20, atkIntervalSec:0.45 },
+    passive:{ cn:"自然祝福", healPctEvery:5, healEverySec:60 } },
+  hero_eagle: { cn:"雷羽鹰", sprite:"sprites_alpha/star_bird.png",
+    base:{ hp:80, moveSpd:1.25, atk:16, atkIntervalSec:0.30 },
+    passive:{ cn:"风暴闪避", dodgeCdSec:45 } },
+  hero_bear: { cn:"霜甲熊", sprite:"sprites_alpha/stone_turtle.png",
+    base:{ hp:150, moveSpd:0.85, atk:22, atkIntervalSec:0.70 },
+    passive:{ cn:"霜甲", dmgReducePct:15 } },
+  hero_mage: { cn:"焰心术士", sprite:"sprites_alpha/flame_fox.png",
+    base:{ hp:90, moveSpd:1.0, atk:24, atkIntervalSec:0.55 },
+    passive:{ cn:"余烬", burnDmg:3, burnSec:2 } }
+};
+let curHero = "spirit_deer";
+let healT = 0, dodgeT = 0, dodgeReady = false;
+function hero(){ return HEROES[curHero]; }
 
 /* ===== 公式（与 endless.json 公式字段一致）===== */
 function budget(w){ return Math.round(RULES.budgetBase + RULES.budgetLin*(w-1) + RULES.budgetQuad*(w-1)*(w-1)); }
@@ -260,7 +286,13 @@ setInterval(function(){
     const touch=e.size/scene.clientWidth*1.4;
     if(d*dx+0<1e9 && d<touch+0.012){
       if(!inv){
-        const dmg=Math.max(2, Math.round(6*dmgMul(st.wave)));
+        if(hero().passive.dodgeCdSec && dodgeReady){
+          dodgeReady=false; dodgeT=0;
+          floatText(st.px,st.py,"闪避!","#cfe3ff"); feed("⚡ 风暴闪避触发（"+hero().passive.cn+"）");
+          return;
+        }
+        let dmg=Math.max(2, Math.round(6*dmgMul(st.wave)));
+        if(hero().passive.dmgReducePct) dmg=Math.max(1, Math.round(dmg*(1-hero().passive.dmgReducePct/100)));
         st.hp-=dmg; st.invUntil=now+800;
         floatText(st.px,st.py,"-"+dmg,"#f8a8a8");
         player.classList.add("hurt"); setTimeout(function(){ player.classList.remove("hurt"); },300);
@@ -272,7 +304,7 @@ setInterval(function(){
 
   // 自动攻击（火元素）
   if(now>=st.fireT && enemies.length>0){
-    st.fireT=now+450;
+    st.fireT=now+hero().base.atkIntervalSec*1000;
     let best=null, bd=1e9;
     for(const e of enemies){ const dx=e.x-st.px, dy=e.y-st.py; const d=dx*dx+dy*dy; if(d<bd){ bd=d; best=e; } }
     const b=document.createElement("div"); b.className="bullet";
@@ -290,7 +322,8 @@ setInterval(function(){
       let mul=1.0;
       if(STRONG["fire"]===t.element) mul=1.6;         // 火 强克 木
       else if(STRONG[t.element]==="fire") mul=0.6;    // 被克
-      const dmg=Math.round(20*mul);
+      let dmg=Math.round(hero().base.atk*mul);
+      if(hero().passive.burnDmg){ dmg+=hero().passive.burnDmg*hero().passive.burnSec; }
       t.hp-=dmg;
       floatText(t.x,t.y,dmg+(mul>1?" 强克!":mul<1?" 被克":""), mul>1?"#ffe08a":mul<1?"#9ab0c8":"#fff");
       if(mul>1) sfx("cp_sfx_hit_fire.wav");
@@ -313,6 +346,18 @@ setInterval(function(){
       sfx("cp_sfx_pickup.wav");
       applyDrop(d.key, d.x, d.y);
     }
+  }
+
+  // 英雄被动
+  const pv = hero().passive;
+  if(pv.healPctEvery){
+    healT += dt;
+    if(healT >= pv.healEverySec){ healT=0; const a=Math.round(st.hpMax*pv.healPctEvery/100);
+      st.hp=Math.min(st.hpMax, st.hp+a); floatText(st.px,st.py,"+"+a,"#8fe3a8"); sfx("cp_sfx_heal.wav"); }
+  }
+  if(pv.dodgeCdSec && !dodgeReady){
+    dodgeT += dt;
+    if(dodgeT >= pv.dodgeCdSec){ dodgeReady=true; feed("⚡ 风暴闪避就绪"); }
   }
 
   // 里程碑
@@ -351,7 +396,8 @@ function startRun(){
   for(const b of bullets) b.el.remove();
   for(const d of drops) d.el.remove();
   enemies=[]; bullets=[]; drops=[];
-  st.running=true; st.hp=100; st.wave=1; st.waveT=0; st.time=0; st.kills=0; st.coins=0;
+  st.running=true; st.hp=hero().base.hp; st.wave=1; st.waveT=0; st.time=0; st.kills=0; st.coins=0;
+  healT=0; dodgeT=0; dodgeReady=false;
   st.invUntil=0; st.fireT=0; st.milestones=new Set(); st.over=false; spawnQueue=0;
   document.getElementById("btnStart").disabled=true;
   document.getElementById("feed").innerHTML="";
@@ -366,7 +412,25 @@ function endRun(){
   feed("☠ 挑战结束：存活 "+st.wave+" 波 / "+Math.floor(st.time)+" 秒，击杀 "+st.kills+"，入账 "+st.coins+"🍀", true);
   banner("☠ 存活 "+st.wave+" 波 · "+Math.floor(st.time)+"s · 击杀 "+st.kills);
 }
+function renderHeroSel(){
+  const el=document.getElementById("heroSel");
+  let html="";
+  Object.keys(HEROES).forEach(function(k){
+    const h=HEROES[k];
+    html+='<button class="hbtn'+(k===curHero?" sel":"")+'" data-h="'+k+'" '+(st.running?"disabled":"")+' title="'+h.passive.cn+'：'+h.passive.desc+'">'
+      +'<img src="'+h.sprite+'" alt="">'+h.cn+'</button>';
+  });
+  el.innerHTML=html;
+  Array.prototype.forEach.call(el.querySelectorAll(".hbtn"), function(b){
+    b.addEventListener("click", function(){
+      if(st.running) return;
+      curHero=b.getAttribute("data-h"); renderHeroSel();
+      feed("🦌 已选择 "+HEROES[curHero].cn+"（"+HEROES[curHero].passive.cn+"）");
+    });
+  });
+}
 document.getElementById("btnStart").addEventListener("click", startRun);
+renderHeroSel();
 renderHud();
 </script>
 </body>

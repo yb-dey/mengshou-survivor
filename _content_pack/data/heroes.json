@@ -1,0 +1,57 @@
+{
+  "system": "森灵英雄图鉴",
+  "version": 1,
+  "description": "《萌兽消消岛》英雄差异化规格（纯设计数据，非游戏代码）。4 位英雄各绑定一个元素身份、一套基础数值（生命/移速/攻击/攻速）与一个被动天赋，主动技能从 skill_cooldowns.json 的 8 技能池各取 2 个——让「解锁英雄」（meta_upgrades 的 800/1200/1500 币奖励）有真实的内容支撑。数值天平：基础 DPS 31–53 的跨度由生命/移速/被动补偿（玻璃炮跑得快、坦克打得慢），有效 DPS（含被动折算）44–55 区间。**元素口径统一**：世界观只有五元素（fire/water/earth/light/wood），雷羽鹰的「雷」映射为 light、霜甲熊的「冰」映射为 water（meta_upgrades.json 解锁项描述已同步修正）。",
+  "references": [
+    "Vampire Survivors 角色差异：初始角色均衡，解锁角色以极端数值换独特被动（波特娜 -MaxHP +伤害、克罗奇移速特化），差异化而非强弱碾压（vampire-survivors.fandom.com）",
+    "Brotato 角色设计：每位角色一个改变玩法的天赋 + 数值偏置，鼓励「为英雄换一套构筑」"
+  ],
+  "elementFix": {
+    "note": "雷→light（雷羽·光速突袭）、冰→water（霜甲·冻结迟滞）。此映射与五元素克制链/反应系统完全兼容，meta_upgrades.json 的 unlock_eagle/unlock_bear 描述已同步修正，后续立绘与文案均以本表口径为准。"
+  },
+  "baseHero": "spirit_deer",
+  "heroes": {
+    "spirit_deer": {
+      "cn": "灵鹿祭司", "element": "wood", "unlockCost": 0,
+      "base": { "hp": 100, "moveSpd": 1.0, "atk": 20, "atkIntervalSec": 0.45 },
+      "passive": { "cn": "自然祝福", "desc": "每 60 秒回复 5% 最大生命（战斗中的稳定续航）" },
+      "skills": ["ab_heal", "ab_vine"],
+      "playstyle": "均衡辅助：中庸的面板 + 稳定回血被动，最适合新手熟悉走位与克制链。",
+      "sprite": "sprites_alpha/spirit_deer.png"
+    },
+    "hero_eagle": {
+      "cn": "雷羽鹰", "element": "light", "unlockCost": 800,
+      "base": { "hp": 80, "moveSpd": 1.25, "atk": 16, "atkIntervalSec": 0.30 },
+      "passive": { "cn": "风暴闪避", "desc": "每 45 秒自动闪避下一次受到的伤害（被动保命，无需操作）" },
+      "skills": ["ab_dash", "ab_chain"],
+      "playstyle": "高速爆发：全队最快攻速与移速，但生命最低——玻璃大炮，靠走位风筝，失误即死。",
+      "sprite": "sprites_alpha/star_bird.png",
+      "spriteNote": "占位图（星羽鸟），待云端出图替换为雷羽鹰正式立绘"
+    },
+    "hero_bear": {
+      "cn": "霜甲熊", "element": "water", "unlockCost": 1200,
+      "base": { "hp": 150, "moveSpd": 0.85, "atk": 22, "atkIntervalSec": 0.70 },
+      "passive": { "cn": "霜甲", "desc": "受到的所有伤害固定 -15%（重装减伤，可叠加灵盾花）" },
+      "skills": ["ab_frost", "ab_quake"],
+      "playstyle": "重装坦克：生命最高 + 全队唯一常驻减伤被动，但攻速最慢移速垫底——硬抗推进流。",
+      "sprite": "sprites_alpha/stone_turtle.png",
+      "spriteNote": "占位图（石甲龟），待云端出图替换为霜甲熊正式立绘"
+    },
+    "hero_mage": {
+      "cn": "焰心术士", "element": "fire", "unlockCost": 1500,
+      "base": { "hp": 90, "moveSpd": 1.0, "atk": 24, "atkIntervalSec": 0.55 },
+      "passive": { "cn": "余烬", "desc": "每次命中附加 2 秒灼烧（每秒 3 点，可与元素反应叠乘）" },
+      "skills": ["ab_fireball", "ab_summon"],
+      "playstyle": "法术炮台：单发最高伤害 + DoT 被动（有效 DPS 约 55 为全队上限），生命偏低容错最少——上限与风险最高。",
+      "sprite": "sprites_alpha/flame_fox.png",
+      "spriteNote": "占位图（火苗狐），待云端出图替换为焰心术士正式立绘"
+    }
+  },
+  "unlockLink": {
+    "hero_eagle": "unlock_eagle",
+    "hero_bear": "unlock_bear",
+    "hero_mage": "unlock_mage",
+    "note": "与 meta_upgrades.json 的英雄解锁项一一对应：解锁项购买后 hero 可用；占位图待云端出图替换。"
+  },
+  "balanceNote": "基础 DPS：雷羽鹰 53.3 > 焰心 43.6(+灼烧≈54.5 有效) > 灵鹿 44.4 > 霜甲熊 31.4。差异由生存/机动补偿：雷羽鹰 -20% HP +25% 移速 + 闪避被动；霜甲熊 +50% HP + 15% 减伤但 DPS -29%；焰心输出上限最高但 HP -10% 无保底容错；灵鹿各项居中 + 唯一自回血。设计目标：每个英雄都有「最想选他的那局」，没有全方位上位替代。"
+}

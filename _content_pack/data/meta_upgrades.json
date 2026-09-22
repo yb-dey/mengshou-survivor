@@ -144,14 +144,14 @@
       "cost": { "base": 800, "growth": 1.0 },
       "effects": { "unlock": "hero_eagle" },
       "icon": "sprites/star_bird.png", "sfx": "cp_sfx_summon.wav",
-      "desc": "解锁新英雄「雷羽鹰」（雷元素，高速爆发）。占位图（待云端出图替换为正式立绘）。"
+      "desc": "解锁新英雄「雷羽鹰」（光元素·雷羽映射，高速爆发）。占位图（待云端出图替换为正式立绘）。"
     },
     "unlock_bear": {
       "cn": "解锁·霜甲熊", "category": "unlock", "tag": "unlock", "maxLevel": 1,
       "cost": { "base": 1200, "growth": 1.0 },
       "effects": { "unlock": "hero_bear" },
       "icon": "sprites/stone_turtle.png", "sfx": "cp_sfx_summon.wav",
-      "desc": "解锁新英雄「霜甲熊」（冰元素，重装坦克）。占位图（待云端出图替换为正式立绘）。"
+      "desc": "解锁新英雄「霜甲熊」（水元素·霜甲映射，重装坦克）。占位图（待云端出图替换为正式立绘）。"
     },
     "unlock_mage": {
       "cn": "解锁·焰心术士", "category": "unlock", "tag": "unlock", "maxLevel": 1,

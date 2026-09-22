@@ -293,6 +293,18 @@
 - **合成器**：`tools/synth_audio.py` 新增 `_amb_base` / `_chirp` / `_decay_ping` / `_loop_amb` 四原语 + 4 合成函数（`cp_amb_forest` 鸟鸣+柔风+叶沙、`cp_amb_night` 虫鸣脉冲串+低鸣、`cp_amb_river` 宽带水声+气泡+闷蛙、`cp_amb_cave` 55Hz drone+水滴回响），jobs 列表 44→48 条？否——44 条总计（7 BGM + 33 SFX + 4 AMB）。
 - **消费点**：`meta_lab.html` 大厅开关升级为「声景开关」（同时驱动 cp_bgm_lobby 0.8 + cp_amb_forest 0.5 双通道，真实演示分层叠加）；`audio_demo.html` 加 4 试听卡（44 条全覆盖）。
 - **校验**：`data/ambience.json` 合法 JSON；4 wav 均存在且 24.0s / 峰值 85% / RMS 7.4–15.1%（氛围层响度刻意低于战斗 SFX 10.9–30%——「背景自然声」定位）；元素关联引用全部存在于 element_matrix；场景映射优先级有序且 amb key 全部有效；两页面 `node --check` 通过。
+## 2.16 英雄图鉴（差异化规格 + 对比可视化 · 本轮新增）
+
+> 让「解锁英雄」（§2.11 的 800/1200/1500 币奖励）有真实内容支撑：4 位英雄各绑定一个元素身份、一套基础数值与一个被动天赋，主动技能从 skill_cooldowns 的 8 技能池各取 2 个。数值天平：基础 DPS 31–53 的跨度由生命/移速/被动补偿——雷羽鹰（光·雷羽映射）-20% HP +25% 移速 + 45s 自动闪避，玻璃炮；霜甲熊（水·霜甲映射）+50% HP + 15% 常驻减伤但 DPS -29%，重装坦克；焰心术士（火）单发最高 + 灼烧 DoT（有效 DPS≈55 上限）容错最少；灵鹿祭司（木·初始）各项居中 + 唯一自回血。**没有全方位上位替代**。元素口径统一修正：雷→light、冰→water（meta_upgrades 解锁项描述已同步修正）。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `data/heroes.json` | 英雄差异化规格 | 4 英雄（灵鹿祭司/雷羽鹰/霜甲熊/焰心术士），各含 `base`（hp/moveSpd/atk/atkIntervalSec）+ `passive`（自然祝福·60s 自回 5% / 风暴闪避·45s CD / 霜甲·减伤 15% / 余烬·灼烧 DoT）+ `skills`（2 技能绑定）+ `playstyle` + 元素口径修正说明 + 解锁联动 |
+| `hero_chart.html` | 英雄对比可视化 | 属性条形对比（生命/移速/攻击/攻速/DPS）+ 被动卡 + 技能 chips + 天平说明（数据驱动，零图片生成） |
+
+- **生成器**：`tools/build_hero_chart.py`（读 `data/heroes.json` + skill_cooldowns 技能名 + element_matrix 配色，纯标准库渲染）。
+- **消费点**：`endless_lab.html` 挂英雄选择器（开战前 4 选 1，参数与被动在无尽循环中真实生效——自回血计时/自动闪避判定/减伤系数/灼烧附加），英雄图鉴从「参考页」升级为「可玩对比」。
+- **校验**：`data/heroes.json` 合法 JSON；元素引用 ∈ element_matrix 五元素、技能绑定 8 key 全部存在于 skill_cooldowns、精灵图 4/4 存在、unlockLink 与 meta_upgrades 解锁项一一对应；DPS 天平复算与 balanceNote 一致（44.4/53.3/31.4/43.6+灼烧）；meta_upgrades 两处「雷/冰元素」口径修正落盘；`hero_chart.html` 0 占位符、4 立绘引用存在；endless_lab 内联 `HEROES` 与 JSON 逐项比对 **DATA_SYNC_OK**（base 4 参数 + passive 全参数无漂移）、`node --check` 通过。
 ## 3. 目录结构
 
 ```
@@ -322,6 +334,7 @@ _content_pack/
 ├── endless_chart.html      # 无尽模式：难度二次曲线 SVG + 币产出递减 + 四阶段敌种池 + 里程碑（数据驱动）
 ├── endless_lab.html        # 无尽模式可玩实验室（endless.json 真跑起来，波次缩放+精英/Boss周期+掉落联动，file:// 双击即开）
 ├── ambience_chart.html     # 环境氛围音层：双通道分层说明 + 4 氛围音卡 + 场景映射优先级（数据驱动）
+├── hero_chart.html         # 英雄图鉴：4 英雄属性条形对比 + 被动 + 技能绑定 + DPS 天平（数据驱动）
 ├── boss_arena.html         # BOSS 竞技场（boss_phases.json 三阶段可玩校验场，纯前端 file:// 双击即开）
 ├── campaign.html          # 战役模式（wave_design.json 10 关 × 多波次可玩校验场，逐波刷怪，纯前端 file:// 双击即开）
 ├── sprites/               # 原始生成图（RGB，未抠）
@@ -384,7 +397,8 @@ _content_pack/
 │   ├── achievements.json      # 成就与任务系统：19 成就 × 5 组 + 每日任务池（economy 两水龙头判定来源）
 │   ├── pickups.json           # 局内拾取物系统：8 种拾取物 + 击杀掉落表 + 宝箱开箱表
 │   ├── endless.json           # 无尽模式：四条难度公式 + 精英/Boss 周期 + 四阶段敌种池 + 里程碑
-│   └── ambience.json          # 环境氛围音层：4 氛围音 + 双通道增益 + 场景映射优先级
+│   ├── ambience.json          # 环境氛围音层：4 氛围音 + 双通道增益 + 场景映射优先级
+│   └── heroes.json            # 英雄图鉴：4 英雄差异化数值 + 被动 + 技能绑定 + 元素口径修正
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -406,7 +420,8 @@ _content_pack/
     ├── gen_pickups.py        # 拾取物精灵生成（纯标准库，复用 gen_vfx.Canvas）
     ├── build_pickup_chart.py # 由 data/pickups.json 生成 掉落表 + 拾取物卡组参考页
     ├── build_endless_chart.py # 由 data/endless.json 生成 难度曲线 + 阶段池 + 里程碑参考页
-    └── build_ambience_chart.py # 由 data/ambience.json 生成 双通道 + 场景映射参考页
+    ├── build_ambience_chart.py # 由 data/ambience.json 生成 双通道 + 场景映射参考页
+    └── build_hero_chart.py   # 由 data/heroes.json 生成 英雄对比参考页
 ```
 
 ## 4. 接入游戏路径（待主文件释放后）
@@ -453,11 +468,12 @@ _content_pack/
 - 局内拾取物系统：`data/pickups.json` 为合法 JSON（8 种拾取物：常见 3 / 稀有 5；击杀掉落表与宝箱开箱表权重和均=100；8 icon + 8 sfx 引用零缺失）；8 个精灵由 `tools/gen_pickups.py` 程序化生成并校验——均 64×64 `colorType=6` RGBA，非空行占比 73%–80%（内容饱满非空白）；`pickup_chart.html` 由 `tools/build_pickup_chart.py` 数据驱动生成，校验 0 占位符、8 名称全在、8 图标引用均存在；`pickup_lab.html` 为可玩实验室，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `PICKUP`/`DROP`/`CHEST` 已与 `pickups.json` 逐项比对一致（8 拾取物 / 6% 掉落 / 两权重表无漂移）；经济边界断言通过——货币型拾取物（金币袋 +15 / 宝箱小袋 +30 / 大袋 +80）全部计入 economy.json 既有 kill/clear 口径，不新增 faucet、积压率 0.22 不变。
 - 无尽模式：`data/endless.json` 为合法 JSON（四条难度公式 + 精英每 5 波 HP×6 / Boss 每 10 波 + 四阶段敌种池 6 敌种全部存在于 wave_design、阶段区间连续覆盖、里程碑 5/10/20 分钟有序）；`endless_chart.html` 由 `tools/build_endless_chart.py` 数据驱动生成，校验 0 占位符、含 `<svg>` 难度曲线、5 精灵引用均存在；`endless_lab.html` 为可玩实验室，内联 `<script>` 经 `node --check` 通过（file:// 双击可用，无 fetch），内联 `RULES` 17 参数 / `PHASES` 4 阶段 / `ENEMIES` 6 敌种与 `endless.json`+`wave_design.json` 逐项比对一致（含四公式字符串防漂移检查）；经济边界——币产出 `max(2, 10-floor(w/3))` 递减（w30 起每波 2 币）、里程碑零货币，economy.json 四 faucet 总口径与积压率 0.22 不受无尽模式影响。
 - 环境氛围音层：`data/ambience.json` 为合法 JSON（4 条 cp_amb_* 均存在、24.0s、峰值 85% 无削波、RMS 7.4–15.1% 刻意低于战斗 SFX 的「背景自然声」响度定位；元素关联引用全部存在于 element_matrix；场景映射 P1–P4 有序且 amb key 全部有效）；`ambience_chart.html` 由 `tools/build_ambience_chart.py` 数据驱动生成，0 占位符；双通道增益（BGM 0.8 / AMB 0.5）与战斗/氛围分工写入规格——战斗强度归 BGM 层、场景昼夜归 Ambience 层，互不污染；`meta_lab.html` 声景开关真实驱动双通道叠加（消费点接线），两页面 `node --check` 通过。
+- 英雄图鉴：`data/heroes.json` 为合法 JSON（4 英雄：灵鹿祭司/雷羽鹰/霜甲熊/焰心术士；元素引用 ∈ 五元素、技能绑定 8 key 全部存在于 skill_cooldowns、精灵 4/4 存在、unlockLink 与 meta_upgrades 解锁项一一对应）；DPS 天平复算一致（灵鹿 44.4 / 雷羽鹰 53.3 / 霜甲熊 31.4 / 焰心 43.6+灼烧有效≈54.5）；**元素口径统一修正**——meta_upgrades.json 两处「雷元素/冰元素」描述改为「光元素·雷羽映射/水元素·霜甲映射」（与五元素体系/克制链/反应系统兼容）；`hero_chart.html` 由 `tools/build_hero_chart.py` 数据驱动生成，0 占位符、4 立绘引用存在；`endless_lab.html` 英雄选择器内联 `HEROES` 与 JSON 逐项比对一致（base/passive 全参数无漂移）、`node --check` 通过。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵）+ 音乐（7 BGM + 33 SFX + 4 环境音）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（12 份 JSON）+ 可视化参考页与可玩校验场（9 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵）+ 音乐（7 BGM + 33 SFX + 4 环境音）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（13 份 JSON）+ 可视化参考页与可玩校验场（10 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -495,4 +511,5 @@ _content_pack/
 25. ~~**局内拾取物系统（设计规格 + 程序化精灵 + 可玩实验室）**~~ ✅ 已交付 `data/pickups.json`（8 种拾取物：治愈果实 20% 回血 / 金币袋 +15 币 / 经验晶露 +50 EXP / 磁石吸附 5s / 震地菇全屏 50 伤 / 灵盾花挡 3 次 / 幸运骰重抽 +1 / 宝箱开箱表结算；击杀 6% 掉落权重表 + 宝箱开箱权重表均和=100）+ **8 个程序化新精灵** `pickups/*.png`（64×64 RGBA 真透底，`tools/gen_pickups.py` 复用 gen_vfx.Canvas 距离场画法生成——治愈果实/金币袋/磁石/震地菇/宝箱/经验晶露/灵盾花/幸运骰，零外部素材、零生成额度）+ 数据驱动可视化 `pickup_chart.html`（双掉落权重条 + 稀有度分组卡组）+ 可玩实验室 `pickup_lab.html`（纯前端 `file://` 双击即开：鼠标移动英雄 → 触碰拾取物即时生效（回血飘字/磁石全场吸附动画/清屏 CSS 屏震/护盾环/开箱加权结算），「模拟击杀」与「精英必掉」按钮真实按权重表抽卡）。经济边界：所有货币产出计入 economy.json 既有 faucet，不新增水龙头；校验含两表权重和=100、图标/音效引用零缺失、`node --check` + DATA_SYNC_OK（8/6%/两表无漂移）；`index.html` 加 🍒 导航卡与拾取物资产块、`manifest.json` 加 pickups 类目（counts.pickups=8）、`README` §2.13/§3/§6/§7/引言同步。补齐「走位即决策」反馈层支柱，为 §4 接入主游戏时的拾取物系统提供端到端验证样本。
 26. ~~**无尽模式（生成器规格 + 难度曲线 + 可玩实验室）**~~ ✅ 已交付 `data/endless.json`（波次 20s：预算 `6+2(w-1)+0.15(w-1)²`、生命 `1+0.22(w-1)+0.012(w-1)²`、伤害 `1+0.10(w-1)+0.005(w-1)²`、币产出 `max(2, 10-floor(w/3))` 递减；精英每 5 波 HP×6 必掉宝箱、Boss 每 10 波掉双宝箱；敌种池四阶段 w1–4 单元素 → w15+ 五元素狂潮；里程碑 5/10/20 分钟非货币荣誉）+ `endless_chart.html`（三条 SVG 难度曲线 + 币递减表 + 阶段池精灵卡组）+ 可玩实验室 `endless_lab.html`（纯前端 `file://`：鼠标走位 + 火元素自动攻击按克制链结算 ×1.6/×0.6、波次曲线刷怪受屏上限 30 截断、精英/Boss 周期登场、击杀 6% 掉落拾取物真实生效、死亡结算存活纪录、里程碑播成就 Jingle）。**四规格同循环**：wave_design 敌种 + element_matrix 克制 + pickups 掉落 + achievements 音效在同一个无尽循环里真跑，是内容包最完整的端到端校验场。经济边界：币产出递减 + 里程碑零货币，防无限刷突破 economy.json 四 faucet 口径；校验含跨表敌种引用、阶段区间连续性、`node --check` + DATA_SYNC_OK（17 参数/4 阶段/6 敌种 + 四公式防漂移）；`index.html` 加 ♾️ 导航卡、`README` §2.14/§3/§6/§7 同步。补齐长线留存「通关后玩什么」，为 §4 接入主游戏时的无尽模式提供端到端验证样本。
 27. ~~**环境氛围音层（Ambience 分层音频规格 + 4 条氛围音）**~~ ✅ 已交付 `data/ambience.json`（双通道分层：Music 0.8 管战斗强度、Ambience 0.5 管场景昼夜；4 条环境音的场景映射优先级表 P1 water→浅滩 / P2 earth·Boss 前厅→洞窟 / P3 无尽 w15+→夜间 / P4 默认→森林日间；昼夜规则）+ **4 条 24s 无缝循环氛围音**（`cp_amb_forest` 鸟鸣+柔风+叶沙 / `cp_amb_night` 虫鸣脉冲串+低鸣 / `cp_amb_river` 宽带水声+气泡+闷蛙 / `cp_amb_cave` 55Hz drone+水滴回响；`synth_audio.py` 新增 `_amb_base`/`_chirp`/`_decay_ping`/`_loop_amb` 四原语纯标准库合成，零外部素材）+ `ambience_chart.html`（双通道说明+场景映射表）。音频 40→44（7 BGM + 33 SFX + 4 AMB）；消费点：`meta_lab.html` 大厅开关升级「声景开关」双通道叠加（0.8/0.5 真实增益）、`audio_demo.html` 加 4 试听卡；校验含响度定位断言（AMB RMS 7.4–15.1% < 战斗 SFX 10.9–30%）、元素关联跨表引用、`node --check`；`index.html` 加 🎧 导航卡、`README` §2.15/§3/§6/§7 同步。音频体系从「事件反馈」扩展到「空间沉浸」，与 §2.11 经济表零冲突（氛围音不涉货币），为 §4 接入主游戏时的分层音频提供规格底座。
+28. ~~**英雄图鉴（差异化规格 + 对比可视化 + 实验室英雄选择器）**~~ ✅ 已交付 `data/heroes.json`（4 英雄差异化：灵鹿祭司初始均衡 + 60s 自回 5%；雷羽鹰 800 币解锁·光元素·玻璃炮 53.3 DPS + 45s 自动闪避；霜甲熊 1200 币·水元素·坦克 150HP+15% 常驻减伤但 DPS 31.4；焰心术士 1500 币·火元素·炮台灼烧 DoT 有效 DPS≈55 上限；各绑定 2 技能，基础 DPS 31–53 由生存/机动补偿，无全方位上位替代）+ `hero_chart.html`（属性条形对比 + 被动 + 技能绑定 + 天平说明）+ `endless_lab.html` 英雄选择器（开战前 4 选 1，被动真实生效：自回血计时/自动闪避判定/减伤系数/灼烧附加）。**元素口径统一修正**：雷→light、冰→water（meta_upgrades 两处描述同步修正，与五元素克制链/反应系统兼容）。校验：技能绑定/元素引用/精灵/解锁链接跨表全过、DPS 天平复算一致、`node --check` + DATA_SYNC_OK（base/passive 全参数）；`index.html` 加 🦌 导航卡、`README` §2.16/§3/§6/§7 同步。使「解锁英雄」从一句话定位升级为有真实数值差异与可玩验证的内容，为 §4 接入主游戏时的英雄系统提供数据底座。
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。
