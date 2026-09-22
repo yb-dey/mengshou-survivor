@@ -130,6 +130,20 @@ jobs:
         run: |
           node ci/daily-knife.mjs --selftest
           node ci/daily-knife.mjs
+      # 波次表「孤儿表」审计：第 22 个"无人守"的维度。
+      # 【v1.197】病根=**同一份数据存在两套实现，其一手写却零读取** ——
+      #   `DATA_WAVES_8`（14 行手写 8 分钟变体，逐行带 R2 调参注释）全项目零读取；
+      #   真身是 v2.0 的 `buildWavesFor()`（以 DATA_WAVES_15 为唯一骨架按 winTime 压缩）。
+      #   实测两者早已分叉：生成器对 ch4(480s) 产出 22 行/840 只，手表 14 行仅 1 行一致(7.1%)、
+      #   总量 563 只（少 33%）⇒ 谁把它接回去 = **静默的行为回退**（开局少 1 兔波、P1 熊腰斩、缺喷嚏猬）。
+      #   ⚠ 既有门禁全测不到：表非空、有注释、不参与布局 —— 问题是"被新实现取代却没删"。
+      #   修法：显式标注「已废弃/预留」+ 说明为何不可接线；门禁守"零读取 + 有标记"这一状态。
+      #   门禁含两条防线：注释窗口要够宽（曾用 400 字符窗口读不到上方标记）+ 解析退化不静默通过。
+      #   **硬门禁**（发现未标记孤儿表即 exit 1）。
+      - name: 波次孤儿表审计（GATE）
+        run: |
+          node ci/orphan-wave-table.mjs --selftest
+          node ci/orphan-wave-table.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
