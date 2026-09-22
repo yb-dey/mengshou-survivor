@@ -282,7 +282,7 @@ const results = {};
 // 【2026-09-22】支持"只渲指定曲目": node ci/render-missing-bgm.mjs ridge --apply
 //   （默认全渲会覆盖既有 wav；曾因回退过 abyss，必须能单曲重渲而不动其它）
 const _only = process.argv.slice(2).filter((a) => !a.startsWith('--'));
-const RENDER_LIST = _only.length ? _only : ['march', 'horde', 'abyss', 'win', 'lose', 'ridge'];
+const RENDER_LIST = _only.length ? _only : ['march', 'horde', 'abyss', 'win', 'lose', 'bloom', 'ridge'];
 for (const tid of RENDER_LIST) {
   const { out, jingle } = renderTrack(tid);
   const rawPeak = normalize(out);
