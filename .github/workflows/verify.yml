@@ -113,6 +113,10 @@ jobs:
         run: |
           python3 ci/rarity-contrast.py --selftest
           python3 ci/rarity-contrast.py
+      - name: 存档字段·写入展示闭环（GATE）
+        run: |
+          python3 ci/save-field-loop.py --selftest
+          python3 ci/save-field-loop.py
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
