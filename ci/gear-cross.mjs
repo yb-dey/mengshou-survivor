@@ -132,7 +132,7 @@ export function audit(srcRaw) {
 }
 
 function selftest() {
-  const HTML = process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
+  const HTML = process.env.GAME_HTML || process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
   const base = fs.readFileSync(HTML, 'utf8');
   const cases = [];
   cases.push(['真实文件零违规', base, 0]);
@@ -198,7 +198,7 @@ if (isMain) {
   if (process.argv.includes('--selftest')) {
     process.exit(selftest() ? 0 : 1);
   } else {
-    const HTML = process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
+    const HTML = process.env.GAME_HTML || process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
     const r = audit(fs.readFileSync(HTML, 'utf8'));
     console.log(`ci/gear-cross.mjs — GATE — ${HTML}`);
     console.log(`DATA_GEAR_SLOT ${r.stats.nSlot} · RARITY ${r.stats.nRarity} · DATA_GEAR ${r.stats.nGear} 条 · per 长度/单调检查 ${r.stats.checked} 条 · 同 slot+stat 对照对 ${r.stats.dChecked || 0} · 组数 ${r.stats.groups || 0}`);
