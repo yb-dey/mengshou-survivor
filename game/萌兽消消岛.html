@@ -7029,32 +7029,35 @@ function drawVitalsHud(ctx) {
   drawVitalsCell(ctx, lay.clock, "时钟", v.clock, v.clockSub, GAME.endlessMode ? "#e6c24a" : "#3a7bd5", !!GAME.endlessMode);
   drawHudClusterFrame(ctx, lay.hp.x, lay.hp.y, lay.hp.w, lay.hp.h, "生命", hpCol, v.hpLow);
   barX = lay.hp.x + 10;
-  barY = lay.hp.y + lay.hp.h - 12;
+  barY = lay.hp.y + lay.hp.h - 16;
   barW = lay.hp.w - 20;
-  barH = 7;
-  rr = 2;   // 【v1.180】半径勿贴半高, 避免部分引擎 roundRect 只剩左端一点
-  ctx.fillStyle = "rgba(8,12,10,0.55)";
-  fillRoundRect(ctx, barX, barY, barW, barH, rr);
+  barH = 10;   // 【v1.180】加高生命细条, 手机截图一眼能看见 fill
+  rr = 3;
+  ctx.fillStyle = "rgba(8,12,10,0.62)";
+  // 槽底用 fillRect, 避开 roundRect 半高边缘假空
+  ctx.fillRect(barX, barY, barW, barH);
   if (v.hpGhost > v.hpRatio) {
     ctx.fillStyle = "rgba(255,255,255,0.55)";
-    fillRoundRect(ctx, barX, barY, Math.max(4, barW * v.hpGhost), barH, rr);
+    ctx.fillRect(barX, barY, Math.max(4, barW * v.hpGhost), barH);
   }
   // 【v1.180】fill 跟 hpText 同数: 有血必画实心条, 活着不出现空槽
   if (v.hpRatio > 0.001 || v.hp > 0) {
-    fillW = Math.max(6, barW * Math.max(v.hpRatio, v.hp > 0 ? 0.02 : 0));
+    fillW = Math.max(8, barW * Math.max(v.hpRatio, v.hp > 0 ? 0.02 : 0));
     if (fillW > barW) fillW = barW;
     ctx.fillStyle = hpCol;
-    fillRoundRect(ctx, barX, barY, fillW, barH, rr);
-    if (fillW > 10) {
-      ctx.fillStyle = "rgba(255,247,224,0.28)";
-      fillRoundRect(ctx, barX + 1, barY + 1, Math.max(4, fillW * 0.42), Math.max(2, barH - 3), 1);
-    }
+    ctx.fillRect(barX, barY, fillW, barH);
+    ctx.fillStyle = "rgba(255,247,224,0.38)";
+    ctx.fillRect(barX, barY, fillW, Math.max(2, (barH * 0.38) | 0));
+    ctx.strokeStyle = "rgba(16,20,14,0.75)";
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(barX + 0.5, barY + 0.5, barW - 1, barH - 1);
+    ctx.lineWidth = 1;
   }
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = v.hpLow ? "#ffe082" : "#fff7e0";
   ctx.font = "bold 22px " + FONT_STACK;
-  ctx.fillText(v.hpText, lay.hp.x + 10, lay.hp.y + 36);
+  ctx.fillText(v.hpText, lay.hp.x + 10, lay.hp.y + 32);
   drawVitalsCell(ctx, lay.kill, "杀敌", v.killText, "本局", "#c9a24b", false);
   if (!GAME.hudSnap) GAME.hudSnap = {};
   GAME.hudSnap.vitals = {
@@ -24024,12 +24027,12 @@ function paintStarRidge(c2, w, y0, amp) {
   g.addColorStop(1, "#121a34");
   c2.fillStyle = g;
   c2.fill();
-  // 【v1.180】脊线墨缘略收, 少一分硬瓦楞
-  c2.strokeStyle = "rgba(6, 8, 18, 0.72)";
-  c2.lineWidth = Math.max(3.6, amp * 0.055);
+  // 【v1.180】脊线墨缘再收, 平铺时少露发光横带
+  c2.strokeStyle = "rgba(6, 8, 18, 0.48)";
+  c2.lineWidth = Math.max(2.8, amp * 0.042);
   c2.stroke();
-  c2.strokeStyle = "rgba(220, 230, 255, 0.32)";
-  c2.lineWidth = Math.max(1.8, amp * 0.028);
+  c2.strokeStyle = "rgba(220, 230, 255, 0.16)";
+  c2.lineWidth = Math.max(1.4, amp * 0.022);
   c2.beginPath();
   c2.moveTo(0, y0 + amp * 0.40);
   c2.quadraticCurveTo(w * 0.35, y0 + amp * 0.22, w * 0.62, y0 + amp * 0.30);
@@ -24097,7 +24100,7 @@ function paintChapterGround(c2, w, h, mt) {
     washV.addColorStop(1, "rgba(6, 10, 22, 0.45)");
     c2.fillStyle = washV;
     c2.fillRect(0, 0, w, h);
-    paintStarRidge(c2, w, h * 0.02, h * 0.16);
+    paintStarRidge(c2, w, h * 0.02, h * 0.12);  // 【v1.180】脊更矮, 瓦楞横带更弱
     // 淡土路: 大面积软晕, 四边 alpha 收, 瓦片接缝不露硬条
     pathH = Math.max(120, h * 0.22);
     var mesaY = h * 0.38;
