@@ -1,0 +1,35 @@
+name: audio-config-consistency
+# 音频配置「多表一致性」门禁（2026-09-22 新增）
+#
+# 守住的东西：同一份逐曲配平增益被抄在 4 处（HTML CONFIG / 门禁 py / 修复器 mjs / 旋律 py），
+#   不同步的两个后果都致命：
+#     · 修复器口径 ≠ 门禁口径 ⇒ 修复器按错尺子 ⇒ **假报警**（照它改会把已配平的音频改坏）
+#     · 旋律门禁漏登记 ⇒ 该曲根本不参评 ⇒ **假绿**（门禁绿但没评到）
+#
+# 本 workflow 做两件事（顺序不可换）：
+#   ① 判据阴性对照 —— 注入三类已知缺陷，门禁必须全检出（判据坏了的门禁比没有更危险）
+#   ② 正式门禁 —— 四处表 + 交付目录的 wav 必须彼此一致
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'game/**'
+      - 'ci/bgm-lane-loudness.py'
+      - 'ci/fix-bgm-lane-loudness.mjs'
+      - 'ci/bgm-melody.py'
+      - 'ci/audio-config-consistency.mjs'
+      - '.github/workflows/audio-config-consistency.yml'
+
+jobs:
+  consistency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: '① 判据阴性对照（注入缺陷必须被检出）'
+        run: node ci/audio-config-consistency.mjs --selftest
+      - name: '② 正式门禁（四处 trim 表 + wav 清单彼此一致）'
+        run: node ci/audio-config-consistency.mjs
