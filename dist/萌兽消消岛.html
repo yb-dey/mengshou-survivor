@@ -17105,7 +17105,57 @@ function paintCuteSil(c2, kind, fill) {
     c2.beginPath(); c2.arc(x, y, r, 0, CONFIG.TWO_PI); c2.fill();
     c2.fillStyle = fill;
   }
-  if (kind === "cone") {
+  if (kind === "xbow") {
+    // 【v1.176】大厅武器井专用: 横托+弓臂+松果头, 小尺寸先读「弩」而不是棍/棒
+    c2.lineWidth = 3.6;
+    c2.beginPath();
+    c2.moveTo(8, 18);
+    c2.quadraticCurveTo(4, 32, 8, 46);
+    c2.lineTo(16, 42);
+    c2.quadraticCurveTo(10, 32, 16, 22);
+    c2.closePath();
+    fs();
+    c2.beginPath();
+    c2.moveTo(48, 18);
+    c2.quadraticCurveTo(60, 32, 48, 46);
+    c2.lineTo(40, 42);
+    c2.quadraticCurveTo(52, 32, 40, 22);
+    c2.closePath();
+    fs();
+    c2.beginPath();
+    c2.moveTo(12, 28);
+    c2.lineTo(52, 28);
+    c2.lineTo(52, 36);
+    c2.lineTo(12, 36);
+    c2.closePath();
+    fs();
+    c2.beginPath();
+    c2.moveTo(28, 22);
+    c2.lineTo(28, 52);
+    c2.lineTo(36, 52);
+    c2.lineTo(36, 40);
+    c2.lineTo(44, 40);
+    c2.lineTo(44, 32);
+    c2.lineTo(36, 32);
+    c2.lineTo(36, 22);
+    c2.closePath();
+    fs();
+    c2.beginPath();
+    c2.moveTo(32, 8);
+    c2.bezierCurveTo(24, 10, 22, 20, 26, 28);
+    c2.bezierCurveTo(30, 34, 38, 34, 42, 28);
+    c2.bezierCurveTo(46, 20, 42, 10, 32, 8);
+    c2.closePath();
+    fs();
+    c2.lineWidth = 2.4;
+    c2.beginPath();
+    c2.moveTo(26, 14); c2.quadraticCurveTo(32, 17, 38, 14);
+    c2.moveTo(25, 20); c2.quadraticCurveTo(32, 23, 39, 20);
+    c2.stroke();
+    hi(28, 14, 2.8);
+    c2.lineWidth = 3.6;
+    c2.strokeStyle = ink;
+  } else if (kind === "cone") {
     // 【v1.143】松果弩侧影: 左弓臂 + 横托 + 松果身, 不是领结也不是三角棍
     // 【v1.176】弓臂更满、松果鳞纹更清楚, 小井里先读「弩」
     c2.lineWidth = 3.6;
@@ -23916,39 +23966,38 @@ function drawHallStageGround(ctx) {
   var g, i, clumps;
   ctx.save();
   try {
-    g = ctx.createLinearGradient(80, 40, 560, 420);
-    g.addColorStop(0, "rgba(244,248,228,0.42)");
-    g.addColorStop(0.45, "rgba(220,232,190,0.08)");
-    g.addColorStop(1, "rgba(46,60,28,0.10)");
+    g = ctx.createLinearGradient(90, 36, 580, 380);
+    g.addColorStop(0, "rgba(248,252,236,0.55)");
+    g.addColorStop(0.35, "rgba(220,232,190,0.14)");
+    g.addColorStop(1, "rgba(46,60,28,0.16)");
     ctx.fillStyle = g;
-    ctx.fillRect(100, 48, 500, 300);
+    ctx.fillRect(110, 40, 480, 300);
   } catch (eSg) { /* skip */ }
-  ctx.fillStyle = "rgba(184,132,88,0.30)";
-  ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 328, 210, 16, 0, 0, CONFIG.TWO_PI);
-  else ctx.arc(360, 328, 120, 0, CONFIG.TWO_PI);
-  ctx.fill();
+  // 路唇: 浅土带横贯舞台脚下, 墨近缘 + 苔亮带, 读成走道
+  ctx.fillStyle = "rgba(184,132,88,0.42)";
+  fillRoundRect(ctx, 150, 318, 420, 26, 12);
+  ctx.fillStyle = "rgba(200,236,200,0.34)";
+  fillRoundRect(ctx, 168, 322, 384, 12, 8);
   ctx.strokeStyle = "#2e3c1c";
-  ctx.lineWidth = 2.2;
-  ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 318, 198, 11, 0, Math.PI * 1.05, Math.PI * 1.95);
-  else ctx.arc(360, 318, 110, Math.PI * 1.05, Math.PI * 1.95);
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(200,236,200,0.55)";
+  ctx.lineWidth = 2.4;
+  strokeRoundRect(ctx, 150, 318, 420, 26, 12);
+  ctx.strokeStyle = "rgba(244,248,228,0.55)";
   ctx.lineWidth = 1.6;
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(348, 312, 150, 7, 0, Math.PI * 1.15, Math.PI * 1.7);
-  else ctx.arc(348, 312, 90, Math.PI * 1.15, Math.PI * 1.7);
+  ctx.moveTo(176, 324);
+  ctx.lineTo(524, 324);
   ctx.stroke();
   clumps = [
-    [148, 292, 16, "#5a8a3a"],
-    [176, 338, 20, "#6a9a4a"],
-    [132, 368, 14, "#4e7a34"],
-    [548, 286, 16, "#5a8a3a"],
-    [578, 332, 22, "#6a9a4a"],
-    [552, 372, 14, "#4e7a34"],
-    [250, 372, 12, "#6a9a4a"],
-    [470, 368, 13, "#5a8a3a"]
+    [140, 278, 18, "#5a8a3a"],
+    [168, 348, 22, "#6a9a4a"],
+    [118, 360, 16, "#4e7a34"],
+    [196, 366, 14, "#5a8a3a"],
+    [552, 270, 18, "#5a8a3a"],
+    [582, 336, 24, "#6a9a4a"],
+    [548, 366, 16, "#4e7a34"],
+    [510, 360, 14, "#5a8a3a"],
+    [250, 378, 13, "#6a9a4a"],
+    [460, 376, 14, "#5a8a3a"]
   ];
   for (i = 0; i < clumps.length; i++) {
     paintInkTuft(ctx, clumps[i][0], clumps[i][1], clumps[i][2], clumps[i][3]);
@@ -26016,8 +26065,8 @@ var HALL_SLOT_GLYPH = {};
 function hallSlotGlyphSpec(defId, slotId) {
   // 【v1.176】大厅六槽用墨线剪影, 小井里先读出武器/护甲/项链/腰带/手套/鞋子。装备库仍走原贴图。
   var table = {
-    pinebow: ["cone", "#b8733a"],
-    thornbow: ["needle", "#2f6a28"],
+    pinebow: ["xbow", "#b8733a"],
+    thornbow: ["xbow", "#2f6a28"],
     leafmail: ["leaf3", "#5eae42"],
     barkplate: ["log", "#8a6238"],
     dewdrop: ["dew", "#42b4c4"],
@@ -26035,7 +26084,7 @@ function hallSlotGlyphSpec(defId, slotId) {
   if (slotId === "belt") return ["twig", "#4a8c38"];
   if (slotId === "gloves") return ["paw", "#e0909e"];
   if (slotId === "shoes") return ["boot", "#c9a06c"];
-  return ["cone", "#b8733a"];
+  return ["xbow", "#b8733a"];
 }
 function hallSlotGlyph(defId, slotId) {
   var spec = hallSlotGlyphSpec(defId, slotId);
