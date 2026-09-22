@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-23 03:43:44",
+  "generated_at": "2026-09-23 04:04:24",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
     "vfx": 24,
     "icons": 12,
     "skill_icons": 13,
-    "design_data": 6,
+    "design_data": 8,
     "audio": 35,
     "bgm": 6,
     "sfx": 29
@@ -446,9 +446,19 @@
       "bytes": 2256
     },
     {
+      "key": "economy",
+      "cn": "经济系统",
+      "bytes": 2579
+    },
+    {
       "key": "element_matrix",
       "cn": "五元素克制矩阵",
       "bytes": 1110
+    },
+    {
+      "key": "meta_upgrades",
+      "cn": "局外成长系统",
+      "bytes": 9446
     },
     {
       "key": "reactions",

@@ -226,6 +226,21 @@
 - **设计要点**：三类乘区分明——**元素专精**（5 张单元素卡，与 §2.5 克制链、§2.9 反应一一联动）、**反应连锁**（共鸣 / 绵延 / 附著大师 / 剧毒蔓延，放大 §2.9 反应结算）、**生存续航**（厚皮 / 硬壳 / 汲取 / 护体 / 不灭）；传说卡「元素共鸣」不再挑元素，是通用终极乘区。全部 24 张卡的图标复用既有 `icons/st_*` / `skill_icons/el_*·ab_*` / `vfx/fx_*`、音效复用 `cp_sfx_*`（**零新资产**）。
 - **校验**：`data/upgrades.json` 为合法 JSON；24 张卡的 icon / sfx 引用经 `os.path.exists` 核验**零缺失**；`upgrade_chart.html` 由脚本校验（0 占位符、含 `<svg>`、24 张卡名全在、19 个图标引用均存在）；`upgrade_lab.html` 内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `UP` / `RARITY` / `LEVELUP` / `CURVE` 已与 `upgrades.json` 逐项比对一致（24 卡 / 4 稀有度 / 抽卡规则 / 经验曲线 均无漂移）。
 
+## 2.11 局外成长系统（设计规格 + 可玩实验室 · 本轮新增）
+
+> 补齐幸存品类「局内构筑 + 局外养成」双层循环的另一半：已有局内成长(upgrades)，独缺**跨局永久强化**。本规格定义「森灵币」产出-消耗闭环与 18 项永久强化（基础属性 / 元素亲和 / 经济加成 / 生存续航 / 英雄解锁），让每局战斗都为下一局变强铺路。设计锚定：Vampire Survivors PowerUp（金币购永久强化）、Hades 夜之镜（局内资源→局外成长→更强局内表现）、Rogue Legacy 庄园（死亡也累积永久收益，消除挫败感）。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `data/meta_upgrades.json` | 局外成长系统规格 | 18 项永久强化（基础 5 / 元素 5 / 经济 3 / 生存 2 / 解锁 3），每项含 `category / maxLevel / cost{base,growth} / effects / icon`；几何成本 `cost(l)=round(base*growth^(l-1))`；另含 `currency`（森灵币）、`stats`（12 个字段口径） |
+| `data/economy.json` | 森灵币经济水槽模型 | 货币(1) + 产出入口(4：击杀/通关/首次通关/每日) + 回收水槽(2：永久强化/英雄解锁) + 积压率 0.22（<0.3 健康），经 `game-economy check` E1–E4 全 PASS |
+| `meta_chart.html` | 经济水槽 + 分类消耗 + 永久强化清单可视化 | 由两份 JSON 数据驱动生成（积压率仪表 SVG + 五类总消耗对比 + 18 项强化卡组，零图片生成） |
+| `meta_lab.html` | 局外成长可玩实验室 | 纯前端 `file://` 校验场：本局自动战斗 20s 赚币 → 局外大厅买永久强化 → 下一局伤害/生命/金币收益更高，验证「跨局养成」闭环 |
+
+- **生成器**：`tools/build_meta_chart.py`（读 `data/meta_upgrades.json` + `data/economy.json`，复用 `data/element_matrix.json` 五元素配色，纯标准库渲染，零依赖、不卡机）。
+- **设计要点**：五类乘区分明——**基础属性**（生命/攻击/移速/拾取/暴击）、**元素亲和**（五元素各 2%/级，与 §2.5 克制链、§2.9 反应叠乘）、**经济加成**（金币/经验/开局金币，加速养成回本）、**生存续航**（减伤/复活）、**英雄解锁**（雷羽鹰/霜甲熊/焰心术士，占位图待云端出图替换）。全部 18 项复用既有 `icons/st_*` / `skill_icons/el_*·ab_*` / `vfx/fx_*` / `sprites/*` / `cp_sfx_*` 资产（**零新资产**）。
+- **经济闭环**：全流程总产出 41,946 森灵币，总消耗 32,718 币（永久强化 29,218 + 解锁 3,500），积压率 0.22——消耗吃掉 78%，留 22% 作「存币待购」余量，既不通胀也不枯竭；`data/economy.json` 经 `game-economy` 技能 `check` 校验（E1 货币≥1 / E2 产出≥1 / E3 水槽≥1 / E4 积压率≤0.3）全 PASS。
+- **校验**：两份 JSON 合法；18 项 icon/sfx 引用 `os.path.exists` 核验零缺失；`economy.json` 内部自洽（faucets 求和=total_faucet、drains 求和=total_drain、积压率匹配、drains 与 meta_upgrades 总成本跨表一致）；`meta_chart.html` 0 占位符、含 `<svg>`、18 项名全在、16 图标引用均存在；`meta_lab.html` 内联 `<script>` 经 `node --check` 通过（file:// 双击可用），内联 `MU`/`EC` 与两份 JSON 逐项比对一致（18 项 / 积压率 0.22 无漂移）。
 ## 3. 目录结构
 
 ```
@@ -246,6 +261,8 @@ _content_pack/
 ├── reaction_lab.html       # 元素反应可玩实验室（reactions.json 真跑起来，纯前端 file:// 双击即开）
 ├── upgrade_chart.html      # 局内成长系统：经验曲线 + 稀有度权重缩放 + 24 张升级卡（数据驱动，内联 SVG/HTML）
 ├── upgrade_lab.html        # 局内成长可玩实验室（upgrades.json 真跑起来，升级三选一 + DPS 验证，纯前端 file:// 双击即开）
+├── meta_chart.html         # 局外成长系统：经济水槽 + 五类总消耗 + 18 项永久强化（数据驱动，内联 SVG/HTML）
+├── meta_lab.html           # 局外成长可玩实验室（meta_upgrades.json 真跑起来，赚币→永久强化→更强，纯前端 file:// 双击即开）
 ├── boss_arena.html         # BOSS 竞技场（boss_phases.json 三阶段可玩校验场，纯前端 file:// 双击即开）
 ├── campaign.html          # 战役模式（wave_design.json 10 关 × 多波次可玩校验场，逐波刷怪，纯前端 file:// 双击即开）
 ├── sprites/               # 原始生成图（RGB，未抠）
@@ -291,7 +308,9 @@ _content_pack/
 │   ├── wave_design.json       # 10 关 × 多波次敌种组合 + 元素分布
 │   ├── boss_phases.json       # 森林古木三阶段 Boss 脚本（baseHp 200，3 阶段）
 │   ├── reactions.json         # 五元素反应系统：10 组元素对 × 5 元素 × 7 状态
-│   └── upgrades.json          # 局内成长系统：24 张升级卡 × 4 稀有度 + 经验曲线 + 抽卡权重
+│   ├── upgrades.json          # 局内成长系统：24 张升级卡 × 4 稀有度 + 经验曲线 + 抽卡权重
+│   ├── meta_upgrades.json     # 局外成长系统：18 项永久强化 × 5 类 + 几何成本曲线
+│   └── economy.json           # 森灵币经济水槽模型：1 货币 / 4 产出 / 2 水槽 / 积压率 0.22
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -307,7 +326,8 @@ _content_pack/
     ├── build_element_chart.py # 由 data/*.json 生成元素克制环 + 倍率矩阵 + 冷却条参考页
     ├── build_wave_chart.py   # 由 data/wave_design.json + data/boss_phases.json 生成关卡/Boss 参考页
     ├── build_reaction_chart.py # 由 data/reactions.json 生成 5×5 反应矩阵 + 反应卡 + 状态图例参考页
-    └── build_upgrade_chart.py  # 由 data/upgrades.json 生成 经验曲线 + 权重缩放 + 24 张升级卡参考页
+    ├── build_upgrade_chart.py  # 由 data/upgrades.json 生成 经验曲线 + 权重缩放 + 24 张升级卡参考页
+    └── build_meta_chart.py    # 由 data/meta_upgrades.json + data/economy.json 生成 经济水槽 + 永久强化参考页
 ```
 
 ## 4. 接入游戏路径（待主文件释放后）
@@ -348,11 +368,13 @@ _content_pack/
 - 演练场机制深化：`playground.html` 已接入五元素系统——每个敌种带 `element` 属性并显示元素徽章，玩家选攻击元素后伤害按 `element_matrix.json` 倍率结算（强克 ×1.6 / 被克 ×0.6 / 同元素 ×0.85 / 中性 ×1.0），并启用该元素代表技能的冷却（`skill_cooldowns.json` 数据）；命中飘字显示克制倍率。脚本经 `node --check` 语法校验通过（内联数据，file:// 双击可用，无需 fetch）。
 - 元素反应系统：`data/reactions.json` 为合法 JSON（C(5,2)=10 对全覆盖、无多余、status 引用均存在，`fire+water` 增幅类状态为 null 符合设计）；`reaction_chart.html` 由 `tools/build_reaction_chart.py` 数据驱动生成，校验 0 占位符、10 反应名全在、7 状态图标路径均存在；`reaction_lab.html` 为可玩实验室，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `REACT`/`STATUS`/`ELEMENTS` 已与 `reactions.json` 逐项比对一致（5 元素 / 7 状态 / 10 反应 均无漂移），逆触发 +20% 状态时长已在 `applyStatus` 真正生效；7 状态全部映射到既有 `icons/st_*.png` + `fx_*`/`cp_sfx_*` 资产（零新资产）。
 - 局内成长系统：`data/upgrades.json` 为合法 JSON（24 张升级卡：普通 5 / 稀有 11 / 史诗 6 / 传说 2，每张含 rarity / maxStacks / tags / effects / icon / sfx）；24 张卡的 icon / sfx 引用经 `os.path.exists` 核验零缺失；`upgrade_chart.html` 由 `tools/build_upgrade_chart.py` 数据驱动生成，校验 0 占位符、含 `<svg>`、24 张卡名全在、19 个图标引用均存在；`upgrade_lab.html` 为可玩实验室，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `UP`/`RARITY`/`LEVELUP`/`CURVE` 已与 `upgrades.json` 逐项比对一致（24 卡 / 4 稀有度 / 抽卡规则 / 经验曲线 均无漂移）。
+- 局外成长系统：`data/meta_upgrades.json` 为合法 JSON（18 项永久强化：基础 5 / 元素 5 / 经济 3 / 生存 2 / 解锁 3，每项含 category / maxLevel / cost{base,growth} / effects / icon）；18 项 icon / sfx 引用经 `os.path.exists` 核验零缺失；`meta_chart.html` 由 `tools/build_meta_chart.py` 数据驱动生成，校验 0 占位符、含 `<svg>`、18 项名全在、16 个图标引用均存在；`meta_lab.html` 为可玩实验室，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `MU`/`EC` 已与 `meta_upgrades.json`/`economy.json` 逐项比对一致（18 项 / 积压率 0.22 均无漂移）。
+- 经济系统：`data/economy.json` 经 `game-economy` 技能 `check` 校验 E1–E4 全 PASS（货币 1 / 产出入口 4 / 回收水槽 2 / 积压率 0.22 ≤ 0.3）；内部自洽（faucets 求和=total_faucet 41,946、drains 求和=total_drain 32,718、积压率=(产出-消耗)/产出 一致、drains 与 meta_upgrades 总成本跨表一致），经济不通胀、不枯竭。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张精灵）+ 音乐（6 首 BGM + 29 SFX）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（4 份 JSON + 2 可视化参考页）**七支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张精灵）+ 音乐（6 首 BGM + 29 SFX）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（8 份 JSON）+ 可视化参考页与可玩校验场（5 参考页 + 3 实验室 + 竞技场 + 战役 + 演练场）**八大支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -384,4 +406,5 @@ _content_pack/
 
 23. ~~**局内成长系统（设计规格 + 可玩实验室）**~~ ✅ 已交付 `data/upgrades.json`（24 张升级卡 × 4 稀有度；抽 3 选 1、稀有度权重随等级缩放、叠层上限、二次经验曲线至 Lv.20）+ 数据驱动可视化 `upgrade_chart.html`（经验曲线 SVG + 权重缩放表 + 流派标签分布 + 分层卡组）+ 可玩实验室 `upgrade_lab.html`（纯前端 `file://` 双击即开：自动攻击累积经验 → 升级弹三选一 → 选卡立刻改变属性面板与 DPS，验证「构筑是否真带来成长」）。`tools/build_upgrade_chart.py` 读 JSON 纯标准库渲染（零依赖、不卡机）；三类乘区分明（元素专精 5 卡 / 反应连锁 4 卡 / 生存续航 5 卡 / 功能 5 卡），与 §2.5 克制链、§2.9 元素反应一一联动；24 张卡通通复用既有 `icons/st_*` + `skill_icons/el_*·ab_*` + `vfx/fx_*` + `cp_sfx_*` 资产（零新资产）；`upgrade_lab.html` 内联数据与 JSON 逐项比对一致、内联脚本 `node --check` 通过；`index.html` 加 🎲 导航卡、`README` §2.10/§3/§6/§7 同步。填补内容包长期缺失的一环（此前有波次 / Boss / 元素 / 反应，独缺局内成长），为 §4 接入主游戏时的升级流程与构筑系统提供端到端验证样本。
 
+24. ~~**局外成长系统（设计规格 + 可玩实验室）**~~ ✅ 已交付 `data/meta_upgrades.json`（18 项永久强化 × 5 类：基础属性 / 元素亲和 / 经济加成 / 生存续航 / 英雄解锁；几何成本 `cost(l)=round(base*growth^(l-1))`）+ `data/economy.json`（森灵币产出-消耗水槽模型：1 货币 / 4 产出入口 / 2 回收水槽 / 积压率 0.22）+ 数据驱动可视化 `meta_chart.html`（积压率仪表 SVG + 五类总消耗对比 + 18 项强化卡组）+ 可玩实验室 `meta_lab.html`（纯前端 `file://` 双击即开：本局自动战斗 20s 赚币 → 局外大厅买永久强化 → 下一局伤害/生命/金币收益更高，验证「跨局养成」闭环）。`tools/build_meta_chart.py` 读两份 JSON 纯标准库渲染（零依赖、不卡机）；经济表经 `game-economy` 技能 `check` E1–E4 全 PASS（积压率 0.22 < 0.3 健康）；18 项复用既有 `icons/`+`skill_icons/`+`vfx/`+`sprites/`+`cp_sfx_*` 资产（零新资产，英雄解锁项用现有精灵作占位图待云端出图替换）；`meta_lab.html` 内联数据与 JSON 逐项比对一致、内联脚本 `node --check` 通过；`index.html` 加 🌱 导航卡、`README` §2.11/§3/§6/§7 同步。与 §2.10 局内成长共同构成幸存品类「局内构筑 + 局外养成」双层循环，为 §4 接入主游戏时的局外养成与货币系统提供端到端验证样本。
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

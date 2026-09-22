@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 局外成长实验室</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; --red:#e06666; }
+  *{ box-sizing:border-box;margin:0;padding:0 }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:28px 16px; display:flex; flex-direction:column; align-items:center; }
+  h1{ font-size:26px; letter-spacing:2px; margin-bottom:4px }
+  .sub{ opacity:.8; margin-bottom:20px; font-size:13px; text-align:center; max-width:900px; line-height:1.6 }
+  .cols{ width:100%; max-width:1080px; display:grid; grid-template-columns:1fr 1fr; gap:16px }
+  @media(max-width:820px){ .cols{ grid-template-columns:1fr } }
+  .card{ background:rgba(15,47,31,.55); border:1px solid rgba(159,224,180,.25); border-radius:14px; padding:18px 20px }
+  .card h2{ font-size:16px; margin-bottom:12px; display:flex; align-items:center; gap:8px }
+  .card h2 small{ opacity:.6; font-weight:400; font-size:12px }
+  .bal{ font-size:26px; font-weight:800; color:var(--gold) }
+  .statrow{ display:flex; justify-content:space-between; font-size:13px; margin:5px 0; border-bottom:1px dashed rgba(159,224,180,.15); padding-bottom:4px }
+  .statrow b{ color:var(--gold) }
+  .cat{ font-size:14px; font-weight:700; margin:14px 0 8px; padding-left:8px; border-left:4px solid var(--leaf) }
+  .up{ display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.04); border-radius:10px; padding:8px 12px; margin:6px 0 }
+  .up img{ width:38px; height:38px; flex:none; border-radius:7px }
+  .up-b{ flex:1; min-width:0 }
+  .up-n{ font-size:14px; font-weight:700 }
+  .up-e{ font-size:11.5px; opacity:.75; margin-top:2px }
+  .up-lv{ font-size:11px; color:var(--gold); white-space:nowrap }
+  .btn{ cursor:pointer; border:none; border-radius:8px; padding:7px 12px; font-size:13px; font-weight:700; color:#0f2f1f; background:var(--leaf); white-space:nowrap }
+  .btn:disabled{ background:rgba(159,224,180,.2); color:rgba(243,247,238,.4); cursor:not-allowed }
+  .btn.gold{ background:var(--gold) }
+  .btn.red{ background:var(--red); color:#fff }
+  .hud{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px }
+  .hud .chip{ flex:1; min-width:90px; background:rgba(255,255,255,.05); border:1px solid rgba(159,224,180,.2); border-radius:10px; padding:10px; text-align:center }
+  .chip .k{ font-size:11px; opacity:.7 }
+  .chip .v{ font-size:20px; font-weight:800; margin-top:2px }
+  .chip .v small{ font-size:12px; opacity:.7 }
+  .bar{ height:10px; background:rgba(255,255,255,.08); border-radius:5px; overflow:hidden; margin-top:8px }
+  .bar i{ display:block; height:100%; background:linear-gradient(90deg,#6fe39a,#3fa66a); transition:width .2s }
+  .bar.hp i{ background:linear-gradient(90deg,#f18b8b,#e06666) }
+  .note{ font-size:11.5px; opacity:.6; line-height:1.6; margin-top:12px }
+  footer{ margin-top:20px; font-size:12px; opacity:.5; text-align:center; line-height:1.7; max-width:820px }
+</style>
+</head>
+<body>
+  <h1>🌱 局外成长实验室</h1>
+  <div class="sub">《萌兽消消岛》「局内赚币 → 局外永久强化 → 下一局更强 → 赚更多」双层循环可玩演示。点「开始本局」自动战斗 20 秒赚取 <b>森灵币</b>（跨局累积，永不清零），再用森灵币在左侧大厅购买永久强化；强化后下一局的攻击/生命/金币收益都会更高。内联数据来自 <code>data/meta_upgrades.json</code> + <code>data/economy.json</code>（纯前端 file:// 双击即开，无 fetch）。</div>
+
+  <div class="cols">
+    <div class="card">
+      <h2>🏛️ 局外大厅 <small>永久强化（跨局存续）</small></h2>
+      <div>森灵币余额 <span class="bal" id="bal">0</span></div>
+      <div id="shop"></div>
+    </div>
+
+    <div class="card">
+      <h2>⚔️ 本局战斗 <small>自动战斗赚取森灵币</small></h2>
+      <div class="hud">
+        <div class="chip"><div class="k">每秒伤害</div><div class="v" id="dps">0</div></div>
+        <div class="chip"><div class="k">本局击杀</div><div class="v" id="kills">0</div></div>
+        <div class="chip"><div class="k">本局赚币</div><div class="v" id="runcoins">0</div></div>
+        <div class="chip"><div class="k">倒计时</div><div class="v" id="timer">20s</div></div>
+      </div>
+      <div class="statrow"><span>英雄生命</span><span><b id="hp">100</b>/<span id="hpmax">100</span></span></div>
+      <div class="bar hp"><i id="hpbar" style="width:100%"></i></div>
+      <div style="display:flex;gap:8px;margin:14px 0">
+        <button class="btn gold" id="btnStart">▶ 开始本局</button>
+        <button class="btn red" id="btnEnd" disabled>■ 结束本局</button>
+      </div>
+      <h2>✨ 永久加成 <small>已购强化对本局的提升</small></h2>
+      <div id="perm"></div>
+      <div class="note">基础：20 伤害/秒 · 敌 50 血 · 每杀 3 币 · 敌每秒打 5（减伤后可降）· 本局 20 秒。强化「利爪之魂」提升伤害→更多击杀→更多金币；「聚宝盆」提升每杀金币；「生命之源/铜墙铁壁/涅槃」提升存活，让高伤害撑满整局。</div>
+    </div>
+  </div>
+
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>局外成长 + 经济闭环的可玩校验场，与 §2.10 局内成长系统构成双层循环；内联 MU/EC 数据与 meta_upgrades.json / economy.json 逐项比对一致。</footer>
+
+<script>
+"use strict";
+/* ===== 内联数据（子集：运行所需字段，与 data/meta_upgrades.json、data/economy.json 对齐）===== */
+const CATS = { basic:"基础属性", element:"元素亲和", economy:"经济加成", survival:"生存续航", unlock:"英雄解锁" };
+const CAT_ORDER = ["basic","element","economy","survival","unlock"];
+const MU = {
+  meta_hp:    { cn:"生命之源", category:"basic", tag:"defense", maxLevel:10, cost:{base:50,growth:1.35},  effects:{maxHpPct:4}, icon:"icons/st_heal.png" },
+  meta_atk:   { cn:"利爪之魂", category:"basic", tag:"damage", maxLevel:10, cost:{base:60,growth:1.35},  effects:{atkPct:3}, icon:"icons/st_atk_up.png" },
+  meta_spd:   { cn:"风行足", category:"basic", tag:"utility", maxLevel:8, cost:{base:40,growth:1.35},  effects:{moveSpdPct:2}, icon:"skill_icons/ab_dash.png" },
+  meta_pickup:{ cn:"磁石之触", category:"basic", tag:"utility", maxLevel:8, cost:{base:30,growth:1.35},  effects:{pickupRangePct:10}, icon:"vfx/fx_pickup.png" },
+  meta_crit:  { cn:"鹰眼", category:"basic", tag:"damage", maxLevel:6, cost:{base:80,growth:1.5},  effects:{critRate:0.01}, icon:"icons/st_mark.png" },
+  meta_fire:  { cn:"火之亲和", category:"element", tag:"element", maxLevel:5, cost:{base:120,growth:1.6}, effects:{elementDmgPct:{fire:2}}, icon:"skill_icons/el_fire.png" },
+  meta_water: { cn:"水之亲和", category:"element", tag:"element", maxLevel:5, cost:{base:120,growth:1.6}, effects:{elementDmgPct:{water:2}}, icon:"skill_icons/el_water.png" },
+  meta_earth: { cn:"土之亲和", category:"element", tag:"element", maxLevel:5, cost:{base:120,growth:1.6}, effects:{elementDmgPct:{earth:2}}, icon:"skill_icons/el_earth.png" },
+  meta_light: { cn:"光之亲和", category:"element", tag:"element", maxLevel:5, cost:{base:120,growth:1.6}, effects:{elementDmgPct:{light:2}}, icon:"skill_icons/el_light.png" },
+  meta_wood:  { cn:"木之亲和", category:"element", tag:"element", maxLevel:5, cost:{base:120,growth:1.6}, effects:{elementDmgPct:{wood:2}}, icon:"skill_icons/el_wood.png" },
+  meta_coin:  { cn:"聚宝盆", category:"economy", tag:"economy", maxLevel:5, cost:{base:100,growth:1.6}, effects:{coinGainPct:5}, icon:"vfx/fx_coin_burst.png" },
+  meta_exp:   { cn:"悟性", category:"economy", tag:"economy", maxLevel:5, cost:{base:100,growth:1.6}, effects:{expGainPct:5}, icon:"vfx/fx_levelup.png" },
+  meta_startcoin:{ cn:"家底", category:"economy", tag:"economy", maxLevel:5, cost:{base:150,growth:1.5}, effects:{startingCoins:60}, icon:"vfx/fx_coin_burst.png" },
+  meta_armor: { cn:"铜墙铁壁", category:"survival", tag:"defense", maxLevel:5, cost:{base:120,growth:1.6}, effects:{armorPct:1}, icon:"icons/st_def_up.png" },
+  meta_revive:{ cn:"涅槃", category:"survival", tag:"defense", maxLevel:3, cost:{base:500,growth:1.8}, effects:{revive:1}, icon:"icons/st_heal.png" },
+  unlock_eagle:{ cn:"解锁·雷羽鹰", category:"unlock", tag:"unlock", maxLevel:1, cost:{base:800,growth:1.0}, effects:{unlock:"hero_eagle"}, icon:"sprites/star_bird.png" },
+  unlock_bear:{ cn:"解锁·霜甲熊", category:"unlock", tag:"unlock", maxLevel:1, cost:{base:1200,growth:1.0}, effects:{unlock:"hero_bear"}, icon:"sprites/stone_turtle.png" },
+  unlock_mage:{ cn:"解锁·焰心术士", category:"unlock", tag:"unlock", maxLevel:1, cost:{base:1500,growth:1.0}, effects:{unlock:"hero_mage"}, icon:"sprites/flame_fox.png" }
+};
+const EC = {
+  currencies:[{ id:"coins", cn:"森灵币", symbol:"🍀" }],
+  hoarding_rate:0.22,
+  model:{ total_faucet:41946, total_drain:32718, net_surplus:9228 }
+};
+const ELEM_CN = { fire:"火", water:"水", earth:"土", light:"光", wood:"木" };
+
+/* ===== 成本与派生 ===== */
+function cost(base, growth, l){ return Math.round(base * Math.pow(growth, l-1)); }
+
+let profile = { coins: 0, levels: {} };
+Object.keys(MU).forEach(function(k){ profile.levels[k] = 0; });
+
+function permanent(){
+  const p = { atkPct:0, maxHpPct:0, moveSpdPct:0, pickupRangePct:0, critRate:0,
+              coinGainPct:0, expGainPct:0, startingCoins:0, armorPct:0, revive:0,
+              element:{ fire:0, water:0, earth:0, light:0, wood:0 }, unlocks:[] };
+  Object.keys(MU).forEach(function(k){
+    const u = MU[k], lv = profile.levels[k];
+    if(!lv) return;
+    const ef = u.effects;
+    if(ef.maxHpPct) p.maxHpPct += ef.maxHpPct*lv;
+    if(ef.atkPct) p.atkPct += ef.atkPct*lv;
+    if(ef.moveSpdPct) p.moveSpdPct += ef.moveSpdPct*lv;
+    if(ef.pickupRangePct) p.pickupRangePct += ef.pickupRangePct*lv;
+    if(ef.critRate) p.critRate += ef.critRate*lv;
+    if(ef.coinGainPct) p.coinGainPct += ef.coinGainPct*lv;
+    if(ef.expGainPct) p.expGainPct += ef.expGainPct*lv;
+    if(ef.startingCoins) p.startingCoins += ef.startingCoins*lv;
+    if(ef.armorPct) p.armorPct += ef.armorPct*lv;
+    if(ef.revive) p.revive += ef.revive*lv;
+    if(ef.elementDmgPct){ for(const e in ef.elementDmgPct){ p.element[e] += ef.elementDmgPct[e]*lv; } }
+    if(ef.unlock) p.unlocks.push(ef.unlock);
+  });
+  return p;
+}
+
+/* ===== 本局战斗 ===== */
+const BASE_DPS = 20, ENEMY_HP = 50, COIN_PER_KILL = 3, INCOMING = 5, RUN_TIME = 20;
+let run = { active:false, elapsed:0, kills:0, coins:0, hp:100, maxHp:100, revived:false };
+
+function effLabel(eff){
+  const L = { maxHpPct:"生命+%s%/级", atkPct:"伤害+%s%/级", moveSpdPct:"移速+%s%/级",
+              pickupRangePct:"拾取范围+%s%/级", critRate:"暴击率+%s%/级",
+              coinGainPct:"金币+%s%/级", expGainPct:"经验+%s%/级", startingCoins:"开局+%s币/级",
+              armorPct:"减伤+%s%/级", revive:"复活+%s/级" };
+  const parts = [];
+  for(const k in eff){
+    if(k === "elementDmgPct"){ for(const e in eff[k]) parts.push(ELEM_CN[e]+"伤+"+eff[k][e]+"%/级"); }
+    else if(k === "unlock"){ parts.push("解锁新英雄"); }
+    else { const v = (k==="critRate") ? Math.round(eff[k]*100) : eff[k]; parts.push(L[k].replace("%s", v)); }
+  }
+  return parts.join(" · ");
+}
+
+function renderShop(){
+  const bal = document.getElementById("bal");
+  bal.textContent = String(profile.coins);
+  let html = "";
+  CAT_ORDER.forEach(function(c){
+    html += '<div class="cat">'+CATS[c]+'</div>';
+    Object.keys(MU).forEach(function(k){
+      const u = MU[k];
+      if(u.category !== c) return;
+      const lv = profile.levels[k];
+      const isUnlock = u.category === "unlock";
+      const maxed = lv >= u.maxLevel;
+      const cst = maxed ? 0 : cost(u.cost.base, u.cost.growth, lv+1);
+      const afford = !maxed && profile.coins >= cst;
+      const btnTxt = isUnlock ? (maxed ? "已解锁" : "解锁 "+cst) : (maxed ? "已满级" : "升级 "+cst);
+      html += '<div class="up"><img src="'+u.icon+'" alt="">'
+        + '<div class="up-b"><div class="up-n">'+u.cn+'</div>'
+        + '<div class="up-e">'+effLabel(u.effects)+'</div></div>'
+        + '<span class="up-lv">'+(isUnlock ? (lv>0?"已解锁":"未解锁") : lv+"/"+u.maxLevel)+'</span>'
+        + '<button class="btn" data-k="'+k+'" '+(afford?"":"disabled")+'>'+btnTxt+'</button></div>';
+    });
+  });
+  document.getElementById("shop").innerHTML = html;
+  Array.prototype.forEach.call(document.querySelectorAll("#shop .btn"), function(b){
+    b.addEventListener("click", function(){ buy(b.getAttribute("data-k")); });
+  });
+}
+
+function buy(k){
+  const u = MU[k], lv = profile.levels[k];
+  if(lv >= u.maxLevel) return;
+  const cst = cost(u.cost.base, u.cost.growth, lv+1);
+  if(profile.coins < cst) return;
+  profile.coins -= cst;
+  profile.levels[k] = lv + 1;
+  try{ new Audio("audio/cp_sfx_coin.wav").play(); }catch(e){}
+  renderShop(); renderPerm();
+}
+
+function renderPerm(){
+  const p = permanent();
+  const rows = [];
+  rows.push(["伤害加成", "+"+p.atkPct+"%"]);
+  rows.push(["生命加成", "+"+p.maxHpPct+"%"]);
+  rows.push(["移速加成", "+"+p.moveSpdPct+"%"]);
+  rows.push(["拾取范围", "+"+p.pickupRangePct+"%"]);
+  rows.push(["暴击率", "+"+Math.round(p.critRate*100)+"%"]);
+  rows.push(["金币收益", "+"+p.coinGainPct+"%"]);
+  rows.push(["经验收益", "+"+p.expGainPct+"%"]);
+  rows.push(["开局金币", "+"+p.startingCoins]);
+  rows.push(["减伤", "+"+p.armorPct+"%"]);
+  rows.push(["复活次数", "+"+p.revive]);
+  const elem = Object.keys(p.element).filter(function(e){return p.element[e]>0;})
+    .map(function(e){ return ELEM_CN[e]+"+"+p.element[e]+"%"; });
+  if(elem.length) rows.push(["元素亲和", elem.join(" ")]);
+  if(p.unlocks.length) rows.push(["已解锁英雄", p.unlocks.length+" 位"]);
+  document.getElementById("perm").innerHTML = rows.map(function(r){
+    return '<div class="statrow"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>';
+  }).join("");
+}
+
+function startRun(){
+  if(run.active) return;
+  const p = permanent();
+  run = { active:true, elapsed:0, kills:0, coins:0, maxHp:100*(1+p.maxHpPct/100), hp:0, revived:false };
+  run.hp = run.maxHp;
+  run.coins = p.startingCoins;   // 家底：开局金币
+  document.getElementById("btnStart").disabled = true;
+  document.getElementById("btnEnd").disabled = false;
+  renderRun();
+}
+
+function endRun(){
+  if(!run.active) return;
+  run.active = false;
+  profile.coins += Math.floor(run.coins);
+  document.getElementById("btnStart").disabled = false;
+  document.getElementById("btnEnd").disabled = true;
+  try{ new Audio("audio/cp_sfx_win.wav").play(); }catch(e){}
+  renderShop(); renderPerm(); renderRun();
+}
+
+function renderRun(){
+  document.getElementById("dps").textContent = String(Math.round(currentDps()));
+  document.getElementById("kills").textContent = String(Math.floor(run.kills));
+  document.getElementById("runcoins").textContent = String(Math.floor(run.coins));
+  document.getElementById("timer").textContent = Math.max(0, Math.ceil(RUN_TIME - run.elapsed)) + "s";
+  document.getElementById("hp").textContent = String(Math.max(0, Math.floor(run.hp)));
+  document.getElementById("hpmax").textContent = String(Math.round(run.maxHp));
+  document.getElementById("hpbar").style.width = Math.max(0, run.hp/run.maxHp*100) + "%";
+}
+
+function currentDps(){
+  const p = permanent();
+  return BASE_DPS * (1 + p.atkPct/100);
+}
+
+function tick(){
+  if(!run.active) return;
+  run.elapsed += 0.25;
+  const p = permanent();
+  const dps = currentDps();
+  const killsThis = dps * 0.25 / ENEMY_HP;
+  run.kills += killsThis;
+  run.coins += killsThis * COIN_PER_KILL * (1 + p.coinGainPct/100);
+  const incoming = INCOMING * (1 - p.armorPct/100);
+  run.hp -= incoming * 0.25;
+  if(run.hp <= 0){
+    if(!run.revived && p.revive > 0){
+      run.revived = true; run.hp = run.maxHp * 0.5;
+    } else {
+      endRun(); return;
+    }
+  }
+  if(run.elapsed >= RUN_TIME){ endRun(); return; }
+  renderRun();
+}
+
+document.getElementById("btnStart").addEventListener("click", startRun);
+document.getElementById("btnEnd").addEventListener("click", endRun);
+renderShop(); renderPerm(); renderRun();
+setInterval(tick, 250);
+</script>
+</body>
+</html>

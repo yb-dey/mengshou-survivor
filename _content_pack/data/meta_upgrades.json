@@ -1,0 +1,164 @@
+{
+  "system": "森灵局外成长系统",
+  "version": 1,
+  "description": "《萌兽消消岛》跨局永久强化规格（纯设计数据，非游戏代码）。玩家在局内表现获取「森灵币」，跨局累积，在局外大厅购买永久强化（属性成长 + 元素亲和 + 经济加成 + 生存 + 英雄解锁），让每一次局内战斗都「为下一次变强」铺路。本规格与 data/upgrades.json（局内成长）构成幸存品类的双层循环：局内「升级三选一」是单局构筑，局外「永久强化」是跨局养成。此前内容包有局内成长(upgrades)却独缺局外成长，本规格补齐这一环。",
+  "references": [
+    "Vampire Survivors PowerUp：局外用金币购买永久强化（生命/攻击/拾取范围等），跨局存续，是幸存品类局外成长的范式（vampire-survivors.fandom.com）",
+    "Hades 夜之镜 Mirror of Night：用局内获得的「黑暗精萃」在局外永久强化能力，把「局内资源 → 局外成长 → 更强的局内表现」闭环做成核心钩子（hades.fandom.com）",
+    "Rogue Legacy 庄园：局外遗产系统让每次死亡都累积永久收益，消除挫败感、拉长养成线（roguelegacy.fandom.com）"
+  ],
+  "currency": { "id": "coins", "cn": "森灵币", "symbol": "🍀", "note": "局外永久货币，跨局累积，不随单局结束清零" },
+  "costModel": {
+    "formula": "cost(level) = round(base * growth^(level-1))",
+    "note": "每级成本按几何增长，让「点到满级」的总投入有沉没成本感；越往后单级越贵，逼玩家在「点满一条线」与「广铺多条线」之间取舍。"
+  },
+  "categories": {
+    "basic": "基础属性",
+    "element": "元素亲和",
+    "economy": "经济加成",
+    "survival": "生存续航",
+    "unlock": "英雄解锁"
+  },
+  "stats": {
+    "maxHpPct": "最大生命加成（百分比，每级叠加，跨局永久）",
+    "atkPct": "伤害加成（百分比，每级叠加）",
+    "moveSpdPct": "移动速度加成（百分比）",
+    "pickupRangePct": "拾取范围加成（百分比）",
+    "critRate": "暴击率（0–1，百分点叠加）",
+    "elementDmgPct": "元素伤害加成（百分比，按元素区分，与 element_matrix 五元素一一对应）",
+    "coinGainPct": "金币收益加成（百分比，加速后续养成）",
+    "expGainPct": "经验收益加成（百分比，加速局内升级）",
+    "startingCoins": "开局金币（固定值，每级叠加）",
+    "armorPct": "减伤（百分比，每级叠加）",
+    "revive": "阵亡自动复活次数（固定值）",
+    "unlock": "解锁（英雄/技能，一次性，无数值叠加）"
+  },
+  "metaUpgrades": {
+    "meta_hp": {
+      "cn": "生命之源", "category": "basic", "tag": "defense", "maxLevel": 10,
+      "cost": { "base": 50, "growth": 1.35 },
+      "effects": { "maxHpPct": 4 },
+      "icon": "icons/st_heal.png", "sfx": "cp_sfx_heal.wav",
+      "desc": "最大生命 +4%/级。局外养成的第一站，最稳的生存底子，任何流派都吃得下。"
+    },
+    "meta_atk": {
+      "cn": "利爪之魂", "category": "basic", "tag": "damage", "maxLevel": 10,
+      "cost": { "base": 60, "growth": 1.35 },
+      "effects": { "atkPct": 3 },
+      "icon": "icons/st_atk_up.png", "sfx": "cp_sfx_buff.wav",
+      "desc": "伤害 +3%/级。与局内「锐爪」叠加，跨局把天花板越抬越高。"
+    },
+    "meta_spd": {
+      "cn": "风行足", "category": "basic", "tag": "utility", "maxLevel": 8,
+      "cost": { "base": 40, "growth": 1.35 },
+      "effects": { "moveSpdPct": 2 },
+      "icon": "skill_icons/ab_dash.png", "sfx": "cp_sfx_dash.wav",
+      "desc": "移动速度 +2%/级。拉扯与躲技能的地基，风筝流前置。"
+    },
+    "meta_pickup": {
+      "cn": "磁石之触", "category": "basic", "tag": "utility", "maxLevel": 8,
+      "cost": { "base": 30, "growth": 1.35 },
+      "effects": { "pickupRangePct": 10 },
+      "icon": "vfx/fx_pickup.png", "sfx": "cp_sfx_pickup.wav",
+      "desc": "拾取范围 +10%/级。减少追金币的走位损耗，经济流的效率地基。"
+    },
+    "meta_crit": {
+      "cn": "鹰眼", "category": "basic", "tag": "damage", "maxLevel": 6,
+      "cost": { "base": 80, "growth": 1.5 },
+      "effects": { "critRate": 0.01 },
+      "icon": "icons/st_mark.png", "sfx": "cp_sfx_buff.wav",
+      "desc": "暴击率 +1%/级。需搭配局内「致命」才划算，是后期暴击流的跨局底子。"
+    },
+    "meta_fire": {
+      "cn": "火之亲和", "category": "element", "tag": "element", "maxLevel": 5,
+      "cost": { "base": 120, "growth": 1.6 },
+      "effects": { "elementDmgPct": { "fire": 2 } },
+      "icon": "skill_icons/el_fire.png", "sfx": "cp_sfx_elem_fire.wav",
+      "desc": "火元素伤害 +2%/级。与局内「焚心」、灼烧反应线叠乘，火系玩家的跨局专精。"
+    },
+    "meta_water": {
+      "cn": "水之亲和", "category": "element", "tag": "element", "maxLevel": 5,
+      "cost": { "base": 120, "growth": 1.6 },
+      "effects": { "elementDmgPct": { "water": 2 } },
+      "icon": "skill_icons/el_water.png", "sfx": "cp_sfx_elem_water.wav",
+      "desc": "水元素伤害 +2%/级。与「蒸发 ×2.0」反应线叠乘。"
+    },
+    "meta_earth": {
+      "cn": "土之亲和", "category": "element", "tag": "element", "maxLevel": 5,
+      "cost": { "base": 120, "growth": 1.6 },
+      "effects": { "elementDmgPct": { "earth": 2 } },
+      "icon": "skill_icons/el_earth.png", "sfx": "cp_sfx_elem_earth.wav",
+      "desc": "土元素伤害 +2%/级。与「结晶(护盾)」反应线叠乘，偏攻防一体。"
+    },
+    "meta_light": {
+      "cn": "光之亲和", "category": "element", "tag": "element", "maxLevel": 5,
+      "cost": { "base": 120, "growth": 1.6 },
+      "effects": { "elementDmgPct": { "light": 2 } },
+      "icon": "skill_icons/el_light.png", "sfx": "cp_sfx_elem_light.wav",
+      "desc": "光元素伤害 +2%/级。与「光合(回血+急速)」反应线叠乘。"
+    },
+    "meta_wood": {
+      "cn": "木之亲和", "category": "element", "tag": "element", "maxLevel": 5,
+      "cost": { "base": 120, "growth": 1.6 },
+      "effects": { "elementDmgPct": { "wood": 2 } },
+      "icon": "skill_icons/el_wood.png", "sfx": "cp_sfx_elem_wood.wav",
+      "desc": "木元素伤害 +2%/级。与「腐朽(中毒蔓延)」DoT 线叠乘，DoT 流核心。"
+    },
+    "meta_coin": {
+      "cn": "聚宝盆", "category": "economy", "tag": "economy", "maxLevel": 5,
+      "cost": { "base": 100, "growth": 1.6 },
+      "effects": { "coinGainPct": 5 },
+      "icon": "vfx/fx_coin_burst.png", "sfx": "cp_sfx_coin.wav",
+      "desc": "金币收益 +5%/级。养成自己的「钱生钱」，点满后回本周期显著缩短。"
+    },
+    "meta_exp": {
+      "cn": "悟性", "category": "economy", "tag": "economy", "maxLevel": 5,
+      "cost": { "base": 100, "growth": 1.6 },
+      "effects": { "expGainPct": 5 },
+      "icon": "vfx/fx_levelup.png", "sfx": "cp_sfx_levelup.wav",
+      "desc": "经验收益 +5%/级。加速局内升级节奏，间接多拿局内构筑卡。"
+    },
+    "meta_startcoin": {
+      "cn": "家底", "category": "economy", "tag": "economy", "maxLevel": 5,
+      "cost": { "base": 150, "growth": 1.5 },
+      "effects": { "startingCoins": 60 },
+      "icon": "vfx/fx_coin_burst.png", "sfx": "cp_sfx_coin.wav",
+      "desc": "每局开局 +60 森灵币。让「重开一局」从零起步更顺滑。"
+    },
+    "meta_armor": {
+      "cn": "铜墙铁壁", "category": "survival", "tag": "defense", "maxLevel": 5,
+      "cost": { "base": 120, "growth": 1.6 },
+      "effects": { "armorPct": 1 },
+      "icon": "icons/st_def_up.png", "sfx": "cp_sfx_buff.wav",
+      "desc": "减伤 +1%/级。对高频小伤（小兵围殴）收益极高，后期硬抗 BOSS 的底气。"
+    },
+    "meta_revive": {
+      "cn": "涅槃", "category": "survival", "tag": "defense", "maxLevel": 3,
+      "cost": { "base": 500, "growth": 1.8 },
+      "effects": { "revive": 1 },
+      "icon": "icons/st_heal.png", "sfx": "cp_sfx_win.wav",
+      "desc": "每局阵亡自动复活 +1 次（恢复 50% 生命）。昂贵的容错保险，冲高关卡必备。"
+    },
+    "unlock_eagle": {
+      "cn": "解锁·雷羽鹰", "category": "unlock", "tag": "unlock", "maxLevel": 1,
+      "cost": { "base": 800, "growth": 1.0 },
+      "effects": { "unlock": "hero_eagle" },
+      "icon": "sprites/star_bird.png", "sfx": "cp_sfx_summon.wav",
+      "desc": "解锁新英雄「雷羽鹰」（雷元素，高速爆发）。占位图（待云端出图替换为正式立绘）。"
+    },
+    "unlock_bear": {
+      "cn": "解锁·霜甲熊", "category": "unlock", "tag": "unlock", "maxLevel": 1,
+      "cost": { "base": 1200, "growth": 1.0 },
+      "effects": { "unlock": "hero_bear" },
+      "icon": "sprites/stone_turtle.png", "sfx": "cp_sfx_summon.wav",
+      "desc": "解锁新英雄「霜甲熊」（冰元素，重装坦克）。占位图（待云端出图替换为正式立绘）。"
+    },
+    "unlock_mage": {
+      "cn": "解锁·焰心术士", "category": "unlock", "tag": "unlock", "maxLevel": 1,
+      "cost": { "base": 1500, "growth": 1.0 },
+      "effects": { "unlock": "hero_mage" },
+      "icon": "sprites/flame_fox.png", "sfx": "cp_sfx_summon.wav",
+      "desc": "解锁新英雄「焰心术士」（火元素，法术炮台）。占位图（待云端出图替换为正式立绘）。"
+    }
+  }
+}
