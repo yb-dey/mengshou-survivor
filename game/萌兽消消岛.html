@@ -1539,11 +1539,11 @@ var CONFIG = {
     joyHat: "rgba(60,80,40,0.32)",      // 【v1.183】摇杆帽再静一档, 靠墨缘读形
     pauseText: "#3a5a20",
     fpsText: "#9ab88a",
-    enemyRabbit: "#f7eedc",           // 【v1.185】奶油兔: 实心可读, 夜巅不洗成幽灵
+    enemyRabbit: "#faf3e4",           // 【v1.185】奶油兔: 实心可读, 夜巅不洗成幽灵
     enemyBear: "#8a5a3a",
-    enemyMouse: "#d0c8bc",            // 【v1.185】灰鼠: 实心中调, 与兔/狐/蟾分色且不透明糊
-    enemyFox: "#f29642",            // 【v1.185】橙狐: 命名填色实心一档, 非半透明橙渍
-    enemyfox: "#f29642",
+    enemyMouse: "#ddd4c6",            // 【v1.185】灰鼠: 实心中调, 与兔/狐/蟾分色且不透明糊
+    enemyFox: "#f4a04e",            // 【v1.185】橙狐: 命名填色实心一档, 非半透明橙渍
+    enemyfox: "#f4a04e",
     enemyRaven: "#4a4a68",          // 【v1.13】夜啼鸦(复用鼠剪影)
     enemyraven: "#4a4a68",
     enemyorbitcrab: "#c45a38",      // 【v1.14】环甲蟹(绕圈扑人)
@@ -1557,7 +1557,7 @@ var CONFIG = {
     enemyshieldbug: "#2a8a8a",      // 【v1.15】盾甲虫(光环减伤)
     enemyShieldbug: "#2a8a8a",
     enemyleaptoad: "#7ec85a",       // 【v1.182】绿蟾: 命名填色略抬
-    enemyLeaptoad: "#86d462",         // 【v1.185】绿蟾: 实心苔绿, 夜底可指名
+    enemyLeaptoad: "#8ed86a",         // 【v1.185】绿蟾: 实心苔绿, 夜底可指名
     enemyburrowmole: "#8a5a32",    // 【v1.29】钻钻鼹(破土)
     enemyBurrowmole: "#8a5a32",
     enemyhoneypot: "#e07090",       // 【v1.39】蜜罐猬(奶源)
@@ -24203,30 +24203,30 @@ function paintStarRidge(c2, w, y0, amp) {
   c2.moveTo(0, y0 + amp * 0.40);
   c2.quadraticCurveTo(w * 0.35, y0 + amp * 0.22, w * 0.62, y0 + amp * 0.30);
   c2.stroke();
-  // 【v1.185】quiet wind-grain: 2–4 道软弧墨纹, alpha≈0.12–0.18, 星巅远脊身份, 无霓虹
+  // 【v1.185】quiet wind-grain: 2–4 道软弧墨纹, alpha≈0.16–0.20, 星巅远脊身份, 无霓虹
   c2.save();
   c2.lineCap = "round";
   c2.lineJoin = "round";
-  c2.strokeStyle = "rgba(200, 214, 240, 0.16)";
-  c2.lineWidth = Math.max(1.1, amp * 0.016);
+  c2.strokeStyle = "rgba(210, 222, 246, 0.20)";
+  c2.lineWidth = Math.max(1.2, amp * 0.018);
   c2.beginPath();
   c2.moveTo(w * 0.08, y0 + amp * 0.52);
   c2.quadraticCurveTo(w * 0.28, y0 + amp * 0.34, w * 0.46, y0 + amp * 0.48);
   c2.stroke();
-  c2.strokeStyle = "rgba(186, 202, 232, 0.14)";
-  c2.lineWidth = Math.max(1.0, amp * 0.014);
+  c2.strokeStyle = "rgba(198, 214, 240, 0.18)";
+  c2.lineWidth = Math.max(1.1, amp * 0.016);
   c2.beginPath();
   c2.moveTo(w * 0.22, y0 + amp * 0.58);
   c2.quadraticCurveTo(w * 0.48, y0 + amp * 0.40, w * 0.72, y0 + amp * 0.54);
   c2.stroke();
-  c2.strokeStyle = "rgba(210, 222, 246, 0.12)";
-  c2.lineWidth = Math.max(0.9, amp * 0.012);
+  c2.strokeStyle = "rgba(220, 230, 250, 0.16)";
+  c2.lineWidth = Math.max(1.0, amp * 0.014);
   c2.beginPath();
   c2.moveTo(w * 0.40, y0 + amp * 0.36);
   c2.quadraticCurveTo(w * 0.58, y0 + amp * 0.24, w * 0.88, y0 + amp * 0.42);
   c2.stroke();
-  c2.strokeStyle = "rgba(176, 192, 224, 0.13)";
-  c2.lineWidth = Math.max(1.0, amp * 0.013);
+  c2.strokeStyle = "rgba(186, 204, 236, 0.17)";
+  c2.lineWidth = Math.max(1.1, amp * 0.015);
   c2.beginPath();
   c2.moveTo(w * 0.55, y0 + amp * 0.62);
   c2.quadraticCurveTo(w * 0.72, y0 + amp * 0.48, w * 0.96, y0 + amp * 0.58);
