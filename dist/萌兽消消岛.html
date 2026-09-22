@@ -25,7 +25,8 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.192 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.193 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.193 美术】设置/关于/怎么玩/后置加菜盘奶油填 #f4efe2 + 2px 软苔缘 #5c7044(makeModal comfort); 后置加菜条标题 #2c3a22、副标奶油字压橄榄(makeButton quiet / drawDailyPickPanel); 悬停或聚焦时软墨脉冲(notePointerHover); 灯笼港湾选中签软墨再加一档(makeThemeChip); 早波吻尖/耳腔仍实心粉彩(paintEnemySilhouette muzzleDot); 开设置走 SFX_UI 软 notch(Audio._start settingsopen)。1.192 回港条盖住层/HUD 发丝保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.192 美术】回港条改画在大厅 UI 之上、落在两侧部位槽之间(drawHallReturnToast): 奶油字 #f4f7ec / 橄榄底 #314228 / 缘 #5c7044, 时间·击杀·金币三格同色; 标题下 1.5px 苔线; 亮起 2 粒软墨点(armHallReturnDust/drawHallReturnDust); HUD 时钟/生命/杀敌奶油发丝再抬(drawHudClusterFrame/drawVitalsHud); 回港走 SFX_UI 软 notch(Audio._start)。1.191 部位字/槽标软墨/设置缘/穿上勾保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.191 美术】大厅六部位字深苔+奶油发丝(makeHallGearFrame); 槽标外墨约 2.4px 软苔(hallSlotGlyph); 回港条橄榄底+奶油字 #f4f7ec、缘 #5c7044(drawHallReturnToast); 设置盘外缘 2px 软苔(makeModal); 仓库入仓/装备库穿上短墨勾(armEquipInkTick/drawEquipInkTick); SFX_UI 仅穿戴 tick 软 notch(Audio._start)。1.190 强化标题 #2c3a22/早波实心/脚环 0.18/回大厅钮/风纹/擦入/复活奶油保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.190 美术】永久强化行标题深苔(drawUpgradePanel); 早波兔耳/狐吻/鼠耳/蟾眼路径约 +10%(paintEnemySilhouette, makeEnemySprite 边距同比 half); 入账回大厅 2px 苔缘+更深橄榄(makeButton resultfoot); 回港条去金眩仍可读(drawHallReturnToast); 星巅风纹 α≈0.18–0.22(paintStarRidge); 拾珠短墨火花(armBeadInkSpark/drawBeadInkSparks); SFX_GEM 软 notch。1.189 锁章/结算墨点/HUD 字缘/脚环 0.18 保持。数值/掉落/进化/复活次数/10 分钟轴不动。
@@ -622,7 +623,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.192",                   // 【v1.192】回港条盖住层+时间/击杀/金币奶油格; 标题苔线; 2 粒墨点; HUD 发丝再抬; SFX_UI 回港 notch。不改掉率/价格/锻造/进化/复活次数/10 分钟轴
+  version: "1.193",                   // 【v1.193】设置/关于/加菜盘奶油缘; 后置加菜标题深苔+副标奶油橄榄; 主题签软墨; 开设置 SFX_UI notch。不改掉率/价格/锻造/进化/复活次数/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -8574,6 +8575,7 @@ var DATA_SFX = {
   resultwin: { sfx: "SFX_WIN",     rate: 1,    gain: 0.72, node: true, duck: true },
   resultlose: { sfx: "SFX_LOSE",   rate: 1,    gain: 0.68, node: true, duck: true },
   hallreturn: { sfx: "SFX_UI", rate: 1.05, gain: 0.40, node: true }, // 【v1.192】回港条亮起走 SFX_UI; 10ms 软 notch 在 Audio._start, 不改总线 gain
+  settingsopen: { sfx: "SFX_UI", rate: 0.96, gain: 0.42 }, // 【v1.193】打开设置走 SFX_UI; 12ms 软 notch 在 Audio._start, 不改总线 gain, 不吞 select/暂停/回港
   eventfog: { sfx: "SFX_EVENT",    rate: 0.82, gain: 0.92, node: true, duck: true },
   eventstar: { sfx: "SFX_EVENT",   rate: 1.22, gain: 0.95, node: true, duck: true },
   eventbloom: { sfx: "SFX_EVENT",  rate: 1.0,  gain: 0.9, node: true, duck: true },
@@ -13098,6 +13100,13 @@ var Audio = {
         g.gain.setValueAtTime(gHr * 0.46, tHr);
         g.gain.linearRampToValueAtTime(gHr, tHr + 0.010);
       }
+      // 【v1.193】打开设置软 notch: 12ms 从 0.48 爬到同一峰值。select / 暂停 / 回港 / 穿戴不走这条
+      if (prioKey === "settingsopen") {
+        var tSet = this.ctx.currentTime + (delay || 0);
+        var gSet = g.gain.value;
+        g.gain.setValueAtTime(gSet * 0.48, tSet);
+        g.gain.linearRampToValueAtTime(gSet, tSet + 0.012);
+      }
       src.connect(g);
       if (!this.sfxGain) this._initSfxGain();
       if (this.sfxGain) g.connect(this.sfxGain); else if (this.master) g.connect(this.master); else g.connect(this.ctx.destination);
@@ -13298,6 +13307,7 @@ function releaseCombatPointer() {
 }
 function onPointerDown(e) {
   e.preventDefault();
+  notePointerHover(e);
   var p = pointerToView(e);
   var j;
   // R6 F2 根因封堵: NaN/Inf 坐标直接拒收该指针(不激活摇杆/不进任何下游), 比出口守卫更根治
@@ -13332,6 +13342,7 @@ function onPointerDown(e) {
 }
 function onPointerMove(e) {
   e.preventDefault();
+  notePointerHover(e);
   var j = Input.joy;
   if (e.pointerId !== j.pid) return;
   var p = pointerToView(e);
@@ -15693,6 +15704,15 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
     }
     c2.fillStyle = color;
   }
+  function muzzleDot(dx, dy, rr, nose) {
+    // 【v1.193】吻尖一粒软鼻: 实心粉彩上先读出嘴, 不改外轮廓尺寸/碰撞
+    c2.fillStyle = nose || "#e09080";
+    c2.beginPath();
+    if (typeof c2.ellipse === "function") c2.ellipse(cx + dx, cy + dy, rr, rr * 0.72, 0, 0, CONFIG.TWO_PI);
+    else c2.arc(cx + dx, cy + dy, rr * 0.86, 0, CONFIG.TWO_PI);
+    c2.fill();
+    c2.fillStyle = color;
+  }
   function blobEars(ew, eh, spread) {
     c2.beginPath();
     if (typeof c2.ellipse === "function") {
@@ -15810,7 +15830,8 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
       c2.lineTo(cx + r * 0.82, cy - r * 1.42);
       c2.lineTo(cx - r * 0.26, cy - r * 0.52);
       c2.closePath(); fs();
-      c2.fillStyle = silShade(color, 0.18);
+      // 【v1.193】耳腔再压一档, 尖耳先读出「狐」; 外轮廓尺寸不动
+      c2.fillStyle = silShade(color, 0.34);
       c2.beginPath();
       c2.moveTo(cx - r * 0.08, cy - r * 0.50);
       c2.lineTo(cx - r * 0.56, cy - r * 1.04);
@@ -15847,6 +15868,7 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
       c2.lineTo(cx + r * 1.30, cy + r * 0.14);
       c2.lineTo(cx + r * 0.54, cy + r * 0.42);
       c2.closePath(); fs();
+      muzzleDot(r * 1.18, r * 0.22, r * 0.07, "#8a4030");
       paws(r * 0.36, r * 0.76, r * 0.16);
       trashInk();
       oneLift(-r * 0.20, -r * 0.24, r * 0.22, r * 0.14);
@@ -15887,6 +15909,12 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
       oneLift(-r * 0.22, r * 0.08, r * 0.30, r * 0.16);
       trashLight();
       trashEyes(r * 0.50, -r * 0.62, r * 0.24);
+      c2.strokeStyle = "#2a3224";
+      c2.lineWidth = Math.max(1.6, r * 0.06);
+      c2.beginPath();
+      c2.moveTo(cx - r * 0.16, cy + r * 0.08);
+      c2.quadraticCurveTo(cx, cy + r * 0.20, cx + r * 0.16, cy + r * 0.08);
+      c2.stroke();
       trashUlStroke();
       break;
     case "mouse":
@@ -15896,7 +15924,8 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
       // 【v1.190】圆耳路径约 +10%, 先读出「鼠」
       c2.beginPath(); c2.arc(cx - r * 0.64, cy - r * 0.78, r * 0.51, 0, CONFIG.TWO_PI); fs();
       c2.beginPath(); c2.arc(cx + r * 0.64, cy - r * 0.78, r * 0.51, 0, CONFIG.TWO_PI); fs();
-      c2.fillStyle = silShade(color, 0.22);
+      // 【v1.193】耳腔暖粉, 灰填体上先读出圆耳; 半径不动
+      c2.fillStyle = mixHex(silShade(color, 0.28), "#e7a8b0", 0.55);
       c2.beginPath(); c2.arc(cx - r * 0.64, cy - r * 0.76, r * 0.22, 0, CONFIG.TWO_PI); c2.fill();
       c2.beginPath(); c2.arc(cx + r * 0.64, cy - r * 0.76, r * 0.22, 0, CONFIG.TWO_PI); c2.fill();
       trashInk();
@@ -15917,6 +15946,7 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
       trashInk();
       oneLift(-r * 0.20, -r * 0.24, r * 0.22, r * 0.14);
       snout(r * 0.04, r * 0.18, r * 0.20);
+      muzzleDot(r * 0.06, r * 0.22, r * 0.06, "#c47a6a");
       whisk(r * 0.24, r * 0.12, r * 0.40);
       trashInk();
       trashLight();
@@ -16464,7 +16494,8 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
         c2.beginPath();
         c2.arc(cx + r * 0.42, cy - r * 0.86, r * 0.31, 0, CONFIG.TWO_PI); fs();
       }
-      c2.fillStyle = silShade(color, 0.18);
+      // 【v1.193】耳腔暖粉, 奶油填体上先读出长耳; 半径不动
+      c2.fillStyle = mixHex(silShade(color, 0.22), "#e7a0a8", 0.62);
       c2.beginPath();
       if (typeof c2.ellipse === "function") {
         c2.ellipse(cx - r * 0.42, cy - r * 1.00, r * 0.11, r * 0.35, -0.22, 0, CONFIG.TWO_PI);
@@ -16491,6 +16522,7 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
       paws(r * 0.34, r * 0.72, r * 0.15);
       oneLift(-r * 0.18, -r * 0.22, r * 0.22, r * 0.14);
       snout(r * 0.14, r * 0.16, r * 0.18);
+      muzzleDot(r * 0.16, r * 0.22, r * 0.065, "#e09080");
       trashLight();
       trashEyes(r * 0.28, -r * 0.18, r * 0.17);
       trashUlStroke();
@@ -27086,6 +27118,30 @@ var UIStack = {
 function widgetPressed(w) {
   return !!(w && UIStack.pressed === w);
 }
+// 【v1.193】大厅指针悬停: 只服务后置加菜软墨脉冲, 不改命中/热区
+var PointerHover = { x: -1, y: -1, on: false, focusId: "" };
+function notePointerHover(e) {
+  var p, r, b;
+  if (!e) { PointerHover.on = false; PointerHover.focusId = ""; return; }
+  p = pointerToView(e);
+  if (!isFinite(p.x) || !isFinite(p.y)) { PointerHover.on = false; return; }
+  PointerHover.x = p.x;
+  PointerHover.y = p.y;
+  PointerHover.on = true;
+  b = (typeof uiHomeDaily !== "undefined") ? uiHomeDaily : null;
+  if (!b || !b.visible || !b.rect) {
+    if (PointerHover.focusId === "homedaily") PointerHover.focusId = "";
+    return;
+  }
+  r = b.rect;
+  if (p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h) PointerHover.focusId = b.id;
+  else if (PointerHover.focusId === b.id) PointerHover.focusId = "";
+}
+function widgetInkHot(w) {
+  if (!w || !w.visible) return false;
+  if (widgetPressed(w)) return true;
+  return !!(PointerHover.on && PointerHover.focusId && PointerHover.focusId === w.id);
+}
 function beginWidgetPress(ctx, w) {
   if (!widgetPressed(w)) return false;
   ctx.save();
@@ -27982,21 +28038,36 @@ function makeButton(id, x, y, w, h, label, onTap) {
         return;
       }
       if (skin === "quiet") {
-        ctx.fillStyle = this.accentFill || "#1a2418";
+        // 【v1.193】后置加菜条: 奶油填 + 2px 软苔缘, 标题深苔 #2c3a22, 副标奶油字压橄榄。悬停/按下软墨脉冲, 热区不动
+        var inkHot = widgetInkHot(this);
+        var pulseA = inkHot ? (0.34 + 0.42 * (0.5 + 0.5 * Math.sin((typeof performance !== "undefined" ? performance.now() : Date.now()) * 0.006))) : 0;
+        var subW, subH, subX, subY;
+        ctx.fillStyle = "#f4efe2";
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
-        ctx.strokeStyle = this.accentStroke || "#5a6a50";
-        ctx.lineWidth = widgetPressed(this) ? 2 : 1;
+        ctx.strokeStyle = "#5c7044";
+        ctx.lineWidth = 2;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
+        if (pulseA > 0) {
+          ctx.strokeStyle = "rgba(44, 58, 34, " + pulseA.toFixed(3) + ")";
+          ctx.lineWidth = 3;
+          strokeRoundRect(ctx, r.x - 2, r.y - 2, r.w + 4, r.h + 4, 14);
+        }
         ctx.lineWidth = 1;
-        ctx.fillStyle = "#d8c898";
+        ctx.fillStyle = "#2c3a22";
         ctx.font = "bold 18px " + FONT_STACK;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(this.label, r.x + r.w / 2, this.sub ? r.y + r.h / 2 - 8 : r.y + r.h / 2);
+        ctx.fillText(this.label, r.x + r.w / 2, this.sub ? r.y + 16 : r.y + r.h / 2);
         if (this.sub) {
           ctx.font = "bold 12px " + FONT_STACK;
-          ctx.fillStyle = "#a8b090";
-          ctx.fillText(this.sub, r.x + r.w / 2, r.y + r.h / 2 + 12);
+          subW = Math.min(r.w - 16, ctx.measureText(this.sub).width + 18);
+          subH = 18;
+          subX = r.x + (r.w - subW) / 2;
+          subY = r.y + r.h - subH - 6;
+          ctx.fillStyle = "#314228";
+          fillRoundRect(ctx, subX, subY, subW, subH, 8);
+          ctx.fillStyle = "#f4f7ec";
+          ctx.fillText(this.sub, r.x + r.w / 2, subY + subH / 2);
         }
         endWidgetPress(ctx, pressed);
         return;
@@ -28710,6 +28781,19 @@ function makeModal(id, panelW, panelH, drawPanel) {
       }
       ctx.fillStyle = c.modalMask;
       ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
+      // 【v1.193】设置/关于/怎么玩/后置加菜: 奶油填 + 2px 软苔缘, 不吃亮顶光, 无金边
+      if (this.id === "settingsmodal" || this.id === "aboutmodal" || this.id === "guidemodal" || this.id === "dailymodal") {
+        ctx.fillStyle = "rgba(36, 48, 24, 0.16)";
+        fillRoundRect(ctx, px + 2, py + 4, this.panelW, this.panelH, 18);
+        ctx.fillStyle = "#f4efe2";
+        fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
+        ctx.strokeStyle = "#5c7044";
+        ctx.lineWidth = 2;
+        strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
+        ctx.lineWidth = 1;
+        if (drawPanel) drawPanel(ctx, this);
+        return;
+      }
       // 【v1.153】模态盘统一圆角+一块柔影, 不再是硬边纸块
       // 【v1.176】苔盘再净一档: 左上柔光 + #2f5a3a 墨缘, 强化/图鉴备案截图不显洗白
       ctx.fillStyle = "rgba(16,20,14,0.18)";
@@ -28724,9 +28808,8 @@ function makeModal(id, panelW, panelH, drawPanel) {
         ctx.fillStyle = mossG;
         fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       } catch (eMoss) { /* keep flat panel */ }
-      // 【v1.191】设置盘外缘收成约 2px 软苔; 其它模态仍走 2.2px #2f5a3a, 不改内部字阶
-      ctx.strokeStyle = this.id === "settingsmodal" ? "#5c7044" : "#2f5a3a";
-      ctx.lineWidth = this.id === "settingsmodal" ? 2 : 2.2;
+      ctx.strokeStyle = "#2f5a3a";
+      ctx.lineWidth = 2.2;
       strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       ctx.lineWidth = 1;
       if (drawPanel) drawPanel(ctx, this);
@@ -29069,20 +29152,24 @@ function makeDailyCard(i, x, y, w, h) {
   });
 }
 function drawDailyPickPanel(ctx, m) {
-  var c = CONFIG.colors;
   var py = (CONFIG.viewH - m.panelH) / 2;
-  ctx.fillStyle = c.cardTitle;
+  var dishSub, dishW;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  // 【v1.193】标题深苔 #2c3a22; 副标奶油字压橄榄, 备案截图能分开两行
+  ctx.fillStyle = "#2c3a22";
   ctx.font = "bold 36px " + FONT_STACK;
   ctx.fillText("后置加菜", CONFIG.viewW / 2, py + 42);
-  // 【v1.156】加菜面板头部去金: 副标改苔绿墨, 与选章面板同一字阶
+  dishSub = extraDishSideLine();
   ctx.font = "bold 18px " + FONT_STACK;
-  ctx.fillStyle = "#3a5a20";
-  ctx.fillText(extraDishSideLine(), CONFIG.viewW / 2, py + 82);
-  ctx.fillStyle = c.cardDesc;
+  dishW = Math.min(m.panelW - 96, ctx.measureText(dishSub).width + 40);
+  ctx.fillStyle = "#314228";
+  fillRoundRect(ctx, CONFIG.viewW / 2 - dishW / 2, py + 66, dishW, 30, 10);
+  ctx.fillStyle = "#f4f7ec";
+  ctx.fillText(dishSub, CONFIG.viewW / 2, py + 81);
+  ctx.fillStyle = "#3a4626";
   ctx.font = "bold 15px " + FONT_STACK;
-  ctx.fillText("三种短局 · 后置加菜 · 不冲正片主桌", CONFIG.viewW / 2, py + 112);
+  ctx.fillText("三种短局 · 后置加菜 · 不冲正片主桌", CONFIG.viewW / 2, py + 116);
   /* 【v1.194】今日最佳行: 原缺陷——saveData.dailyBest 五字段全写盘 + clamp 携带 + 注释声明,
      却零渲染点, 玩家"今天加菜的最好成绩"永久不可见。
      落位: 卡片区末(136+2*160+150=606) 与 返回钮顶(756-88=668) 之间的空档。
@@ -33629,10 +33716,16 @@ function makeThemeChip(i, x, y, w, h) {
         ctx.fillStyle = "rgba(12,10,8,0.46)";
         fillRoundRect(ctx, r.x + 5, r.y + 5, r.w - 10, stripH, 5);
       }
-      // 【v1.152】未选主题卡描边/字再静一档, 区域 chrome 不抢出击; 【v1.155】未选再静一档(选中态不动)
+      // 【v1.152】未选主题卡描边/字再静一档, 区域 chrome 不抢出击; 【v1.155】未选再静一档
+      // 【v1.193】选中签(灯笼港湾)软墨再加一档: 外圈 #5c7044 / 2.8px, 内圈主题色仍 2.2。热区不动
       ctx.strokeStyle = sel ? th.accent : "rgba(201,162,75,0.11)";
       ctx.lineWidth = sel || widgetPressed(this) ? 2.2 : 1;
       strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
+      if (sel) {
+        ctx.strokeStyle = "rgba(92, 112, 68, 0.95)";
+        ctx.lineWidth = 2.8;
+        strokeRoundRect(ctx, r.x - 1, r.y - 1, r.w + 2, r.h + 2, 9);
+      }
       ctx.lineWidth = 1;
       // 【v1.161】选中态去金盘金字: 改苔纸小签+苔侧签+深苔字(对齐 dockGold/选章卡选中语言), 未选态不动
       ctx.fillStyle = sel ? "rgba(226,236,198,0.92)" : "rgba(16,12,8,0.30)";
@@ -34019,7 +34112,7 @@ function onTapOpenSettings() {
   uiSetImport.visible = true;
   uiSetClose.visible = true;
   Audio.unlock();
-  Audio.play("select");
+  Audio.play("settingsopen");
 }
 
 function onTapCloseSettings() {
@@ -37111,6 +37204,7 @@ function init() {
   el.addEventListener("pointerup", onPointerUp);
   el.addEventListener("pointercancel", onPointerCancel);
   el.addEventListener("lostpointercapture", onLostPointerCapture);
+  el.addEventListener("pointerleave", function () { notePointerHover(null); });
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("keyup", onKeyUp);
   window.addEventListener("blur", releaseCombatPointer);
