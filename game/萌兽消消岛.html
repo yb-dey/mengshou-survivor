@@ -27546,6 +27546,43 @@ function drawDailyPickPanel(ctx, m) {
   ctx.fillStyle = c.cardDesc;
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText("三种短局 · 后置加菜 · 不冲正片主桌", CONFIG.viewW / 2, py + 112);
+  /* 【v1.194】今日最佳行: 原缺陷——saveData.dailyBest 五字段全写盘 + clamp 携带 + 注释声明,
+     却零渲染点, 玩家"今天加菜的最好成绩"永久不可见。
+     落位: 卡片区末(136+2*160+150=606) 与 返回钮顶(756-88=668) 之间的空档。
+     口径: 只在记录属于"今天"时展示当日战绩; 否则视为"今日尚未开桌"。
+     【v1.194b】补齐 date / ruleId 两个"写而不显"字段:
+       · ruleId → 展示为**口味名**(玩家看得懂的是名字, 不是 id)
+       · date   → 展示为**月/日**, 让"这份记录属于哪一天"有据可查(跨天后仍能自证) */
+  (function drawDailyBestLine() {
+    var _db = saveData.dailyBest;
+    var _today = todayStamp();
+    var _has = !!(_db && typeof _db === "object" && _db.date === _today && (_db.wins | 0) + (_db.bestKills | 0) > 0);
+    ctx.font = "bold 15px " + FONT_STACK;
+    if (_has) {
+      var _bs = _db.bestSec | 0;
+      var _bm = (_bs / 60) | 0, _bx = _bs % 60;
+      /* ruleId -> 口味名: 查表失败时退回 id 原样, 绝不显示 undefined */
+      var _rn = "";
+      var _rr = DATA_DAILY[_db.ruleId];
+      if (_rr && _rr.name) _rn = _rr.name;
+      else if (typeof _db.ruleId === "string" && _db.ruleId) _rn = _db.ruleId;
+      /* date(YYYY-MM-DD) -> M月D日 */
+      var _dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(_db.date);
+      var _ds = _dm ? (parseInt(_dm[2], 10) + "月" + parseInt(_dm[3], 10) + "日") : "";
+      ctx.fillStyle = "#3a5a20";
+      ctx.fillText("今日最佳 · 完成 " + (_db.wins | 0) + " 场 · 击杀 " + (_db.bestKills | 0)
+        + " · 最快 " + (_bm + ":" + (_bx < 10 ? "0" : "") + _bx), CONFIG.viewW / 2, py + 618);
+      if (_rn || _ds) {
+        ctx.font = "bold 13px " + FONT_STACK;
+        ctx.fillStyle = "#6a6a5a";
+        ctx.fillText((_rn ? "口味 " + _rn : "") + (_rn && _ds ? " · " : "") + (_ds || ""),
+          CONFIG.viewW / 2, py + 640);
+      }
+    } else {
+      ctx.fillStyle = "#8a8a76";
+      ctx.fillText("今日尚未开桌 · 挑一种口味试一把", CONFIG.viewW / 2, py + 622);
+    }
+  })();
   ctx.fillStyle = "#6a6a5a";
   ctx.font = "bold 14px " + FONT_STACK;
   ctx.fillText("正片出击仍在大厅主钮 · 加菜不发锻纹/章礼", CONFIG.viewW / 2, py + m.panelH - 118);
@@ -29541,6 +29578,18 @@ function drawResultPanel(ctx, m) {
     }
     ctx.fillStyle = (_ee && ((runSummary.endlessTime | 0) > (_ee.time | 0) || (runSummary.endlessKills | 0) > (_ee.kills | 0))) ? "#7a6220" : c.cardDesc;
     ctx.fillText(_line, cx, py + 132);
+    /* 【v1.194c】章历史最高(落盘持久记录)常驻行。
+       上面那行读的是 runSummary.prevEndless —— enterResult 时刻的**临时快照**, 只服务
+       "本局 vs 上一局"。saveData.chapterBest[].endlessTime/endlessKills 才是真正落盘的
+       **历史最高**, 此前全项目零读取点。这里补上, 让"我能活多久"成为可回看的目标。 */
+    var _pe2 = saveData.chapterBest[runSummary.chId];
+    if (_pe2 && ((_pe2.endlessTime | 0) > 0 || (_pe2.endlessKills | 0) > 0)) {
+      var _pm = ((_pe2.endlessTime | 0) / 60) | 0, _ps = (_pe2.endlessTime | 0) % 60;
+      ctx.font = "bold 14px " + FONT_STACK;
+      ctx.fillStyle = "#6a6a5a";
+      ctx.fillText(runSummary.chName + " 无尽最高 · 存活 " + (_pm + ":" + (_ps < 10 ? "0" : "") + _ps)
+        + " · 击杀 " + (_pe2.endlessKills | 0), cx, py + 158);
+    }
   } else if (!runSummary.win && runSummary.note) {
     ctx.fillStyle = "#c0392b";
     ctx.fillText(runSummary.note, cx, py + 132);
