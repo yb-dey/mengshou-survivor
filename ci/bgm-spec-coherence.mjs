@@ -27,8 +27,14 @@
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const ROOT = process.env.MENGSHOU_ROOT || 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou';
+// 【v1.206】⚠ 此前 ROOT 默认值写死本机 Windows 绝对路径 ⇒ 本地跑没事（路径存在），
+//   一到 CI（工作目录 /home/runner/work/...）就 ENOENT 崩掉（bgm-spec-coherence.mjs:201 selftest）。
+//   这正是项目铁律"禁止写死本机绝对路径"的违规，也是"本地查不出、CI 才现形"的典型。
+//   修法：默认值改为**相对脚本位置**（ci/.. = 仓库根），本地与云端通用；MENGSHOU_ROOT 仍可覆盖。
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = process.env.MENGSHOU_ROOT || path.resolve(__dirname, '..');
 const GAME_HTML = process.env.GAME_HTML || path.join(ROOT, 'game/萌兽消消岛.html');
 const SR = 44100;
 const TOL = 1;                 // 采样容差（四舍五入）
