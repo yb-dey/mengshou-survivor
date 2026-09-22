@@ -8188,13 +8188,24 @@ function setBgmChoice(id) {
 
 // R3 五曲 BGM 轨道表【R3】(T-V2-BGMSPEC): trackId -> 渲染规格。
 // loop 曲长度 = beats*60/bpm 秒(44100Hz 参考采样数与 spec 给定值逐一吻合:
-//   港湾 235200 / 启程 168000 / 怪潮 144000 / 深渊 252000); jingle 长度 = refSmp/44100 秒
+//   港湾 235200 / 启程 717560 / 怪潮 576000 / 深渊 504000); jingle 长度 = refSmp/44100 秒
 //   (胜利 94500 / 失败 110250), 播完一次经 onended 回港湾曲, 不入 loop。
+// 【v1.198】⚠ `refSmp` 的**语义**与两种曲的消费方式（此前从未写清，导致连错三处）：
+//   · loop 曲：refSmp 是**渲染规格的声明值**，恒等于 round(beats*60/bpm*44100)；
+//       但 `_renderBgmTrack`(L12158) 对 loop 曲**不读它**（直接用算术式推 loopSec）
+//       ⇒ 它一旦写错**不会有任何报错、也不会影响听感**，是纯"书面规格"。
+//   · jingle 曲：无 bpm/beats，`refSmp` 是**唯一权威长度**（L12158 直接 /44100 用）。
+//   历史漂移（本行上方注释曾长期写着旧值，v1.198 一并修正）：
+//     · 怪潮 288000（应为 576000，**恰好减半**）· 深渊 252000（应为 504000，**恰好减半**）
+//     · 启程 注释写 168000（v1.94 由 8 拍扩到 32 拍后未同步；表内值 717560 才是对的）
+//   ⇒ 门禁 `ci/bgm-spec-coherence.mjs` **持续守住**这三条判据：
+//      A 算术闭合(loop 曲 refSmp==beats*60/bpm*44100) · B 本注释与表内值逐条相等 · C 全部曲都被 BGM_TRACK_ORDER 收录
+//   ⚠ **增删曲目或改 bpm/beats 时，必须同步改本注释 + 表内 refSmp**（否则门禁红）。
 var DATA_BGM = {
   harbor: { name: "港湾", bpm: 90,  beats: 8, refSmp: 235200 },   // C Ionian(HOME)
   march:  { name: "启程", bpm: 118, beats: 32, refSmp: 717560 }, // 【v1.94】G 五声两句发育循环(~16.3s), 托住约 10 分钟
-  horde:  { name: "怪潮", bpm: 147, beats: 32, refSmp: 288000 },   // 【v1.102】E Aeolian 放开段四句(~13s)
-  abyss:  { name: "深渊", bpm: 84,  beats: 16, refSmp: 252000 },  // 【v1.103】D Phrygian(BOSS), 循环约 11 秒
+  horde:  { name: "怪潮", bpm: 147, beats: 32, refSmp: 576000 },   // 【v1.102】E Aeolian 放开段四句(~13s)；【v1.198】refSmp 288000→576000 修正减半
+  abyss:  { name: "深渊", bpm: 84,  beats: 16, refSmp: 504000 },  // 【v1.103】D Phrygian(BOSS), 循环约 11 秒；【v1.198】refSmp 252000→504000 修正减半
   meadow: { name: "芽野", bpm: 96,  beats: 8, refSmp: 220500 },   // 【v1.5】主题曲·晨光
   city:   { name: "灯笼港", bpm: 128, beats: 16, refSmp: 330750 },  // 【v1.7】主题曲·岛港灯笼(id=city 存档兼容)
   dune:   { name: "沙原", bpm: 88,  beats: 8, refSmp: 240545 },   // 【v1.5】主题曲·黄昏
