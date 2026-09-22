@@ -258,6 +258,7 @@ _content_pack/
 - 技能 / 元素图标：13/13 程序化生成成功并校验——均为 `colorType=6` RGBA（64×64），体积 1.6KB–4.6KB；逐张目检通过（叶片轴与中脉同向、星芒可见、面板元素色可辨、六边符印与圆盘/方面板三底盘不混淆）；试看页 `skill_icons_demo.html` 内联校验通过（13 张 `data:image/png`）。
 - 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、24 VFX（尺寸 / 体积）、12 状态图标（尺寸 / 体积）、13 技能/元素图标（尺寸 / 体积 / 分组）、2 设计数值 JSON（字节数）、30 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
 - 设计数值：`data/element_matrix.json` 与 `data/skill_cooldowns.json` 均为合法 JSON（`json.load` 通过）；`element_chart.html` 由 `tools/build_element_chart.py` 数据驱动生成，校验含 `<svg>` 节点、5×5 倍率矩阵（6 行）、8 技能冷却条；五元素 5 环克制链对称（火→木→土→水→光→火），与 §2.4 元素徽章「强克」文案一致。
+- 演练场机制深化：`playground.html` 已接入五元素系统——每个敌种带 `element` 属性并显示元素徽章，玩家选攻击元素后伤害按 `element_matrix.json` 倍率结算（强克 ×1.6 / 被克 ×0.6 / 同元素 ×0.85 / 中性 ×1.0），并启用该元素代表技能的冷却（`skill_cooldowns.json` 数据）；命中飘字显示克制倍率。脚本经 `node --check` 语法校验通过（内联数据，file:// 双击可用，无需 fetch）。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
@@ -280,5 +281,6 @@ _content_pack/
 14. ~~**元素克制听觉/视觉签名（五元素系统补全）**~~ ✅ 已交付 3 个缺失元素的命中 VFX（水花 / 碎石 / 叶爆，128² RGBA 真透底，程序化生成）与 5 个元素命中音效（火/水/土/光/木，0.22s–0.34s，纯标准库合成），补足原 fx_fireball/fx_lightning/fx_frost 仅覆盖火/光/冰、缺 水/土/木 的空白；`gen_vfx.py` 加 3 特效函数、`synth_audio.py` 加 5 合成函数、`audio_demo.html` 加 5 试听卡（共 30 条）、`vfx_demo.html` 加 3 展示卡、README/manifest/index 同步；五元素命中反馈（视觉 VFX + 听觉 SFX）全配对，为后续按元素分发伤害与克制倍率提供素材基础。
 15. ~~**技能 / 元素图标（英雄技能栏 + 五元素身份 UI）**~~ ✅ 已交付 13 个程序化 RGBA 图标（`skill_icons/`）：5 个元素徽章（`el_fire/water/earth/light/wood`，六边符印底盘，与 R18 元素命中 VFX/SFX 构成「元素身份→命中反馈」闭环）+ 8 个技能按钮（`ab_fireball/heal/frost/chain/vine/quake/dash/summon`，圆角方面板底盘，覆盖 火球/治疗/霜冻/链雷/藤缚/地震/瞬步/召唤）；`tools/gen_skill_icons.py`（hexplate + panel 双底盘 + 4 新符号）+ `tools/build_skill_icons_demo.py` 分组展示页；与状态图标（圆牌）形成「圆牌=状态 / 六边=元素 / 方板=技能」三系 UI 语言；生成期发现 el_fire 与 st_burn 同盘同色同符号的视觉重复，已通过底盘去重解决。
 16. ~~**元素克制与技能数值（设计规格）**~~ ✅ 已交付 2 份设计数值 JSON（`data/element_matrix.json` 五元素 5 环克制链 + 倍率 + 配色 + 克制理由；`data/skill_cooldowns.json` 8 技能冷却/法力/元素/类型）+ 数据驱动可视化参考页 `element_chart.html`（五边形克制环 SVG + 5×5 倍率矩阵 + 8 技能冷却条）；`tools/build_element_chart.py` 读 JSON 纯标准库渲染，零依赖、不卡机；与 §2.4 元素身份 UI、R18 元素命中反馈三件套在规则与视觉层对齐，为 §4 接入主游戏时的伤害公式与技能节奏提供数据底座。
+17. ~~**演练场机制深化（playground 接入元素系统）**~~ ✅ `playground.html` 已升级为「机制演示」：6 敌种带 `element` 属性 + 元素徽章；玩家选攻击元素 → 伤害按 `element_matrix.json` 倍率结算（强克 ×1.6 / 被克 ×0.6 / 同元素 ×0.85 / 中性 ×1.0）并显示克制飘字；启用该元素代表技能冷却（`skill_cooldowns.json` 数据，按钮带实时倒计时遮罩）；`node --check` 语法校验通过，内联数据保证 file:// 双击可用。内容包从「资产可用性演示」进化为「元素克制规则可玩预览」。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

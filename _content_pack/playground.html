@@ -18,6 +18,17 @@
     transition:transform .15s, box-shadow .15s }
   .btn:hover{ transform:translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,.4) }
   .btn.on{ background:linear-gradient(160deg,#e8c463,#caa23f); color:var(--ink); border-color:var(--cream) }
+  .elems{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center }
+  .elem{ position:relative; width:46px; height:46px; border-radius:12px; border:2px solid rgba(255,255,255,.25);
+    background:rgba(15,47,31,.6); color:var(--cream); cursor:pointer; font-size:20px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; transition:transform .12s, box-shadow .12s }
+  .elem:hover{ transform:translateY(-2px) }
+  .elem .cd{ position:absolute; inset:0; background:rgba(0,0,0,.62); border-radius:10px; color:#fff;
+    font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; pointer-events:none }
+  .elem.on{ box-shadow:0 0 0 3px var(--gold) inset; }
+  .elem.cd-active{ opacity:.5; cursor:not-allowed }
+  .ebadge{ display:inline-flex; align-items:center; gap:4px; font-size:11px; opacity:.85; margin-top:-2px }
+  .ebadge i{ width:9px; height:9px; border-radius:50%; display:inline-block }
   .score{ font-size:15px; opacity:.9 }
   .score b{ color:var(--gold); font-size:20px }
   #stage{ width:100%; max-width:900px; background:rgba(15,47,31,.5); border:1px solid rgba(159,224,180,.25);
@@ -53,10 +64,11 @@
 </head>
 <body>
   <h1>⚔️ 森灵萌兽 · 实战演练场</h1>
-  <div class="hint">用内容包真实资产搭的迷你战斗场景：点击萌兽发动攻击（触发对应特效与音效），击败它们得分；点「森林 BGM」开启循环主题曲。本页纯前端，直接双击打开即可，资产经相对路径加载（sprites_alpha / vfx / audio）。</div>
+  <div class="hint">用内容包真实资产搭的迷你战斗场景：先选下方「攻击元素」（对应技能图标里的元素徽章），再点击萌兽发动攻击——伤害按 <b>五元素克制倍率</b> 结算（强克 ×1.6 / 被克 ×0.6 / 同元素 ×0.85 / 中性 ×1.0），并启用该元素技能的冷却。击败萌兽得分；点「森林 BGM」开启循环主题曲。本页纯前端，直接双击打开即可，资产经相对路径加载（sprites_alpha / vfx / audio）。</div>
   <div class="bar">
     <button class="btn" id="bgm">🎵 森林 BGM</button>
     <button class="btn" id="reset">🔄 重置演练</button>
+    <div class="elems" id="elems"></div>
     <div class="score">得分 <b id="score">0</b></div>
   </div>
   <div id="stage">
@@ -68,18 +80,35 @@
     <div class="enemies" id="enemies"></div>
   </div>
   <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>
-  资产：8 张透底精灵 + 18 个程序化 VFX + 19 条音频；本页为「资产可用性」演示，不修改也不依赖主游戏文件，与 GROK 路线零冲突。</footer>
+  资产：8 张透底精灵 + 24 个程序化 VFX + 30 条音频；本页为「资产可用性 + 元素克制机制」演示，伤害按 data/element_matrix.json 倍率结算并启用技能冷却，不修改也不依赖主游戏文件，与 GROK 路线零冲突。</footer>
 
 <script>
-  // 敌种花名册（数据取自 README / manifest，HP 按稀有度设定）
+  // 敌种花名册（数据取自 README / manifest，HP 按稀有度设定；element 取自五元素系统）
   const ROSTER = [
-    { key:'sprout_bunny',   cn:'芽芽兔',   hp:30,  boss:false },
-    { key:'flame_fox',      cn:'火苗狐',   hp:36,  boss:false },
-    { key:'water_frog',     cn:'水滴蛙',   hp:50,  boss:false },
-    { key:'star_bird',      cn:'星羽鸟',   hp:44,  boss:false },
-    { key:'stone_turtle',   cn:'石甲龟',   hp:90,  boss:false },
-    { key:'forest_ancient', cn:'森林古木', hp:200, boss:true  },
+    { key:'sprout_bunny',   cn:'芽芽兔',   hp:30,  boss:false, element:'wood'  },
+    { key:'flame_fox',      cn:'火苗狐',   hp:36,  boss:false, element:'fire'  },
+    { key:'water_frog',     cn:'水滴蛙',   hp:50,  boss:false, element:'water' },
+    { key:'star_bird',      cn:'星羽鸟',   hp:44,  boss:false, element:'light' },
+    { key:'stone_turtle',   cn:'石甲龟',   hp:90,  boss:false, element:'earth' },
+    { key:'forest_ancient', cn:'森林古木', hp:200, boss:true,  element:'wood'  },
   ];
+  // 五元素系统（与 data/element_matrix.json 一致；file:// 下不 fetch，内联保证双击可用）
+  const ELEMENTS = {
+    fire:  { cn:'火', color:'#ff7a3c' },
+    water: { cn:'水', color:'#5ab6ff' },
+    earth: { cn:'土', color:'#8c6a40' },
+    light: { cn:'光', color:'#ffd740' },
+    wood:  { cn:'木', color:'#66d957' },
+  };
+  const CYCLE = { fire:'wood', wood:'earth', earth:'water', water:'light', light:'fire' }; // 强克方向
+  const MUL = { strong:1.6, weak:0.6, same:0.85, neutral:1.0 };
+  const CD  = { fire:1.2, water:3.0, earth:8.0, light:4.0, wood:5.0 }; // 各元素代表技能冷却(s)，取自 data/skill_cooldowns.json
+  function rel(a, d){
+    if (a === d) return { k:'same', v:MUL.same };
+    if (CYCLE[a] === d) return { k:'strong', v:MUL.strong };
+    if (CYCLE[d] === a) return { k:'weak', v:MUL.weak };
+    return { k:'neutral', v:MUL.neutral };
+  }
   const HIT_VFX = ['fx_hit_spark.png','fx_slash.png','fx_star.png'];
   const HIT_SFX = ['cp_sfx_hit.wav','cp_sfx_kill.wav'];
   const KILL_VFX = ['fx_explosion.png','fx_coin_burst.png'];
@@ -103,14 +132,40 @@
     card.appendChild(d);
   }
 
+  const cdUntil = {};
+  let curElem = 'light';
+  const elemBtns = {};
+  function refreshElem(a){
+    const b = elemBtns[a]; if(!b) return;
+    const remain = (cdUntil[a]||0) - performance.now();
+    if (remain > 0){
+      b.classList.add('cd-active');
+      b.querySelector('.cd').textContent = (remain/1000).toFixed(1);
+      b._raf = requestAnimationFrame(() => refreshElem(a));
+    } else {
+      b.classList.remove('cd-active');
+      const c = b.querySelector('.cd'); if(c) c.textContent = '';
+      if (b._raf) cancelAnimationFrame(b._raf);
+    }
+  }
+  function flashCD(a){ const b = elemBtns[a]; if(!b) return;
+    b.animate([{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'translateX(0)'}], {duration:160}); }
+
   function attack(card, e){
     if (card.classList.contains('dead')) return;
+    const a = curElem;
+    const now = performance.now();
+    if (cdUntil[a] && now < cdUntil[a]){ flashCD(a); return; }
+    const r = rel(a, e.element);
     const crit = Math.random() < 0.22;
-    const dmg = (crit ? 1.8 : 1) * (8 + Math.floor(Math.random()*9)) | 0;
+    let dmg = (crit ? 1.8 : 1) * (8 + Math.floor(Math.random()*9)) | 0;
+    dmg = Math.max(1, Math.round(dmg * r.v));
     e.hp -= dmg;
     spawnVfx(card, HIT_VFX[Math.floor(Math.random()*HIT_VFX.length)]);
-    floatDmg(card, '-' + dmg, crit);
+    const tag = r.k === 'strong' ? ' ×' + r.v.toFixed(2) + ' 克!' : (r.k === 'weak' ? ' ×' + r.v.toFixed(2) : (r.k === 'same' ? ' ×' + r.v.toFixed(2) : ''));
+    floatDmg(card, '-' + dmg + tag, crit || r.k === 'strong');
     audio('audio/' + HIT_SFX[Math.floor(Math.random()*HIT_SFX.length)]).play().catch(()=>{});
+    cdUntil[a] = now + CD[a] * 1000; refreshElem(a);
     const hpEl = card.querySelector('.hp');
     const pct = Math.max(0, e.hp / e.max) * 100;
     hpEl.style.width = pct + '%';
@@ -144,11 +199,31 @@
       card.innerHTML =
         '<img src="sprites_alpha/' + e.key + '.png" alt="' + e.cn + '">' +
         '<div class="nm">' + e.cn + (e.boss ? ' 👑' : '') + '</div>' +
+        '<div class="ebadge"><i style="background:' + ELEMENTS[e.element].color + '"></i>' + ELEMENTS[e.element].cn + '属性</div>' +
         '<div class="hpwrap"><div class="hp"></div></div>';
       card.addEventListener('click', () => attack(card, e));
       enemiesEl.appendChild(card);
     });
   }
+  function buildElems(){
+    const wrap = document.getElementById('elems');
+    wrap.innerHTML = '';
+    Object.keys(ELEMENTS).forEach(k => {
+      const b = document.createElement('div');
+      b.className = 'elem' + (k === curElem ? ' on' : '');
+      b.style.borderColor = ELEMENTS[k].color;
+      b.innerHTML = ELEMENTS[k].cn + '<span class="cd"></span>';
+      b.title = ELEMENTS[k].cn + '元素 · 技能冷却 ' + CD[k] + 's';
+      b.addEventListener('click', () => {
+        curElem = k;
+        document.querySelectorAll('.elem').forEach(x => x.classList.remove('on'));
+        b.classList.add('on');
+      });
+      elemBtns[k] = b;
+      wrap.appendChild(b);
+    });
+  }
+  buildElems();
   build();
 
   document.getElementById('reset').addEventListener('click', () => { document.querySelectorAll('.enemy').forEach(c => c.classList.remove('dead')); build(); });
