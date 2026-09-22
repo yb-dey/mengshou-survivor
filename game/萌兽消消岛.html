@@ -23933,82 +23933,45 @@ function paintChapterGround(c2, w, h, mt) {
     for (n = 0; n < 5; n++) paintInkRock(c2, 70 + rnd() * (w - 140), 70 + rnd() * (h - 140), 52 + rnd() * 18, rnd() > 0.5 ? b : c);
     c2.globalAlpha = 1;
   } else if (kind === "star") {
-    // 【v1.145】夜石土路加厚到瓦片高约 16%, 墨边更清楚; 不再叠两道细尺线。
-    // 【v1.152】星巅地面只留夜海军蓝+厚土石路: 星井/夜石块杂物移除, 战场不再撒碎块抢英雄戏
-    // 【v1.162】去掉 5 团 #3a4258 灰斑(读作占位云); 海军底保持安静, 土路墨边再厚一档
-    // 【v1.177】左上受光。远脊(冷)与近台(暖、暗崖)分层; 软边保留, 不回 20px 硬墨条, 不回灰斑。
-    // 【v1.178】缺 ground_star.png 时: 远脊横铺+近路暖唇+柔丘(非散乱梯形占位)。平铺仍读作一夜石路。
-    var skyG = c2.createLinearGradient(0, 0, w * 0.72, h * 0.9);
-    skyG.addColorStop(0, "rgba(148, 168, 220, 0.28)");
-    skyG.addColorStop(0.42, "rgba(40, 52, 96, 0.06)");
-    skyG.addColorStop(1, "rgba(4, 6, 16, 0.18)");
+    // 【v1.145】夜石土路加厚; 【v1.152】去星井碎块; 【v1.162】去灰斑; 【v1.177】左上受光。
+    // 【v1.178】缺 ground_star.png: 整瓦海军+柔脊+淡土路晕(边缘淡出), 平铺不再显硬梯形/桶形占位。
+    var skyG = c2.createLinearGradient(0, 0, w * 0.7, h);
+    skyG.addColorStop(0, "#4a5a88");
+    skyG.addColorStop(0.35, a);
+    skyG.addColorStop(1, "#0c1020");
     c2.fillStyle = skyG;
     c2.fillRect(0, 0, w, h);
-    paintStarRidge(c2, w, h * 0.02, h * 0.16);
-    paintStarRidge(c2, w, h * 0.14, h * 0.10);
-    pathH = Math.max(104, h * 0.17);
-    var mesaY = h * 0.42;
-    // 近路暗崖→暖土: 圆角丘带替代硬直角梯形, 平铺接缝不读作乱梯形
-    c2.fillStyle = "#141821";
-    c2.beginPath();
-    c2.moveTo(0, mesaY + pathH * 0.55);
-    c2.quadraticCurveTo(w * 0.28, mesaY + pathH * 0.92, w * 0.55, mesaY + pathH * 0.62);
-    c2.quadraticCurveTo(w * 0.78, mesaY + pathH * 0.48, w, mesaY + pathH * 0.72);
-    c2.lineTo(w, mesaY + pathH * 1.15);
-    c2.lineTo(0, mesaY + pathH * 1.15);
-    c2.closePath();
-    c2.fill();
-    c2.fillStyle = "#6a5844";
-    c2.beginPath();
-    c2.moveTo(0, mesaY + pathH * 0.08);
-    c2.quadraticCurveTo(w * 0.32, mesaY - pathH * 0.06, w * 0.58, mesaY + pathH * 0.10);
-    c2.quadraticCurveTo(w * 0.82, mesaY + pathH * 0.18, w, mesaY + pathH * 0.06);
-    c2.lineTo(w, mesaY + pathH * 0.58);
-    c2.quadraticCurveTo(w * 0.7, mesaY + pathH * 0.48, w * 0.4, mesaY + pathH * 0.62);
-    c2.quadraticCurveTo(w * 0.18, mesaY + pathH * 0.70, 0, mesaY + pathH * 0.55);
-    c2.closePath();
-    c2.fill();
-    var lipG = c2.createLinearGradient(0, mesaY, w * 0.78, mesaY + pathH * 0.42);
-    lipG.addColorStop(0, "rgba(248, 232, 198, 0.86)");
-    lipG.addColorStop(0.34, "rgba(190, 156, 112, 0.40)");
+    paintStarRidge(c2, w, h * 0.03, h * 0.18);
+    // 淡土路: 大面积软晕, 四边 alpha 收, 瓦片接缝不露硬条
+    pathH = Math.max(120, h * 0.22);
+    var mesaY = h * 0.38;
+    var road = c2.createRadialGradient(w * 0.45, mesaY + pathH * 0.35, w * 0.08, w * 0.5, mesaY + pathH * 0.4, w * 0.72);
+    road.addColorStop(0, "rgba(210, 176, 128, 0.55)");
+    road.addColorStop(0.45, "rgba(106, 88, 68, 0.42)");
+    road.addColorStop(1, "rgba(20, 24, 36, 0)");
+    c2.fillStyle = road;
+    c2.fillRect(0, mesaY - pathH * 0.2, w, pathH * 1.4);
+    var lipG = c2.createLinearGradient(0, mesaY, w * 0.8, mesaY + pathH * 0.5);
+    lipG.addColorStop(0, "rgba(248, 232, 198, 0.50)");
+    lipG.addColorStop(0.5, "rgba(190, 156, 112, 0.18)");
     lipG.addColorStop(1, "rgba(92, 74, 56, 0)");
     c2.fillStyle = lipG;
     c2.beginPath();
-    c2.moveTo(0, mesaY + pathH * 0.06);
-    c2.quadraticCurveTo(w * 0.35, mesaY - pathH * 0.04, w * 0.7, mesaY + pathH * 0.08);
-    c2.lineTo(w, mesaY + pathH * 0.05);
-    c2.lineTo(w, mesaY + pathH * 0.36);
-    c2.quadraticCurveTo(w * 0.55, mesaY + pathH * 0.30, 0, mesaY + pathH * 0.34);
+    c2.moveTo(0, mesaY + pathH * 0.18);
+    c2.quadraticCurveTo(w * 0.4, mesaY + pathH * 0.02, w, mesaY + pathH * 0.16);
+    c2.quadraticCurveTo(w * 0.55, mesaY + pathH * 0.38, 0, mesaY + pathH * 0.42);
     c2.closePath();
     c2.fill();
-    var edge = Math.min(26, pathH * 0.26);
-    var gTop = c2.createLinearGradient(0, mesaY - edge, 0, mesaY + edge * 0.55);
-    gTop.addColorStop(0, a);
-    gTop.addColorStop(1, "rgba(0,0,0,0)");
-    c2.fillStyle = gTop;
-    c2.fillRect(0, mesaY - edge, w, edge * 1.4);
-    var gBot = c2.createLinearGradient(0, mesaY + pathH - edge * 0.35, 0, mesaY + pathH + edge);
-    gBot.addColorStop(0, "rgba(0,0,0,0)");
-    gBot.addColorStop(1, a);
-    c2.fillStyle = gBot;
-    c2.fillRect(0, mesaY + pathH - edge * 0.35, w, edge * 1.35);
-    c2.strokeStyle = "rgba(8, 6, 4, 0.88)";
-    c2.lineWidth = Math.max(4.0, h * 0.006);
+    c2.strokeStyle = "rgba(255, 240, 214, 0.35)";
+    c2.lineWidth = Math.max(2, h * 0.003);
     c2.beginPath();
-    c2.moveTo(0, mesaY + pathH * 0.07);
-    c2.quadraticCurveTo(w * 0.4, mesaY - 2, w, mesaY + pathH * 0.06);
-    c2.stroke();
-    c2.strokeStyle = "rgba(255, 240, 214, 0.66)";
-    c2.lineWidth = Math.max(2.4, h * 0.0036);
-    c2.beginPath();
-    c2.moveTo(0, mesaY + pathH * 0.14);
-    c2.quadraticCurveTo(w * 0.45, mesaY + pathH * 0.06, w * 0.72, mesaY + pathH * 0.12);
+    c2.moveTo(w * 0.05, mesaY + pathH * 0.20);
+    c2.quadraticCurveTo(w * 0.45, mesaY + pathH * 0.08, w * 0.85, mesaY + pathH * 0.18);
     c2.stroke();
     c2.lineWidth = 1;
-    // 柔丘台地(圆顶+暗崖), 左上受光; 避免硬直角梯形占位感
-    paintMesaButte(c2, w * 0.03, h * 0.17, w * 0.22, h * 0.13);
-    paintMesaButte(c2, w * 0.58, h * 0.64, w * 0.24, h * 0.12);
-  } else if (kind === "mist") {
+    // 单座远柔丘点缀(左上受光), 不堆多座以免平铺成桶阵
+    paintMesaButte(c2, w * 0.62, h * 0.58, w * 0.26, h * 0.11);
+  } else if (kind === "mist") {  } else if (kind === "mist") {
     // 【v1.153】雾泽苇簇 8→5 且整体 0.8 alpha, 路径像星巅一样干净(石章不动)
     // 【v1.160】再静半档: 苇簇 5→4 + alpha 0.8→0.72, 向星巅留白看齐, 苇簇身份保留
     c2.globalAlpha = 0.72;
