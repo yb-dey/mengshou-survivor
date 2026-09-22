@@ -25,7 +25,8 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.194 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.195 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.195 美术】后置加菜内档: 分区标题 #2c3a22, 行卡奶油 #f4efe2 + 2px 苔缘 #5c7044, 获取 crumb 苔丸(drawDailyPickPanel/makeDailyCard/drawDailyObtainCrumb); 选中英雄卡软苔脉冲缘 α 0.20–0.35(makeHeroChip); 英雄卡行下软影(drawHomeBase); 正片出击更深橄榄填 + 2px 苔缘、去掉金/亮绿眩(makeButton homestart); 点出击奶油擦入前软墨勾(drawStartInkTick/drawEntranceWipe); SFX_START 正片武装再软一档 notch(Audio._start/_renderOne)。1.194 早波形/接触影/出战铭牌/技能名保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.194 美术】早波剪影控制点约 8–12% 再点名(paintEnemySilhouette): 兔颊更满、狐尾更蓬、鼠吻更瘦、蟾腹更圆, 粉彩填色不动; 接触影再软一档更扁椭圆(drawEarlyTrashContactShadow); 出战地面奶油铭牌 #f4efe2 + 2px 苔缘 #5c7044 + 短标 #2c3a22, 窗下软唇对齐大厅中脊(drawHomeBase); 英雄卡技能名 #2c3a22、血/速条改静橄榄(makeHeroChip/drawHeroMeter); 点出战预览与英雄卡聚焦走 SFX_UI 软 notch(Audio._start sortiepreview/heropick)。叠层外墨与填体 α≥0.92 保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.193 美术】设置/关于/怎么玩/后置加菜盘奶油填 #f4efe2 + 2px 软苔缘 #5c7044(makeModal comfort); 后置加菜条标题 #2c3a22、副标奶油字压橄榄(makeButton quiet / drawDailyPickPanel); 悬停或聚焦时软墨脉冲(notePointerHover); 灯笼港湾选中签软墨再加一档(makeThemeChip); 早波吻尖/耳腔仍实心粉彩(paintEnemySilhouette muzzleDot); 开设置走 SFX_UI 软 notch(Audio._start settingsopen)。1.192 回港条盖住层/HUD 发丝保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.192 美术】回港条改画在大厅 UI 之上、落在两侧部位槽之间(drawHallReturnToast): 奶油字 #f4f7ec / 橄榄底 #314228 / 缘 #5c7044, 时间·击杀·金币三格同色; 标题下 1.5px 苔线; 亮起 2 粒软墨点(armHallReturnDust/drawHallReturnDust); HUD 时钟/生命/杀敌奶油发丝再抬(drawHudClusterFrame/drawVitalsHud); 回港走 SFX_UI 软 notch(Audio._start)。1.191 部位字/槽标软墨/设置缘/穿上勾保持。数值/掉落/进化/复活次数/10 分钟轴不动。
@@ -624,7 +625,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.194",                   // 【v1.194】早波形体再点名; 出战地面奶油铭牌; 英雄卡技能名深苔+血速条静橄榄; 预览/选角 SFX_UI notch。不改掉率/价格/锻造/进化/复活次数/10 分钟轴
+  version: "1.195",                   // 【v1.195】加菜内档苔缘行卡; 选中英雄软苔脉冲; 正片出击收静橄榄; 出击软墨勾 + SFX_START notch。不改掉率/价格/锻造/进化/复活次数/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -3651,12 +3652,13 @@ function armEntranceDust() {
 function endEntranceWipe() {
   if (!(GAME.entranceWipeT > 0)) return;
   GAME.entranceWipeT = 0;
+  GAME.startInkTick = false;
   armEntranceDust();
 }
 function updateEntranceWipe(rawDt) {
   var d, step;
   if (!GAME || GAME.state !== GAME.flow.PLAYING) {
-    if (GAME) { GAME.entranceWipeT = 0; GAME.entranceDust = null; }
+    if (GAME) { GAME.entranceWipeT = 0; GAME.entranceDust = null; GAME.startInkTick = false; }
     return;
   }
   // 出击当帧常被音频/进场卡撑到 >0.42s。不封顶的话擦入在第一次绘制前就被减完。
@@ -3667,6 +3669,7 @@ function updateEntranceWipe(rawDt) {
     GAME.entranceWipeT -= step;
     if (GAME.entranceWipeT <= 0) {
       GAME.entranceWipeT = 0;
+      GAME.startInkTick = false;
       armEntranceDust();
     }
   }
@@ -3695,6 +3698,28 @@ function clipEntranceWipe(ctx, px, py, r) {
     ctx.clip("evenodd");
   }
 }
+function drawStartInkTick(ctx, u) {
+  // 【v1.195】正片出击当帧、奶油擦入揭开前: 落在旧主钮中心的一笔软墨勾。只画在擦入幕上, 揭开后即收。
+  var bx, by, a, s;
+  if (!GAME.startInkTick || u > 0.48) return;
+  a = 0.78 * (1 - u / 0.48);
+  if (a < 0.04) return;
+  bx = 20 + (CONFIG.homeStartW || 492) * 0.5;
+  by = (CONFIG.homeStartY || 536) + (CONFIG.homeStartH || 104) * 0.5;
+  s = 16;
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.strokeStyle = "#2c3a22";
+  ctx.lineWidth = 3.2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(bx - s, by);
+  ctx.lineTo(bx - s * 0.25, by + s * 0.72);
+  ctx.lineTo(bx + s, by - s * 0.7);
+  ctx.stroke();
+  ctx.restore();
+}
 function drawEntranceWipe(ctx) {
   var dur, u, px, py, maxR, r, edge;
   if (!(GAME.entranceWipeT > 0) || GAME.state !== GAME.flow.PLAYING) return;
@@ -3715,6 +3740,8 @@ function drawEntranceWipe(ctx) {
     ctx.globalAlpha = 0.90 * (1 - u);
     ctx.fillStyle = "#f4ead4";
     ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
+    ctx.globalAlpha = 1;
+    drawStartInkTick(ctx, u);
     ctx.restore();
     return;
   }
@@ -3730,6 +3757,7 @@ function drawEntranceWipe(ctx) {
   ctx.beginPath();
   ctx.arc(px, py, r, 0, CONFIG.TWO_PI);
   ctx.stroke();
+  drawStartInkTick(ctx, u);
   ctx.restore();
 }
 function drawEntranceDust(ctx) {
@@ -8564,7 +8592,7 @@ var DATA_SFX = {
   halltab: { sfx: "SFX_UI",        rate: 1.26, gain: 0.40 }, // 【v1.143】大厅切页短清 tick, 仍走原 UI 音
   heropick: { sfx: "SFX_UI",       rate: 1.12, gain: 0.46 }, // 【v1.146】点选英雄卡短 tick, 略满体, 仍走原 UI 音; 【v1.194】聚焦软 notch 在 Audio._start, 音高/增益不动
   pause:   { sfx: "SFX_UI",       rate: 0.85, gain: 0.7 },
-  start:   { sfx: "SFX_START",    rate: 1.08, gain: 0.70, node: true }, // 【v1.143】出击键略短略轻, 仍走原开局音
+  start:   { sfx: "SFX_START",    rate: 1.08, gain: 0.70, node: true }, // 【v1.143】出击键略短略轻, 仍走原开局音; 【v1.195】正片武装软 notch 在 Audio._start, 音高/增益不动
   buyfail: { sfx: "SFX_CARD",      rate: 0.7,  gain: 0.5 },    // 【R11】购买失败提示音(金币不足; 已满级不响)
   boss:    { sfx: "SFX_BOSS_WARN", rate: 1,    gain: 1 },
   bosswarn: { sfx: "SFX_BOSS_WARN", rate: 1,   gain: 1, node: true, duck: true }, // 【v1.35】5 秒预警, 不再走 elite
@@ -12333,9 +12361,10 @@ var Audio = {
     } else if (id === "SFX_START") { len = 0.38; out = this._alloc(len, sr);
       // 【v1.183】开局 notch 再软一档: 起音略缓、顶层增益收淡, 仍可爱; 音高/时长/性格不动
       // 【v1.187】擦入伴音再软一档: 起音 6/5→12/10ms, 顶层 659Hz 0.58→0.46, 中层 0.92→0.84; 三音/0.38s/性格不动
-      this._tone(out, sr, { wave: "triangle", f0: 392.0, t0: 0, dur: 0.18, a: 0.012, d: 0.08, s: 0.14, r: 0.08, gain: 0.80 });
-      this._tone(out, sr, { wave: "sine", f0: 523.25, t0: 0.08, dur: 0.22, a: 0.010, d: 0.1, s: 0.16, r: 0.1, gain: 0.84 });
-      this._tone(out, sr, { wave: "triangle", f0: 659.26, t0: 0.16, dur: 0.22, a: 0.010, d: 0.08, s: 0.10, r: 0.12, gain: 0.46 });
+      // 【v1.195】正片出击武装再软一档: 起音 12/10→18/16ms, 顶层 0.46→0.40; 三音/0.38s/性格不动, 总线 gain 不动
+      this._tone(out, sr, { wave: "triangle", f0: 392.0, t0: 0, dur: 0.18, a: 0.018, d: 0.08, s: 0.14, r: 0.08, gain: 0.80 });
+      this._tone(out, sr, { wave: "sine", f0: 523.25, t0: 0.08, dur: 0.22, a: 0.016, d: 0.1, s: 0.16, r: 0.1, gain: 0.84 });
+      this._tone(out, sr, { wave: "triangle", f0: 659.26, t0: 0.16, dur: 0.22, a: 0.016, d: 0.08, s: 0.10, r: 0.12, gain: 0.40 });
     } else if (id === "SFX_BOSS_WARN") { len = 0.8; out = this._alloc(len, sr);
       // 三短一长脉冲(四段包络); 【v1.158】起音 5→13ms+各段增益收一档, 预警不喊仍清; 节奏/音高/时长不动
       this._tone(out, sr, { wave: "triangle", f0: 392, t0: 0,    dur: 0.10, a: 0.013, d: 0.08, s: 0, r: 0.03, gain: 0.88 });
@@ -13062,11 +13091,12 @@ var Audio = {
       //   ⚠ 不要在任何离线渲染脚本里按 id 缩放 —— 层级只在这里乘一次。
       g.gain.value = CONFIG.audio.gains[sid] * gainMul;
       // 【v1.187】SFX_START 软 notch 也盖住已加载的 wav: 12ms 从半增益爬到同一峰值, 不改总线 gain
+      // 【v1.195】正片出击武装再软一档: 16ms 从 0.38 爬到同一峰值。其它 notch 不走这条, 总线 gain 不动
       if (sid === "SFX_START") {
         var tS = this.ctx.currentTime + (delay || 0);
         var gEnd = g.gain.value;
-        g.gain.setValueAtTime(gEnd * 0.5, tS);
-        g.gain.linearRampToValueAtTime(gEnd, tS + 0.012);
+        g.gain.setValueAtTime(gEnd * 0.38, tS);
+        g.gain.linearRampToValueAtTime(gEnd, tS + 0.016);
       }
       // 【v1.188】SFX_REVIVE 软 notch 盖住已加载 wav: 16ms 从半增益爬到同一峰值, 不改总线 gain
       if (sid === "SFX_REVIVE") {
@@ -27967,15 +27997,17 @@ function drawHomeBase(ctx) {
   ctx.lineWidth = 2.6;
   strokeRoundRect(ctx, 120, heroTrayY - 6, 476, heroTrayH + 12, 16);
   ctx.lineWidth = 1;
+  // 【v1.195】英雄卡行下软影: 整排一块扁椭圆, 落在托盘下沿, 不改卡热区
+  ctx.save();
+  ctx.globalAlpha = 0.52;
+  fillDropShadow(ctx, 358, heroTrayY + heroTrayH + 8, 220, 12);
+  ctx.restore();
   var startY = CONFIG.homeStartY || 536;
   var startH = CONFIG.homeStartH || 104;
   var startW = CONFIG.homeStartW || 492;
-  ctx.fillStyle = "rgba(47,191,88,0.30)";
-  fillRoundRect(ctx, 12, startY - 8, startW + 16, startH + 16, 18);
-  ctx.strokeStyle = "#1e6e32";
-  ctx.lineWidth = 3;
-  strokeRoundRect(ctx, 12, startY - 8, startW + 16, startH + 16, 18);
-  ctx.lineWidth = 1;
+  // 【v1.195】正片出击外框收静: 去掉亮绿晕和 3px 绿描, 只留向下软墨影
+  ctx.fillStyle = "rgba(28, 36, 20, 0.20)";
+  fillRoundRect(ctx, 28, startY + 8, startW - 16, startH, 18);
   ctx.fillStyle = "rgba(16,20,14,0.92)";
   ctx.fillRect(0, 0, CONFIG.viewW, 56);
   ctx.fillStyle = "#E6C24A";
@@ -28046,6 +28078,31 @@ function makeButton(id, x, y, w, h, label, onTap) {
       var fill = c.btnBg, stroke = "#fff7e0", ink = c.btnText, faceY;
       var pressed = beginWidgetPress(ctx, this);
       if (skin === "cta") {
+        if (this.id === "homestart") {
+          // 【v1.195】正片出击收静: 更深橄榄填, 2px 苔缘 #5c7044, 奶油字, 无亮绿面、无金/奶油眩光。热区/文案不动。
+          ctx.fillStyle = "rgba(28, 36, 20, 0.22)";
+          fillRoundRect(ctx, r.x, r.y + 4, r.w, r.h, rr);
+          ctx.fillStyle = "#2c3a22";
+          fillRoundRect(ctx, r.x, r.y + 3, r.w, r.h, rr);
+          ctx.fillStyle = "#3a4e30";
+          fillRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
+          ctx.strokeStyle = "#5c7044";
+          ctx.lineWidth = 2;
+          strokeRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
+          ctx.lineWidth = 1;
+          ctx.fillStyle = "#f7f4ea";
+          ctx.font = "bold 38px " + FONT_STACK;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(this.label, r.x + r.w / 2, this.sub ? r.y + r.h / 2 - 14 : r.y + r.h / 2);
+          if (this.sub) {
+            ctx.font = "bold 18px " + FONT_STACK;
+            ctx.fillStyle = "#f4efe2";
+            ctx.fillText(this.sub, r.x + r.w / 2, r.y + r.h / 2 + 24);
+          }
+          endWidgetPress(ctx, pressed);
+          return;
+        }
         // 【v1.157】主 CTA 去金晕: 淡金外晕+奶白粗框 → 柔影+细墨缘(对齐 v1.154 技能圆盘墨重), 薄荷绿面/白字层级不动,
         //   左上补一片柔光(同技能盘), 大厅层级仍一眼压过符文/主题; 尺寸/热区/文案不动。
         ctx.fillStyle = "rgba(12,16,12,0.32)";
@@ -29149,6 +29206,31 @@ function dailyIsArmed(idx) {
 function dailyRuleAt(i) {
   return DATA_DAILY[DAILY_RULE_ORDER[i]] || null;
 }
+function drawDailyObtainCrumb(ctx, r, rule) {
+  // 【v1.195】获取 crumb: 时长仍是深苔字, +N金 收进苔丸奶油字, 金额仍读规则表
+  var gift = dailyGiftCoinsOf(rule);
+  var pre = "约" + (rule.durMin || 6) + "分钟 · 后置加菜 ";
+  var pill = "+" + gift + "金";
+  var post = " · 不解锁章节";
+  var cy = r.y + 108;
+  var preW, pillW, x0;
+  ctx.font = "bold 14px " + FONT_STACK;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  preW = ctx.measureText(pre).width;
+  pillW = ctx.measureText(pill).width + 16;
+  x0 = r.x + 28;
+  ctx.fillStyle = "#2c3a22";
+  ctx.fillText(pre, x0, cy);
+  ctx.fillStyle = "#5c7044";
+  fillRoundRect(ctx, x0 + preW, cy - 11, pillW, 22, 8);
+  ctx.fillStyle = "#f4efe2";
+  ctx.textAlign = "center";
+  ctx.fillText(pill, x0 + preW + pillW / 2, cy);
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#2c3a22";
+  ctx.fillText(post, x0 + preW + pillW + 4, cy);
+}
 function makeDailyCard(i, x, y, w, h) {
   return UIStack.add({
     id: "dailycard" + i, kind: "DailyCard",
@@ -29174,32 +29256,35 @@ function makeDailyCard(i, x, y, w, h) {
       var armed = dailyIsArmed(this.idx);
       var accent = (rule && rule.color) || "#e07a2a";
       if (!rule) return;
-      // 【v1.156】加菜卡对齐选章卡(1.155 苔纸细墨族): 柔影+苔纸底+细墨框+左侧色签;
-      //   锁定(armed)苔纸亮一档+绿框绿签, 今日口味(hot)墨框略深; 不再深盘粗彩框。尺寸/热区/两下开战不动。
-      ctx.fillStyle = "rgba(16,20,14,0.12)";
-      fillRoundRect(ctx, r.x + 1, r.y + 3, r.w, r.h, 16);
-      ctx.fillStyle = armed ? "rgba(214,232,186,0.98)" : (hot ? "rgba(226,236,198,0.97)" : "rgba(222,232,198,0.94)");
+      // 【v1.195】内档行卡: 奶油填 #f4efe2 + 2px 苔缘 #5c7044。锁定只加内圈深苔, 两下开战不动。
+      ctx.fillStyle = "rgba(44, 58, 34, 0.22)";
+      fillRoundRect(ctx, r.x + 1, r.y + 4, r.w, r.h, 16);
+      ctx.fillStyle = "#f4efe2";
       fillRoundRect(ctx, r.x, r.y, r.w, r.h, 16);
-      ctx.strokeStyle = armed ? "#2e8b47" : (hot ? "rgba(42,58,24,0.80)" : "rgba(42,58,24,0.55)");
-      ctx.lineWidth = armed ? 2.5 : 1.5;
+      ctx.strokeStyle = "#5c7044";
+      ctx.lineWidth = 2;
       strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 16);
+      if (armed) {
+        ctx.strokeStyle = "#2c3a22";
+        ctx.lineWidth = 2;
+        strokeRoundRect(ctx, r.x + 4, r.y + 4, r.w - 8, r.h - 8, 12);
+      }
       ctx.lineWidth = 1;
-      ctx.fillStyle = armed ? "#3faf5a" : accent;
+      ctx.fillStyle = accent;
       fillRoundRect(ctx, r.x + 6, r.y + 14, 5, r.h - 28, 2);
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = "#2e3c1c";
+      ctx.fillStyle = "#2c3a22";
       ctx.font = "bold 28px " + FONT_STACK;
       ctx.fillText(rule.name, r.x + 28, r.y + 32);
-      ctx.fillStyle = "#3a5a20";
+      ctx.fillStyle = "#3a4626";
       ctx.font = "bold 16px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, rule.rule, r.w - 48), r.x + 28, r.y + 68);
-      ctx.fillStyle = "#6a6a5a";
-      ctx.font = "bold 14px " + FONT_STACK;
-      ctx.fillText("约" + (rule.durMin || 6) + "分钟 · 后置加菜 +" + dailyGiftCoinsOf(rule) + "金 · 不解锁章节", r.x + 28, r.y + 100);
-      ctx.fillStyle = armed ? "#2e8b47" : "#5a6a40";
+      drawDailyObtainCrumb(ctx, r, rule);
+      ctx.fillStyle = armed ? "#2c3a22" : "#5c7044";
       ctx.font = "bold 18px " + FONT_STACK;
       ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
       ctx.fillText(armed
         ? (hot ? "今日口味 · 再点开战" : "再点开战 · 后置加菜")
         : (hot ? "今日口味 · 先点锁定" : "先点锁定 · 不冲正片"), r.x + r.w - 18, r.y + r.h - 22);
@@ -29222,9 +29307,11 @@ function drawDailyPickPanel(ctx, m) {
   fillRoundRect(ctx, CONFIG.viewW / 2 - dishW / 2, py + 66, dishW, 30, 10);
   ctx.fillStyle = "#f4f7ec";
   ctx.fillText(dishSub, CONFIG.viewW / 2, py + 81);
-  ctx.fillStyle = "#3a4626";
+  ctx.fillStyle = "#2c3a22";
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText("三种短局 · 后置加菜 · 不冲正片主桌", CONFIG.viewW / 2, py + 116);
+  ctx.fillStyle = "#5c7044";
+  ctx.fillRect((CONFIG.viewW - (m.panelW - 96)) / 2, py + 128, m.panelW - 96, 2);
   /* 【v1.194】今日最佳行: 原缺陷——saveData.dailyBest 五字段全写盘 + clamp 携带 + 注释声明,
      却零渲染点, 玩家"今天加菜的最好成绩"永久不可见。
      落位: 卡片区末(136+2*160+150=606) 与 返回钮顶(756-88=668) 之间的空档。
@@ -29248,21 +29335,21 @@ function drawDailyPickPanel(ctx, m) {
       /* date(YYYY-MM-DD) -> M月D日 */
       var _dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(_db.date);
       var _ds = _dm ? (parseInt(_dm[2], 10) + "月" + parseInt(_dm[3], 10) + "日") : "";
-      ctx.fillStyle = "#3a5a20";
+      ctx.fillStyle = "#2c3a22";
       ctx.fillText("今日最佳 · 完成 " + (_db.wins | 0) + " 场 · 击杀 " + (_db.bestKills | 0)
         + " · 最快 " + (_bm + ":" + (_bx < 10 ? "0" : "") + _bx), CONFIG.viewW / 2, py + 618);
       if (_rn || _ds) {
         ctx.font = "bold 13px " + FONT_STACK;
-        ctx.fillStyle = "#6a6a5a";
+        ctx.fillStyle = "#5c7044";
         ctx.fillText((_rn ? "口味 " + _rn : "") + (_rn && _ds ? " · " : "") + (_ds || ""),
           CONFIG.viewW / 2, py + 640);
       }
     } else {
-      ctx.fillStyle = "#8a8a76";
+      ctx.fillStyle = "#2c3a22";
       ctx.fillText("今日尚未开桌 · 挑一种口味试一把", CONFIG.viewW / 2, py + 622);
     }
   })();
-  ctx.fillStyle = "#6a6a5a";
+  ctx.fillStyle = "#2c3a22";
   ctx.font = "bold 14px " + FONT_STACK;
   ctx.fillText("正片出击仍在大厅主钮 · 加菜不发锻纹/章礼", CONFIG.viewW / 2, py + m.panelH - 118);
 }
@@ -33559,6 +33646,19 @@ function makeHeroChip(i, x, y, w, h) {
       ctx.font = "bold 11px " + FONT_STACK;
       ctx.fillText(sheet.wpn, cx, r.y + 92);
       ctx.fillText(sheet.spec, cx, r.y + 106);
+      if (selected) {
+        // 【v1.195】仅选中卡外圈软苔脉冲 α 0.20–0.35, 不改选择规则, 不压到邻卡
+        var pulseA = 0.275;
+        var pulseT;
+        if (!GAME.reduceMotion) {
+          pulseT = (typeof performance !== "undefined" ? performance.now() : Date.now()) * 0.0028;
+          pulseA = 0.20 + 0.15 * (0.5 + 0.5 * Math.sin(pulseT));
+        }
+        ctx.strokeStyle = "rgba(92, 112, 68, " + pulseA.toFixed(3) + ")";
+        ctx.lineWidth = 2.5;
+        strokeRoundRect(ctx, r.x - 5, r.y - 5, r.w + 10, r.h + 10, 15);
+        ctx.lineWidth = 1;
+      }
       ctx.restore();
     }
   });
@@ -34578,7 +34678,7 @@ function onTapStart() {
   if (hallLayerOpen()) return;
   Audio.unlock();
   leaveDailyMode();                 // 【v1.77】正片出击卸加菜规则
-  startRun(pickRecommendedChapter());   // 【v1.70】主 CTA 直接进 10 分钟正片
+  startRun(pickRecommendedChapter(), "sortie");   // 【v1.70】主 CTA 直接进 10 分钟正片; 【v1.195】sortie 才武装软墨勾
 }
 function onTapDaily() {
   if (GAME.state !== GAME.flow.HOME || chapterSelectOpen || dailyPickOpen) return;
@@ -36131,6 +36231,7 @@ var GAME = {
   enterCine: null,                  // 【v1.62】进场过场快照
   entranceWipeT: 0,                 // 【v1.187】开局奶油擦入剩余秒(纯表现, 不另加输入锁)
   entranceWipeDur: 0,
+  startInkTick: false,              // 【v1.195】正片出击软墨勾(纯表现, 擦入揭开即收)
   entranceDust: null,               // 【v1.187】擦入结束脚下墨点; 章卡还在时先按住, 露出台面再放
   enterSeen: {},                    // 【v1.62】本会话已看过的章/房键(重复更短)
   aboutLoreOpen: false,             // 【v1.74】关于页薄设定展开(默认收起, 可跳过)
@@ -36915,7 +37016,7 @@ function applyDailyStartKit() {
   }
 }
 
-function startRun(chapterIdx) {
+function startRun(chapterIdx, ink) {
   // R6 F4 fuzz 守卫(QA 修正口径): HOME/PLAYING 允许开局(PLAYING=重开), 模态态与结算态拒绝
   var st = GAME.state;
   if (st === GAME.flow.LEVELUP_MODAL || st === GAME.flow.REVIVE_MODAL ||
@@ -37044,6 +37145,7 @@ function startRun(chapterIdx) {
   armPetSortie("start");
   GAME.setState(GAME.flow.PLAYING);
   armEnterCine("chapter");
+  GAME.startInkTick = (ink === "sortie"); // 【v1.195】只有正片出击画软墨勾; 选章/加菜开战不画
   armEntranceWipe();                // 【v1.187】奶油擦入与开局音同一拍, 不延长章卡
   syncBgmForState(true);
   Audio.play("start");
@@ -37089,6 +37191,7 @@ function goHome() {
   resetChallengeRoom("idle");       // 【v1.21】回大厅收试炼光环, 避免世界层状态残留
   GAME.enterCine = null;
   GAME.entranceWipeT = 0;
+  GAME.startInkTick = false;
   GAME.entranceDust = null;
   GAME.settleInk = null;
   GAME.beadInk = null;
