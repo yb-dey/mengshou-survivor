@@ -32594,12 +32594,12 @@ function drawGearPanel(ctx, m) {
   } else {
     ctx.fillText("点背包或部位选中, 升品钮旁看出花什么、涨什么", CONFIG.viewW / 2, py + 112);
   }
-  // 【v1.181】选中件下一行短获取条(入袋→现在→下一步), 落在标题与六部位之间, 不挪热区
-  ctx.fillStyle = "#2e3c1c";
-  ctx.font = "bold 12px " + FONT_STACK;
-  ctx.fillText(hudFitText(ctx, gearPathCrumbLine(sel, deal), 620), CONFIG.viewW / 2, py + 128);
   // 【v1.175】入袋 / 现在 / 下一步。落在六部位与背包之间的空档, 不挪热区, 不改掉率/升品价。
-  drawPathSteps(ctx, 40, py + 358, 640, 36, gearPathSteps(sel, deal));
+  // 【v1.181】路径条略上移, 腾出一行短获取条(不被六部位/背包盖住)
+  drawPathSteps(ctx, 40, py + 340, 640, 32, gearPathSteps(sel, deal));
+  ctx.fillStyle = "#1c2810";
+  ctx.font = "bold 13px " + FONT_STACK;
+  ctx.fillText(hudFitText(ctx, gearPathCrumbLine(sel, deal), 620), CONFIG.viewW / 2, py + 386);
   if (GAME.hallForgeLastT > 0 && last && last.spent && last.ok && uiGearMsg.indexOf("升品!") >= 0) {
     drawSpendGainDuo(ctx, 40, py + 928, 640, 52, last);
   } else {
@@ -36371,7 +36371,7 @@ function init() {
       return {
         version: CONFIG.version,
         polish: polishDeskLine(),
-        scale: { elite: CONFIG.eliteDrawScale, boss: CONFIG.bossDrawScale, lethal: CONFIG.lethalDrawScale },
+        scale: { elite: CONFIG.eliteDrawScale, boss: CONFIG.bossDrawScale, lethal: CONFIG.lethalDrawScale, trash: CONFIG.trashDrawScale },
         gemHalf: CONFIG.gemDrawHalf,
         petHalf: CONFIG.petDrawHalf,
         fieldSprS: CONFIG.fieldSprS,
