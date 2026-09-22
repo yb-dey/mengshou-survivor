@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-09-23 00:42:07",
+  "generated_at": "2026-09-23 00:57:40",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
-    "vfx": 18,
+    "vfx": 21,
     "audio": 19,
     "bgm": 3,
     "sfx": 16
@@ -76,6 +76,13 @@
   ],
   "vfx": [
     {
+      "key": "fx_buff",
+      "cn": "",
+      "w": 96,
+      "h": 96,
+      "bytes": 5554
+    },
+    {
       "key": "fx_coin_burst",
       "cn": "金币迸发",
       "w": 96,
@@ -90,6 +97,13 @@
       "bytes": 6093
     },
     {
+      "key": "fx_debuff",
+      "cn": "",
+      "w": 96,
+      "h": 96,
+      "bytes": 5542
+    },
+    {
       "key": "fx_explosion",
       "cn": "大爆裂",
       "w": 128,
@@ -102,6 +116,13 @@
       "w": 96,
       "h": 96,
       "bytes": 5660
+    },
+    {
+      "key": "fx_freeze_shatter",
+      "cn": "",
+      "w": 96,
+      "h": 96,
+      "bytes": 5288
     },
     {
       "key": "fx_frost",

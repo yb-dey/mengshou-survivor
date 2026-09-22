@@ -24,6 +24,9 @@ meta = [
     ('fx_shockwave', '冲击波环', 'AoE 释放 / 范围冲击',  'pulse'),
     ('fx_portal',    '召唤门',   '召唤 / 传送',         'spin'),
     ('fx_coin_burst','金币迸发', '金币 / 得分拾取',     'pop'),
+    ('fx_freeze_shatter','冰碎', '冻结命中 / 碎冰解控',  'spin'),
+    ('fx_buff',      '增益光环', '攻防增益 / 强化',     'float'),
+    ('fx_debuff',    '减益光环', '减速 / 虚弱 / 诅咒',  'breathe'),
 ]
 
 def b64(name):

@@ -81,10 +81,13 @@
 | `vfx/fx_shockwave.png`| 冲击波环 | AoE 释放 / 范围冲击 | 128² |
 | `vfx/fx_portal.png`   | 召唤门 | 召唤 / 传送 | 128² |
 | `vfx/fx_coin_burst.png`| 金币迸发 | 金币 / 得分拾取 | 96² |
+| `vfx/fx_freeze_shatter.png` | 冰碎 | 冻结命中 / 碎冰解控 | 96² |
+| `vfx/fx_buff.png` | 增益光环 | 攻防增益 / 强化生效 | 96² |
+| `vfx/fx_debuff.png` | 减益光环 | 减速 / 虚弱 / 诅咒 | 96² |
 
 - **生成器**：`tools/gen_vfx.py`（仅标准库：自写 PNG 写出 + 加性辉光/柔边环/放射尖刺），`tools/build_vfx_demo.py` 产出内联展示页。
-- **试看页**：`vfx_demo.html`（18 张 base64 内联，深色背景 + CSS 动效，双击即看）。
-- **校验**：18/18 均为 `colorType=6` RGBA；非空白像素占比 8%–64%（锐利型如斩击/星爆稀疏、辉光型饱满），透明区域正确保留；涵盖命中/弹道/护盾/治疗/斩击/星爆/霜/升级/拾取/毒/爆炸/雷/群疗/位移/预警/冲击波/召唤门/金币等全机制。
+- **试看页**：`vfx_demo.html`（21 张 base64 内联，深色背景 + CSS 动效，双击即看）。
+- **校验**：21/21 均为 `colorType=6` RGBA；非空白像素占比 8%–64%（锐利型如斩击/星爆稀疏、辉光型饱满），透明区域正确保留；涵盖命中/弹道/护盾/治疗/斩击/星爆/霜/升级/拾取/毒/爆炸/雷/群疗/位移/预警/冲击波/召唤门/金币/冰碎/增益/减益等全机制。
 
 ## 3. 目录结构
 
@@ -97,7 +100,7 @@ _content_pack/
 ├── showcase.html          # 自包含展示页（精灵已内联，8 张）
 ├── audio_demo.html        # 音频试听页（引用 audio/*.wav）
 ├── codex.html             # 图鉴页（8 角色 背景/属性/对策 + 元素克制环）
-├── vfx_demo.html          # VFX 试看页（PNG base64 内联，18 个）
+├── vfx_demo.html          # VFX 试看页（PNG base64 内联，21 个）
 ├── sprites/               # 原始生成图（RGB，未抠）
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
@@ -118,7 +121,7 @@ _content_pack/
 │   ├── cp_sfx_lose.wav    # 失败
 │   └── cp_sfx_ui.wav      # UI 点击
 ├── vfx/                   # 程序化特效精灵（RGBA 真透底）
-│   └── fx_*.png（18 个）
+│   └── fx_*.png（21 个）
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -157,18 +160,18 @@ _content_pack/
 
 - 贴图：8/8 生成成功（6 萌兽 + Boss 森林古木 + Hero 灵鹿祭司）；8/8 透底为 RGBA；小兵/宠物 512²、Boss/Hero 1024²；展示页内联校验通过（8 张 `data:image/webp`）。
 - 音频：19/19 合成成功并校验——峰值均 85%（未削波），RMS 13.4%–30.0%（非空非静音）；试听页 `audio_demo.html` 数据驱动网格覆盖全部 19 条（3 BGM + 16 SFX），引用相对路径可双击播放。
-- VFX：18/18 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（18 张 `data:image/png`）。
-- 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、18 VFX（尺寸 / 体积）、19 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
+- VFX：21/21 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（21 张 `data:image/png`）。
+- 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、21 VFX（尺寸 / 体积）、19 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张精灵）+ 音乐（3 首 BGM + 16 SFX）+ 特效（18 个 VFX）+ 图鉴（codex）**四支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张精灵）+ 音乐（3 首 BGM + 16 SFX）+ 特效（21 个 VFX）+ 图鉴（codex）**四支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
 3. ~~**游戏事件音效库（16 个 SFX）**~~ ✅ 已交付 `cp_sfx_summon / heal / hit / kill / levelup / pickup / hurt / evolve / win / lose / ui.wav` + 音画配套 5 条（`explosion / dash / portal / coin / warning`，与 fx_explosion·fx_dash_trail·fx_portal·fx_coin_burst·fx_telegraph 成套）；试听页 `audio_demo.html` 升级为数据驱动网格（19 条）。
-4. ~~**VFX 精灵包**~~ ✅ 已交付 18 个程序化 RGBA 特效（10 基础：命中火花/火球/护盾泡/治疗光环/斩击弧/星爆/霜晶/升级星环/拾取闪光/毒云；+5 战斗向：大爆裂/雷击/治疗爆发/冲刺残影/预警圈；+3 通用向：冲击波环/召唤门/金币迸发）+ `vfx_demo.html` 试看页（18 张）。
+4. ~~**VFX 精灵包**~~ ✅ 已交付 21 个程序化 RGBA 特效（10 基础：命中火花/火球/护盾泡/治疗光环/斩击弧/星爆/霜晶/升级星环/拾取闪光/毒云；+5 战斗向：大爆裂/雷击/治疗爆发/冲刺残影/预警圈；+3 通用向：冲击波环/召唤门/金币迸发；+3 机制向：冰碎/增益光环/减益光环）+ `vfx_demo.html` 试看页（21 张）。
 5. ~~**角色图鉴 Codex**~~ ✅ 已交付 `codex.html`（8 角色背景/属性/对策 + 元素克制环）。
 6. **更多敌种/英雄（待云端出图恢复）**：原计划经云端 Miora 文生图扩种（雷羽鹰/霜甲熊/焰心术士等以补齐元素），但本环境 `miora_text_to_image` 暂不可用；将在云端图像生成恢复后继续，沿用同一 chibi 语言 + 抠图流程。
 7. **音频接线桥接（待主文件释放）**：当 `game/萌兽消消岛.html` 可编辑时，将 `cp_*` 三条原型音轨以「独立 key」登记进 `sfxFiles/DATA_SFX`（不影响现有 29 音源集），实现零冲突接入。

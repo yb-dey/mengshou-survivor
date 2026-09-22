@@ -32,6 +32,7 @@ VFX_CN = {
     'fx_explosion': '大爆裂', 'fx_lightning': '雷击', 'fx_heal_burst': '治疗爆发',
     'fx_dash_trail': '冲刺残影', 'fx_telegraph': '预警圈', 'fx_shockwave': '冲击波环',
     'fx_portal': '召唤门', 'fx_coin_burst': '金币迸发',
+    'fx_freeze_shatter': '冰碎', 'fx_buff': '增益光环', 'fx_debuff': '减益光环',
 }
 BGM_CN = {
     'cp_bgm_forest': '森林主题', 'cp_bgm_battle': '战斗主题', 'cp_bgm_boss': 'BOSS 主题',

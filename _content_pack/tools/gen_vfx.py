@@ -367,6 +367,65 @@ def fx_coin_burst(path, size=96):
     c.glow(cx, cy, size*0.07, (1.0, 1.0, 0.85), 1.0, soft=2.2)
     save(c, path)
 
+def fx_freeze_shatter(path, size=96):
+    """冰碎 / 冻结碎裂：冷蓝冰晶中心 + 放射冰碴 + 破碎环（冻结命中 / 碎冰解控）。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.34, (0.55, 0.85, 1.0), 0.35, soft=1.3)   # 冷蓝辉光
+    c.ring(cx, cy, size*0.20, size*0.30, (0.75, 0.95, 1.0), 0.6)   # 冰核环
+    rng = random.Random(53)
+    for k in range(6):                                              # 中心六边冰晶
+        a2 = k*math.pi/3
+        c.line(cx, cy, cx+math.cos(a2)*size*0.16, cy+math.sin(a2)*size*0.16, (0.85, 0.97, 1.0), 0.9, width=size*0.02)
+    for _ in range(10):                                            # 放射冰碴
+        ang = rng.uniform(0, 2*math.pi)
+        r = size*(0.24 + rng.random()*0.22)
+        x = cx + math.cos(ang)*r; y = cy + math.sin(ang)*r
+        sz = size*(0.04 + rng.random()*0.04)
+        for k in range(6):
+            a2 = ang + k*math.pi/3
+            c.line(x, y, x+math.cos(a2)*sz, y+math.sin(a2)*sz, (0.70, 0.92, 1.0), 0.8, width=size*0.012)
+    c.glow(cx, cy, size*0.08, (0.90, 1.0, 1.0), 0.9, soft=2.0)
+    save(c, path)
+
+def fx_buff(path, size=96):
+    """增益光环：青绿上升符环 + 上升三角 + 上升光点（攻防增益 / 强化生效）。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.40, (0.55, 0.90, 0.55), 0.28, soft=1.4)  # 青绿增益辉光
+    c.ring(cx, cy, size*0.26, size*0.36, (0.70, 1.0, 0.75), 0.7)   # 主环
+    for k in range(3):                                             # 上升三角箭头
+        yy = cy + size*0.16 - k*size*0.16
+        wd = size*0.10
+        c.line(cx-wd, yy+wd*0.5, cx, yy-wd*0.5, (0.85, 1.0, 0.85), 0.9, width=size*0.02)
+        c.line(cx+wd, yy+wd*0.5, cx, yy-wd*0.5, (0.85, 1.0, 0.85), 0.9, width=size*0.02)
+    rng = random.Random(59)
+    for _ in range(8):                                             # 上升光点
+        ang = rng.uniform(0, 2*math.pi)
+        r = size*(0.10 + rng.random()*0.18)
+        x = cx + math.cos(ang)*r; y = cy + math.sin(ang)*r
+        c.glow(x, y, size*0.04, (0.80, 1.0, 0.85), 0.7, soft=1.8)
+    save(c, path)
+
+def fx_debuff(path, size=96):
+    """减益光环：紫红下沉符环 + 下降倒三角 + 滴落暗点（减速 / 虚弱 / 诅咒）。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.40, (0.70, 0.25, 0.65), 0.26, soft=1.3)  # 紫红暗晕
+    c.ring(cx, cy, size*0.26, size*0.36, (0.90, 0.35, 0.80), 0.7)  # 主环
+    for k in range(3):                                             # 下降倒三角
+        yy = cy - size*0.16 + k*size*0.16
+        wd = size*0.10
+        c.line(cx-wd, yy-wd*0.5, cx, yy+wd*0.5, (1.0, 0.55, 0.90), 0.9, width=size*0.02)
+        c.line(cx+wd, yy-wd*0.5, cx, yy+wd*0.5, (1.0, 0.55, 0.90), 0.9, width=size*0.02)
+    rng = random.Random(67)
+    for _ in range(8):                                             # 滴落暗点
+        ang = rng.uniform(0, 2*math.pi)
+        r = size*(0.10 + rng.random()*0.18)
+        x = cx + math.cos(ang)*r; y = cy + math.sin(ang)*r
+        c.glow(x, y, size*0.04, (0.85, 0.35, 0.75), 0.7, soft=1.6)
+    save(c, path)
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/vfx'
     import os
@@ -389,8 +448,12 @@ if __name__ == '__main__':
     fx_shockwave(f'{out_dir}/fx_shockwave.png')
     fx_portal(f'{out_dir}/fx_portal.png')
     fx_coin_burst(f'{out_dir}/fx_coin_burst.png')
+    fx_freeze_shatter(f'{out_dir}/fx_freeze_shatter.png')
+    fx_buff(f'{out_dir}/fx_buff.png')
+    fx_debuff(f'{out_dir}/fx_debuff.png')
     for f in ['fx_hit_spark','fx_fireball','fx_shield','fx_heal','fx_slash','fx_star','fx_frost',
               'fx_levelup','fx_pickup','fx_poison','fx_explosion','fx_lightning','fx_heal_burst',
-              'fx_dash_trail','fx_telegraph','fx_shockwave','fx_portal','fx_coin_burst']:
+              'fx_dash_trail','fx_telegraph','fx_shockwave','fx_portal','fx_coin_burst',
+              'fx_freeze_shatter','fx_buff','fx_debuff']:
         print('PNG OK:', f)
 
