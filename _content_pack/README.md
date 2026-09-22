@@ -41,6 +41,24 @@
 - **试听页**：`audio_demo.html` 引用相对路径 `audio/*.wav`，双击即听，同样规避死资产。
 - **校验**：三曲峰值均 = 85%（未削波），RMS 15.9% / 22.3% / 23.6%（非空、非静音）。
 
+## 2.2 VFX 特效精灵（本轮新增 · 程序化真透底）
+
+> 与 AI 抠图不同，特效（辉光/星芒/护盾环）需要**柔和的 alpha**，AI 直出无 alpha 且抠图会破坏光晕。因此本包用**纯程序化**（几何 + 径向渐变，零依赖、零额度、不卡机）生成，得到干净可控的 RGBA。
+
+| 文件 | 中文名 | 用途 | 尺寸 |
+|---|---|---|---|
+| `vfx/fx_hit_spark.png` | 命中火花 | 敌人受击 / 暴击反馈 | 96² |
+| `vfx/fx_fireball.png`  | 火球 | 远程弹道 / 灼烧弹 | 96² |
+| `vfx/fx_shield.png`    | 护盾泡 | 召唤 / 护盾增益 | 128² |
+| `vfx/fx_heal.png`      | 治疗光环 | 英雄治疗 / 回血 | 128² |
+| `vfx/fx_slash.png`     | 斩击弧 | 近战挥砍 | 128² |
+| `vfx/fx_star.png`      | 星爆 | 击杀 / 得分 / 拾取 | 96² |
+| `vfx/fx_frost.png`     | 霜晶 | 冰冻 / 减速 | 96² |
+
+- **生成器**：`tools/gen_vfx.py`（仅标准库：自写 PNG 写出 + 加性辉光/柔边环/放射尖刺），`tools/build_vfx_demo.py` 产出内联展示页。
+- **试看页**：`vfx_demo.html`（7 张 base64 内联，深色背景 + CSS 动效，双击即看）。
+- **校验**：7/7 均为 `colorType=6` RGBA；非空白像素占比 8%–64%（锐利型如斩击/星爆稀疏、辉光型饱满），透明区域正确保留。
+
 ## 3. 目录结构
 
 ```
@@ -48,6 +66,7 @@ _content_pack/
 ├── README.md              # 本文件
 ├── showcase.html          # 自包含展示页（精灵已内联，8 张）
 ├── audio_demo.html        # 音频试听页（引用 audio/*.wav）
+├── vfx_demo.html          # VFX 试看页（PNG base64 内联，7 个）
 ├── sprites/               # 原始生成图（RGB，未抠）
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
@@ -56,10 +75,14 @@ _content_pack/
 │   ├── cp_bgm_forest.wav
 │   ├── cp_sfx_summon.wav
 │   └── cp_sfx_heal.wav
+├── vfx/                   # 程序化特效精灵（RGBA 真透底）
+│   └── fx_*.png（7 个）
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
-    └── synth_audio.py     # 森林 BGM + 召唤/治疗音效合成
+    ├── synth_audio.py     # 森林 BGM + 召唤/治疗音效合成
+    ├── gen_vfx.py         # VFX 特效生成（纯标准库）
+    └── build_vfx_demo.py  # 构建 VFX 内联展示页
 ```
 
 ## 4. 接入游戏路径（待主文件释放后）
@@ -90,6 +113,7 @@ _content_pack/
 
 - 贴图：8/8 生成成功（6 萌兽 + Boss 森林古木 + Hero 灵鹿祭司）；8/8 透底为 RGBA；小兵/宠物 512²、Boss/Hero 1024²；展示页内联校验通过（8 张 `data:image/webp`）。
 - 音频：3/3 合成成功并校验——峰值均 85%（未削波），RMS 15.9% / 22.3% / 23.6%（非空非静音）；试听页引用相对路径可双击播放。
+- VFX：7/7 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（7 张 `data:image/png`）。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
@@ -98,7 +122,7 @@ _content_pack/
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**新 creature 行为音效**~~ ✅ 已交付 `cp_sfx_summon.wav` / `cp_sfx_heal.wav`。
-3. **VFX 精灵包**：命中火花、护盾泡、治疗光环、火球等小尺寸特效图（64–128²，透明），增强战斗反馈。
+3. ~~**VFX 精灵包**~~ ✅ 已交付 7 个程序化 RGBA 特效（命中火花/火球/护盾泡/治疗光环/斩击弧/星爆/霜晶）+ `vfx_demo.html` 试看页。
 4. **更多敌种/英雄**：按同一 chibi 语言与抠图流程持续扩充图鉴。
 5. **音频接线桥接（待主文件释放）**：当 `game/萌兽消消岛.html` 可编辑时，将 `cp_*` 三条原型音轨以「独立 key」登记进 `sfxFiles/DATA_SFX`（不影响现有 29 音源集），实现零冲突接入。
 
