@@ -203,7 +203,7 @@ export function audit(srcRaw) {
 
 // ---------------- selftest ----------------
 function selftest() {
-  const HTML = process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
+  const HTML = process.env.GAME_HTML || process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
   const base = fs.readFileSync(HTML, 'utf8');
   const cases = [];
 
@@ -260,7 +260,7 @@ if (isMain) {
   if (process.argv.includes('--selftest')) {
     process.exit(selftest() ? 0 : 1);
   } else {
-    const HTML = process.argv[2] || 'game/萌兽消消岛.html';
+    const HTML = process.env.GAME_HTML || process.argv[2] || 'game/萌兽消消岛.html';
     const src = fs.readFileSync(HTML, 'utf8');
     const r = audit(src);
     console.log(`ci/fork-feel-count.mjs — GATE — ${HTML}`);
