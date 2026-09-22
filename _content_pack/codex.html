@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 图鉴 Codex</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(120% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:#eaf6ee; min-height:100vh; padding:46px 20px;}
+  h1{font-size:30px;letter-spacing:2px;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+  .sub{text-align:center;opacity:.78;margin:6px 0 28px;font-size:14px}
+  .wheel{display:flex;justify-content:center;margin:0 auto 34px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;max-width:1040px;margin:0 auto}
+  .card{background:linear-gradient(165deg,#1f5c3a,#143e28);border:1px solid rgba(232,196,99,.3);
+    border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:10px;
+    box-shadow:0 12px 30px rgba(0,0,0,.35);transition:transform .2s}
+  .card:hover{transform:translateY(-4px)}
+  .card.boss{border-color:#ffb454;box-shadow:0 12px 34px rgba(255,140,40,.3)}
+  .card.hero{border-color:#7fd3ff;box-shadow:0 12px 34px rgba(80,180,255,.25)}
+  .top{display:flex;align-items:center;gap:14px}
+  .sprite{width:88px;height:88px;object-fit:contain;background:radial-gradient(circle,#0c1a28,#060c14);border-radius:12px;padding:6px}
+  .nm{font-size:19px;font-weight:700}
+  .en{font-size:12px;opacity:.6}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+  .tag{font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.12)}
+  .tag.el{font-weight:700}
+  .tag.rar{background:rgba(232,196,99,.22);color:#f0d488}
+  .bar{height:8px;border-radius:6px;background:rgba(255,255,255,.12);overflow:hidden;position:relative}
+  .bar i{display:block;height:100%;border-radius:6px}
+  .stat{font-size:12px;display:flex;align-items:center;gap:8px}
+  .stat b{width:34px;opacity:.7;font-weight:400}
+  .stat .bar{flex:1}
+  .trait{font-size:12px;background:rgba(255,255,255,.08);border-radius:10px;padding:8px 10px}
+  .trait b{color:#ffd87a}
+  .lore{font-size:13px;line-height:1.6;opacity:.9}
+  .strat{font-size:12px;line-height:1.5;opacity:.85;border-left:3px solid #ffd87a;padding-left:10px}
+  .strat b{color:#ffd87a}
+  footer{text-align:center;margin-top:36px;font-size:12px;opacity:.45}
+</style>
+</head>
+<body>
+  <h1>🌿 森灵萌兽 · 图鉴 Codex</h1>
+  <div class="sub">《萌兽消消岛》森灵内容包 · 8 位角色的背景、属性与对策（独立命名空间）</div>
+
+  <div class="wheel">
+    <svg width="230" height="230" viewBox="0 0 230 230">
+      <defs>
+        <marker id="arw" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#ffe9a8"/>
+        </marker>
+      </defs>
+      <!-- 元素环：火>木>土>水>火，光↔暗 -->
+      <circle cx="115" cy="115" r="92" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+      <g font-size="15" font-weight="700" text-anchor="middle" fill="#fff">
+        <circle cx="115" cy="35"  r="20" fill="#e8533a"/><text x="115" y="40">火</text>
+        <circle cx="190" cy="92" r="20" fill="#5fbf6a"/><text x="190" y="97">木</text>
+        <circle cx="162" cy="175" r="20" fill="#c9a05a"/><text x="162" y="180">土</text>
+        <circle cx="68"  cy="175" r="20" fill="#4aa8e8"/><text x="68"  y="180">水</text>
+        <circle cx="40"  cy="92" r="20" fill="#f3e06a"/><text x="40"  y="97">光</text>
+        <circle cx="115" cy="115" r="18" fill="#9a6bd6"/><text x="115" y="120" font-size="13">暗</text>
+      </g>
+      <!-- 克制箭头 火→木→土→水→火 -->
+      <g stroke="#ffe9a8" stroke-width="2.5" fill="none" marker-end="url(#arw)">
+        <path d="M135,52 Q165,60 178,80"/>
+        <path d="M178,108 Q176,140 158,160"/>
+        <path d="M132,165 Q100,176 78,162"/>
+        <path d="M60,108 Q62,76 80,56"/>
+      </g>
+      <!-- 光↔暗 互克 -->
+      <line x1="98" y1="115" x2="132" y2="115" stroke="#ffe9a8" stroke-width="2.5" marker-end="url(#arw)"/>
+      <line x1="132" y1="120" x2="98" y2="120" stroke="#ffe9a8" stroke-width="2.5" marker-end="url(#arw)"/>
+      <text x="115" y="218" text-anchor="middle" font-size="11" fill="rgba(255,255,255,.7)">火克木 · 木克土 · 土克水 · 水克火 · 光暗互克（冰=水亚种 · 雷=光亚种）</text>
+    </svg>
+  </div>
+
+  <div class="grid">
+    <!-- 芽芽兔 -->
+    <div class="card">
+      <div class="top"><img class="sprite" src="sprites_alpha/sprout_bunny.webp" alt="芽芽兔">
+        <div><div class="nm">芽芽兔 <span class="en">Sprout Bunny</span></div>
+        <div class="tags"><span class="tag el" style="background:#5fbf6a">木</span><span class="tag">敌方·小兵</span><span class="tag rar">普通</span></div></div></div>
+      <div class="stat"><b>HP</b><div class="bar"><i style="width:25%;background:#5fbf6a"></i></div></div>
+      <div class="stat"><b>速度</b><div class="bar"><i style="width:55%;background:#7fd3ff"></i></div></div>
+      <div class="trait"><b>分裂</b>：被击杀原地留下芽苗，短暂后萌出新的小兔。</div>
+      <div class="lore">林间蹦跳的嫩芽精灵，看似无害，却总在不经意间铺满整片草地。</div>
+      <div class="strat"><b>对策</b>：优先清理，避免被分裂出的小兔逐步淹没阵地。</div>
+    </div>
+    <!-- 火苗狐 -->
+    <div class="card">
+      <div class="top"><img class="sprite" src="sprites_alpha/flame_fox.webp" alt="火苗狐">
+        <div><div class="nm">火苗狐 <span class="en">Flame Fox</span></div>
+        <div class="tags"><span class="tag el" style="background:#e8533a">火</span><span class="tag">敌方·快速</span><span class="tag rar">普通</span></div></div></div>
+      <div class="stat"><b>HP</b><div class="bar"><i style="width:25%;background:#e8533a"></i></div></div>
+      <div class="stat"><b>速度</b><div class="bar"><i style="width:90%;background:#7fd3ff"></i></div></div>
+      <div class="trait"><b>灼烧</b>：接触玩家会附加持续灼烧伤害。</div>
+      <div class="lore">尾尖跳着火苗的顽皮狐狸，跑得飞快，所过之处留下焦痕。</div>
+      <div class="strat"><b>对策</b>：高机动但脆皮，用范围伤害或减速在路径上拦截。</div>
+    </div>
+    <!-- 水滴蛙 -->
+    <div class="card">
+      <div class="top"><img class="sprite" src="sprites_alpha/water_frog.webp" alt="水滴蛙">
+        <div><div class="nm">水滴蛙 <span class="en">Water Frog</span></div>
+        <div class="tags"><span class="tag el" style="background:#4aa8e8">水</span><span class="tag">敌方·远程</span><span class="tag rar">普通</span></div></div></div>
+      <div class="stat"><b>HP</b><div class="bar"><i style="width:55%;background:#4aa8e8"></i></div></div>
+      <div class="stat"><b>速度</b><div class="bar"><i style="width:55%;background:#7fd3ff"></i></div></div>
+      <div class="trait"><b>吐水弹</b>：周期发射可追踪的水弹。</div>
+      <div class="lore">鼓着腮帮的水塘居民，没事就爱朝经过的人吐水泡。</div>
+      <div class="strat"><b>对策</b>：保持走位规避弹道，近身可快速击杀。</div>
+    </div>
+    <!-- 石甲龟 -->
+    <div class="card">
+      <div class="top"><img class="sprite" src="sprites_alpha/stone_turtle.webp" alt="石甲龟">
+        <div><div class="nm">石甲龟 <span class="en">Stone Turtle</span></div>
+        <div class="tags"><span class="tag el" style="background:#c9a05a">土</span><span class="tag">敌方·坦克</span><span class="tag rar">稀有</span></div></div></div>
+      <div class="stat"><b>HP</b><div class="bar"><i style="width:95%;background:#c9a05a"></i></div></div>
+      <div class="stat"><b>速度</b><div class="bar"><i style="width:20%;background:#7fd3ff"></i></div></div>
+      <div class="trait"><b>减伤护盾</b>：受到伤害 −40%。</div>
+      <div class="lore">背负厚甲的沉稳老龟，慢吞吞却几乎打不动。</div>
+      <div class="strat"><b>对策</b>：高血厚甲，用水/光系持续输出慢慢磨穿护盾。</div>
+    </div>
+    <!-- 星羽鸟 -->
+    <div class="card">
+      <div class="top"><img class="sprite" src="sprites_alpha/star_bird.webp" alt="星羽鸟">
+        <div><div class="nm">星羽鸟 <span class="en">Star Bird</span></div>
+        <div class="tags"><span class="tag el" style="background:#f3e06a">光</span><span class="tag">敌方·飞行</span><span class="tag rar">稀有</span></div></div></div>
+      <div class="stat"><b>HP</b><div class="bar"><i style="width:55%;background:#f3e06a"></i></div></div>
+      <div class="stat"><b>速度</b><div class="bar"><i style="width:100%;background:#7fd3ff"></i></div></div>
+      <div class="trait"><b>俯冲</b>：高空蓄力后向玩家俯冲撞击。</div>
+      <div class="lore">栖于林冠的星光之鸟，振翅时洒落细碎星尘。</div>
+      <div class="strat"><b>对策</b>：极快但轨迹可预判，俯冲落点提前闪避再反击。</div>
+    </div>
+    <!-- 棉花羊 -->
+    <div class="card">
+      <div class="top"><img class="sprite" src="sprites_alpha/cotton_sheep.webp" alt="棉花羊">
+        <div><div class="nm">棉花羊 <span class="en">Cotton Sheep</span></div>
+        <div class="tags"><span class="tag el" style="background:#f3e06a">光/治愈</span><span class="tag">友方·宠物</span><span class="tag rar">史诗</span></div></div></div>
+      <div class="stat"><b>HP</b><div class="bar"><i style="width:55%;background:#f3e06a"></i></div></div>
+      <div class="stat"><b>速度</b><div class="bar"><i style="width:30%;background:#7fd3ff"></i></div></div>
+      <div class="trait"><b>掉落羊毛</b>：被击败有概率掉落可回血的羊毛。</div>
+      <div class="lore">软糯的云朵绵羊，蹭一蹭就能让人安心下来。</div>
+      <div class="strat"><b>对策</b>：优先捕捉或保护，持续为队伍提供续航。</div>
+    </div>
+    <!-- 森林古木 BOSS -->
+    <div class="card boss">
+      <div class="top"><img class="sprite" src="sprites_alpha/forest_ancient.webp" alt="森林古木">
+        <div><div class="nm">森林古木 <span class="en">Forest Ancient</span></div>
+        <div class="tags"><span class="tag el" style="background:#5fbf6a">木/土</span><span class="tag">敌方·BOSS</span><span class="tag rar">传说</span></div></div></div>
+      <div class="stat"><b>HP</b><div class="bar"><i style="width:100%;background:#5fbf6a"></i></div></div>
+      <div class="stat"><b>速度</b><div class="bar"><i style="width:8%;background:#7fd3ff"></i></div></div>
+      <div class="trait"><b>召唤藤蔓 + 范围践踏</b>：周期召唤小藤蔓掩护，并释放震屏践踏。</div>
+      <div class="lore">沉睡千年的林心古木，被惊扰后舒展枝桠，怒意撼动整片森林。</div>
+      <div class="strat"><b>对策</b>：优先清理召唤出的藤蔓，踩准践踏间隙集火输出。</div>
+    </div>
+    <!-- 灵鹿祭司 HERO -->
+    <div class="card hero">
+      <div class="top"><img class="sprite" src="sprites_alpha/spirit_deer.webp" alt="灵鹿祭司">
+        <div><div class="nm">灵鹿祭司 <span class="en">Spirit Deer</span></div>
+        <div class="tags"><span class="tag el" style="background:#f3e06a">光</span><span class="tag">可玩英雄</span><span class="tag rar">史诗</span></div></div></div>
+      <div class="stat"><b>HP</b><div class="bar"><i style="width:55%;background:#f3e06a"></i></div></div>
+      <div class="stat"><b>速度</b><div class="bar"><i style="width:55%;background:#7fd3ff"></i></div></div>
+      <div class="trait"><b>星辉治疗 + 净化</b>：持续为友军回复生命，并清除负面状态。</div>
+      <div class="lore">引动星辉的灵鹿，所踏之处伤痕愈合，阴霾退散。</div>
+      <div class="strat"><b>对策（阵容）</b>：队伍核心续航位，配合前排承伤可稳住战线。</div>
+    </div>
+  </div>
+
+  <footer>萌兽消消岛 · 森灵内容包 · 图鉴与特效均为独立命名空间，不改动主游戏文件</footer>
+</body>
+</html>

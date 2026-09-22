@@ -54,6 +54,9 @@
 | `vfx/fx_slash.png`     | 斩击弧 | 近战挥砍 | 128² |
 | `vfx/fx_star.png`      | 星爆 | 击杀 / 得分 / 拾取 | 96² |
 | `vfx/fx_frost.png`     | 霜晶 | 冰冻 / 减速 | 96² |
+| `vfx/fx_levelup.png`   | 升级星环 | 升级 / 强化 | 128² |
+| `vfx/fx_pickup.png`    | 拾取闪光 | 宝石 / 金币拾取 | 96² |
+| `vfx/fx_poison.png`    | 毒云 | 中毒 / 持续伤害 | 96² |
 
 - **生成器**：`tools/gen_vfx.py`（仅标准库：自写 PNG 写出 + 加性辉光/柔边环/放射尖刺），`tools/build_vfx_demo.py` 产出内联展示页。
 - **试看页**：`vfx_demo.html`（7 张 base64 内联，深色背景 + CSS 动效，双击即看）。
@@ -66,7 +69,8 @@ _content_pack/
 ├── README.md              # 本文件
 ├── showcase.html          # 自包含展示页（精灵已内联，8 张）
 ├── audio_demo.html        # 音频试听页（引用 audio/*.wav）
-├── vfx_demo.html          # VFX 试看页（PNG base64 内联，7 个）
+├── codex.html             # 图鉴页（8 角色 背景/属性/对策 + 元素克制环）
+├── vfx_demo.html          # VFX 试看页（PNG base64 内联，10 个）
 ├── sprites/               # 原始生成图（RGB，未抠）
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
@@ -76,7 +80,7 @@ _content_pack/
 │   ├── cp_sfx_summon.wav
 │   └── cp_sfx_heal.wav
 ├── vfx/                   # 程序化特效精灵（RGBA 真透底）
-│   └── fx_*.png（7 个）
+│   └── fx_*.png（10 个）
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -113,17 +117,18 @@ _content_pack/
 
 - 贴图：8/8 生成成功（6 萌兽 + Boss 森林古木 + Hero 灵鹿祭司）；8/8 透底为 RGBA；小兵/宠物 512²、Boss/Hero 1024²；展示页内联校验通过（8 张 `data:image/webp`）。
 - 音频：3/3 合成成功并校验——峰值均 85%（未削波），RMS 15.9% / 22.3% / 23.6%（非空非静音）；试听页引用相对路径可双击播放。
-- VFX：7/7 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（7 张 `data:image/png`）。
+- VFX：10/10 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（10 张 `data:image/png`）。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张精灵）+ 音乐（BGM + 2 SFX）**双支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张精灵）+ 音乐（BGM + 2 SFX）+ 特效（10 个 VFX）+ 图鉴（codex）**四支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**新 creature 行为音效**~~ ✅ 已交付 `cp_sfx_summon.wav` / `cp_sfx_heal.wav`。
-3. ~~**VFX 精灵包**~~ ✅ 已交付 7 个程序化 RGBA 特效（命中火花/火球/护盾泡/治疗光环/斩击弧/星爆/霜晶）+ `vfx_demo.html` 试看页。
-4. **更多敌种/英雄**：按同一 chibi 语言与抠图流程持续扩充图鉴。
-5. **音频接线桥接（待主文件释放）**：当 `game/萌兽消消岛.html` 可编辑时，将 `cp_*` 三条原型音轨以「独立 key」登记进 `sfxFiles/DATA_SFX`（不影响现有 29 音源集），实现零冲突接入。
+3. ~~**VFX 精灵包**~~ ✅ 已交付 10 个程序化 RGBA 特效（命中火花/火球/护盾泡/治疗光环/斩击弧/星爆/霜晶/升级星环/拾取闪光/毒云）+ `vfx_demo.html` 试看页。
+4. ~~**角色图鉴 Codex**~~ ✅ 已交付 `codex.html`（8 角色背景/属性/对策 + 元素克制环）。
+5. **更多敌种/英雄（待云端出图恢复）**：原计划经云端 Miora 文生图扩种（雷羽鹰/霜甲熊/焰心术士等以补齐元素），但本环境 `miora_text_to_image` 暂不可用；将在云端图像生成恢复后继续，沿用同一 chibi 语言 + 抠图流程。
+6. **音频接线桥接（待主文件释放）**：当 `game/萌兽消消岛.html` 可编辑时，将 `cp_*` 三条原型音轨以「独立 key」登记进 `sfxFiles/DATA_SFX`（不影响现有 29 音源集），实现零冲突接入。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

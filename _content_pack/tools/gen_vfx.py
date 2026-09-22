@@ -186,6 +186,54 @@ def fx_frost(path, size=96):
             c.line(x, y, x2, y2, (0.75, 0.92, 1.0), 0.85, width=size*0.015)
     save(c, path)
 
+def fx_levelup(path, size=128):
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.30, (1.0, 0.85, 0.3), 0.9, soft=2.0)     # 金辉核心
+    c.ring(cx, cy, size*0.18, size*0.30, (1.0, 0.9, 0.4), 0.7)     # 升阶环
+    rng = random.Random(3)
+    for _ in range(9):                                              # 向上星芒
+        ang = -math.pi/2 + rng.uniform(-0.7, 0.7)
+        r = size*(0.30 + rng.random()*0.18)
+        c.line(cx, cy, cx+math.cos(ang)*r, cy+math.sin(ang)*r, (1.0, 0.92, 0.45), 0.85, width=size*0.018)
+    save(c, path)
+
+def fx_pickup(path, size=96):
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.34, (1.0, 0.85, 0.25), 0.55, soft=1.6)   # 暖黄辉光
+    # 菱形宝石
+    d = size*0.20
+    for t in range(-20, 21):
+        f = t/20.0
+        x = cx + f*d
+        y = cy + abs(f)*d*0.0
+        yy = cy + (1-abs(f))*d
+        c.line(cx, cy-d, x, yy, (1.0, 0.9, 0.4), 0.9, width=size*0.03)
+        c.line(cx, cy+d, x, yy, (1.0, 0.9, 0.4), 0.9, width=size*0.03)
+        c.line(cx-d, cy, x, yy, (1.0, 0.95, 0.5), 0.9, width=size*0.03)
+        c.line(cx+d, cy, x, yy, (1.0, 0.95, 0.5), 0.9, width=size*0.03)
+    c.glow(cx, cy, size*0.08, (1.0, 1.0, 0.8), 1.0, soft=2.2)     # 高光
+    save(c, path)
+
+def fx_poison(path, size=96):
+    c = Canvas(size, size)
+    cx = cy = size/2
+    rng = random.Random(5)
+    for _ in range(5):                                              # 毒云团
+        ang = rng.uniform(0, 2*math.pi)
+        r = size*(0.05 + rng.random()*0.20)
+        x = cx + math.cos(ang)*r
+        y = cy + math.sin(ang)*r
+        c.glow(x, y, size*0.22, (0.45, 0.85, 0.25), 0.4, soft=1.2)
+    for _ in range(8):                                              # 深色毒点
+        ang = rng.uniform(0, 2*math.pi)
+        r = size*(0.05 + rng.random()*0.18)
+        x = cx + math.cos(ang)*r
+        y = cy + math.sin(ang)*r
+        c.glow(x, y, size*0.05, (0.25, 0.55, 0.15), 0.7, soft=1.6)
+    save(c, path)
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/vfx'
     import os
@@ -197,6 +245,9 @@ if __name__ == '__main__':
     fx_slash(f'{out_dir}/fx_slash.png')
     fx_star(f'{out_dir}/fx_star.png')
     fx_frost(f'{out_dir}/fx_frost.png')
-    for f in ['fx_hit_spark','fx_fireball','fx_shield','fx_heal','fx_slash','fx_star','fx_frost']:
+    fx_levelup(f'{out_dir}/fx_levelup.png')
+    fx_pickup(f'{out_dir}/fx_pickup.png')
+    fx_poison(f'{out_dir}/fx_poison.png')
+    for f in ['fx_hit_spark','fx_fireball','fx_shield','fx_heal','fx_slash','fx_star','fx_frost','fx_levelup','fx_pickup','fx_poison']:
         print('PNG OK:', f)
 

@@ -13,6 +13,9 @@ meta = [
     ('fx_slash',     '斩击弧',   '近战挥砍',           'swing'),
     ('fx_star',      '星爆',     '击杀 / 得分 / 拾取',  'pop'),
     ('fx_frost',     '霜晶',     '冰冻 / 减速',         'spin'),
+    ('fx_levelup',   '升级星环', '升级 / 强化',         'pop'),
+    ('fx_pickup',    '拾取闪光', '宝石 / 金币拾取',     'pulse'),
+    ('fx_poison',    '毒云',     '中毒 / 持续伤害',     'breathe'),
 ]
 
 def b64(name):
