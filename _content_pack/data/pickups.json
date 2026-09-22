@@ -1,0 +1,74 @@
+{
+  "system": "森灵局内拾取物系统",
+  "version": 1,
+  "description": "《萌兽消消岛》局内拾取物（pickups）规格（纯设计数据，非游戏代码）。敌人死亡概率掉落地板拾取物，玩家走位触碰即生效——这是幸存品类「走位即决策」的核心反馈层（Vampire Survivors 的地板食物/金币袋/磁石范式）。拾取物分局内即时效果（治疗/清屏/护盾/吸附/重抽）与成长转化（金币袋/经验晶露）两类；所有货币型拾取物的产出均计入 data/economy.json 既有 faucet（金币袋=kill 口径的形态之一、宝箱大额币=clear/first_clear 口径），**不新增任何货币水龙头**。精灵由 tools/gen_pickups.py 程序化生成（64×64 RGBA 真透底，零外部素材）。",
+  "references": [
+    "Vampire Survivors 地板拾取物：地面食物（回血）、金币袋、真空磁石（吸全屏经验）、骰子（重抽升级选项），掉落稀有度分层（vampire-survivors.fandom.com）",
+    "Brotato / 20 Minutes Till Dawn 的局内即时道具反馈：拾取瞬间有明确音效+飘字，强化「走位即决策」"
+  ],
+  "rarity": {
+    "common": { "cn": "常见", "color": "#b9c6bd", "note": "常规掉落，单局高频" },
+    "rare":   { "cn": "稀有", "color": "#5ab6ff", "note": "低概率掉落/宝箱限定，效果质变" }
+  },
+  "dropRules": {
+    "enemyDrop": {
+      "chancePerKill": 0.06,
+      "note": "每击杀 6% 概率掉落一个拾取物（波次内小怪）；精英必掉、Boss 必掉宝箱。权重表和恒为 100。",
+      "weights": { "pickup_heal": 30, "pickup_coin": 25, "pickup_exp": 20, "pickup_magnet": 8, "pickup_bomb": 7, "pickup_shield": 6, "pickup_reroll": 4 }
+    },
+    "chestOpen": {
+      "note": "宝箱开出表（精英/Boss 掉落宝箱后开启），权重和恒为 100。coins_big 归 economy.json clear/first_clear 口径。",
+      "weights": { "coins_small": 40, "coins_big": 20, "heal_full": 15, "shield": 10, "reroll": 10, "bomb": 5 }
+    }
+  },
+  "pickups": {
+    "pickup_heal": {
+      "cn": "治愈果实", "rarity": "common",
+      "effect": { "healPct": 20 },
+      "icon": "pickups/pickup_heal.png", "sfx": "cp_sfx_heal.wav",
+      "desc": "回复 20% 最大生命。高压波次的保命稻草，掉落权重最高的拾取物。"
+    },
+    "pickup_coin": {
+      "cn": "金币袋", "rarity": "common",
+      "effect": { "coins": 15 },
+      "icon": "pickups/pickup_coin.png", "sfx": "cp_sfx_coin.wav",
+      "desc": "+15 森灵币（计入 economy.json kill 击杀掉落口径）。局外养成的基础进项。"
+    },
+    "pickup_exp": {
+      "cn": "经验晶露", "rarity": "common",
+      "effect": { "exp": 50 },
+      "icon": "pickups/pickup_exp.png", "sfx": "cp_sfx_pickup.wav",
+      "desc": "+50 经验（约等于 1–2 次升级所需）。中期升级节奏的加速器。"
+    },
+    "pickup_magnet": {
+      "cn": "磁石", "rarity": "rare",
+      "effect": { "magnetSec": 5 },
+      "icon": "pickups/pickup_magnet.png", "sfx": "cp_sfx_buff.wav",
+      "desc": "5 秒内吸附全屏经验晶石与拾取物。清场后的「收割时刻」，与经验流构筑（好学/悟性）联动。"
+    },
+    "pickup_bomb": {
+      "cn": "震地菇", "rarity": "rare",
+      "effect": { "screenDamage": 50 },
+      "icon": "pickups/pickup_bomb.png", "sfx": "cp_sfx_explosion.wav",
+      "desc": "对全屏敌人造成 50 点伤害（配套 fx_explosion + 屏震）。被围时的翻盘键。"
+    },
+    "pickup_shield": {
+      "cn": "灵盾花", "rarity": "rare",
+      "effect": { "shieldCharges": 3, "shieldSec": 10 },
+      "icon": "pickups/pickup_shield.png", "sfx": "cp_sfx_buff.wav",
+      "desc": "10 秒内获得可抵挡 3 次伤害的护盾（配套 icons/st_shield）。冲精英群的护身符。"
+    },
+    "pickup_reroll": {
+      "cn": "幸运骰", "rarity": "rare",
+      "effect": { "reroll": 1 },
+      "icon": "pickups/pickup_reroll.png", "sfx": "cp_sfx_ui.wav",
+      "desc": "升级三选一时可重抽 1 次（存入局内库存，与 §2.10 升级系统联动）。构筑流洗牌器。"
+    },
+    "pickup_chest": {
+      "cn": "宝箱", "rarity": "rare",
+      "effect": { "openTable": "chestOpen" },
+      "icon": "pickups/pickup_chest.png", "sfx": "cp_sfx_evolve.wav",
+      "desc": "精英/Boss 必掉，开启按 chestOpen 权重表结算（金币/满血/护盾/重抽/震地）。惊喜感载体。"
+    }
+  }
+}

@@ -254,6 +254,20 @@
 - **生成器**：`tools/build_achievement_chart.py`（读 `data/achievements.json`，纯标准库渲染，零依赖、不卡机）。
 - **经济边界（与 §2.11 的联动约束）**：全表唯二货币出口是「首通类成就 → economy.faucets[first_clear]（2,097 币口径）」与「每日任务 → economy.faucets[daily]（1,259 币口径，20 币/日）」；其余 17 个成就均为非货币奖励（title / codex / frame）。校验断言：任何成就条目不得携带货币 reward（`coins_first_clear` 判定除外）、`daily.rewardCoins` 恒等于 20——保证成就系统上线不改变 R28 经济表的积压率 0.22。
 - **校验**：`data/achievements.json` 为合法 JSON；19+6 条 icon 引用 `os.path.exists` 零缺失；枚举全合法（group ∈ 5 组、metric.type ∈ 17 种）；跨表引用全存在（levelClear 目标 ∈ wave_design 关卡 id 1–10、reactionKinds 目标 ≤ 10 种反应、statusKinds 目标 ≤ 7 种状态）；`achievement_chart.html` 0 占位符、25 个名称全在、17 图标引用均存在；`achievement_lab.html` 内联 `<script>` 经 `node --check` 通过（file:// 双击可用），内联 `ACH`/`DPOOL`/`DPICK`/`DREWARD` 与 JSON 逐项比对 **DATA_SYNC_OK**（19 成就 / 6 任务 / 抽 3 / 20 币均无漂移）。
+## 2.13 局内拾取物系统（设计规格 + 程序化精灵 + 可玩实验室 · 本轮新增）
+
+> 幸存品类「走位即决策」的核心反馈层：敌人死亡 6% 概率掉落地板拾取物、精英/Boss 必掉宝箱，玩家移动触碰即生效。8 种拾取物分局内即时效果（治愈果实/磁石/震地菇/灵盾花/幸运骰）与成长转化（金币袋/经验晶露/宝箱）两类；所有货币型产出计入 `data/economy.json` 既有 faucet（金币袋=kill 口径、宝箱大额币=clear 口径），**不新增任何货币水龙头**。设计锚定：Vampire Survivors 地板食物/金币袋/真空磁石/骰子范式。8 个精灵由 `tools/gen_pickups.py` 程序化生成（64×64 RGBA 真透底，与 icons/ 圆牌、skill_icons/ 方板、pickups/ 小物件形成第四系视觉语言），音效全部复用既有 `cp_sfx_*`（零新音频）。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `data/pickups.json` | 拾取物系统规格 | 8 种拾取物（常见 3 / 稀有 5），每项含 `rarity / effect / icon / sfx / desc`；`dropRules`（击杀掉落 6% + 权重表和=100；宝箱开箱权重表和=100） |
+| `pickups/*.png` | 8 个程序化精灵 | 64×64 RGBA 真透底（gen_pickups.py 纯标准库生成，非空行占比 73–80%），Q 版可爱 + 深色描边 + 微辉光 |
+| `pickup_chart.html` | 掉落表 + 拾取物卡组可视化 | 击杀掉落权重条 + 宝箱开箱权重条 + 按稀有度分组卡组（数据驱动，零图片生成） |
+| `pickup_lab.html` | 拾取物可玩实验室 | 纯前端 `file://` 校验场：鼠标移动英雄 → 触碰拾取物即时生效（回血/飘字/吸附动画/清屏震屏/护盾环/开箱弹结果），击杀掉落与精英必掉按钮真实按权重表抽卡 |
+
+- **生成器**：`tools/gen_pickups.py`（复用 gen_vfx.Canvas 距离场画法，8 形状函数：圆/圆角矩形/水滴/多瓣花）+ `tools/build_pickup_chart.py`（读 JSON 纯标准库渲染）。
+- **联动**：幸运骰 ↔ §2.10 升级三选一（重抽库存）；金币袋/宝箱币 ↔ §2.11 经济表（kill/clear 口径，积压率 0.22 不变）；宝箱掉落者 ↔ §2.6 波次精英与 Boss；磁石吸附 ↔ 经验晶露与 §2.10 经验曲线。
+- **校验**：`data/pickups.json` 合法 JSON；两掉落权重表和均=100；8 icon + 8 sfx 引用零缺失；8 精灵均 64×64 RGBA（colorType=6）非空行占比 73–80%；`pickup_chart.html` 0 占位符、8 名称全在、8 图标引用均存在；`pickup_lab.html` 内联 `<script>` 经 `node --check` 通过，内联 `PICKUP`/`DROP`/`CHEST` 与 JSON 逐项比对一致（8 拾取物 / 6% 掉落 / 两权重表无漂移），经济边界断言通过（货币拾取物单一额 ≤ 50，无新增 faucet）。
 ## 3. 目录结构
 
 ```
@@ -278,6 +292,8 @@ _content_pack/
 ├── meta_lab.html           # 局外成长可玩实验室（meta_upgrades.json 真跑起来，赚币→永久强化→更强，纯前端 file:// 双击即开）
 ├── achievement_chart.html  # 成就与任务系统：奖励政策 + 19 成就 × 5 组 + 每日任务池（数据驱动，内联 SVG/HTML）
 ├── achievement_lab.html    # 留存系统可玩实验室（achievements.json 真跑起来，进度→达成→发奖，纯前端 file:// 双击即开）
+├── pickup_chart.html       # 局内拾取物系统：击杀掉落表 + 宝箱开箱表 + 8 种拾取物卡组（数据驱动，内联 SVG/HTML）
+├── pickup_lab.html         # 拾取物可玩实验室（pickups.json 真跑起来，触碰即生效，纯前端 file:// 双击即开）
 ├── boss_arena.html         # BOSS 竞技场（boss_phases.json 三阶段可玩校验场，纯前端 file:// 双击即开）
 ├── campaign.html          # 战役模式（wave_design.json 10 关 × 多波次可玩校验场，逐波刷怪，纯前端 file:// 双击即开）
 ├── sprites/               # 原始生成图（RGB，未抠）
@@ -320,6 +336,8 @@ _content_pack/
 ├── icons/                 # 状态图标（RGBA 真透底，常驻 HUD 指示）
 │   └── st_*.png（12 个）
 ├── skill_icons/           # 技能 / 元素图标（RGBA 真透底，六边符印 + 圆角方面板双底盘）
+├── pickups/               # 拾取物精灵（RGBA 真透底，小物件视觉系）
+│   └── pickup_*.png（8 个：治愈果实/金币袋/经验晶露/磁石/震地菇/灵盾花/幸运骰/宝箱）
 │   ├── el_*.png（5 个元素徽章）
 │   └── ab_*.png（8 个技能按钮）
 ├── data/                  # 设计数值规格（JSON，非图片/音频）
@@ -331,7 +349,8 @@ _content_pack/
 │   ├── upgrades.json          # 局内成长系统：24 张升级卡 × 4 稀有度 + 经验曲线 + 抽卡权重
 │   ├── meta_upgrades.json     # 局外成长系统：18 项永久强化 × 5 类 + 几何成本曲线
 │   ├── economy.json           # 森灵币经济水槽模型：1 货币 / 4 产出 / 2 水槽 / 积压率 0.22
-│   └── achievements.json      # 成就与任务系统：19 成就 × 5 组 + 每日任务池（economy 两水龙头判定来源）
+│   ├── achievements.json      # 成就与任务系统：19 成就 × 5 组 + 每日任务池（economy 两水龙头判定来源）
+│   └── pickups.json           # 局内拾取物系统：8 种拾取物 + 击杀掉落表 + 宝箱开箱表
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -349,7 +368,9 @@ _content_pack/
     ├── build_reaction_chart.py # 由 data/reactions.json 生成 5×5 反应矩阵 + 反应卡 + 状态图例参考页
     ├── build_upgrade_chart.py  # 由 data/upgrades.json 生成 经验曲线 + 权重缩放 + 24 张升级卡参考页
     ├── build_meta_chart.py    # 由 data/meta_upgrades.json + data/economy.json 生成 经济水槽 + 永久强化参考页
-    └── build_achievement_chart.py # 由 data/achievements.json 生成 奖励政策 + 成就卡组 + 任务池参考页
+    ├── build_achievement_chart.py # 由 data/achievements.json 生成 奖励政策 + 成就卡组 + 任务池参考页
+    ├── gen_pickups.py        # 拾取物精灵生成（纯标准库，复用 gen_vfx.Canvas）
+    └── build_pickup_chart.py # 由 data/pickups.json 生成 掉落表 + 拾取物卡组参考页
 ```
 
 ## 4. 接入游戏路径（待主文件释放后）
@@ -393,11 +414,12 @@ _content_pack/
 - 局外成长系统：`data/meta_upgrades.json` 为合法 JSON（18 项永久强化：基础 5 / 元素 5 / 经济 3 / 生存 2 / 解锁 3，每项含 category / maxLevel / cost{base,growth} / effects / icon）；18 项 icon / sfx 引用经 `os.path.exists` 核验零缺失；`meta_chart.html` 由 `tools/build_meta_chart.py` 数据驱动生成，校验 0 占位符、含 `<svg>`、18 项名全在、16 个图标引用均存在；`meta_lab.html` 为可玩实验室，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `MU`/`EC` 已与 `meta_upgrades.json`/`economy.json` 逐项比对一致（18 项 / 积压率 0.22 均无漂移）。
 - 经济系统：`data/economy.json` 经 `game-economy` 技能 `check` 校验 E1–E4 全 PASS（货币 1 / 产出入口 4 / 回收水槽 2 / 积压率 0.22 ≤ 0.3）；内部自洽（faucets 求和=total_faucet 41,946、drains 求和=total_drain 32,718、积压率=(产出-消耗)/产出 一致、drains 与 meta_upgrades 总成本跨表一致），经济不通胀、不枯竭。
 - 成就与任务系统：`data/achievements.json` 为合法 JSON（19 成就 × 5 组 + 每日任务池 6 模板；group/metric.type 枚举全合法，levelClear 目标 ∈ 关卡 id 1–10，reactionKinds ≤ 10、statusKinds ≤ 7 跨表引用全存在）；`achievement_chart.html` 由 `tools/build_achievement_chart.py` 数据驱动生成，校验 0 占位符、25 个名称全在、17 图标引用均存在；`achievement_lab.html` 内联 `<script>` 经 `node --check` 通过，内联 `ACH`/`DPOOL`/`DPICK`/`DREWARD` 与 JSON 逐项比对一致（19 成就 / 6 任务 / 抽 3 / 20 币无漂移）；经济边界断言通过——成就本体零货币奖励，唯二货币出口（首通→first_clear、每日→daily）均为 economy.json 既有水龙头，积压率 0.22 不受影响。
+- 局内拾取物系统：`data/pickups.json` 为合法 JSON（8 种拾取物：常见 3 / 稀有 5；击杀掉落表与宝箱开箱表权重和均=100；8 icon + 8 sfx 引用零缺失）；8 个精灵由 `tools/gen_pickups.py` 程序化生成并校验——均 64×64 `colorType=6` RGBA，非空行占比 73%–80%（内容饱满非空白）；`pickup_chart.html` 由 `tools/build_pickup_chart.py` 数据驱动生成，校验 0 占位符、8 名称全在、8 图标引用均存在；`pickup_lab.html` 为可玩实验室，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `PICKUP`/`DROP`/`CHEST` 已与 `pickups.json` 逐项比对一致（8 拾取物 / 6% 掉落 / 两权重表无漂移）；经济边界断言通过——货币型拾取物（金币袋 +15 / 宝箱小袋 +30 / 大袋 +80）全部计入 economy.json 既有 kill/clear 口径，不新增 faucet、积压率 0.22 不变。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张精灵）+ 音乐（7 首 BGM + 33 SFX）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（9 份 JSON）+ 可视化参考页与可玩校验场（6 参考页 + 4 实验室 + 竞技场 + 战役 + 演练场）**九大支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵）+ 音乐（7 首 BGM + 33 SFX）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（10 份 JSON）+ 可视化参考页与可玩校验场（7 参考页 + 5 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -432,4 +454,5 @@ _content_pack/
 24. ~~**局外成长系统（设计规格 + 可玩实验室）**~~ ✅ 已交付 `data/meta_upgrades.json`（18 项永久强化 × 5 类：基础属性 / 元素亲和 / 经济加成 / 生存续航 / 英雄解锁；几何成本 `cost(l)=round(base*growth^(l-1))`）+ `data/economy.json`（森灵币产出-消耗水槽模型：1 货币 / 4 产出入口 / 2 回收水槽 / 积压率 0.22）+ 数据驱动可视化 `meta_chart.html`（积压率仪表 SVG + 五类总消耗对比 + 18 项强化卡组）+ 可玩实验室 `meta_lab.html`（纯前端 `file://` 双击即开：本局自动战斗 20s 赚币 → 局外大厅买永久强化 → 下一局伤害/生命/金币收益更高，验证「跨局养成」闭环）。`tools/build_meta_chart.py` 读两份 JSON 纯标准库渲染（零依赖、不卡机）；经济表经 `game-economy` 技能 `check` E1–E4 全 PASS（积压率 0.22 < 0.3 健康）；18 项复用既有 `icons/`+`skill_icons/`+`vfx/`+`sprites/`+`cp_sfx_*` 资产（零新资产，英雄解锁项用现有精灵作占位图待云端出图替换）；`meta_lab.html` 内联数据与 JSON 逐项比对一致、内联脚本 `node --check` 通过；`index.html` 加 🌱 导航卡、`README` §2.11/§3/§6/§7 同步。与 §2.10 局内成长共同构成幸存品类「局内构筑 + 局外养成」双层循环，为 §4 接入主游戏时的局外养成与货币系统提供端到端验证样本。
 26. ~~**成就与任务系统（设计规格 + 可玩实验室）**~~ ✅ 已交付 `data/achievements.json`（19 个一次性成就 × 5 组 + 每日任务池 6 模板抽 3/天、各 +20 🍀；17 种指标口径全部取自既有系统：波次击杀/反应触发/构筑拿卡/永久强化/货币积累）+ 数据驱动可视化 `achievement_chart.html`（奖励政策流向表 + 5 组成就卡 + 每日任务池 + 指标词汇表）+ 可玩实验室 `achievement_lab.html`（纯前端 `file://` 双击即开：事件推进 → 成就进度实时填充、达成弹金框 → 每日任务按日期种子抽取、完成入账 → 首通触发 economy.first_clear 双倍结算横幅）。经济边界：成就本体从不发币（只发称号/图鉴/头像框），唯二货币出口严格对应 economy.json 既有 first_clear/daily 两水龙头，不突破四 faucet 总量、积压率 0.22 不变；校验含跨表引用存在性（关卡 id/反应种类/状态种类）与 `node --check` + DATA_SYNC_OK（19/6/3/20 无漂移）；`index.html` 加 🏅 导航卡、`README` §2.12/§3/§6/§7 同步。补齐留存支柱，使内容包形成「波次→Boss→元素→反应→局内构筑→局外养成→经济→成就」完整设计链，为 §4 接入主游戏时的留存系统提供端到端验证样本。
 27. ~~**系统事件音效包（成就 / 任务 / 首通 / 大额入账 + 大厅 BGM · 音乐侧接线）**~~ ✅ 已交付 5 条新音频（`cp_bgm_lobby` 34.3s 84 BPM I–V–vi–IV 大厅松弛曲无缝循环；`cp_sfx_achievement` 1.25s D 大调五音琶音隆重 Jingle；`cp_sfx_daily` 0.46s 暖木琴双音轻巧；`cp_sfx_first_clear` 1.38s 号角三连 Fanfare；`cp_sfx_coin_big` 1.10s 固定种子 9 枚金属 ping 迸发）。其中 `synth_achievement`/`synth_daily`/`synth_bgm_lobby` 三个函数此前已写好但**从未接入 jobs 列表**（wav 从未生成）——本轮补接线并新增 `synth_first_clear`/`synth_coin_big` 两函数；全部 40 条音频重合成回归通过（峰值均 85% 无削波、RMS 10.9%–30.0% 非静音）。**每条新音频均接线真实消费点**（规避「零消费」死资产）：`achievement_lab.html` 成就达成→Jingle、每日任务完成→双音、首通结算→Fanfare；`meta_lab.html` 本局结算入账→coin_big（替换原 win）、新增 🎵 大厅 BGM 开关按钮（loop 循环）；`audio_demo.html` 加 5 试听卡（40 条全覆盖）；`manifest.json`/`index.html` 重生成（audio 35→40，bgm 6→7）；`README` §2.1/§3/§6/§7/引言同步（顺手修复 §6 清单段「4 设计数值 JSON」跨轮漂移 → 9）。为 §4 接入主游戏时的成就/任务/结算音效与大厅场景 BGM 提供素材底座。
+29. ~~**局内拾取物系统（设计规格 + 程序化精灵 + 可玩实验室）**~~ ✅ 已交付 `data/pickups.json`（8 种拾取物：治愈果实 20% 回血 / 金币袋 +15 币 / 经验晶露 +50 EXP / 磁石吸附 5s / 震地菇全屏 50 伤 / 灵盾花挡 3 次 / 幸运骰重抽 +1 / 宝箱开箱表结算；击杀 6% 掉落权重表 + 宝箱开箱权重表均和=100）+ **8 个程序化新精灵** `pickups/*.png`（64×64 RGBA 真透底，`tools/gen_pickups.py` 复用 gen_vfx.Canvas 距离场画法生成——治愈果实/金币袋/磁石/震地菇/宝箱/经验晶露/灵盾花/幸运骰，零外部素材、零生成额度）+ 数据驱动可视化 `pickup_chart.html`（双掉落权重条 + 稀有度分组卡组）+ 可玩实验室 `pickup_lab.html`（纯前端 `file://` 双击即开：鼠标移动英雄 → 触碰拾取物即时生效（回血飘字/磁石全场吸附动画/清屏 CSS 屏震/护盾环/开箱加权结算），「模拟击杀」与「精英必掉」按钮真实按权重表抽卡）。经济边界：所有货币产出计入 economy.json 既有 faucet，不新增水龙头；校验含两表权重和=100、图标/音效引用零缺失、`node --check` + DATA_SYNC_OK（8/6%/两表无漂移）；`index.html` 加 🍒 导航卡与拾取物资产块、`manifest.json` 加 pickups 类目（counts.pickups=8）、`README` §2.13/§3/§6/§7/引言同步。补齐「走位即决策」反馈层支柱，为 §4 接入主游戏时的拾取物系统提供端到端验证样本。
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

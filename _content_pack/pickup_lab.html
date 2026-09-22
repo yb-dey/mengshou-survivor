@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 拾取物实验室</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; --red:#e06666; }
+  *{ box-sizing:border-box;margin:0;padding:0 }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:24px 14px; display:flex; flex-direction:column; align-items:center; }
+  h1{ font-size:24px; letter-spacing:2px; margin-bottom:4px }
+  .sub{ opacity:.8; margin-bottom:16px; font-size:13px; text-align:center; max-width:900px; line-height:1.6 }
+  .cols{ width:100%; max-width:1060px; display:grid; grid-template-columns:1fr 340px; gap:14px }
+  @media(max-width:860px){ .cols{ grid-template-columns:1fr } }
+  .scene{ position:relative; height:460px; border-radius:14px; overflow:hidden; cursor:crosshair;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(110,180,120,.10) 0 60px, transparent 61px),
+      radial-gradient(circle at 75% 65%, rgba(110,180,120,.08) 0 80px, transparent 81px),
+      repeating-linear-gradient(45deg, rgba(255,255,255,.015) 0 22px, transparent 22px 44px),
+      linear-gradient(160deg, #2a5c3c, #173b27); border:1px solid rgba(159,224,180,.25) }
+  .scene.shake{ animation: shk .38s }
+  @keyframes shk{ 0%,100%{transform:translate(0,0)} 20%{transform:translate(-6px,3px)} 40%{transform:translate(5px,-4px)} 60%{transform:translate(-4px,2px)} 80%{transform:translate(3px,-2px)} }
+  .pickup{ position:absolute; width:44px; height:44px; margin:-22px 0 0 -22px; transition:none;
+    filter:drop-shadow(0 3px 6px rgba(0,0,0,.45)); cursor:pointer }
+  .pickup.mag{ transition: transform .12s linear }
+  .player{ position:absolute; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #9fd8b4, #3fa66a 60%, #22684a); border:2px solid #d8f2e2;
+    box-shadow:0 0 14px rgba(110,220,150,.5); pointer-events:none }
+  .player.shielded{ box-shadow:0 0 0 4px rgba(120,170,255,.35), 0 0 18px rgba(140,190,255,.6) }
+  .float{ position:absolute; font-weight:800; font-size:15px; pointer-events:none;
+    animation: up 1s forwards; text-shadow:0 2px 4px rgba(0,0,0,.5) }
+  @keyframes up{ from{opacity:1; transform:translateY(0)} to{opacity:0; transform:translateY(-46px)} }
+  .panel{ background:rgba(15,47,31,.55); border:1px solid rgba(159,224,180,.25); border-radius:14px; padding:16px 18px }
+  .panel h2{ font-size:15px; margin-bottom:10px; display:flex; align-items:center; gap:6px }
+  .panel h2 small{ opacity:.6; font-weight:400; font-size:11.5px }
+  .hud{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px }
+  .chip{ flex:1; min-width:70px; background:rgba(255,255,255,.05); border:1px solid rgba(159,224,180,.2); border-radius:9px; padding:7px; text-align:center }
+  .chip .k{ font-size:10.5px; opacity:.7 }
+  .chip .v{ font-size:17px; font-weight:800; margin-top:1px }
+  .bar{ height:9px; background:rgba(255,255,255,.08); border-radius:5px; overflow:hidden; margin:4px 0 8px }
+  .bar i{ display:block; height:100%; transition:width .2s }
+  .bar.hp i{ background:linear-gradient(90deg,#f18b8b,#e06666) }
+  .bar.xp i{ background:linear-gradient(90deg,#6fe39a,#3fa66a) }
+  .btn{ cursor:pointer; border:none; border-radius:8px; padding:8px 12px; font-size:12.5px; font-weight:700; color:#0f2f1f; background:var(--leaf) }
+  .btn.gold{ background:var(--gold) }
+  .btn.gray{ background:rgba(159,224,180,.25); color:var(--cream) }
+  .row{ display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px }
+  .feed{ font-size:11.5px; line-height:1.65; max-height:170px; overflow:auto; background:rgba(0,0,0,.25); border-radius:9px; padding:8px 10px }
+  .feed .c{ color:var(--gold) }
+  .banner{ position:fixed; left:50%; top:16px; transform:translateX(-50%); background:linear-gradient(160deg,#c49a2e,#e8c463);
+    color:#0f2f1f; font-weight:800; padding:9px 20px; border-radius:11px; box-shadow:0 10px 28px rgba(0,0,0,.5);
+    opacity:0; pointer-events:none; transition:opacity .3s, top .3s; z-index:9; max-width:90vw; text-align:center }
+  .banner.show{ opacity:1; top:26px }
+  .note{ font-size:11px; opacity:.6; line-height:1.6; margin-top:10px }
+  footer{ margin-top:16px; font-size:11.5px; opacity:.5; text-align:center; line-height:1.7; max-width:840px }
+</style>
+</head>
+<body>
+  <h1>🍒 拾取物实验室</h1>
+  <div class="sub">《萌兽消消岛》局内拾取物可玩演示：鼠标在场景里移动英雄，触碰掉落物即生效（治疗/金币/经验/磁铁吸附/清屏震地/护盾/重抽）；「模拟击杀」按 6% 掉落规则随机落物，「精英必掉」直接落宝箱——开箱按 chestOpen 权重表结算。纯前端 file:// 双击即开，无 fetch；内联数据来自 <code>data/pickups.json</code>。</div>
+  <div class="banner" id="banner"></div>
+
+  <div class="cols">
+    <div>
+      <div class="scene" id="scene">
+        <div class="player" id="player" style="left:50%;top:50%"></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="btnKill">⚔ 模拟击杀（6% 掉落）</button>
+        <button class="btn gold" id="btnElite">🎁 精英必掉宝箱</button>
+        <button class="btn gray" id="btnClear">🧹 清空场景</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>📊 状态 <small>触碰拾取物实时反馈</small></h2>
+      <div class="hud">
+        <div class="chip"><div class="k">生命</div><div class="v" id="sHp">100</div></div>
+        <div class="chip"><div class="k">等级</div><div class="v" id="sLv">1</div></div>
+        <div class="chip"><div class="k">森灵币</div><div class="v" id="sCoin" style="color:var(--gold)">0</div></div>
+        <div class="chip"><div class="k">重抽</div><div class="v" id="sReroll">0</div></div>
+      </div>
+      <div class="hud">
+        <div class="chip"><div class="k">护盾次数</div><div class="v" id="sShield">0</div></div>
+        <div class="chip"><div class="k">磁石</div><div class="v" id="sMag">—</div></div>
+      </div>
+      <div style="font-size:11px;opacity:.7">生命 <span id="hpTxt">100/100</span></div>
+      <div class="bar hp"><i id="hpBar" style="width:100%"></i></div>
+      <div style="font-size:11px;opacity:.7">经验 <span id="xpTxt">0/12</span></div>
+      <div class="bar xp"><i id="xpBar" style="width:0%"></i></div>
+      <h2 style="margin-top:12px">📜 事件流水</h2>
+      <div class="feed" id="feed"></div>
+      <div class="note">掉落规则：每击杀 6% 概率，权重 治愈30/金币25/经验20/磁石8/震地7/灵盾6/骰4；开箱表 小袋40/大袋20/满血15/灵盾10/骰10/震地5。金币袋与开箱币均计入 economy.json 既有 faucet（kill / clear 口径），不新增水龙头。</div>
+    </div>
+  </div>
+
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>拾取物可玩校验场：8 个精灵为 gen_pickups.py 程序化生成（pickups/*.png），音效复用既有 cp_sfx_*；内联 PICKUP/DROP/CHEST 与 pickups.json 逐项比对一致。</footer>
+
+<script>
+"use strict";
+/* ===== 内联数据（子集，与 data/pickups.json 对齐）===== */
+const PICKUP = {
+  pickup_heal:   { cn:"治愈果实", rarity:"common", icon:"pickups/pickup_heal.png",   sfx:"cp_sfx_heal.wav",      effect:{healPct:20} },
+  pickup_coin:   { cn:"金币袋",   rarity:"common", icon:"pickups/pickup_coin.png",   sfx:"cp_sfx_coin.wav",      effect:{coins:15} },
+  pickup_exp:    { cn:"经验晶露", rarity:"common", icon:"pickups/pickup_exp.png",    sfx:"cp_sfx_pickup.wav",    effect:{exp:50} },
+  pickup_magnet: { cn:"磁石",     rarity:"rare",   icon:"pickups/pickup_magnet.png", sfx:"cp_sfx_buff.wav",      effect:{magnetSec:5} },
+  pickup_bomb:   { cn:"震地菇",   rarity:"rare",   icon:"pickups/pickup_bomb.png",   sfx:"cp_sfx_explosion.wav", effect:{screenDamage:50} },
+  pickup_shield: { cn:"灵盾花",   rarity:"rare",   icon:"pickups/pickup_shield.png", sfx:"cp_sfx_buff.wav",      effect:{shieldCharges:3, shieldSec:10} },
+  pickup_reroll: { cn:"幸运骰",   rarity:"rare",   icon:"pickups/pickup_reroll.png", sfx:"cp_sfx_ui.wav",        effect:{reroll:1} },
+  pickup_chest:  { cn:"宝箱",     rarity:"rare",   icon:"pickups/pickup_chest.png",  sfx:"cp_sfx_evolve.wav",    effect:{openTable:"chestOpen"} }
+};
+const DROP = { chancePerKill:0.06,
+  weights:{ pickup_heal:30, pickup_coin:25, pickup_exp:20, pickup_magnet:8, pickup_bomb:7, pickup_shield:6, pickup_reroll:4 } };
+const CHEST = { weights:{ coins_small:40, coins_big:20, heal_full:15, shield:10, reroll:10, bomb:5 } };
+
+/* ===== 状态 ===== */
+const st = { hp:100, hpMax:100, lv:1, xp:0, xpNeed:12, coins:0, reroll:0, shield:0, shieldUntil:0, magUntil:0 };
+const scene = document.getElementById("scene");
+const player = document.getElementById("player");
+let px = 0.5, py = 0.5;      // 玩家相对坐标 0-1
+let items = [];               // {key, el, x, y}
+let uid = 0;
+
+/* ===== 工具 ===== */
+function sfx(name){ try{ new Audio("audio/"+name).play(); }catch(e){} }
+let bannerTimer=null;
+function banner(msg){
+  const b=document.getElementById("banner");
+  b.textContent=msg; b.classList.add("show");
+  if(bannerTimer) clearTimeout(bannerTimer);
+  bannerTimer=setTimeout(function(){ b.classList.remove("show"); },2200);
+}
+function feed(msg, gold){
+  const el=document.getElementById("feed");
+  const p=document.createElement("div");
+  if(gold) p.innerHTML='<span class="c">'+msg+'</span>'; else p.textContent=msg;
+  el.insertBefore(p, el.firstChild);
+  while(el.childNodes.length>30) el.removeChild(el.lastChild);
+}
+function floatText(x, y, txt, color){
+  const s=document.createElement("span");
+  s.className="float"; s.textContent=txt; s.style.color=color||"#fff";
+  s.style.left=(x*100)+"%"; s.style.top=(y*100)+"%";
+  scene.appendChild(s);
+  setTimeout(function(){ s.remove(); }, 1000);
+}
+function weighted(weights){
+  let sum=0; for(const k in weights) sum+=weights[k];
+  let r=Math.random()*sum;
+  for(const k in weights){ r-=weights[k]; if(r<0) return k; }
+  return Object.keys(weights)[0];
+}
+
+/* ===== 拾取物生成 / 拾取 ===== */
+function spawn(key){
+  if(items.length>=8) return;
+  const el=document.createElement("img");
+  el.className="pickup"; el.src=PICKUP[key].icon; el.alt=PICKUP[key].cn; el.title=PICKUP[key].cn;
+  const x=0.08+Math.random()*0.84, y=0.12+Math.random()*0.76;
+  el.style.left=(x*100)+"%"; el.style.top=(y*100)+"%";
+  scene.appendChild(el);
+  const it={ key:key, el:el, x:x, y:y, id:uid++ };
+  el.addEventListener("pointerdown", function(ev){ ev.stopPropagation(); grab(it); });
+  items.push(it);
+}
+function grab(it){
+  const idx=items.indexOf(it);
+  if(idx<0) return;
+  items.splice(idx,1);
+  it.el.remove();
+  applyPickup(it.key, it.x, it.y);
+}
+function applyPickup(key, x, y){
+  const d=PICKUP[key];
+  sfx(d.sfx);
+  if(key==="pickup_heal"){
+    const amt=Math.round(st.hpMax*0.20);
+    st.hp=Math.min(st.hpMax, st.hp+amt);
+    floatText(x,y,"+"+amt,"#f8a8a8"); feed("🍒 治愈果实：回复 "+amt+" 生命");
+  } else if(key==="pickup_coin"){
+    st.coins+=d.effect.coins;
+    floatText(x,y,"+"+d.effect.coins+"🍀","#e8c463"); feed("💰 金币袋：+"+d.effect.coins+" 森灵币（kill 口径）");
+  } else if(key==="pickup_exp"){
+    gainXp(d.effect.exp, x, y);
+  } else if(key==="pickup_magnet"){
+    st.magUntil=Date.now()+d.effect.magnetSec*1000;
+    banner("🧲 磁石！"+d.effect.magnetSec+" 秒吸附全场"); feed("🧲 磁石：吸附 "+d.effect.magnetSec+" 秒");
+  } else if(key==="pickup_bomb"){
+    scene.classList.remove("shake"); void scene.offsetWidth; scene.classList.add("shake");
+    floatText(x,y,"全屏 "+d.effect.screenDamage,"#ffb08a"); feed("💥 震地菇：全屏 "+d.effect.screenDamage+" 伤害（清屏）", true);
+  } else if(key==="pickup_shield"){
+    st.shield=d.effect.shieldCharges; st.shieldUntil=Date.now()+d.effect.shieldSec*1000;
+    banner("🛡 灵盾花：可挡 "+d.effect.shieldCharges+" 次"); feed("🛡 灵盾花：护盾 "+d.effect.shieldCharges+" 次 / "+d.effect.shieldSec+" 秒");
+  } else if(key==="pickup_reroll"){
+    st.reroll+=d.effect.reroll;
+    floatText(x,y,"重抽 +1","#cfe3ff"); feed("🎲 幸运骰：三选一重抽库存 +1（联动 §2.10）");
+  } else if(key==="pickup_chest"){
+    openChest(x,y);
+  }
+  renderHud();
+}
+function openChest(x, y){
+  const roll=weighted(CHEST.weights);
+  feed("🎁 开启宝箱 → "+roll, true);
+  if(roll==="coins_small"){ st.coins+=30; floatText(x,y,"+30🍀","#e8c463"); feed("　金币小袋 +30 币（clear 口径）", true); }
+  else if(roll==="coins_big"){ st.coins+=80; floatText(x,y,"+80🍀","#e8c463"); feed("　金币大袋 +80 币（clear/first_clear 口径）", true); }
+  else if(roll==="heal_full"){ st.hp=st.hpMax; floatText(x,y,"生命全满","#f8a8a8"); feed("　生命全满！", true); }
+  else if(roll==="shield"){ st.shield=3; st.shieldUntil=Date.now()+10000; feed("　灵盾花效果 ×3", true); }
+  else if(roll==="reroll"){ st.reroll+=1; feed("　幸运骰 ×1", true); }
+  else if(roll==="bomb"){
+    scene.classList.remove("shake"); void scene.offsetWidth; scene.classList.add("shake");
+    feed("　震地菇效果：全屏 50 伤害", true);
+  }
+  banner("🎁 宝箱开启：" + (roll==="coins_small"?"金币小袋 +30🍀":roll==="coins_big"?"金币大袋 +80🍀":roll==="heal_full"?"生命全满":roll==="shield"?"灵盾花":roll==="reroll"?"幸运骰":"震地菇"));
+}
+function gainXp(v, x, y){
+  st.xp+=v; floatText(x,y,"+"+v+" EXP","#8fe3a8");
+  while(st.xp>=st.xpNeed){
+    st.xp-=st.xpNeed; st.lv++; st.xpNeed=Math.round(8+6*(st.lv-1)+1.2*(st.lv-1)*(st.lv-1));
+    sfx("cp_sfx_levelup.wav");
+    feed("⬆ 升级！Lv."+st.lv+"（三选一在 §2.10 upgrade_lab 验证）", true);
+  }
+}
+function killDrop(){
+  if(Math.random()<DROP.chancePerKill){
+    const key=weighted(DROP.weights);
+    spawn(key);
+    feed("⚔ 击杀 → 掉落「"+PICKUP[key].cn+"」");
+  } else {
+    feed("⚔ 击杀 → 未掉落（6% 概率未命中）");
+  }
+}
+
+/* ===== 渲染 ===== */
+function renderHud(){
+  document.getElementById("sHp").textContent=String(Math.round(st.hp));
+  document.getElementById("sLv").textContent=String(st.lv);
+  document.getElementById("sCoin").textContent=String(st.coins);
+  document.getElementById("sReroll").textContent=String(st.reroll);
+  document.getElementById("sShield").textContent=String(st.shield);
+  const magLeft=st.magUntil-Date.now();
+  document.getElementById("sMag").textContent=magLeft>0?Math.ceil(magLeft/1000)+"s":"—";
+  document.getElementById("hpTxt").textContent=Math.round(st.hp)+"/"+st.hpMax;
+  document.getElementById("hpBar").style.width=(st.hp/st.hpMax*100)+"%";
+  document.getElementById("xpTxt").textContent=st.xp+"/"+st.xpNeed;
+  document.getElementById("xpBar").style.width=(st.xp/st.xpNeed*100)+"%";
+  player.className="player"+(st.shield>0&&st.shieldUntil>Date.now()?" shielded":"");
+}
+
+/* ===== 玩家移动（跟随指针）===== */
+scene.addEventListener("pointermove", function(ev){
+  const r=scene.getBoundingClientRect();
+  px=(ev.clientX-r.left)/r.width; py=(ev.clientY-r.top)/r.height;
+  player.style.left=(px*100)+"%"; player.style.top=(py*100)+"%";
+});
+scene.addEventListener("pointerdown", function(ev){
+  const r=scene.getBoundingClientRect();
+  px=(ev.clientX-r.left)/r.width; py=(ev.clientY-r.top)/r.height;
+  player.style.left=(px*100)+"%"; player.style.top=(py*100)+"%";
+});
+
+/* ===== 主循环 ===== */
+setInterval(function(){
+  const now=Date.now();
+  if(st.shield>0&&st.shieldUntil<=now){ st.shield=0; feed("🛡 护盾超时消失"); }
+  const mag=st.magUntil>now;
+  for(let i=items.length-1;i>=0;i--){
+    const it=items[i];
+    if(mag){
+      it.x+= (px-it.x)*0.14; it.y+= (py-it.y)*0.14;
+      it.el.classList.add("mag");
+      it.el.style.left=(it.x*100)+"%"; it.el.style.top=(it.y*100)+"%";
+    }
+    const dx=it.x-px, dy=it.y-py;
+    if(dx*dx+dy*dy<0.0022){ grab(it); }
+  }
+  renderHud();
+}, 60);
+
+document.getElementById("btnKill").addEventListener("click", killDrop);
+document.getElementById("btnElite").addEventListener("click", function(){ spawn("pickup_chest"); feed("🎁 精英被击败 → 必掉宝箱！", true); });
+document.getElementById("btnClear").addEventListener("click", function(){
+  items.forEach(function(it){ it.el.remove(); }); items=[];
+  feed("🧹 场景已清空");
+});
+renderHud();
+feed("👆 移动鼠标控制英雄，触碰拾取物即生效。先点几次「模拟击杀」试试掉落概率。");
+</script>
+</body>
+</html>

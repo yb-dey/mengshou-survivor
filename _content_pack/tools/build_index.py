@@ -16,6 +16,7 @@ sprites = uniq_keys(os.path.join(ROOT, 'sprites_alpha'), ('.png', '.webp'))
 vfx = uniq_keys(os.path.join(ROOT, 'vfx'), ('.png',))
 icons = uniq_keys(os.path.join(ROOT, 'icons'), ('.png',))
 skill = uniq_keys(os.path.join(ROOT, 'skill_icons'), ('.png',))
+pickups = uniq_keys(os.path.join(ROOT, 'pickups'), ('.png',))
 data = uniq_keys(os.path.join(ROOT, 'data'), ('.json',))
 audio = uniq_keys(os.path.join(ROOT, 'audio'), ('.wav',))
 
@@ -63,7 +64,12 @@ DATA_CN = {
     'wave_design': '关卡波次设计', 'boss_phases': 'BOSS 多阶段脚本',
     'reactions': '元素反应系统', 'upgrades': '局内成长系统',
     'meta_upgrades': '局外成长系统', 'economy': '经济系统',
-    'achievements': '成就与任务系统',
+    'achievements': '成就与任务系统', 'pickups': '局内拾取物系统',
+}
+PICKUP_CN = {
+    'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',
+    'pickup_magnet': '磁石', 'pickup_bomb': '震地菇', 'pickup_shield': '灵盾花',
+    'pickup_reroll': '幸运骰', 'pickup_chest': '宝箱',
 }
 
 def chips(keys, cn):
@@ -117,6 +123,7 @@ html = f'''<!DOCTYPE html>
     <div class="stat"><b>{len(vfx)}</b><span>特效精灵</span></div>
     <div class="stat"><b>{len(icons)}</b><span>状态图标</span></div>
     <div class="stat"><b>{len(skill)}</b><span>技能/元素图标</span></div>
+    <div class="stat"><b>{len(pickups)}</b><span>拾取物精灵</span></div>
     <div class="stat"><b>{len(audio)}</b><span>音频（{len(bgm)} BGM + {len(sfx)} SFX）</span></div>
   </div>
   <div class="nav">
@@ -153,6 +160,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="meta_chart.html" target="_blank">
       <div class="ico">🌱</div><div class="t">局外成长系统</div>
       <div class="d">跨局永久强化 + 森灵币经济闭环：18 项永久强化 × 5 类（几何成本），产出-消耗水槽（积压率 0.22 健康），含可玩实验室 meta_lab.html。</div></a>
+    <a class="ncard" href="pickup_chart.html" target="_blank">
+      <div class="ico">🍒</div><div class="t">局内拾取物系统</div>
+      <div class="d">8 种拾取物精灵（程序化生成）+ 击杀掉落表 / 宝箱开箱表，走位即决策的反馈层，含可玩实验室 pickup_lab.html。</div></a>
     <a class="ncard" href="achievement_chart.html" target="_blank">
       <div class="ico">🏅</div><div class="t">成就与任务系统</div>
       <div class="d">19 个一次性成就 × 5 组 + 每日任务池（抽 3/天），指标取自全部既有系统；首通/每日任务即 economy 两水龙头的判定来源，含可玩实验室 achievement_lab.html。</div></a>
@@ -172,6 +182,8 @@ html = f'''<!DOCTYPE html>
       {chips(icons, ICON_CN)}</div>
     <div class="blk"><h2>⚡ 技能 / 元素图标 <small>{len(skill)} 个</small></h2>
       {chips(skill, SKILL_CN)}</div>
+    <div class="blk"><h2>🍒 拾取物精灵 <small>{len(pickups)} 个</small></h2>
+      {chips(pickups, PICKUP_CN)}</div>
     <div class="blk"><h2>⚖️ 设计数值规格 <small>{len(data)} 份 JSON</small></h2>
       {chips(data, DATA_CN)}</div>
     <div class="blk"><h2>🎵 音频 <small>{len(bgm)} BGM + {len(sfx)} SFX</small></h2>
@@ -191,4 +203,4 @@ with open(out, 'w', encoding='utf-8') as f:
     f.write(html)
 print('index.html written:', os.path.getsize(out), 'bytes;',
       len(sprites), 'sprites /', len(vfx), 'vfx /', len(icons), 'icons /',
-      len(skill), 'skill /', len(data), 'data /', len(audio), 'audio')
+      len(skill), 'skill /', len(pickups), 'pickups /', len(data), 'data /', len(audio), 'audio')

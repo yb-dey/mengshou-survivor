@@ -41,6 +41,7 @@ sprites = uniq_keys(os.path.join(ROOT, 'sprites_alpha'), ('.png',))
 vfx = uniq_keys(os.path.join(ROOT, 'vfx'), ('.png',))
 icons = uniq_keys(os.path.join(ROOT, 'icons'), ('.png',))
 skill = uniq_keys(os.path.join(ROOT, 'skill_icons'), ('.png',))
+pickups = uniq_keys(os.path.join(ROOT, 'pickups'), ('.png',))
 data = uniq_keys(os.path.join(ROOT, 'data'), ('.json',))
 audio = uniq_keys(os.path.join(ROOT, 'audio'), ('.wav',))
 bgm = [k for k in audio if k.startswith('cp_bgm_')]
@@ -80,7 +81,12 @@ DATA_CN = {
     'wave_design': '关卡波次设计', 'boss_phases': 'BOSS 多阶段脚本',
     'reactions': '元素反应系统', 'upgrades': '局内成长系统',
     'meta_upgrades': '局外成长系统', 'economy': '经济系统',
-    'achievements': '成就与任务系统',
+    'achievements': '成就与任务系统', 'pickups': '局内拾取物系统',
+}
+PICKUP_CN = {
+    'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',
+    'pickup_magnet': '磁石', 'pickup_bomb': '震地菇', 'pickup_shield': '灵盾花',
+    'pickup_reroll': '幸运骰', 'pickup_chest': '宝箱',
 }
 
 sprite_list = []
@@ -113,6 +119,12 @@ for k in skill:
     skill_list.append({'key': k, 'cn': SKILL_CN.get(k, ''), 'group': 'element' if k.startswith('el_') else 'ability',
                        'w': w, 'h': h, 'bytes': os.path.getsize(p)})
 
+pickup_list = []
+for k in pickups:
+    p = os.path.join(ROOT, 'pickups', k + '.png')
+    w, h = png_size(p)
+    pickup_list.append({'key': k, 'cn': PICKUP_CN.get(k, ''), 'w': w, 'h': h, 'bytes': os.path.getsize(p)})
+
 audio_list = []
 for k in audio:
     p = os.path.join(ROOT, 'audio', k + '.wav')
@@ -132,11 +144,13 @@ manifest = {
     'namespace': '_content_pack',
     'counts': {
         'sprites': len(sprites), 'vfx': len(vfx), 'icons': len(icons),
-        'skill_icons': len(skill), 'design_data': len(data), 'audio': len(audio),
+        'skill_icons': len(skill), 'pickups': len(pickups),
+        'design_data': len(data), 'audio': len(audio),
         'bgm': len(bgm), 'sfx': len(sfx),
     },
     'sprites': sprite_list, 'vfx': vfx_list, 'icons': icon_list,
-    'skill_icons': skill_list, 'design_data': data_list, 'audio': audio_list,
+    'skill_icons': skill_list, 'pickups': pickup_list,
+    'design_data': data_list, 'audio': audio_list,
 }
 
 out = os.path.join(ROOT, 'manifest.json')
@@ -144,4 +158,4 @@ with open(out, 'w', encoding='utf-8') as f:
     json.dump(manifest, f, ensure_ascii=False, indent=2)
 print('manifest.json written:', os.path.getsize(out), 'bytes;',
       len(sprites), 'sprites /', len(vfx), 'vfx /', len(icons), 'icons /',
-      len(skill), 'skill /', len(data), 'data /', len(audio), 'audio')
+      len(skill), 'skill /', len(pickups), 'pickups /', len(data), 'data /', len(audio), 'audio')

@@ -1,12 +1,13 @@
 {
-  "generated_at": "2026-09-23 04:44:50",
+  "generated_at": "2026-09-23 05:08:07",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
     "vfx": 24,
     "icons": 12,
     "skill_icons": 13,
-    "design_data": 9,
+    "pickups": 8,
+    "design_data": 10,
     "audio": 40,
     "bgm": 7,
     "sfx": 33
@@ -439,6 +440,64 @@
       "bytes": 2315
     }
   ],
+  "pickups": [
+    {
+      "key": "pickup_bomb",
+      "cn": "震地菇",
+      "w": 64,
+      "h": 64,
+      "bytes": 1523
+    },
+    {
+      "key": "pickup_chest",
+      "cn": "宝箱",
+      "w": 64,
+      "h": 64,
+      "bytes": 624
+    },
+    {
+      "key": "pickup_coin",
+      "cn": "金币袋",
+      "w": 64,
+      "h": 64,
+      "bytes": 1025
+    },
+    {
+      "key": "pickup_exp",
+      "cn": "经验晶露",
+      "w": 64,
+      "h": 64,
+      "bytes": 1663
+    },
+    {
+      "key": "pickup_heal",
+      "cn": "治愈果实",
+      "w": 64,
+      "h": 64,
+      "bytes": 1083
+    },
+    {
+      "key": "pickup_magnet",
+      "cn": "磁石",
+      "w": 64,
+      "h": 64,
+      "bytes": 1426
+    },
+    {
+      "key": "pickup_reroll",
+      "cn": "幸运骰",
+      "w": 64,
+      "h": 64,
+      "bytes": 779
+    },
+    {
+      "key": "pickup_shield",
+      "cn": "灵盾花",
+      "w": 64,
+      "h": 64,
+      "bytes": 1200
+    }
+  ],
   "design_data": [
     {
       "key": "achievements",
@@ -464,6 +523,11 @@
       "key": "meta_upgrades",
       "cn": "局外成长系统",
       "bytes": 9446
+    },
+    {
+      "key": "pickups",
+      "cn": "局内拾取物系统",
+      "bytes": 4451
     },
     {
       "key": "reactions",
