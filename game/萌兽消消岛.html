@@ -23962,8 +23962,8 @@ function paintHallGround(c2, w, h, th) {
   c2.lineWidth = 1;
 }
 function drawHallStageGround(ctx) {
-  // 【v1.176】舞台后景只画一次: 左上受光、软草簇、路唇。英雄与六部位框在其后绘制, 不会被盖住。
-  var g, i, clumps;
+  // 【v1.176】舞台后景只画一次: 左上受光。草簇/路唇改在落地台绘制后走 drawHallStageAccent, 避免被台身盖住。
+  var g;
   ctx.save();
   try {
     g = ctx.createLinearGradient(90, 36, 580, 380);
@@ -23973,31 +23973,44 @@ function drawHallStageGround(ctx) {
     ctx.fillStyle = g;
     ctx.fillRect(110, 40, 480, 300);
   } catch (eSg) { /* skip */ }
-  // 路唇: 浅土带横贯舞台脚下, 墨近缘 + 苔亮带, 读成走道
-  ctx.fillStyle = "rgba(184,132,88,0.42)";
-  fillRoundRect(ctx, 150, 318, 420, 26, 12);
-  ctx.fillStyle = "rgba(200,236,200,0.34)";
-  fillRoundRect(ctx, 168, 322, 384, 12, 8);
+  ctx.restore();
+}
+function drawHallStageAccent(ctx) {
+  // 【v1.176】台缘路唇 + 两侧草簇: 落在落地台之后、角色卡之前, 侧槽/英雄不被盖。
+  var i, clumps;
+  ctx.save();
+  ctx.fillStyle = "rgba(184,132,88,0.48)";
+  ctx.beginPath();
+  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 332, 196, 18, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(360, 332, 110, 0, CONFIG.TWO_PI);
+  ctx.fill();
+  ctx.fillStyle = "rgba(200,236,200,0.38)";
+  ctx.beginPath();
+  if (typeof ctx.ellipse === "function") ctx.ellipse(352, 326, 168, 10, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(352, 326, 90, 0, CONFIG.TWO_PI);
+  ctx.fill();
   ctx.strokeStyle = "#2e3c1c";
   ctx.lineWidth = 2.4;
-  strokeRoundRect(ctx, 150, 318, 420, 26, 12);
-  ctx.strokeStyle = "rgba(244,248,228,0.55)";
-  ctx.lineWidth = 1.6;
   ctx.beginPath();
-  ctx.moveTo(176, 324);
-  ctx.lineTo(524, 324);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 332, 196, 18, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(360, 332, 110, 0, CONFIG.TWO_PI);
   ctx.stroke();
+  ctx.strokeStyle = "rgba(244,248,228,0.62)";
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  if (typeof ctx.ellipse === "function") ctx.ellipse(348, 322, 140, 8, 0, Math.PI * 1.15, Math.PI * 1.75);
+  else ctx.arc(348, 322, 80, Math.PI * 1.15, Math.PI * 1.75);
+  ctx.stroke();
+  // 两侧沟: 装备框与舞台之间, 草簇一眼可读
   clumps = [
-    [140, 278, 18, "#5a8a3a"],
-    [168, 348, 22, "#6a9a4a"],
-    [118, 360, 16, "#4e7a34"],
-    [196, 366, 14, "#5a8a3a"],
-    [552, 270, 18, "#5a8a3a"],
-    [582, 336, 24, "#6a9a4a"],
-    [548, 366, 16, "#4e7a34"],
-    [510, 360, 14, "#5a8a3a"],
-    [250, 378, 13, "#6a9a4a"],
-    [460, 376, 14, "#5a8a3a"]
+    [128, 236, 18, "#5a8a3a"],
+    [148, 268, 22, "#6a9a4a"],
+    [132, 300, 16, "#4e7a34"],
+    [156, 328, 14, "#5a8a3a"],
+    [570, 230, 18, "#5a8a3a"],
+    [552, 262, 22, "#6a9a4a"],
+    [576, 296, 16, "#4e7a34"],
+    [548, 324, 14, "#5a8a3a"]
   ];
   for (i = 0; i < clumps.length; i++) {
     paintInkTuft(ctx, clumps[i][0], clumps[i][1], clumps[i][2], clumps[i][3]);
@@ -26596,6 +26609,7 @@ function drawHomeBase(ctx) {
   else ctx.arc(360, 298, 90, Math.PI * 0.12, Math.PI * 0.88);
   ctx.stroke();
   ctx.lineWidth = 1;
+  drawHallStageAccent(ctx);
   ctx.fillStyle = "#5a3a10";
   ctx.fillRect(18, 64, 8, 92);
   // 【v1.157】出战签去金盘: 金块改苔纸+细墨缘+深墨字(对齐 dock/看板苔纸族), 金不再作大厅主贴片色
