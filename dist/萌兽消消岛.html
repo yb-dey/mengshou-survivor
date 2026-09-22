@@ -25,7 +25,8 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.179 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.180 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.180 美术】局内生命格 fill 跟活着的真实 HP 同数(不再空条谎报 0); 星巅海军洗+柔脊去硬瓦楞; 早波兔/狐/蟾外墨+耳吻点名; 世界拾取「鸡腿/珠」标签收软; 大厅落地台苔点+路唇; 击杀/命中火花与珠墨缘再抬一档; SFX_HIT 起音再收。1.175–1.179 获取条/跟宠软墨/咆哮/主角 drawScale 保留。数值/掉落/进化/10 分钟轴不动。
 // 【v1.179 美术】局内主角改 drawPlayerInRun: 无敌半透明闪不再隔帧整只消失、drawScale 抬一档、立绘外墨加厚, 截图能认出浣熊/龟/熊; 开场前几只杂兵拉进镜头; 图鉴敌人页本色软墨剪影(跟宠同档); 星巅台地脚下接路不再悬空深板; SFX_HURT 持音再收一档。1.175–1.178 获取条/跟宠软墨/咆哮/大厅舞台保留。数值/掉落/进化/10 分钟轴不动。
 // 【v1.178 美术】图鉴跟宠锁定格改本色软墨剪影(左上受光+外墨, 不再近黑死剪影墙)、敌人空格兜底软盘、星巅程序化远脊/近台再加一档受光与台地; 缺 TEX/地面 PNG 不再 fetch 刷 404(程序化路径); 英雄 webp 失败回落 assets/hero_*.png; 道具页鸡腿/炸/磁走可爱剪影; SFX_UI 持音再收。1.175–1.177 获取条/咆哮/大厅舞台保留。数值/掉落/进化/10 分钟轴不动。
 // 【v1.177 美术】局内杂兵外墨加厚(叠在一起仍能点名)、星巅远脊+近台左上受光(出战地面预览同一套)、图鉴选中苔盘 #c8ecc8/#2f5a3a + 页眉获取行。英雄立绘不重采样。1.175–1.176 获取条保留。数值/掉落/进化/10 分钟轴不动。
@@ -608,7 +609,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.179",                   // 【v1.179】局内主角可读(半透明闪+放大+外墨)+开场近景杂兵+敌人图鉴软墨+星巅台地接路+SFX_HURT 持音收。1.175–1.178 获取条/跟宠软墨/咆哮保留。不改掉率/价格/锻造/进化/10 分钟轴
+  version: "1.180",                   // 【v1.180】生命格 fill 跟真实 HP; 星巅柔洗; 早波杂兵外墨; 拾取标签收软; 大厅苔点路唇; 火花/珠缘; SFX_HIT 收。1.175–1.179 保留。不改掉率/价格/锻造/进化/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -6974,10 +6975,17 @@ function hudVitalsView() {
   var win = (ch && ch.winTime) || 0;
   var rt = GAME.runTime || 0;
   var left = win > 0 ? Math.max(0, win - rt) : 0;
-  var hp = player ? Math.ceil(player.hp) : 0;
-  var maxHp = player ? Math.ceil(player.maxHp) : 0;
+  // 【v1.180】现读 player.hp/maxHp(浮点 ratio 画条, ceil 写字)。活着却读到 ≤0 时跟 max 画满,
+  //   避免出生无敌/半透明闪窗出现 0/max 空条谎报(不改 player.hp 本体数值)。
+  var hpRaw = player ? Math.max(0, Number(player.hp) || 0) : 0;
+  var maxRaw = player ? Math.max(0, Number(player.maxHp) || 0) : 0;
+  var aliveCombat = !!(player && player.active && !GAME.pendingDeath &&
+    (GAME.state === GAME.flow.PLAYING || GAME.state === GAME.flow.PAUSED_MENU || GAME.state === GAME.flow.LEVELUP_MODAL));
+  if (aliveCombat && hpRaw <= 0 && maxRaw > 0) hpRaw = maxRaw;
+  var hp = Math.ceil(hpRaw);
+  var maxHp = Math.ceil(maxRaw);
   var kills = player ? (player.killCount | 0) : 0;
-  var hpLow = maxHp > 0 && hp / maxHp < (CONFIG.lowHpPct || 0.3);
+  var hpLow = maxRaw > 0 && hpRaw / maxRaw < (CONFIG.lowHpPct || 0.3);
   var clockSub;
   if (GAME.endlessMode) clockSub = hudEndlessStr || "无尽";
   else if (win > 0) clockSub = "还剩 " + fmtClock(left);
@@ -6988,9 +6996,9 @@ function hudVitalsView() {
     hp: hp,
     maxHp: maxHp,
     hpText: hp + "/" + maxHp,
-    hpRatio: maxHp > 0 ? clamp(hp / maxHp, 0, 1) : 0,
-    hpGhost: (player && player.maxHp > 0 && player.ghostT > 0 && player.ghostHp > player.hp)
-      ? clamp(player.hp / player.maxHp + (player.ghostHp - player.hp) / player.maxHp * (player.ghostT / CONFIG.hpGhostDur), 0, 1)
+    hpRatio: maxRaw > 0 ? clamp(hpRaw / maxRaw, 0, 1) : 0,
+    hpGhost: (player && maxRaw > 0 && player.ghostT > 0 && player.ghostHp > player.hp)
+      ? clamp(hpRaw / maxRaw + (player.ghostHp - hpRaw) / maxRaw * (player.ghostT / CONFIG.hpGhostDur), 0, 1)
       : 0,
     hpLow: hpLow,
     kills: kills,
@@ -7017,22 +7025,30 @@ function drawVitalsHud(ctx) {
   var lay = hudVitalsLayout();
   var v = hudVitalsView();
   var hpCol = v.hpLow ? "#ff6b4a" : "#e74c3c";
-  var barX, barY, barW, barH;
+  var barX, barY, barW, barH, fillW, rr;
   drawVitalsCell(ctx, lay.clock, "时钟", v.clock, v.clockSub, GAME.endlessMode ? "#e6c24a" : "#3a7bd5", !!GAME.endlessMode);
   drawHudClusterFrame(ctx, lay.hp.x, lay.hp.y, lay.hp.w, lay.hp.h, "生命", hpCol, v.hpLow);
   barX = lay.hp.x + 10;
-  barY = lay.hp.y + lay.hp.h - 11;
+  barY = lay.hp.y + lay.hp.h - 12;
   barW = lay.hp.w - 20;
-  barH = 6;
+  barH = 7;
+  rr = 2;   // 【v1.180】半径勿贴半高, 避免部分引擎 roundRect 只剩左端一点
   ctx.fillStyle = "rgba(8,12,10,0.55)";
-  fillRoundRect(ctx, barX, barY, barW, barH, 3);
+  fillRoundRect(ctx, barX, barY, barW, barH, rr);
   if (v.hpGhost > v.hpRatio) {
     ctx.fillStyle = "rgba(255,255,255,0.55)";
-    fillRoundRect(ctx, barX, barY, Math.max(4, barW * v.hpGhost), barH, 3);
+    fillRoundRect(ctx, barX, barY, Math.max(4, barW * v.hpGhost), barH, rr);
   }
-  if (v.hpRatio > 0) {
+  // 【v1.180】fill 跟 hpText 同数: 有血必画实心条, 活着不出现空槽
+  if (v.hpRatio > 0.001 || v.hp > 0) {
+    fillW = Math.max(6, barW * Math.max(v.hpRatio, v.hp > 0 ? 0.02 : 0));
+    if (fillW > barW) fillW = barW;
     ctx.fillStyle = hpCol;
-    fillRoundRect(ctx, barX, barY, Math.max(4, barW * v.hpRatio), barH, 3);
+    fillRoundRect(ctx, barX, barY, fillW, barH, rr);
+    if (fillW > 10) {
+      ctx.fillStyle = "rgba(255,247,224,0.28)";
+      fillRoundRect(ctx, barX + 1, barY + 1, Math.max(4, fillW * 0.42), Math.max(2, barH - 3), 1);
+    }
   }
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
@@ -12021,9 +12037,10 @@ var Audio = {
       this._noise(out, sr, { t0: 0, dur: 0.024, a: 0.001, r: 0.018, gain: 0.15, seed: 11 });
     } else if (id === "SFX_HIT") { len = 0.1; out = this._alloc(len, sr);
       // 【v1.152】命中更干净的短 tick: 噪声层压淡, 主体略收短
-      this._tone(out, sr, { wave: "sine", f0: 1180, f1: 392, t0: 0, dur: 0.07, a: 0.001, d: 0.045, s: 0, r: 0.018, gain: 1 });
-      this._tone(out, sr, { wave: "triangle", f0: 784, t0: 0, dur: 0.03, a: 0.001, d: 0.02, s: 0, r: 0.01, gain: 0.12 });
-      this._noise(out, sr, { t0: 0, dur: 0.032, a: 0.001, r: 0.02, gain: 0.10, seed: 22 });
+      // 【v1.180】起音瞬态再收一档, 比 UI tick 更软; 音高/时长性格不动
+      this._tone(out, sr, { wave: "sine", f0: 1180, f1: 392, t0: 0, dur: 0.068, a: 0.0025, d: 0.042, s: 0, r: 0.020, gain: 0.88 });
+      this._tone(out, sr, { wave: "triangle", f0: 784, t0: 0, dur: 0.028, a: 0.002, d: 0.018, s: 0, r: 0.012, gain: 0.10 });
+      this._noise(out, sr, { t0: 0, dur: 0.026, a: 0.0015, r: 0.018, gain: 0.07, seed: 22 });
     } else if (id === "SFX_GEM") { len = 0.1; out = this._alloc(len, sr);
       // 【v1.152】宝石拾取更柔: 起音放缓+高音泛音压淡, 连拾不刺耳(连击升调机制不动)
       this._tone(out, sr, { wave: "sine", f0: 1568, t0: 0, dur: 0.08, a: 0.004, d: 0.05, s: 0, r: 0.024, gain: 0.9 });
@@ -12105,9 +12122,10 @@ var Audio = {
     } else if (id === "SFX_KILL") { len = 0.14; out = this._alloc(len, sr);
       // 【v1.152】击杀短顿更利落: 噪声压淡收短, 低频主体不动
       // 【v1.162】再清一档小 tick: 尖三角 1175 改短正弦 784, 噪声再短, 低频仍是主体, 整体更软不喊
-      this._tone(out, sr, { wave: "sine", f0: 196, f1: 82, t0: 0, dur: 0.10, a: 0.002, d: 0.05, s: 0, r: 0.032, gain: 0.92 });
-      this._tone(out, sr, { wave: "sine", f0: 784, f1: 523, t0: 0, dur: 0.036, a: 0.002, d: 0.02, s: 0, r: 0.016, gain: 0.20 });
-      this._noise(out, sr, { t0: 0, dur: 0.028, a: 0.002, r: 0.016, gain: 0.10, seed: 55 });
+      // 【v1.180】高频瞬态再收, 击杀比 UI 更闷一点
+      this._tone(out, sr, { wave: "sine", f0: 196, f1: 82, t0: 0, dur: 0.10, a: 0.0025, d: 0.05, s: 0, r: 0.034, gain: 0.88 });
+      this._tone(out, sr, { wave: "sine", f0: 784, f1: 523, t0: 0, dur: 0.032, a: 0.0025, d: 0.018, s: 0, r: 0.018, gain: 0.16 });
+      this._noise(out, sr, { t0: 0, dur: 0.024, a: 0.002, r: 0.014, gain: 0.08, seed: 55 });
     } else if (id === "SFX_UI") { len = 0.11; out = this._alloc(len, sr);
       // 【v1.178】UI tick 持音再收: 起音略缓、主体/高泛音 release 收短、高泛音增益压淡; 音高/性格不动, 无旋律改写
       this._tone(out, sr, { wave: "triangle", f0: 784, t0: 0, dur: 0.07, a: 0.003, d: 0.04, s: 0, r: 0.028, gain: 0.92 });
@@ -15089,7 +15107,8 @@ var PARTICLE_SPRITES = {};
 
 function makeInkPuffSprite(color) {
   // 【v1.162】普通击杀/命中软墨烟: 椭圆+墨缘, 不是硬黄方
-  var scale = 2, w = 22, h = 16;
+  // 【v1.180】墨缘+高光再抬一档, 命中/击杀火花更跳, 仍非霓虹方
+  var scale = 2, w = 24, h = 18;
   var cv = document.createElement("canvas");
   cv.width = w * scale;
   cv.height = h * scale;
@@ -15098,17 +15117,23 @@ function makeInkPuffSprite(color) {
   c2.lineJoin = "round";
   c2.fillStyle = color || "#6faf4f";
   c2.strokeStyle = "#1c1810";
-  c2.lineWidth = 1.8;
+  c2.lineWidth = 2.4;
   c2.beginPath();
-  if (typeof c2.ellipse === "function") c2.ellipse(w / 2, h / 2, 8.2, 5.4, -0.18, 0, CONFIG.TWO_PI);
-  else c2.arc(w / 2, h / 2, 6.2, 0, CONFIG.TWO_PI);
+  if (typeof c2.ellipse === "function") c2.ellipse(w / 2, h / 2, 9.0, 6.0, -0.18, 0, CONFIG.TWO_PI);
+  else c2.arc(w / 2, h / 2, 6.8, 0, CONFIG.TWO_PI);
   c2.fill();
   c2.stroke();
-  c2.fillStyle = "rgba(255,247,224,0.22)";
+  c2.fillStyle = "rgba(255,247,224,0.38)";
   c2.beginPath();
-  if (typeof c2.ellipse === "function") c2.ellipse(w / 2 - 2.2, h / 2 - 1.6, 3.2, 2.0, -0.3, 0, CONFIG.TWO_PI);
-  else c2.arc(w / 2 - 2, h / 2 - 1.4, 2.1, 0, CONFIG.TWO_PI);
+  if (typeof c2.ellipse === "function") c2.ellipse(w / 2 - 2.6, h / 2 - 2.0, 3.8, 2.4, -0.3, 0, CONFIG.TWO_PI);
+  else c2.arc(w / 2 - 2.2, h / 2 - 1.6, 2.4, 0, CONFIG.TWO_PI);
   c2.fill();
+  c2.strokeStyle = "rgba(255,247,224,0.35)";
+  c2.lineWidth = 1.2;
+  c2.beginPath();
+  if (typeof c2.ellipse === "function") c2.ellipse(w / 2, h / 2, 7.2, 4.6, -0.18, Math.PI * 1.15, Math.PI * 1.85);
+  else c2.arc(w / 2, h / 2, 5.2, Math.PI * 1.15, Math.PI * 1.85);
+  c2.stroke();
   cv.half = w / 2;
   return cv;
 }
@@ -15275,9 +15300,21 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
     // 【v1.145】早波杂兵墨线地板, 小卡上仍成块; 【v1.152】再压粗一档, 夜章深底上也能勾住形
     // 【v1.162】再抬到英雄旁边站得住: 地板 ≥3.2 / r*0.18, 手机尺寸外轮廓先成块
     // 【v1.177】外墨再厚一档, 夜章叠怪时轮廓仍分开; 填色不改
+    // 【v1.180】外墨再抬到 ≈2–3px 显示档(烘焙 r*0.32), 手机上兔/狐/蟾轮廓分开
     c2.fillStyle = color;
     c2.strokeStyle = ink;
-    c2.lineWidth = Math.max(5.0, r * 0.28);
+    c2.lineWidth = Math.max(5.6, r * 0.32);
+  }
+  function trashUlStroke() {
+    // 【v1.180】左上受光细描一笔, 夜底剪影不糊成一团
+    c2.strokeStyle = "rgba(255,246,214,0.42)";
+    c2.lineWidth = Math.max(1.6, r * 0.08);
+    c2.beginPath();
+    if (typeof c2.ellipse === "function") c2.ellipse(cx - r * 0.18, cy - r * 0.28, r * 0.62, r * 0.48, -0.4, Math.PI * 1.05, Math.PI * 1.85);
+    else c2.arc(cx - r * 0.12, cy - r * 0.22, r * 0.55, Math.PI * 1.1, Math.PI * 1.8);
+    c2.stroke();
+    c2.strokeStyle = ink;
+    c2.fillStyle = color;
   }
   function oneLift(dx, dy, rx, ry) {
     // 【v1.145】体积只留一块 silLift, 不叠腹影奶油
@@ -15420,14 +15457,15 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
       // 【v1.145】元气骑士简笔疾风狐: 厚三角耳 + 大头 + 蓬尾实心块, 不是细针豆。
       // 【v1.162】外轮廓再点名: 耳更高更尖、尾更蓬、吻更长, 手机尺寸先读出「狐」
       trashInk();
+      // 【v1.180】尖耳再抬一档, 手机尺寸先读出「狐」
       c2.beginPath();
       c2.moveTo(cx - r * 0.10, cy - r * 0.42);
-      c2.lineTo(cx - r * 0.78, cy - r * 1.32);
+      c2.lineTo(cx - r * 0.82, cy - r * 1.42);
       c2.lineTo(cx + r * 0.26, cy - r * 0.52);
       c2.closePath(); fs();
       c2.beginPath();
       c2.moveTo(cx + r * 0.10, cy - r * 0.42);
-      c2.lineTo(cx + r * 0.78, cy - r * 1.32);
+      c2.lineTo(cx + r * 0.82, cy - r * 1.42);
       c2.lineTo(cx - r * 0.26, cy - r * 0.52);
       c2.closePath(); fs();
       c2.fillStyle = silShade(color, 0.18);
@@ -15472,6 +15510,7 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
       snout(r * 0.18, r * 0.18, r * 0.24);
       trashLight();
       trashEyes(r * 0.24, -r * 0.16, r * 0.16);
+      trashUlStroke();
       break;
     case "leaptoad":
       // 【v1.145】元气骑士简笔跳跳蟾: 宽身 + 顶上大眼泡 + 厚后腿, 不是绿豆。
@@ -15504,6 +15543,7 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
       oneLift(-r * 0.22, r * 0.08, r * 0.30, r * 0.16);
       trashLight();
       trashEyes(r * 0.46, -r * 0.54, r * 0.22);
+      trashUlStroke();
       break;
     case "mouse":
       // 【v1.145】元气骑士简笔闪电鼠: 大圆耳 + 大头 + 实心卷尾, 不是黄豆。
@@ -16063,8 +16103,55 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
       trashInk();
       break;
     case "rabbit":
+      // 【v1.180】呆呆兔 procedural: 长耳+圆头+浅吻, 与壳壳龟剪影拆开; 外墨走 trashInk
+      trashInk();
+      c2.beginPath();
+      if (typeof c2.ellipse === "function") {
+        c2.ellipse(cx - r * 0.38, cy - r * 0.95, r * 0.22, r * 0.58, -0.22, 0, CONFIG.TWO_PI);
+        fs();
+        c2.beginPath();
+        c2.ellipse(cx + r * 0.38, cy - r * 0.95, r * 0.22, r * 0.58, 0.22, 0, CONFIG.TWO_PI);
+        fs();
+      } else {
+        c2.arc(cx - r * 0.38, cy - r * 0.78, r * 0.28, 0, CONFIG.TWO_PI); fs();
+        c2.beginPath();
+        c2.arc(cx + r * 0.38, cy - r * 0.78, r * 0.28, 0, CONFIG.TWO_PI); fs();
+      }
+      c2.fillStyle = silShade(color, 0.18);
+      c2.beginPath();
+      if (typeof c2.ellipse === "function") {
+        c2.ellipse(cx - r * 0.38, cy - r * 0.92, r * 0.10, r * 0.32, -0.22, 0, CONFIG.TWO_PI);
+        c2.fill();
+        c2.beginPath();
+        c2.ellipse(cx + r * 0.38, cy - r * 0.92, r * 0.10, r * 0.32, 0.22, 0, CONFIG.TWO_PI);
+        c2.fill();
+      }
+      trashInk();
+      c2.beginPath();
+      if (typeof c2.ellipse === "function") c2.ellipse(cx, cy + r * 0.28, r * 0.78, r * 0.52, 0, 0, CONFIG.TWO_PI);
+      else c2.arc(cx, cy + r * 0.24, r * 0.55, 0, CONFIG.TWO_PI);
+      fs();
+      c2.beginPath();
+      if (typeof c2.ellipse === "function") c2.ellipse(cx, cy - r * 0.12, r * 0.72, r * 0.62, 0, 0, CONFIG.TWO_PI);
+      else c2.arc(cx, cy - r * 0.10, r * 0.58, 0, CONFIG.TWO_PI);
+      fs();
+      c2.fillStyle = mixHex(color, "#ffffff", 0.55);
+      c2.beginPath();
+      if (typeof c2.ellipse === "function") c2.ellipse(cx, cy + r * 0.08, r * 0.36, r * 0.28, 0, 0, CONFIG.TWO_PI);
+      else c2.arc(cx, cy + r * 0.08, r * 0.28, 0, CONFIG.TWO_PI);
+      c2.fill();
+      trashInk();
+      paws(r * 0.34, r * 0.72, r * 0.15);
+      oneLift(-r * 0.18, -r * 0.22, r * 0.22, r * 0.14);
+      snout(r * 0.14, r * 0.16, r * 0.18);
+      trashLight();
+      trashEyes(r * 0.28, -r * 0.18, r * 0.17);
+      trashUlStroke();
+      break;
+    case "shell":
       // 【v1.146】壳壳龟地基: 上穹甲是第一名词, 浅色头从甲缘前探, 四短脚收在甲下, 甲纹最多两块。
       // 【v1.148】渲染升级: 脚/甲/甲纹/浅头先画 → 统一光照+甲缘轮廓光 → 眼/鼻 crisp 收尾, 去掉平涂 lift 补丁。
+      // 【v1.180】从 rabbit 键拆出, 免与呆呆兔 procedural 抢形
       heroInk();
       oval(cx - r * 0.62, cy + r * 0.42, r * 0.20, r * 0.14, 0.22);
       fs();
@@ -16347,12 +16434,13 @@ function makeEnemySprite(r, color, id) {
   // 【v1.98】烘焙半径只服务阅读, 碰撞仍走 DATA_ENEMY.r / playerR。390 上杂兵要成块, 不是豆点。
   var vis = Math.max(r * 2.08, 26);
   var scale = 2, pad = Math.max(16, vis * 0.92);
-  if (idBase === "player" || idBase === "rabbit" || idBase === "bear") {
+  if (idBase === "player" || idBase === "shell" || idBase === "hero_shell" || idBase === "bear" || idBase === "hero_grizz") {
     // 【v1.146】角色地基: 4x 烘焙, 头脸占满画布, 大厅/局内同一张。碰撞仍走原半径。
+    // 【v1.180】壳壳龟改走 shell 键, 与呆呆兔拆开
     vis = Math.max(r * 2.88, 40);
     pad = Math.max(8, vis * 0.32);
     scale = 4;
-  } else if (idBase === "mouse" || idBase === "fox" || idBase === "leaptoad" || idBase === "hedgehog" || idBase === "badger" || idBase === "sporecap" || idBase === "boomfruit" || idBase === "raven" || idBase === "orbitcrab" || idBase === "burrowmole") {
+  } else if (idBase === "rabbit" || idBase === "mouse" || idBase === "fox" || idBase === "leaptoad" || idBase === "hedgehog" || idBase === "badger" || idBase === "sporecap" || idBase === "boomfruit" || idBase === "raven" || idBase === "orbitcrab" || idBase === "burrowmole") {
     // 【v1.145】早波杂兵略放大烘焙, 碰撞仍走原半径
     // 【v1.162】中波鸦/蟹/鼹同档放大, 外轮廓跟早波一样成块
     vis = Math.max(r * 2.28, 30);
@@ -16378,7 +16466,12 @@ function makeEnemySprite(r, color, id) {
     aiC2.restore();
     aiCv.half = vis + pad * 0.22;
     // 【v1.179】英雄 AI 兜底也叠外墨; 杂兵保持原外墨
-    bakeOuterInk(aiCv, Math.max(6, Math.round(aiK * 3.2)));
+    // 【v1.180】早波兔/狐/蟾 AI 外墨再厚半档
+    if (idBase === "rabbit" || idBase === "fox" || idBase === "leaptoad" || idBase === "mouse") {
+      bakeOuterInk(aiCv, Math.max(7, Math.round(aiK * 3.6)));
+    } else {
+      bakeOuterInk(aiCv, Math.max(6, Math.round(aiK * 3.2)));
+    }
     return cacheSpriteBox(aiCv);
   }
   var cv = document.createElement("canvas");
@@ -16390,8 +16483,11 @@ function makeEnemySprite(r, color, id) {
   paintEnemySilhouette(c2, cx, cy, vis, color, idBase || "rabbit");   // 【v1.165】回退也按本体 id 出形状
   cv.half = vis + pad * 0.22;
   // 【v1.179】英雄程序化兜底也叠外墨(星巅海军底可读); 杂兵仍走原粗外墨
-  if (idBase === "player" || idBase === "hero_shell" || idBase === "hero_grizz") {
+  if (idBase === "player" || idBase === "shell" || idBase === "hero_shell" || idBase === "hero_grizz") {
     bakeOuterInk(cv, Math.max(6, Math.round(scale * 3.2)));
+  } else if (idBase === "rabbit" || idBase === "fox" || idBase === "leaptoad" || idBase === "mouse") {
+    // 【v1.180】早波杂兵外墨再厚半档, 手机剪影可读
+    bakeOuterInk(cv, Math.max(7, Math.round(scale * 3.4)));
   } else {
     bakeOuterInk(cv, Math.max(6, Math.round(scale * 3.0)));
   }
@@ -17872,7 +17968,7 @@ function buildSprites() {
   //   谁后完成谁生效 —— 实测 gem0 被 AI 重烘焙从 128px 覆盖成 30px。
   //   加锁后两种完成顺序都收敛到"已落位的外部素材不被覆盖"，结果确定。
   if (!SKIN_LOCKED.player) SPRITES.player = makeEnemySprite(CONFIG.playerR + 4, c.player, "player");
-  if (!SKIN_LOCKED.hero_shell) SPRITES.hero_shell = makeEnemySprite(CONFIG.playerR + 4, c.heroShell, "rabbit");
+  if (!SKIN_LOCKED.hero_shell) SPRITES.hero_shell = makeEnemySprite(CONFIG.playerR + 4, c.heroShell, "shell");
   if (!SKIN_LOCKED.hero_grizz) SPRITES.hero_grizz = makeEnemySprite(CONFIG.playerR + 4, c.heroGrizz, "bear");
   SPRITES.rabbit = makeEnemySprite(DATA_ENEMY.rabbit.r, c.enemyRabbit, "rabbit");
   SPRITES.bear = makeEnemySprite(DATA_ENEMY.bear.r, c.enemyBear, "bear");
@@ -23827,12 +23923,12 @@ function paintMesaButte(c2, x, y, bw, bh) {
   var top, face, mid, foot;
   c2.lineJoin = "round";
   c2.lineCap = "round";
-  // 接触影: 台脚压在土路上
-  c2.globalAlpha = 0.34;
-  c2.fillStyle = "rgba(8, 12, 22, 0.55)";
+  // 接触影: 台脚压在土路上; 【v1.180】略加深加宽, 台地不再悬空
+  c2.globalAlpha = 0.42;
+  c2.fillStyle = "rgba(6, 10, 20, 0.62)";
   c2.beginPath();
-  if (typeof c2.ellipse === "function") c2.ellipse(x + bw * 0.50, y + bh * 1.02, bw * 0.42, bh * 0.16, 0, 0, CONFIG.TWO_PI);
-  else c2.arc(x + bw * 0.50, y + bh * 0.98, bw * 0.28, 0, CONFIG.TWO_PI);
+  if (typeof c2.ellipse === "function") c2.ellipse(x + bw * 0.50, y + bh * 1.04, bw * 0.48, bh * 0.20, 0, 0, CONFIG.TWO_PI);
+  else c2.arc(x + bw * 0.50, y + bh * 1.00, bw * 0.32, 0, CONFIG.TWO_PI);
   c2.fill();
   c2.globalAlpha = 1;
   // 软接坡: 台身下缘连到路面色
@@ -23928,11 +24024,12 @@ function paintStarRidge(c2, w, y0, amp) {
   g.addColorStop(1, "#121a34");
   c2.fillStyle = g;
   c2.fill();
-  c2.strokeStyle = "rgba(6, 8, 18, 0.92)";
-  c2.lineWidth = Math.max(5.0, amp * 0.08);
+  // 【v1.180】脊线墨缘略收, 少一分硬瓦楞
+  c2.strokeStyle = "rgba(6, 8, 18, 0.72)";
+  c2.lineWidth = Math.max(3.6, amp * 0.055);
   c2.stroke();
-  c2.strokeStyle = "rgba(220, 230, 255, 0.38)";
-  c2.lineWidth = Math.max(2, amp * 0.035);
+  c2.strokeStyle = "rgba(220, 230, 255, 0.32)";
+  c2.lineWidth = Math.max(1.8, amp * 0.028);
   c2.beginPath();
   c2.moveTo(0, y0 + amp * 0.40);
   c2.quadraticCurveTo(w * 0.35, y0 + amp * 0.22, w * 0.62, y0 + amp * 0.30);
@@ -23985,25 +24082,34 @@ function paintChapterGround(c2, w, h, mt) {
   } else if (kind === "star") {
     // 【v1.145】夜石土路加厚; 【v1.152】去星井碎块; 【v1.162】去灰斑; 【v1.177】左上受光。
     // 【v1.178】缺 ground_star.png: 整瓦海军+柔脊+淡土路晕(边缘淡出), 平铺不再显硬梯形/桶形占位。
-    var skyG = c2.createLinearGradient(0, 0, w * 0.7, h);
-    skyG.addColorStop(0, "#4a5a88");
-    skyG.addColorStop(0.35, a);
-    skyG.addColorStop(1, "#0c1020");
+    // 【v1.180】径向海军洗+柔脊, 去掉硬瓦楞横带感; 台地接触影保留并略加深。
+    var skyG = c2.createRadialGradient(w * 0.42, h * 0.28, w * 0.06, w * 0.5, h * 0.55, w * 0.85);
+    skyG.addColorStop(0, "#5a6a98");
+    skyG.addColorStop(0.28, "#2a3658");
+    skyG.addColorStop(0.62, a);
+    skyG.addColorStop(1, "#0a0e1c");
     c2.fillStyle = skyG;
     c2.fillRect(0, 0, w, h);
-    paintStarRidge(c2, w, h * 0.03, h * 0.18);
+    // 纵向柔罩: 压掉瓦片接缝横纹
+    var washV = c2.createLinearGradient(0, 0, 0, h);
+    washV.addColorStop(0, "rgba(72, 88, 130, 0.35)");
+    washV.addColorStop(0.45, "rgba(20, 28, 48, 0.08)");
+    washV.addColorStop(1, "rgba(6, 10, 22, 0.45)");
+    c2.fillStyle = washV;
+    c2.fillRect(0, 0, w, h);
+    paintStarRidge(c2, w, h * 0.02, h * 0.16);
     // 淡土路: 大面积软晕, 四边 alpha 收, 瓦片接缝不露硬条
     pathH = Math.max(120, h * 0.22);
     var mesaY = h * 0.38;
     var road = c2.createRadialGradient(w * 0.45, mesaY + pathH * 0.35, w * 0.08, w * 0.5, mesaY + pathH * 0.4, w * 0.72);
-    road.addColorStop(0, "rgba(210, 176, 128, 0.55)");
-    road.addColorStop(0.45, "rgba(106, 88, 68, 0.42)");
+    road.addColorStop(0, "rgba(210, 176, 128, 0.50)");
+    road.addColorStop(0.45, "rgba(106, 88, 68, 0.36)");
     road.addColorStop(1, "rgba(20, 24, 36, 0)");
     c2.fillStyle = road;
     c2.fillRect(0, mesaY - pathH * 0.2, w, pathH * 1.4);
     var lipG = c2.createLinearGradient(0, mesaY, w * 0.8, mesaY + pathH * 0.5);
-    lipG.addColorStop(0, "rgba(248, 232, 198, 0.50)");
-    lipG.addColorStop(0.5, "rgba(190, 156, 112, 0.18)");
+    lipG.addColorStop(0, "rgba(248, 232, 198, 0.42)");
+    lipG.addColorStop(0.5, "rgba(190, 156, 112, 0.14)");
     lipG.addColorStop(1, "rgba(92, 74, 56, 0)");
     c2.fillStyle = lipG;
     c2.beginPath();
@@ -24012,7 +24118,7 @@ function paintChapterGround(c2, w, h, mt) {
     c2.quadraticCurveTo(w * 0.55, mesaY + pathH * 0.38, 0, mesaY + pathH * 0.42);
     c2.closePath();
     c2.fill();
-    c2.strokeStyle = "rgba(255, 240, 214, 0.35)";
+    c2.strokeStyle = "rgba(255, 240, 214, 0.28)";
     c2.lineWidth = Math.max(2, h * 0.003);
     c2.beginPath();
     c2.moveTo(w * 0.05, mesaY + pathH * 0.20);
@@ -24220,30 +24326,49 @@ function drawHallStageGround(ctx) {
 }
 function drawHallStageAccent(ctx) {
   // 【v1.176】台缘路唇 + 两侧草簇: 落在落地台之后、角色卡之前, 侧槽/英雄不被盖。
-  var i, clumps;
+  // 【v1.180】路唇再清一档 + 台面静苔点, 备案截图不显空奶油。
+  var i, clumps, mx, my, mr;
   ctx.save();
-  ctx.fillStyle = "rgba(184,132,88,0.48)";
+  ctx.fillStyle = "rgba(184,132,88,0.55)";
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 332, 196, 18, 0, 0, CONFIG.TWO_PI);
-  else ctx.arc(360, 332, 110, 0, CONFIG.TWO_PI);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 332, 204, 20, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(360, 332, 114, 0, CONFIG.TWO_PI);
   ctx.fill();
-  ctx.fillStyle = "rgba(200,236,200,0.38)";
+  ctx.fillStyle = "rgba(200,236,200,0.44)";
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(352, 326, 168, 10, 0, 0, CONFIG.TWO_PI);
-  else ctx.arc(352, 326, 90, 0, CONFIG.TWO_PI);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(352, 326, 176, 11, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(352, 326, 94, 0, CONFIG.TWO_PI);
   ctx.fill();
   ctx.strokeStyle = "#2e3c1c";
-  ctx.lineWidth = 2.4;
+  ctx.lineWidth = 2.6;
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 332, 196, 18, 0, 0, CONFIG.TWO_PI);
-  else ctx.arc(360, 332, 110, 0, CONFIG.TWO_PI);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 332, 204, 20, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(360, 332, 114, 0, CONFIG.TWO_PI);
   ctx.stroke();
-  ctx.strokeStyle = "rgba(244,248,228,0.62)";
-  ctx.lineWidth = 1.8;
+  ctx.strokeStyle = "rgba(244,248,228,0.68)";
+  ctx.lineWidth = 2.0;
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(348, 322, 140, 8, 0, Math.PI * 1.15, Math.PI * 1.75);
-  else ctx.arc(348, 322, 80, Math.PI * 1.15, Math.PI * 1.75);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(348, 322, 148, 9, 0, Math.PI * 1.15, Math.PI * 1.75);
+  else ctx.arc(348, 322, 84, Math.PI * 1.15, Math.PI * 1.75);
   ctx.stroke();
+  // 静苔点(不成团): 落地台前缘可读质感
+  ctx.fillStyle = "rgba(74, 110, 52, 0.28)";
+  for (i = 0; i < 18; i++) {
+    mx = 220 + (i * 97) % 280;
+    my = 300 + (i * 53) % 36;
+    mr = 1.2 + (i % 3) * 0.7;
+    ctx.beginPath();
+    ctx.arc(mx, my, mr, 0, CONFIG.TWO_PI);
+    ctx.fill();
+  }
+  ctx.fillStyle = "rgba(120, 156, 80, 0.18)";
+  for (i = 0; i < 12; i++) {
+    mx = 240 + (i * 113) % 240;
+    my = 288 + (i * 41) % 28;
+    ctx.beginPath();
+    ctx.arc(mx, my, 0.9 + (i % 2) * 0.5, 0, CONFIG.TWO_PI);
+    ctx.fill();
+  }
   // 两侧沟: 装备框与舞台之间, 草簇一眼可读
   clumps = [
     [128, 236, 18, "#5a8a3a"],
@@ -24973,27 +25098,34 @@ function renderGame() {
     } else {
       ctx.drawImage(spr, g.x - gh, gy - gh, gh * 2, gh * 2);
     }
+    // 【v1.180】珠墨缘再抬一档, 战斗拾取更「跳」但不霓虹
     ctx.strokeStyle = "#1c1810";
-    ctx.globalAlpha = 0.96;
-    ctx.lineWidth = 2.6;   // 【v1.162】局内宝石墨缘再清楚, 跟 FX 晕对比够, 仍无钻面
+    ctx.globalAlpha = 0.98;
+    ctx.lineWidth = 3.0;
     ctx.beginPath();
-    ctx.arc(g.x, gy, gh + 2.2, 0, CONFIG.TWO_PI);
+    ctx.arc(g.x, gy, gh + 2.4, 0, CONFIG.TWO_PI);
     ctx.stroke();
     ctx.strokeStyle = g.tier === 2 ? "#e05a46" : (g.tier === 1 ? "#3faf5a" : "#3a7bd5");
-    ctx.lineWidth = g.tier === 2 ? 2.4 : 1.8;
+    ctx.lineWidth = g.tier === 2 ? 2.8 : 2.2;
     ctx.beginPath();
-    ctx.arc(g.x, gy, gh + 0.6, 0, CONFIG.TWO_PI);
+    ctx.arc(g.x, gy, gh + 0.7, 0, CONFIG.TWO_PI);
     ctx.stroke();
+    ctx.strokeStyle = "rgba(255,247,224,0.35)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(g.x - gh * 0.22, gy - gh * 0.28, gh * 0.42, Math.PI * 1.1, Math.PI * 1.85);
+    ctx.stroke();
+    // 【v1.180】世界「珠」字更小更淡, 不抢杂兵剪影; 获取条仍走 obtainFx
     if (!g.magnet && !_fxQuiet && (g.hopT < 1.15 || GemPool.count < 36)) {
-      ctx.globalAlpha = 0.92;
-      ctx.font = "bold 12px " + FONT_STACK;
+      ctx.globalAlpha = 0.55;
+      ctx.font = "bold 9px " + FONT_STACK;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.lineWidth = 3.5;
-      ctx.strokeStyle = "rgba(16,20,14,0.88)";
-      ctx.strokeText("珠", g.x, gy + gh + 10);
+      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = "rgba(16,20,14,0.55)";
+      ctx.strokeText("珠", g.x, gy + gh + 8);
       ctx.fillStyle = g.tier === 2 ? "#ffc8b8" : (g.tier === 1 ? "#d8ffd0" : "#d0e8ff");
-      ctx.fillText("珠", g.x, gy + gh + 10);
+      ctx.fillText("珠", g.x, gy + gh + 8);
       ctx.textBaseline = "alphabetic";
     }
     ctx.lineWidth = 1;
@@ -25115,25 +25247,26 @@ function renderGame() {
     ctx.stroke();
     ctx.globalAlpha = 1;
     ctx.lineWidth = 1;
+    // 【v1.180】世界鸡腿/磁/炸名签更小更淡, 不抢剪影; 走近提示保留
     var fLabel = fdef.name;
-    var fLabW = fNear ? 108 : 72;
-    var fLabH = fNear ? 32 : 20;
-    ctx.globalAlpha = 0.94 * fblink;
-    ctx.fillStyle = "rgba(232,240,200,0.96)";
-    fillRoundRect(ctx, fd.x - fLabW / 2, fd.y + fyOff + fsz / 2 + 2, fLabW, fLabH, 8);
-    ctx.strokeStyle = "#2f5a3a";
-    ctx.lineWidth = 1.8;
-    strokeRoundRect(ctx, fd.x - fLabW / 2, fd.y + fyOff + fsz / 2 + 2, fLabW, fLabH, 8);
+    var fLabW = fNear ? 96 : 56;
+    var fLabH = fNear ? 28 : 16;
+    ctx.globalAlpha = (fNear ? 0.88 : 0.52) * fblink;
+    ctx.fillStyle = "rgba(232,240,200,0.82)";
+    fillRoundRect(ctx, fd.x - fLabW / 2, fd.y + fyOff + fsz / 2 + 2, fLabW, fLabH, 6);
+    ctx.strokeStyle = "rgba(47,90,58,0.55)";
+    ctx.lineWidth = 1.2;
+    strokeRoundRect(ctx, fd.x - fLabW / 2, fd.y + fyOff + fsz / 2 + 2, fLabW, fLabH, 6);
     ctx.lineWidth = 1;
     ctx.fillStyle = "#2e3c1c";
-    ctx.font = "bold 14px " + FONT_STACK;
+    ctx.font = (fNear ? "bold 12px " : "bold 10px ") + FONT_STACK;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(fLabel, fd.x, fd.y + fyOff + fsz / 2 + (fNear ? 12 : 12));
+    ctx.fillText(fLabel, fd.x, fd.y + fyOff + fsz / 2 + (fNear ? 10 : 10));
     if (fNear) {
       ctx.fillStyle = "#2f5a3a";
-      ctx.font = "bold 12px " + FONT_STACK;
-      ctx.fillText("走近才捡", fd.x, fd.y + fyOff + fsz / 2 + 24);
+      ctx.font = "bold 11px " + FONT_STACK;
+      ctx.fillText("走近才捡", fd.x, fd.y + fyOff + fsz / 2 + 22);
     }
     ctx.globalAlpha = 1;
     ctx.lineWidth = 1;
@@ -26849,6 +26982,13 @@ function drawHomeBase(ctx) {
   if (typeof ctx.ellipse === "function") ctx.ellipse(342, 268, 118, 18, 0, Math.PI * 1.15, Math.PI * 1.55);
   else ctx.arc(342, 268, 70, Math.PI * 1.15, Math.PI * 1.55);
   ctx.stroke();
+  // 【v1.180】台面静苔粒: 备案截图不空
+  ctx.fillStyle = "rgba(62, 92, 42, 0.22)";
+  for (var mossI = 0; mossI < 14; mossI++) {
+    ctx.beginPath();
+    ctx.arc(290 + (mossI * 79) % 170, 258 + (mossI * 37) % 28, 1.1 + (mossI % 3) * 0.55, 0, CONFIG.TWO_PI);
+    ctx.fill();
+  }
   // 近缘苔唇亮带: 台身与卡托之间留一截可读正面, 不再整块暗死
   ctx.strokeStyle = "rgba(200, 236, 200, 0.42)";
   ctx.lineWidth = 2;
