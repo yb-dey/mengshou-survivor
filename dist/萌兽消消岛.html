@@ -25,7 +25,8 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.189 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.190 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.190 美术】永久强化行标题深苔(drawUpgradePanel); 早波兔耳/狐吻/鼠耳/蟾眼路径约 +10%(paintEnemySilhouette, makeEnemySprite 边距同比 half); 入账回大厅 2px 苔缘+更深橄榄(makeButton resultfoot); 回港条去金眩仍可读(drawHallReturnToast); 星巅风纹 α≈0.18–0.22(paintStarRidge); 拾珠短墨火花(armBeadInkSpark/drawBeadInkSparks); SFX_GEM 软 notch。1.189 锁章/结算墨点/HUD 字缘/脚环 0.18 保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.189 美术】选章锁定软墨挂锁+闷橄榄填(drawSoftLockBadge/makeChapterCard); 结算回大厅/再领收静(makeButton resultfoot); 结算开场 2–4 粒短命墨点(armSettleInk/drawSettleInk); 结算小字深苔(drawResultPanel); HUD 时钟/生命/杀敌字缘(drawHudClusterFrame); SFX_LOSE 软 notch。1.188 看板脊/复活奶油/边暗角/走路软尘/脚环 0.18 保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.188 美术】大厅装/强/鉴看板软抬唇+2px 苔外墨(makeHallBoardCell); 复活盘奶油填+约 2px 橄榄描边、按钮去金闪(makeModal/drawRevivePanel/comfort); 倒下暗角只压四边 alpha≤0.35(drawDeathCine); 结算小字对比抬一档; 擦入后走路极淡软尘(drawMoveDust); SFX_REVIVE 软 notch。1.187 叠层外墨/擦入/仓库行/脚环 0.18 保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.187 美术】开局奶油径向擦入 drawEntranceWipe(≤0.42s, 跳过钮/空格同收, 不另加输入锁); 擦入结束脚下 2–3 墨点 drawEntranceDust; 叠层早波(≥2 只交叠)仅先画的那只换 stackInk(正交约 +1px 外墨, 填体 α≥0.92); 仓库行卡 vaultRowChrome 锁定闷填/可打造 2px 软墨, 斑马奶油再静; 睡莲垫下台唇再清一档; SFX_START 软 notch。1.186 脚环/辉光/xN/名牌/鸡腿/强化去金保持。数值/掉落/进化/10 分钟轴不动。
@@ -619,7 +620,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.189",                   // 【v1.189】锁章挂锁; 结算钮收静; 结算墨点; 小字深苔; HUD 字缘; SFX_LOSE 软。1.188 看板脊/复活奶油/边暗角/走路软尘/脚环保持。不改掉率/价格/锻造/进化/复活次数/10 分钟轴
+  version: "1.190",                   // 【v1.190】强化行标题深苔; 早波耳吻眼约 +10%; 回大厅钮 2px 苔缘; 回港条去金; 风纹更可读; 拾珠墨火花; SFX_GEM 软 notch。不改掉率/价格/锻造/进化/复活次数/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -12223,8 +12224,9 @@ var Audio = {
     } else if (id === "SFX_GEM") { len = 0.11; out = this._alloc(len, sr);
       // 【v1.152】宝石拾取更柔: 起音放缓+高音泛音压淡, 连拾不刺耳(连击升调机制不动)
       // 【v1.181】起音再缓+顶泛音再收, 珠拾更可爱不刺; 音高轮廓/连击升调不动
-      this._tone(out, sr, { wave: "sine", f0: 1480, t0: 0, dur: 0.09, a: 0.007, d: 0.055, s: 0, r: 0.028, gain: 0.86 });
-      this._tone(out, sr, { wave: "sine", f0: 1976, t0: 0.024, dur: 0.07, a: 0.006, d: 0.042, s: 0, r: 0.022, gain: 0.16 });
+      // 【v1.190】软 notch: 起音 7/6→12/10ms, 顶泛音 0.16→0.14; 音高/时长/总线 gain 不动(外采 wav 另见 _start)
+      this._tone(out, sr, { wave: "sine", f0: 1480, t0: 0, dur: 0.09, a: 0.012, d: 0.055, s: 0, r: 0.028, gain: 0.86 });
+      this._tone(out, sr, { wave: "sine", f0: 1976, t0: 0.024, dur: 0.07, a: 0.010, d: 0.042, s: 0, r: 0.022, gain: 0.14 });
     } else if (id === "SFX_LEVELUP") { len = 0.42; out = this._alloc(len, sr);
       // 【v1.153】升级琶音起音放缓一档(5ms→14ms)+各层增益略收, 仍清亮可读但不炸耳
       // 【v1.161】残余毛刺再柔一档(对照 CARDSHOW 族仍偏亮): 起音 14→20ms、持音 0.28→0.18/0.12、
@@ -13065,6 +13067,13 @@ var Audio = {
         var gLs = g.gain.value;
         g.gain.setValueAtTime(gLs * 0.54, tLs);
         g.gain.linearRampToValueAtTime(gLs, tLs + 0.018);
+      }
+      // 【v1.190】SFX_GEM 软 notch 盖住已加载 wav: 10ms 从半增益爬到同一峰值, 不改总线 gain
+      if (sid === "SFX_GEM") {
+        var tGm = this.ctx.currentTime + (delay || 0);
+        var gGm = g.gain.value;
+        g.gain.setValueAtTime(gGm * 0.58, tGm);
+        g.gain.linearRampToValueAtTime(gGm, tGm + 0.010);
       }
       src.connect(g);
       if (!this.sfxGain) this._initSfxGain();
@@ -15809,15 +15818,16 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
       if (typeof c2.ellipse === "function") c2.ellipse(cx + r * 0.04, cy - r * 0.08, r * 0.70, r * 0.60, 0, 0, CONFIG.TWO_PI);
       else c2.arc(cx, cy - r * 0.06, r * 0.58, 0, CONFIG.TWO_PI);
       fs();
+      // 【v1.190】狐吻路径约 +10%(锚在吻根外推), 尖耳不动
       c2.beginPath();
-      c2.moveTo(cx + r * 0.52, cy + r * 0.08);
-      c2.lineTo(cx + r * 1.22, cy + r * 0.14);
-      c2.lineTo(cx + r * 0.54, cy + r * 0.38);
+      c2.moveTo(cx + r * 0.50, cy + r * 0.06);
+      c2.lineTo(cx + r * 1.30, cy + r * 0.14);
+      c2.lineTo(cx + r * 0.54, cy + r * 0.42);
       c2.closePath(); fs();
       paws(r * 0.36, r * 0.76, r * 0.16);
       trashInk();
       oneLift(-r * 0.20, -r * 0.24, r * 0.22, r * 0.14);
-      snout(r * 0.18, r * 0.18, r * 0.24);
+      snout(r * 0.20, r * 0.16, r * 0.27);
       trashLight();
       trashEyes(r * 0.24, -r * 0.16, r * 0.16);
       trashUlStroke();
@@ -15848,22 +15858,24 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
         c2.beginPath();
         c2.arc(cx + r * 0.80, cy + r * 0.60, r * 0.28, 0, CONFIG.TWO_PI); fs();
       }
-      c2.beginPath(); c2.arc(cx - r * 0.50, cy - r * 0.54, r * 0.50, 0, CONFIG.TWO_PI); fs();
-      c2.beginPath(); c2.arc(cx + r * 0.50, cy - r * 0.54, r * 0.50, 0, CONFIG.TWO_PI); fs();
+      // 【v1.190】眼泡路径约 +10%, 先读出「蟾」
+      c2.beginPath(); c2.arc(cx - r * 0.54, cy - r * 0.62, r * 0.55, 0, CONFIG.TWO_PI); fs();
+      c2.beginPath(); c2.arc(cx + r * 0.54, cy - r * 0.62, r * 0.55, 0, CONFIG.TWO_PI); fs();
       oneLift(-r * 0.22, r * 0.08, r * 0.30, r * 0.16);
       trashLight();
-      trashEyes(r * 0.46, -r * 0.54, r * 0.22);
+      trashEyes(r * 0.50, -r * 0.62, r * 0.24);
       trashUlStroke();
       break;
     case "mouse":
       // 【v1.145】元气骑士简笔闪电鼠: 大圆耳 + 大头 + 实心卷尾, 不是黄豆。
       // 【v1.162】耳更大、卷尾更实、吻须更清楚, 外轮廓先读出「鼠」
       trashInk();
-      c2.beginPath(); c2.arc(cx - r * 0.60, cy - r * 0.70, r * 0.46, 0, CONFIG.TWO_PI); fs();
-      c2.beginPath(); c2.arc(cx + r * 0.60, cy - r * 0.70, r * 0.46, 0, CONFIG.TWO_PI); fs();
+      // 【v1.190】圆耳路径约 +10%, 先读出「鼠」
+      c2.beginPath(); c2.arc(cx - r * 0.64, cy - r * 0.78, r * 0.51, 0, CONFIG.TWO_PI); fs();
+      c2.beginPath(); c2.arc(cx + r * 0.64, cy - r * 0.78, r * 0.51, 0, CONFIG.TWO_PI); fs();
       c2.fillStyle = silShade(color, 0.22);
-      c2.beginPath(); c2.arc(cx - r * 0.60, cy - r * 0.68, r * 0.20, 0, CONFIG.TWO_PI); c2.fill();
-      c2.beginPath(); c2.arc(cx + r * 0.60, cy - r * 0.68, r * 0.20, 0, CONFIG.TWO_PI); c2.fill();
+      c2.beginPath(); c2.arc(cx - r * 0.64, cy - r * 0.76, r * 0.22, 0, CONFIG.TWO_PI); c2.fill();
+      c2.beginPath(); c2.arc(cx + r * 0.64, cy - r * 0.76, r * 0.22, 0, CONFIG.TWO_PI); c2.fill();
       trashInk();
       c2.beginPath();
       if (typeof c2.ellipse === "function") c2.ellipse(cx, cy + r * 0.34, r * 0.72, r * 0.48, 0, 0, CONFIG.TWO_PI);
@@ -16415,26 +16427,27 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
       break;
     case "rabbit":
       // 【v1.180】呆呆兔 procedural: 长耳+圆头+浅吻, 与壳壳龟剪影拆开; 外墨走 trashInk
+      // 【v1.190】长耳路径约 +10%(rx/ry/上移), 吻与身不动
       trashInk();
       c2.beginPath();
       if (typeof c2.ellipse === "function") {
-        c2.ellipse(cx - r * 0.38, cy - r * 0.95, r * 0.22, r * 0.58, -0.22, 0, CONFIG.TWO_PI);
+        c2.ellipse(cx - r * 0.42, cy - r * 1.04, r * 0.24, r * 0.64, -0.22, 0, CONFIG.TWO_PI);
         fs();
         c2.beginPath();
-        c2.ellipse(cx + r * 0.38, cy - r * 0.95, r * 0.22, r * 0.58, 0.22, 0, CONFIG.TWO_PI);
+        c2.ellipse(cx + r * 0.42, cy - r * 1.04, r * 0.24, r * 0.64, 0.22, 0, CONFIG.TWO_PI);
         fs();
       } else {
-        c2.arc(cx - r * 0.38, cy - r * 0.78, r * 0.28, 0, CONFIG.TWO_PI); fs();
+        c2.arc(cx - r * 0.42, cy - r * 0.86, r * 0.31, 0, CONFIG.TWO_PI); fs();
         c2.beginPath();
-        c2.arc(cx + r * 0.38, cy - r * 0.78, r * 0.28, 0, CONFIG.TWO_PI); fs();
+        c2.arc(cx + r * 0.42, cy - r * 0.86, r * 0.31, 0, CONFIG.TWO_PI); fs();
       }
       c2.fillStyle = silShade(color, 0.18);
       c2.beginPath();
       if (typeof c2.ellipse === "function") {
-        c2.ellipse(cx - r * 0.38, cy - r * 0.92, r * 0.10, r * 0.32, -0.22, 0, CONFIG.TWO_PI);
+        c2.ellipse(cx - r * 0.42, cy - r * 1.00, r * 0.11, r * 0.35, -0.22, 0, CONFIG.TWO_PI);
         c2.fill();
         c2.beginPath();
-        c2.ellipse(cx + r * 0.38, cy - r * 0.92, r * 0.10, r * 0.32, 0.22, 0, CONFIG.TWO_PI);
+        c2.ellipse(cx + r * 0.42, cy - r * 1.00, r * 0.11, r * 0.35, 0.22, 0, CONFIG.TWO_PI);
         c2.fill();
       }
       trashInk();
@@ -16875,7 +16888,15 @@ function makeEnemySprite(r, color, id) {
     return cacheSpriteBox(aiCv);
   }
   // 【v1.182】早波强制命名色填体(奶油兔/灰鼠/橙狐/绿蟾), 不吃 tint/近黑 AI
-  if (isEarlyTrashId(idBase)) color = earlyTrashBodyColor(idBase);
+  var bodyHalf = vis + pad * 0.22;
+  if (isEarlyTrashId(idBase)) {
+    color = earlyTrashBodyColor(idBase);
+    // 【v1.190】耳/吻/眼外扩约 10% 要画布边; half 按画布同比, 身体屏幕尺寸不变, 碰撞仍 e.r
+    var cueMargin = vis * 0.20;
+    var oldSize = size;
+    size += cueMargin * 2;
+    bodyHalf = bodyHalf * (size / oldSize);
+  }
   var cv = document.createElement("canvas");
   cv.width = size * scale;
   cv.height = size * scale;
@@ -16883,7 +16904,7 @@ function makeEnemySprite(r, color, id) {
   c2.scale(scale, scale);
   var cx = size / 2, cy = size / 2 + vis * 0.06;
   paintEnemySilhouette(c2, cx, cy, vis, color, idBase || "rabbit");   // 【v1.165】回退也按本体 id 出形状
-  cv.half = vis + pad * 0.22;
+  cv.half = bodyHalf;
   // 【v1.179】英雄程序化兜底也叠外墨(星巅海军底可读); 杂兵仍走原粗外墨
   if (idBase === "player" || idBase === "shell" || idBase === "hero_shell" || idBase === "hero_grizz") {
     bakeOuterInk(cv, Math.max(6, Math.round(scale * 3.2)));
@@ -20685,6 +20706,57 @@ function spawnGem(x, y, value) {
   GemPool.count++;
 }
 
+function armBeadInkSpark(x, y) {
+  // 【v1.190】拾珠软墨火花: 2–3 粒, 短命, 纯表现, 不改经验
+  var pool, i, n, ang, s, sp;
+  if (!GAME || GAME.reduceMotion) return;
+  pool = GAME.beadInk;
+  if (!pool) pool = GAME.beadInk = [];
+  if (pool.length > 16) pool.splice(0, pool.length - 10);
+  s = ((x * 13 + y * 7) | 0);
+  if (s < 0) s = -s;
+  n = 2 + (s & 1);
+  for (i = 0; i < n; i++) {
+    ang = ((s + i * 137) % 628) / 100;
+    sp = 32 + ((s + i * 11) % 16);
+    pool.push({
+      x: x, y: y,
+      vx: Math.cos(ang) * sp,
+      vy: Math.sin(ang) * sp,
+      r: 4.2 + (i % 2) * 1.4,
+      t: 0,
+      life: 0.20,
+      ink: (i % 2) ? "#2c3a22" : "#5c6c48"
+    });
+  }
+}
+function updateBeadInkSparks(dt) {
+  var pool, i, d;
+  pool = GAME.beadInk;
+  if (!pool || !pool.length) return;
+  for (i = pool.length - 1; i >= 0; i--) {
+    d = pool[i];
+    d.t += dt;
+    if (d.t >= d.life) pool.splice(i, 1);
+  }
+  if (!pool.length) GAME.beadInk = null;
+}
+function drawBeadInkSparks(ctx) {
+  var pool, i, d, u, a, k, rx;
+  pool = GAME.beadInk;
+  if (!pool || !pool.length || GAME.reduceMotion) return;
+  if (GAME.state !== GAME.flow.PLAYING) return;
+  for (i = 0; i < pool.length; i++) {
+    d = pool[i];
+    u = d.life > 0 ? d.t / d.life : 1;
+    if (u < 0) u = 0;
+    if (u >= 1) continue;
+    a = u < 0.16 ? (u / 0.16) : (1 - (u - 0.16) / 0.84);
+    k = d.t;
+    rx = d.r * (1 - u * 0.4);
+    drawInkPuff(ctx, d.x + d.vx * k, d.y + d.vy * k, rx, rx * 0.72, d.ink, 0.55 * a);
+  }
+}
 function collectGem(g) {
   var gx = g.x, gy = g.y, col = g.tier === 2 ? "#e05a46" : (g.tier === 1 ? "#50b45a" : "#4690dc");
   g.active = false;
@@ -20696,6 +20768,7 @@ function collectGem(g) {
   gemCombo.t = CONFIG.gemComboWindow;
   Audio.playMilestone(gemCombo.n);  // 连击里程碑和弦(R3): 5/10/15 连击各触发一次(复用 SFX_LEVELUP 变体)
   Audio.play("pickup");
+  armBeadInkSpark(gx, gy);
   if (!GAME.reduceMotion) {
     spawnParticle(gx, gy, (player.x - gx) * 2.4, (player.y - gy) * 2.4, col);
     var pn = fxBurstN(4), gi2, ang;
@@ -24463,25 +24536,26 @@ function paintStarRidge(c2, w, y0, amp) {
   c2.save();
   c2.lineCap = "round";
   c2.lineJoin = "round";
-  c2.strokeStyle = "rgba(210, 222, 246, 0.20)";
+  // 【v1.190】风纹再可读一档, α 落在 0.18–0.22, 不加新纹
+  c2.strokeStyle = "rgba(210, 222, 246, 0.22)";
   c2.lineWidth = Math.max(1.2, amp * 0.018);
   c2.beginPath();
   c2.moveTo(w * 0.08, y0 + amp * 0.52);
   c2.quadraticCurveTo(w * 0.28, y0 + amp * 0.34, w * 0.46, y0 + amp * 0.48);
   c2.stroke();
-  c2.strokeStyle = "rgba(198, 214, 240, 0.18)";
+  c2.strokeStyle = "rgba(198, 214, 240, 0.20)";
   c2.lineWidth = Math.max(1.1, amp * 0.016);
   c2.beginPath();
   c2.moveTo(w * 0.22, y0 + amp * 0.58);
   c2.quadraticCurveTo(w * 0.48, y0 + amp * 0.40, w * 0.72, y0 + amp * 0.54);
   c2.stroke();
-  c2.strokeStyle = "rgba(220, 230, 250, 0.16)";
+  c2.strokeStyle = "rgba(220, 230, 250, 0.18)";
   c2.lineWidth = Math.max(1.0, amp * 0.014);
   c2.beginPath();
   c2.moveTo(w * 0.40, y0 + amp * 0.36);
   c2.quadraticCurveTo(w * 0.58, y0 + amp * 0.24, w * 0.88, y0 + amp * 0.42);
   c2.stroke();
-  c2.strokeStyle = "rgba(186, 204, 236, 0.17)";
+  c2.strokeStyle = "rgba(186, 204, 236, 0.19)";
   c2.lineWidth = Math.max(1.1, amp * 0.015);
   c2.beginPath();
   c2.moveTo(w * 0.55, y0 + amp * 0.62);
@@ -26293,6 +26367,7 @@ function renderGame() {
   ctx.lineWidth = 1;
   // 粒子层(有效上限随画质档; 【v1.81】按色合并绘制, 只扫 used 槽)
   drawParticles(ctx);
+  drawBeadInkSparks(ctx);   // 【v1.190】拾珠短墨火花, 世界坐标
   drawKillFx(ctx);
   drawEntranceDust(ctx);   // 【v1.187】擦入收束后的脚下墨点, 世界坐标
   drawMoveDust(ctx);       // 【v1.188】走路极淡软尘, 擦入结束后才出现
@@ -28081,13 +28156,14 @@ function makeButton(id, x, y, w, h, label, onTap) {
       }
       if (skin === "resultfoot") {
         // 【v1.189】结算再领/入账回大厅: 闷橄榄填 + 深苔字, 无奶白描边无金闪
+        // 【v1.190】入账回大厅再深一档橄榄 + 2px 苔缘, 对奶油盘多一档对比, 仍无金眩
         var homeBtn = this.tone === "home";
-        ctx.fillStyle = "rgba(28, 36, 20, 0.10)";
+        ctx.fillStyle = "rgba(28, 36, 20, 0.12)";
         fillRoundRect(ctx, r.x + 1, r.y + 2, r.w, r.h, rr);
-        ctx.fillStyle = homeBtn ? "#c5d0ae" : "#d4dec4";
+        ctx.fillStyle = homeBtn ? "#b3c396" : "#d4dec4";
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
-        ctx.strokeStyle = homeBtn ? "#4a5c38" : "#5c6c48";
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = homeBtn ? "#3a4c2e" : "#5c6c48";
+        ctx.lineWidth = homeBtn ? 2 : 1.5;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
         ctx.lineWidth = 1;
         ctx.fillStyle = "#2c3a22";
@@ -30735,14 +30811,15 @@ function drawHallReturnToast(ctx) {
   ];
   ctx.save();
   ctx.globalAlpha = a;
-  ctx.fillStyle = "rgba(12,18,12,0.92)";
+  // 【v1.190】回港条去金眩: 2px 苔缘 + 奶油字, 对大厅仍可读, 无金闪
+  ctx.fillStyle = "rgba(18,24,16,0.90)";
   fillRoundRect(ctx, 20, y, w, h, 12);
-  ctx.strokeStyle = t.win ? "#e6c24a" : "#7cb86a";
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = t.win ? "#5c7044" : "#6a8454";
+  ctx.lineWidth = 2;
   strokeRoundRect(ctx, 20, y, w, h, 12);
   ctx.lineWidth = 1;
-  ctx.fillStyle = t.win ? "#e6c24a" : "#7cb86a";
-  ctx.fillRect(23, y + 10, 10, h - 20);
+  ctx.fillStyle = t.win ? "#8aa86a" : "#7cb86a";
+  ctx.fillRect(23, y + 10, 8, h - 20);
   for (i = 0; i < 3; i++) {
     ch = chips[i];
     col = 38 + i * (chipW + gap);
@@ -30757,10 +30834,10 @@ function drawHallReturnToast(ctx) {
     ctx.fillText(ch.line, col + chipW / 2, y + 26);
   }
   ctx.textAlign = "left";
-  ctx.fillStyle = "#ffe082";
+  ctx.fillStyle = "#e4ecd6";
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText(t.line1 || "", 38, y + 62);
-  ctx.fillStyle = "#fff7e0";
+  ctx.fillStyle = "#f4f7ec";
   ctx.font = "bold 14px " + FONT_STACK;
   ctx.fillText(t.line2 || "", 38, y + 82);
   ctx.restore();
@@ -31396,7 +31473,8 @@ function drawUpgradePanel(ctx, m) {
     strokeRoundRect(ctx, 56, rowY + 12, 52, 52, 10);
     ctx.lineWidth = 1;
     drawItemSprite(ctx, d.id === "hp" ? "tal_hp" : (d.id === "pickup" ? "tal_pickup" : (d.id === "move" ? "tal_move" : (d.id === "atk" ? "wpn_pinecone" : "wpn_bladeleaf"))), 60, rowY + 16, 44);
-    ctx.fillStyle = c.cardTitle;
+    // 【v1.190】行标题深苔, 攻击/生命/… Lv 对奶油盘更清楚; 花费钮仍走 upcost 闷橄榄
+    ctx.fillStyle = "#2c3a22";
     ctx.font = "bold 26px " + FONT_STACK;
     ctx.fillText(d.name + "  Lv." + v.lv + "/" + v.maxLv, 118, rowY + 28);
     ctx.fillStyle = v.canBuy ? "#2e8b47" : c.cardTitle;
@@ -35810,6 +35888,7 @@ var GAME = {
   cardPopT: 0,                      // 【v1.11】三选一卡飞入剩余秒(rawDt)
   resultPopT: 0,                    // 【v1.11】结算装备弹出剩余秒(rawDt)
   settleInk: null,                  // 【v1.189】结算开场短命墨点(纯表现)
+  beadInk: null,                    // 【v1.190】拾珠短墨火花(纯表现)
   obtainFx: [],                     // 【v1.11】获得闪光/飞入
   lootPops: [],                     // 【v1.30】拾取/穿装浮字
   gearHudY: 0,                      // 【v1.30】局内六部位条 y(飞入落点)
@@ -36190,6 +36269,7 @@ function updatePlaying(dt) {
   updateStrikeFx(dt);
   updateBurnZones(dt);
   updateGems(dt);
+  updateBeadInkSparks(dt);   // 【v1.190】拾珠墨火花短命衰减
   updateChests(dt);                 // R8: 宝箱拾取/超时/闪烁计时
   updateFieldItems(dt);             // 【v1.4】策略物(不磁吸)
   updateHazards(dt);                // 【v1.4】地面危险区
@@ -36531,6 +36611,7 @@ function startRun(chapterIdx) {
   resetRun();
   coinFxQueue.length = 0;                       // 【R4】组1 fx 待喷批次清空(防跨局污染)
   deathMarks.length = 0;                       // 【v1.166】死亡帧清空(防跨局污染)
+  GAME.beadInk = null;                          // 【v1.190】拾珠火花不带进下一局
   resetWaves();
   clearRunEntities();
   recomputeStats();
@@ -36680,6 +36761,7 @@ function goHome() {
   GAME.entranceWipeT = 0;
   GAME.entranceDust = null;
   GAME.settleInk = null;
+  GAME.beadInk = null;
   GAME.heroBriefT = 0;
   resetPetRead();
   GAME.setState(GAME.flow.HOME);
