@@ -333,12 +333,89 @@ def synth_ui(path):
     add(0, total, midi_freq(84), 0.16, 'sine', a=0.001, d=0.015, s=0.2, r=0.015)
     write_wav(path, buf); return total
 
+# ---------------- 战斗 BGM（本轮新增 · 探索/秘境的对立项） ----------------
+def synth_bgm_battle(path, bars=16, bpm=128, fade=0.08):
+    """战斗主题 BGM：更快的节奏（128 BPM）、驱动贝斯、 energetic 琶音 lead、
+    kick/snare/hi-hat 鼓组，i–VI–III–VII（Am–F–C–G）进行，无缝循环。"""
+    beat = 60.0 / bpm
+    bar_dur = beat * 4
+    total = bars * bar_dur
+    N = int(total * SR)
+    buf = [0.0] * N
+    rng = random.Random(20260923)
+    # i–VI–III–VII in A minor：Am F C G（root 低八度 + 和弦）
+    prog = [(45, [57, 60, 64]), (41, [53, 57, 60]), (48, [60, 64, 67]), (43, [55, 59, 62])]
+
+    def add(start, dur, freq, amp, wave, a=0.01, d=0.05, s=0.7, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+
+    def kick(start):
+        cnt = int(0.12 * SR); i0 = int(start * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            p = i / float(cnt)
+            buf[idx] += 0.30 * (1 - p) ** 2 * math.sin(2 * math.pi * 70.0 * p * 0.12)
+
+    def snare(start):
+        cnt = int(0.14 * SR); i0 = int(start * SR)
+        r = _noise_rng()
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            p = i / float(cnt)
+            buf[idx] += (r.random() * 2 - 1) * 0.22 * (1 - p) ** 1.5
+
+    def hat(start):
+        cnt = int(0.04 * SR); i0 = int(start * SR)
+        r = _noise_rng()
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            p = i / float(cnt)
+            buf[idx] += (r.random() * 2 - 1) * 0.07 * (1 - p)
+
+    for bar in range(bars):
+        root, chord = prog[(bar // 4) % 4]
+        s0 = bar * bar_dur
+        # pad：整小节柔 sine（高八度铺底）
+        for c in chord:
+            add(s0, bar_dur * 0.98, midi_freq(c + 12), 0.07, 'sine', a=0.20, d=0.1, s=0.8, r=0.4)
+        # 驱动贝斯：八分音符根音（三角波，带颗粒）
+        for e in range(8):
+            add(s0 + e * (beat / 2), beat * 0.42, midi_freq(root), 0.20, 'triangle', a=0.005, d=0.03, s=0.6, r=0.05)
+        # 能量琶音 lead：八分音符跑和弦音（方波）
+        seq = chord * 2
+        for e in range(8):
+            add(s0 + e * (beat / 2), beat * 0.40, midi_freq(seq[e % len(seq)] + 12), 0.09, 'square', a=0.003, d=0.03, s=0.4, r=0.05)
+        # 鼓组：kick(1,3拍) snare(2,4拍) hat(八分)
+        kick(s0); kick(s0 + 2 * beat)
+        snare(s0 + beat); snare(s0 + 3 * beat)
+        for e in range(8):
+            hat(s0 + e * (beat / 2))
+
+    # 无缝循环：末尾 fade 段与开头交叉淡入
+    fc = int(fade * SR)
+    head = buf[:fc]
+    for i in range(fc):
+        w = i / float(fc)
+        buf[i] = buf[i] * w + head[i] * (1 - w)
+        buf[N - fc + i] = buf[N - fc + i] * (1 - w) + head[i] * w
+    write_wav(path, buf)
+    return total
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/audio'
     import os
     os.makedirs(out_dir, exist_ok=True)
     jobs = [
         ('cp_bgm_forest.wav', synth_bgm),
+        ('cp_bgm_battle.wav', synth_bgm_battle),
         ('cp_sfx_summon.wav', synth_summon),
         ('cp_sfx_heal.wav', synth_heal),
         ('cp_sfx_hit.wav', synth_hit),
