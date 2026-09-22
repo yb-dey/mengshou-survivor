@@ -42,6 +42,7 @@ vfx = uniq_keys(os.path.join(ROOT, 'vfx'), ('.png',))
 icons = uniq_keys(os.path.join(ROOT, 'icons'), ('.png',))
 skill = uniq_keys(os.path.join(ROOT, 'skill_icons'), ('.png',))
 pickups = uniq_keys(os.path.join(ROOT, 'pickups'), ('.png',))
+portraits = uniq_keys(os.path.join(ROOT, 'hero_portraits'), ('.png',))
 data = uniq_keys(os.path.join(ROOT, 'data'), ('.json',))
 audio = uniq_keys(os.path.join(ROOT, 'audio'), ('.wav',))
 bgm = [k for k in audio if k.startswith('cp_bgm_')]
@@ -121,6 +122,12 @@ for k in skill:
     skill_list.append({'key': k, 'cn': SKILL_CN.get(k, ''), 'group': 'element' if k.startswith('el_') else 'ability',
                        'w': w, 'h': h, 'bytes': os.path.getsize(p)})
 
+portrait_list = []
+for k in portraits:
+    p = os.path.join(ROOT, 'hero_portraits', k + '.png')
+    w, h = png_size(p)
+    portrait_list.append({'key': k, 'w': w, 'h': h, 'bytes': os.path.getsize(p)})
+
 pickup_list = []
 for k in pickups:
     p = os.path.join(ROOT, 'pickups', k + '.png')
@@ -146,12 +153,12 @@ manifest = {
     'namespace': '_content_pack',
     'counts': {
         'sprites': len(sprites), 'vfx': len(vfx), 'icons': len(icons),
-        'skill_icons': len(skill), 'pickups': len(pickups),
+        'skill_icons': len(skill), 'pickups': len(pickups), 'hero_portraits': len(portraits),
         'design_data': len(data), 'audio': len(audio),
         'bgm': len(bgm), 'sfx': len(sfx),
     },
     'sprites': sprite_list, 'vfx': vfx_list, 'icons': icon_list,
-    'skill_icons': skill_list, 'pickups': pickup_list,
+    'skill_icons': skill_list, 'pickups': pickup_list, 'hero_portraits': portrait_list,
     'design_data': data_list, 'audio': audio_list,
 }
 

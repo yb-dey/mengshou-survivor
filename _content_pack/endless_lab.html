@@ -49,7 +49,7 @@
   .hbtn{ cursor:pointer; border:2px solid rgba(159,224,180,.25); background:rgba(255,255,255,.05);
     border-radius:10px; padding:5px 9px; display:flex; align-items:center; gap:6px; color:var(--cream);
     font-size:12px; font-weight:700 }
-  .hbtn img{ width:30px; height:30px; border-radius:7px }
+  .hbtn img{ width:40px; height:40px; border-radius:9px }
   .hbtn.sel{ border-color:var(--gold); background:rgba(232,196,99,.12) }
   .hbtn:disabled{ opacity:.45; cursor:not-allowed }
   .btn{ cursor:pointer; border:none; border-radius:8px; padding:8px 13px; font-size:13px; font-weight:700; color:#0f2f1f; background:var(--gold) }
@@ -130,16 +130,16 @@ const MILESTONES = [ { atSec:300, reward:"称号「守林人」" }, { atSec:600,
 
 /* ===== 英雄（内联子集，与 data/heroes.json 对齐）===== */
 const HEROES = {
-  spirit_deer: { cn:"灵鹿祭司", sprite:"sprites_alpha/spirit_deer.png",
+  spirit_deer: { cn:"灵鹿祭司", portrait:"hero_portraits/portrait_deer.png", sprite:"sprites_alpha/spirit_deer.png",
     base:{ hp:100, moveSpd:1.0, atk:20, atkIntervalSec:0.45 },
     passive:{ cn:"自然祝福", healPctEvery:5, healEverySec:60 } },
-  hero_eagle: { cn:"雷羽鹰", sprite:"sprites_alpha/star_bird.png",
+  hero_eagle: { cn:"雷羽鹰", portrait:"hero_portraits/portrait_eagle.png", sprite:"sprites_alpha/star_bird.png",
     base:{ hp:80, moveSpd:1.25, atk:16, atkIntervalSec:0.30 },
     passive:{ cn:"风暴闪避", dodgeCdSec:45 } },
-  hero_bear: { cn:"霜甲熊", sprite:"sprites_alpha/stone_turtle.png",
+  hero_bear: { cn:"霜甲熊", portrait:"hero_portraits/portrait_bear.png", sprite:"sprites_alpha/stone_turtle.png",
     base:{ hp:150, moveSpd:0.85, atk:22, atkIntervalSec:0.70 },
     passive:{ cn:"霜甲", dmgReducePct:15 } },
-  hero_mage: { cn:"焰心术士", sprite:"sprites_alpha/flame_fox.png",
+  hero_mage: { cn:"焰心术士", portrait:"hero_portraits/portrait_mage.png", sprite:"sprites_alpha/flame_fox.png",
     base:{ hp:90, moveSpd:1.0, atk:24, atkIntervalSec:0.55 },
     passive:{ cn:"余烬", burnDmg:3, burnSec:2 } }
 };
@@ -418,7 +418,7 @@ function renderHeroSel(){
   Object.keys(HEROES).forEach(function(k){
     const h=HEROES[k];
     html+='<button class="hbtn'+(k===curHero?" sel":"")+'" data-h="'+k+'" '+(st.running?"disabled":"")+' title="'+h.passive.cn+'：'+h.passive.desc+'">'
-      +'<img src="'+h.sprite+'" alt="">'+h.cn+'</button>';
+      +'<img src="'+(h.portrait||h.sprite)+'" alt="">'+h.cn+'</button>';
   });
   el.innerHTML=html;
   Array.prototype.forEach.call(el.querySelectorAll(".hbtn"), function(b){

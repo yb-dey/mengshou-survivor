@@ -17,6 +17,7 @@ vfx = uniq_keys(os.path.join(ROOT, 'vfx'), ('.png',))
 icons = uniq_keys(os.path.join(ROOT, 'icons'), ('.png',))
 skill = uniq_keys(os.path.join(ROOT, 'skill_icons'), ('.png',))
 pickups = uniq_keys(os.path.join(ROOT, 'pickups'), ('.png',))
+portraits = uniq_keys(os.path.join(ROOT, 'hero_portraits'), ('.png',))
 data = uniq_keys(os.path.join(ROOT, 'data'), ('.json',))
 audio = uniq_keys(os.path.join(ROOT, 'audio'), ('.wav',))
 
@@ -126,6 +127,7 @@ html = f'''<!DOCTYPE html>
     <div class="stat"><b>{len(icons)}</b><span>状态图标</span></div>
     <div class="stat"><b>{len(skill)}</b><span>技能/元素图标</span></div>
     <div class="stat"><b>{len(pickups)}</b><span>拾取物精灵</span></div>
+    <div class="stat"><b>{len(portraits)}</b><span>英雄徽章</span></div>
     <div class="stat"><b>{len(audio)}</b><span>音频（{len(bgm)} BGM + {len(sfx)} SFX）</span></div>
   </div>
   <div class="nav">

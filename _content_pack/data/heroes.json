@@ -17,7 +17,7 @@
       "passive": { "cn": "自然祝福", "desc": "每 60 秒回复 5% 最大生命（战斗中的稳定续航）" },
       "skills": ["ab_heal", "ab_vine"],
       "playstyle": "均衡辅助：中庸的面板 + 稳定回血被动，最适合新手熟悉走位与克制链。",
-      "sprite": "sprites_alpha/spirit_deer.png"
+      "sprite": "sprites_alpha/spirit_deer.png", "portrait": "hero_portraits/portrait_deer.png"
     },
     "hero_eagle": {
       "cn": "雷羽鹰", "element": "light", "unlockCost": 800,
@@ -25,7 +25,7 @@
       "passive": { "cn": "风暴闪避", "desc": "每 45 秒自动闪避下一次受到的伤害（被动保命，无需操作）" },
       "skills": ["ab_dash", "ab_chain"],
       "playstyle": "高速爆发：全队最快攻速与移速，但生命最低——玻璃大炮，靠走位风筝，失误即死。",
-      "sprite": "sprites_alpha/star_bird.png",
+      "sprite": "sprites_alpha/star_bird.png", "portrait": "hero_portraits/portrait_eagle.png",
       "spriteNote": "占位图（星羽鸟），待云端出图替换为雷羽鹰正式立绘"
     },
     "hero_bear": {
@@ -34,7 +34,7 @@
       "passive": { "cn": "霜甲", "desc": "受到的所有伤害固定 -15%（重装减伤，可叠加灵盾花）" },
       "skills": ["ab_frost", "ab_quake"],
       "playstyle": "重装坦克：生命最高 + 全队唯一常驻减伤被动，但攻速最慢移速垫底——硬抗推进流。",
-      "sprite": "sprites_alpha/stone_turtle.png",
+      "sprite": "sprites_alpha/stone_turtle.png", "portrait": "hero_portraits/portrait_bear.png",
       "spriteNote": "占位图（石甲龟），待云端出图替换为霜甲熊正式立绘"
     },
     "hero_mage": {
@@ -43,7 +43,7 @@
       "passive": { "cn": "余烬", "desc": "每次命中附加 2 秒灼烧（每秒 3 点，可与元素反应叠乘）" },
       "skills": ["ab_fireball", "ab_summon"],
       "playstyle": "法术炮台：单发最高伤害 + DoT 被动（有效 DPS 约 55 为全队上限），生命偏低容错最少——上限与风险最高。",
-      "sprite": "sprites_alpha/flame_fox.png",
+      "sprite": "sprites_alpha/flame_fox.png", "portrait": "hero_portraits/portrait_mage.png",
       "spriteNote": "占位图（火苗狐），待云端出图替换为焰心术士正式立绘"
     }
   },

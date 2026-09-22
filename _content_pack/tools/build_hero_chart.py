@@ -46,7 +46,7 @@ for k, v in HEROES.items():
             bar('基础 DPS', dps, 53.3, '#e8c463', '%.1f' % dps))
     sp_note = ' · ' + v['spriteNote'] if 'spriteNote' in v else ''
     card = ('<div class="tier" style="border-color:{c}66">'
-            '<div class="tier-h" style="color:{c}"><img src="{sp}" class="himg" alt="">{cn} '
+            '<div class="tier-h" style="color:{c}"><img src="{pt}" class="himg" alt="">{cn} '
             '<small>{el} · {un} · {ps0}</small></div>'
             '{passive}'
             '{bars}'
@@ -54,7 +54,7 @@ for k, v in HEROES.items():
             '<div class="uc-d" style="margin-top:6px"><b>玩法：</b>{ps}</div>'
             '<div class="uc-k" style="margin-top:6px"><code>{k}{spn}</code></div>'
             '</div>').format(c=col, sp=v['sprite'], cn=v['cn'], el=ELEM_CN[v['element']],
-                             un=unlock, ps0=v['playstyle'].split('：')[0], passive=passive_html,
+                             un=unlock, ps0=v['playstyle'].split('：')[0], passive=passive_html, pt=v['portrait'],
                              bars=bars, skills=skills, ps=v['playstyle'], k=k, spn=sp_note)
     cards.append(card)
 tier_html = ''.join(cards)
