@@ -1,0 +1,114 @@
+{
+ "seed": 20260923,
+ "nRuns": 400,
+ "endless": {
+  "spirit_deer": {
+   "cn": "灵鹿祭司",
+   "medianWave": 12,
+   "p25": 12,
+   "p75": 12,
+   "meanTimeSec": 222.5,
+   "milestoneRate": {
+    "300": 0.0,
+    "600": 0.0,
+    "1200": 0.0
+   }
+  },
+  "hero_eagle": {
+   "cn": "雷羽鹰",
+   "medianWave": 12,
+   "p25": 12,
+   "p75": 12,
+   "meanTimeSec": 225.1,
+   "milestoneRate": {
+    "300": 0.0,
+    "600": 0.0,
+    "1200": 0.0
+   }
+  },
+  "hero_bear": {
+   "cn": "霜甲熊",
+   "medianWave": 12,
+   "p25": 12,
+   "p75": 12,
+   "meanTimeSec": 226.8,
+   "milestoneRate": {
+    "300": 0.0,
+    "600": 0.0,
+    "1200": 0.0
+   }
+  },
+  "hero_mage": {
+   "cn": "焰心术士",
+   "medianWave": 12,
+   "p25": 11,
+   "p75": 12,
+   "meanTimeSec": 218.6,
+   "milestoneRate": {
+    "300": 0.0,
+    "600": 0.0,
+    "1200": 0.0
+   }
+  }
+ },
+ "builds": {
+  "runs": 1000,
+  "maxLevel": 20,
+  "dpsP25": 53.0,
+  "dpsMedian": 59.1,
+  "dpsP75": 68.5,
+  "dpsMax": 89.4,
+  "baseDps": 20.0,
+  "topPicks": [
+   {
+    "key": "up_atk",
+    "cn": "锐爪",
+    "n": 2638
+   },
+   {
+    "key": "up_fire",
+    "cn": "焚心",
+    "n": 1879
+   },
+   {
+    "key": "up_wood",
+    "cn": "森语",
+    "n": 1846
+   },
+   {
+    "key": "up_earth",
+    "cn": "磐岩",
+    "n": 1833
+   },
+   {
+    "key": "up_light",
+    "cn": "圣辉",
+    "n": 1811
+   },
+   {
+    "key": "up_water",
+    "cn": "潮汐",
+    "n": 1803
+   },
+   {
+    "key": "up_crit_rate",
+    "cn": "洞察",
+    "n": 1783
+   },
+   {
+    "key": "up_dot_dmg",
+    "cn": "剧毒蔓延",
+    "n": 671
+   }
+  ]
+ },
+ "economy": {
+  "totalFaucet": 41946,
+  "totalDrain": 32718,
+  "jsonDrain": 32718,
+  "drainMatch": true,
+  "hoardingRate": 0.22,
+  "verdict": "HEALTHY",
+  "netSurplus": 9228
+ }
+}
