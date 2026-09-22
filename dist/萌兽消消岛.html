@@ -3142,7 +3142,7 @@ function chapterRewardView(ch, mode) {
     giftStat: def ? gearStatLine(def, rarMin) : "",
     giftRarName: rarD.name,
     giftRarColor: rarD.color,
-$1giftRarColorText: rarD.textDark,
+    giftRarColorText: rarD.textDark,
     giftWear: "",
     giftKind: gift ? "preview" : "none",
     win: false,
@@ -3178,7 +3178,7 @@ $1giftRarColorText: rarD.textDark,
     view.giftWear = runSummary.gearGiftAuto ? "立刻穿上" : "入包";
     view.giftRarName = rarD.name;
     view.giftRarColor = rarD.color;
-$1view.giftRarColorText = rarD.textDark;
+    view.giftRarColorText = rarD.textDark;
   } else if (!gift) {
     view.giftKind = "none";
   } else {
@@ -3392,7 +3392,7 @@ function roomRewardView(tierIdx, mode, extra) {
     bagRar: rarFloor,
     bagRarName: rarD.name,
     bagRarColor: rarD.color,
-$1bagRarColorText: rarD.textLight,
+    bagRarColorText: rarD.textLight,
     bagBoostName: boostD.name,
     bagMiss: extra.bagMiss || "",
     gemKind: gemKind,
@@ -3417,7 +3417,7 @@ $1bagRarColorText: rarD.textLight,
     rarD = DATA_GEAR_RARITY[view.bagRar] || rarD;
     view.bagRarName = rarD.name;
     view.bagRarColor = rarD.color;
-$1view.bagRarColorText = rarD.textLight;
+    view.bagRarColorText = rarD.textLight;
     gems = roomGemStats(tier, view.speed);
     view.gemN = gems.n;
     view.gemXp = gems.xp;
@@ -10776,7 +10776,13 @@ var DATA_HALL_UNLOCK = [
     price: 60 },
   { id: "startbomb", kind: "combat", item: "bomb", name: "开局炸弹",
     cond: { type: "anchor", boss: "boss1" },
-    condText: "击破 3:00 锚点首领（巨盾龟）",
+    // 【v1.202】⚠ 原文 "击破 3:00 锚点首领（巨盾龟）" 是 **v1.187 同一病根被漏掉的一条**：
+    //   boss1 的 `bossTimes` **逐章不同** —— ch1=180(3:00) / ch2=150(2:30) / ch3=180 / ch4=160(2:40) / ch5=180 / ch6=180。
+    //   而 `hallCondMet` 的 anchor 判定是 `saveData.hallAnchor["boss1"]` —— **任意章击破过即解锁**，与章节无关。
+    //   ⇒ "3:00" 只有 ch1/ch3/ch5/ch6 为真，在 ch2(2:30)/ch4(2:40) 击破的玩家读到的是错的。
+    //   **同族对照铁证**：v1.187 已把同组的 startmag/mapledart 改成**章节无关表述**（"击破锚点首领（熔岩狮）"），
+    //   只有本条还留着硬编码时刻 ⇒ 按 v1.187 范式改为章节无关（**文案服从事实**）。
+    condText: "击破锚点首领（巨盾龟）",
     gainText: "下局开局炸弹×1 · 右下可点",
     price: 80 },
   { id: "startmag", kind: "combat", item: "magnet", name: "开局磁铁",
