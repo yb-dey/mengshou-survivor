@@ -351,6 +351,17 @@
 
 - **消费点**：`endless_lab.html`「🎲 本周挑战」选择器——按 ISO 周数种子自动选中（同周一致），点击启用后**真实生效**：敌伤（受击）/ 敌 HP（生成时）/ 生成速率（tick）/ 币产出（波次结算 ×2）四个挂点全部接线。
 - **校验**：`data/challenge_mods.json` 合法 JSON；icon/sfx 引用零缺失（fx_horde 不存在已改 fx_telegraph）；效果字段 8 种全部有挂点实现；玩家/敌人两侧各 4；endless_lab 内联 MODS 与 JSON 逐项比对 **DATA_SYNC_OK**（effects/icons/weekly-picker 对齐）、`node --check` 通过；`mod_chart.html` 0 占位符、8 名称全在、8 图标引用存在。
+## 2.21 Boss 分层组（按 Boss 阶段混音 · 本轮新增）
+
+> 分层音乐第二组：**92 BPM 厚重小调（Am–F–C–G）三层轨**（定音鼓层/厚重低音层/铜管旋律层，31.30s 叠播对齐）。与 tide 组（R40·按敌数）触发维度不同——Boss 组按 **Boss 阶段**混音：阶段 1 仅定音鼓 → 阶段 2 进厚重低音 → 阶段 3 进铜管旋律，三阶段压力递增与 boss_phases.json 的 hpLow 66%/33% 阈值一一对应。消费点：`boss_arena.html`「🎵 Boss 分层」开关（替换原整曲开关），enterPhase 实时调层。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `audio/cp_layer_boss_*.wav` | 3 条 Boss 分层轨 | drums（定音鼓式 kick+战争鼓双击）/ bass（锯齿低音 −12 半音四分顿挫）/ lead（锯齿小调琶音上行+不祥钟声动机每 3 小节），各 31.30s 无缝循环 |
+| `data/music_layers.json` | 扩展 bossGroup | tide 组（按敌数）+ bossGroup（按 Boss 阶段，mixByPhase 三阶段增益矩阵）双组结构 |
+
+- **消费点**：`boss_arena.html`「🎵 Boss 分层」开关（layerAudios 三轨同播，`mixBossLayers(phaseIdx)` 在 enterPhase 实时混音，音量 0.15 插值平滑）。
+- **校验**：三轨实测时长 31.3043s 完全一致；boss_arena `node --check` 通过（修复替换残留的孤立 `});`）；`music_layers.html` 重生成含 👹 Boss 分层组区块（混音矩阵表 + 3 层卡）。
 ## 3. 目录结构
 
 ```
@@ -385,6 +396,7 @@ _content_pack/
 ├── skills_chart.html       # 技能完整规格：8 技能数值卡 + 三级成长 + 反应联动（数据驱动）
 ├── music_layers.html       # 战斗分层自适应音乐：三层轨规格 + 触发条件 + 混音规则（数据驱动）
 ├── mod_chart.html          # 挑战修饰符规格页：轮换规则 + 平衡口径 + 8 修饰符卡（数据驱动）
+├── music_layers.html       # 分层音乐规格页：tide 组（按敌数）+ Boss 组（按阶段）双组结构
 ├── boss_arena.html         # BOSS 竞技场（boss_phases.json 三阶段可玩校验场，纯前端 file:// 双击即开）
 ├── campaign.html          # 战役模式（wave_design.json 10 关 × 多波次可玩校验场，逐波刷怪，纯前端 file:// 双击即开）
 ├── sprites/               # 原始生成图（RGB，未抠）
@@ -428,7 +440,10 @@ _content_pack/
 │   ├── cp_amb_cave.wav       # 环境音·古木洞窟（drone+水滴回响，24s 无缝循环）
 │   ├── cp_layer_tide_drums.wav # 分层 L1 节奏层（116BPM 鼓组，33.1s 无缝循环）
 │   ├── cp_layer_tide_bass.wav  # 分层 L2 低音层（根音八分贝斯，33.1s 无缝循环）
-│   └── cp_layer_tide_lead.wav  # 分层 L3 旋律层（五声 lead+pad，33.1s 无缝循环）
+│   ├── cp_layer_tide_lead.wav  # 分层 L3 旋律层（五声 lead+pad，33.1s 无缝循环）
+│   ├── cp_layer_boss_drums.wav # Boss 分层 L1 定音鼓层（92BPM，31.3s 无缝循环）
+│   ├── cp_layer_boss_bass.wav  # Boss 分层 L2 厚重低音（31.3s 无缝循环）
+│   └── cp_layer_boss_lead.wav  # Boss 分层 L3 铜管旋律（31.3s 无缝循环）
 ├── vfx/                   # 程序化特效精灵（RGBA 真透底）
 │   └── fx_*.png（24 个）
 ├── icons/                 # 状态图标（RGBA 真透底，常驻 HUD 指示）
@@ -484,7 +499,8 @@ _content_pack/
     ├── build_hero_chart.py   # 由 data/heroes.json 生成 英雄对比参考页
     ├── build_skills_chart.py # 由 data/skills.json 生成 技能规格参考页
     ├── build_music_layers.py # 由 data/music_layers.json 生成 分层音乐参考页
-    └── gen_decors.py         # 场景装饰件生成（纯标准库，ell/blade/tri 原语）
+    ├── gen_decors.py         # 场景装饰件生成（纯标准库，ell/blade/tri 原语）
+    └── build_music_layers.py # 分层音乐参考页（tide 组 + Boss 组）
     ├── gen_hero_portraits.py # 英雄徽章生成（纯标准库，复用 gen_vfx.Canvas）
     ├── sim_balance.py        # 数值平衡蒙特卡洛模拟器（seed 固定可复现，0.9s）
     ├── sim_result.json       # 模拟结果（endless/builds/economy 三组）
@@ -537,11 +553,12 @@ _content_pack/
 - 环境氛围音层：`data/ambience.json` 为合法 JSON（4 条 cp_amb_* 均存在、24.0s、峰值 85% 无削波、RMS 7.4–15.1% 刻意低于战斗 SFX 的「背景自然声」响度定位；元素关联引用全部存在于 element_matrix；场景映射 P1–P4 有序且 amb key 全部有效）；`ambience_chart.html` 由 `tools/build_ambience_chart.py` 数据驱动生成，0 占位符；双通道增益（BGM 0.8 / AMB 0.5）与战斗/氛围分工写入规格——战斗强度归 BGM 层、场景昼夜归 Ambience 层，互不污染；`meta_lab.html` 声景开关真实驱动双通道叠加（消费点接线），两页面 `node --check` 通过。
 - 英雄图鉴：`data/heroes.json` 为合法 JSON（4 英雄：灵鹿祭司/雷羽鹰/霜甲熊/焰心术士；元素引用 ∈ 五元素、技能绑定 8 key 全部存在于 skill_cooldowns、精灵 4/4 存在、unlockLink 与 meta_upgrades 解锁项一一对应）；DPS 天平复算一致（灵鹿 44.4 / 雷羽鹰 53.3 / 霜甲熊 31.4 / 焰心 43.6+灼烧有效≈54.5）；**元素口径统一修正**——meta_upgrades.json 两处「雷元素/冰元素」描述改为「光元素·雷羽映射/水元素·霜甲映射」（与五元素体系/克制链/反应系统兼容）；`hero_chart.html` 由 `tools/build_hero_chart.py` 数据驱动生成，0 占位符、4 立绘引用存在；`endless_lab.html` 英雄选择器内联 `HEROES` 与 JSON 逐项比对一致（base/passive 全参数无漂移）、`node --check` 通过。；4 枚程序化徽章（hero_portraits/）均 128×128 RGBA 非空行 96%，portrait 字段已入 DATA_SYNC 校验（lab 内联/JSON/文件三方一致），`endless_lab` 选择器与 `hero_chart` 头像已切换为徽章（sprites 仅作战斗占位）
 - 战斗分层自适应音乐：`data/music_layers.json` 为合法 JSON（3 层轨 cp_layer_tide_* 均存在、**实测时长 33.1034s 三轨完全一致**——叠播对齐充要条件、峰值均 85% 无削波、RMS 8.2–22.4%）；触发阈值与滞回规则（淡入 8/淡出 6）写入规格；`music_layers.html` 由 `tools/build_music_layers.py` 数据驱动生成，0 占位符；`endless_lab.html`「自适应分层」开关按场上实时敌数驱动 L2/L3 音量渐变（滞回混音），`audio_demo.html` 3 试听卡覆盖；两页面 `node --check` 通过；体系定位明确——Music 通道内部自适应子层，战斗场景替代整曲 BGM 避免旋律叠吵。
+- Boss 分层组：`music_layers.json` 扩展 bossGroup（92 BPM/31.30s/A 小调厚重小调，mixByPhase 三阶段增益矩阵与 boss_phases hpLow 阈值一一对应）；3 条 cp_layer_boss_* 实测时长 31.3043s 完全一致、峰值 85%、RMS 达标；`boss_arena.html`「🎵 Boss 分层」开关三轨同播、enterPhase 实时按阶段混音（mixBossLayers 0.15 插值平滑），`node --check` 通过；`music_layers.html` 重生成含 👹 Boss 分层组混音矩阵表与 3 层卡（0 占位符）。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵 + 4 枚英雄徽章 + 8 个场景装饰件）+ 音乐（7 BGM + 33 SFX + 4 环境音 + 3 战斗分层）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（16 份 JSON）+ 可视化参考页与可玩校验场（13 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵 + 4 枚英雄徽章 + 8 个场景装饰件）+ 音乐（7 BGM + 33 SFX + 4 环境音 + 6 战斗分层）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（16 份 JSON）+ 可视化参考页与可玩校验场（13 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -586,4 +603,5 @@ _content_pack/
 32. ~~**战斗分层自适应音乐（三层轨 + 真机混音演示）**~~ ✅ 已交付 `data/music_layers.json`（L1 节奏常开 / L2 低音敌≥8 淡入≤6 淡出滞回 / L3 旋律敌≥15 或 Boss 淡入；增益 1.0/0.8/0.8；fadeSec 1.5）+ **3 条 33.10s 分层轨**（`cp_layer_tide_drums/bass/lead`，同和声 C-Am-F-G 同 BPM 116 同长——实测时长差 <0.001s 叠播对齐，synth_audio.py 新增 `_layer_grid/_layer_add/_layer_noise` 三原语共享时间网格纯标准库合成）+ `music_layers.html`（基础参数 + 三层卡 + 滞回混音规则）。消费点：`endless_lab.html`「🎵 自适应分层」开关——三轨同播，tick 内按场上实时敌数（含生成队列/Boss 精英判定）驱动 L2/L3 音量渐变，**真机自适应混音演示**；`audio_demo.html` 加 3 卡（47 条全覆盖）；校验含三轨时长一致性断言（叠播对齐充要条件）；音频 44→47（7 BGM + 33 SFX + 4 AMB + 3 LAYER）；`index.html` 加 🎚️ 导航卡、`README` §2.18/§3/§6/§7 同步。音频体系第四维补齐——事件 SFX / 情绪 BGM / 空间 AMB / **强度分层 LAYER**，「战斗强度自适应」从整曲切换进化为层内混音，为 §4 接入主游戏时的自适应音频提供规格底座。
 33. ~~**场景装饰件（8 个程序化布景 + 实验室装饰层）**~~ ✅ 已交付 8 个 96×96 RGBA 装饰件（`tools/gen_decors.py` 纯标准库：双草丛/灌木/树/石头/两种花/发光蘑菇，低饱和远景配色）+ `endless_lab.html` 场景装饰层（初始化随机撒 14 个、z-index 底层、随机缩放）。校验：8/8 colorType=6 非空行 39–84%（布景稀疏合理）；lab `node --check` 通过；`manifest.json` 加 decors 类目（=8）、`index.html` 加「场景装饰件」统计卡、`README` §2.19/§3/§7/引言同步。精灵视觉语言第六系（**decors 布景**），让无尽战场有森林生态感。
 34. ~~**挑战修饰符系统（每周轮换 + 真机选择器）**~~ ✅ 已交付 `data/challenge_mods.json`（8 修饰符成对设计：玩家侧 元素大师·火 30%/迅捷之风 20%/聚宝周 币×2/泉涌之愈 治疗+50%；敌人侧 敌潮 生成+30%/迅敌 速度+15%/铁壁 HP+25%/狂暴 伤害+20%；每周 ISO 周数种子抽 1+1、同周一致可复现）+ `mod_chart.html`（轮换规则+平衡口径+8 卡）+ `endless_lab.html`「🎲 本周挑战」选择器（按周种子自动选中，点击启用后敌伤/敌HP/生成速率/币产出四挂点真实生效）。校验：icon/sfx 零缺失（fx_horde 不存在已改 fx_telegraph）、效果字段 8 种全有挂点、DATA_SYNC_OK（effects/icons/weekly-picker 对齐）、`node --check` 通过；`index.html` 加 🎲 导航卡、`README` §2.20/§3/§7/引言同步（design_data 15→16）。修饰符只改变量起点不改变难度曲线（与 R37 校准兼容），为无尽模式提供「本周玩点」重玩多样性。
+35. ~~**Boss 分层组（按 Boss 阶段混音）**~~ ✅ 已交付 3 条 31.30s 分层轨（`cp_layer_boss_drums/bass/lead`，92 BPM 厚重小调 Am–F–C–G：定音鼓式 kick 重压/锯齿低音 −12 半音四分顿挫/锯齿小调琶音上行+不祥钟声动机每 3 小节；三轨时长差 <0.001s 叠播对齐）+ `music_layers.json` 扩展 **bossGroup**（mixByPhase 三阶段增益矩阵：阶段 1 仅 L1 → 2 +L2(0.7) → 3 +L3(0.8)，与 boss_phases.json hpLow 66%/33% 阈值一一对应）+ `music_layers.html` 重生成（tide 组+Boss 组双组结构）。消费点：`boss_arena.html`「🎵 Boss 分层」开关替换原整曲开关——layerAudios 三轨同播，`mixBossLayers(phaseIdx)` 在 enterPhase 实时混音（音量 0.15 插值平滑）；`audio_demo.html` 加 3 卡（50 条全覆盖）。校验：三轨时长一致断言、boss_arena `node --check`（修复替换残留孤立 `});`）、规格页 0 占位符；`index.html` 加 👹 导航卡、`README` §2.21/§3/§6/§7 同步。自适应音乐第二触发维度（敌数→Boss 阶段）落地，Boss 战「阶段越深音乐越满」。
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

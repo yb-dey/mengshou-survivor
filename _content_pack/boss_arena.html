@@ -80,7 +80,7 @@
   <div class="hint">把 <b>data/boss_phases.json</b>（森林古木三阶段）<b>真正跑起来</b>的迷你 Boss 战：上方血条按 66% / 33% 阈值切阶段，每个阶段的能力按其冷却自动触发（藤蔓召唤 → 范围践踏 → 缠绕+木刺 → 古木狂暴，冷却随阶段压缩、混召多属性增援）。先选下方「攻击元素」（火 强克 木 Boss ×1.6），再点 Boss 或召唤物输出；撑到 Boss 倒下即胜利。本页纯前端，双击即开，资产走相对路径。</div>
   <div class="bar">
     <button class="btn" id="start">⚔️ 开始战斗</button>
-    <button class="btn" id="bgm">🎵 森林 BGM</button>
+    <button class="btn" id="bgm">🎵 Boss 分层</button>
     <div class="elems" id="elems"></div>
   </div>
 
@@ -265,6 +265,7 @@
     phaseNote.textContent='阶段 '+ph.phase+'：'+ph.notes;
     const col = i===0?'var(--p1)':(i===1?'var(--p2)':'var(--p3)');
     phaseLbl.style.background = i===0?'rgba(63,166,106,.25)':(i===1?'rgba(232,196,99,.25)':'rgba(229,72,77,.25)');
+    mixBossLayers(i);   // R43：分层音乐随 Boss 阶段进层（data/music_layers.json bossGroup.mixByPhase）
     bossbox.style.borderColor = i===0?'rgba(159,224,180,.3)':(i===1?'rgba(232,196,99,.5)':'rgba(229,72,77,.6)');
     bossbox.style.boxShadow = '0 0 0 1px '+col+' inset';
     banner('🌳 进入 '+ph.phase+' 阶段！');
@@ -354,12 +355,25 @@
 
   buildElems();
   document.getElementById('start').addEventListener('click', start);
-  let bgmOn=false, bgmAudio=null;
+  let bgmOn=false, layerAudios=null;
+  const LAYER_FILES=['audio/cp_layer_boss_drums.wav','audio/cp_layer_boss_bass.wav','audio/cp_layer_boss_lead.wav'];
+  const LAYER_VOLS=[1.0, 0.0, 0.0];   // 阶段1 仅 L1；enterPhase 实时调 L2/L3
   document.getElementById('bgm').addEventListener('click',(ev)=>{
     const btn=ev.currentTarget;
-    if(!bgmOn){ bgmAudio=new Audio('audio/cp_bgm_boss.wav'); bgmAudio.loop=true; bgmAudio.volume=0.5; bgmAudio.play().catch(()=>{}); btn.classList.add('on'); btn.textContent='🎵 停止 BGM'; bgmOn=true; }
-    else { bgmAudio.pause(); btn.classList.remove('on'); btn.textContent='🎵 森林 BGM'; bgmOn=false; }
+    if(!bgmOn){
+      layerAudios=LAYER_FILES.map(f=>{ const a=new Audio(f); a.loop=true; return a; });
+      layerAudios.forEach((a,i)=>{ a.volume=LAYER_VOLS[i]; a.play(); });
+      bgmOn=true; btn.classList.add('on'); btn.textContent='🎵 Boss 分层：开（随阶段进层）';
+    } else {
+      layerAudios.forEach(a=>a.pause());
+      btn.classList.remove('on'); btn.textContent='🎵 Boss 分层'; bgmOn=false;
+    }
   });
+  function mixBossLayers(phase){
+    if(!bgmOn||!layerAudios) return;
+    const mix=[[1.0,0,0],[1.0,0.7,0],[1.0,0.7,0.8]][phase]||[1.0,0,0];
+    layerAudios.forEach((a,i)=>{ a.volume += (mix[i]-a.volume)*0.15; });
+  }
 </script>
 </body>
 </html>

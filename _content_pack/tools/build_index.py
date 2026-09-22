@@ -72,6 +72,7 @@ DATA_CN = {
     'music_layers': '战斗分层自适应音乐',
     'decors': '场景装饰件',
     'challenge_mods': '挑战修饰符系统',
+    'music_layers_boss': 'Boss 分层组',
 }
 PICKUP_CN = {
     'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',
@@ -169,6 +170,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="meta_chart.html" target="_blank">
       <div class="ico">🌱</div><div class="t">局外成长系统</div>
       <div class="d">跨局永久强化 + 森灵币经济闭环：18 项永久强化 × 5 类（几何成本），产出-消耗水槽（积压率 0.22 健康），含可玩实验室 meta_lab.html。</div></a>
+    <a class="ncard" href="music_layers.html" target="_blank">
+      <div class="ico">👹</div><div class="t">Boss 分层组</div>
+      <div class="d">92 BPM 厚重小调三层轨（定音鼓/厚重低音/铜管旋律），按 Boss 三阶段实时混音（阶段 1 鼓 → 2 +低音 → 3 +旋律），boss_arena 真机演示。</div></a>
     <a class="ncard" href="mod_chart.html" target="_blank">
       <div class="ico">🎲</div><div class="t">挑战修饰符</div>
       <div class="d">8 个全局修饰符（玩家增益×敌人增强成对设计），每周按 ISO 周数种子轮换 1+1——endless_lab 本周挑战选择器真实生效。</div></a>

@@ -6,13 +6,106 @@
     "Vertical layering（垂直分层）自适应音乐惯例：所有层同 key/BPM/长度，按游戏强度参数（敌数/连击/血量）实时调各层增益，无缝无跳变（游戏自适应音频通行做法）",
     "Vampire Survivors 音乐随波次加密的听感目标一致：压力感知来自「编曲变满」而非「换曲」"
   ],
-  "base": { "bpm": 116, "bars": 16, "durationSec": 33.1, "key": "C 大调 I–vi–IV–V（C Am F G）", "loop": true },
+  "base": {
+    "bpm": 116,
+    "bars": 16,
+    "durationSec": 33.1,
+    "key": "C 大调 I–vi–IV–V（C Am F G）",
+    "loop": true
+  },
   "layers": [
-    { "id": "L1", "file": "cp_layer_tide_drums.wav", "cn": "节奏层", "instruments": "四踩底鼓 + 八分 hi-hat + 2/4 拍军鼓", "gain": 1.0, "trigger": { "type": "always", "note": "常开——节奏是战斗基础脉动" } },
-    { "id": "L2", "file": "cp_layer_tide_bass.wav", "cn": "低音层", "instruments": "根音八分脉冲贝斯（−24 半音，跟随和弦）", "gain": 0.8, "trigger": { "type": "enemyCount", "threshold": 8, "fadeSec": 1.5, "note": "场上敌 ≥8 淡入，<6 淡出（滞回防抖动）" } },
-    { "id": "L3", "file": "cp_layer_tide_lead.wav", "cn": "旋律层", "instruments": "五声 lead 随机游走 + 和弦长音 pad", "gain": 0.8, "trigger": { "type": "enemyCount", "threshold": 15, "fadeSec": 1.5, "note": "场上敌 ≥15 或精英/Boss 在场淡入" } }
+    {
+      "id": "L1",
+      "file": "cp_layer_tide_drums.wav",
+      "cn": "节奏层",
+      "instruments": "四踩底鼓 + 八分 hi-hat + 2/4 拍军鼓",
+      "gain": 1.0,
+      "trigger": {
+        "type": "always",
+        "note": "常开——节奏是战斗基础脉动"
+      }
+    },
+    {
+      "id": "L2",
+      "file": "cp_layer_tide_bass.wav",
+      "cn": "低音层",
+      "instruments": "根音八分脉冲贝斯（−24 半音，跟随和弦）",
+      "gain": 0.8,
+      "trigger": {
+        "type": "enemyCount",
+        "threshold": 8,
+        "fadeSec": 1.5,
+        "note": "场上敌 ≥8 淡入，<6 淡出（滞回防抖动）"
+      }
+    },
+    {
+      "id": "L3",
+      "file": "cp_layer_tide_lead.wav",
+      "cn": "旋律层",
+      "instruments": "五声 lead 随机游走 + 和弦长音 pad",
+      "gain": 0.8,
+      "trigger": {
+        "type": "enemyCount",
+        "threshold": 15,
+        "fadeSec": 1.5,
+        "note": "场上敌 ≥15 或精英/Boss 在场淡入"
+      }
+    }
   ],
   "mixRule": "三轨同一时刻起播、循环同步；层增益线性过渡（fadeSec 内 volume 渐变）；全体受 Music 通道增益（0.8）约束。滞回区间（淡入 8 / 淡出 6）防止敌数在阈值附近反复横跳。",
   "relation": "与 §2.15 双通道体系的关系：Ambience（空间）+ BGM 完整曲（整曲切换的情绪曲线）+ 本分层组（战斗强度自适应子层）三者可共存——分层组用于战斗场景时替代整曲 BGM，避免两种旋律叠吵。",
-  "consumerNote": "消费点：endless_lab.html「🎵 自适应分层」开关——三轨同播，按场上实时敌数驱动 L2/L3 音量（滞回混音），真·自适应音乐演示；audio_demo.html 3 试听卡。合成：synth_audio.py 新增 _layer_grid/_layer_add/_layer_noise 三原语（共享时间网格=对齐充要条件），纯标准库零外部素材。"
+  "consumerNote": "消费点：endless_lab.html「🎵 自适应分层」开关——三轨同播，按场上实时敌数驱动 L2/L3 音量（滞回混音），真·自适应音乐演示；audio_demo.html 3 试听卡。合成：synth_audio.py 新增 _layer_grid/_layer_add/_layer_noise 三原语（共享时间网格=对齐充要条件），纯标准库零外部素材。",
+  "bossGroup": {
+    "id": "boss",
+    "cn": "Boss 分层组",
+    "base": {
+      "bpm": 92,
+      "bars": 12,
+      "durationSec": 31.3,
+      "key": "A 小调 i–VI–III–VII（Am–F–C–G 厚重小调）",
+      "loop": true
+    },
+    "triggerType": "bossPhase",
+    "mixByPhase": {
+      "phase1": {
+        "L1": 1.0,
+        "L2": 0.0,
+        "L3": 0.0
+      },
+      "phase2": {
+        "L1": 1.0,
+        "L2": 0.7,
+        "L3": 0.0
+      },
+      "phase3": {
+        "L1": 1.0,
+        "L2": 0.7,
+        "L3": 0.8
+      }
+    },
+    "layers": [
+      {
+        "id": "L1",
+        "file": "cp_layer_boss_drums.wav",
+        "cn": "定音鼓层",
+        "instruments": "定音鼓式 kick 重压 + 战争鼓双击",
+        "gain": 1.0
+      },
+      {
+        "id": "L2",
+        "file": "cp_layer_boss_bass.wav",
+        "cn": "厚重低音层",
+        "instruments": "锯齿低音（根音 −12 半音，四分顿挫）",
+        "gain": 0.7
+      },
+      {
+        "id": "L3",
+        "file": "cp_layer_boss_lead.wav",
+        "cn": "铜管旋律层",
+        "instruments": "锯齿小调琶音上行 + 不祥钟声动机（每 3 小节）",
+        "gain": 0.8
+      }
+    ],
+    "note": "按 Boss 阶段混音（非敌数）：阶段 1 仅定音鼓、阶段 2 进低音、阶段 3 进旋律——三阶段压力递增与 boss_phases.json 的 hpLow 66%/33% 阈值一一对应。消费点：boss_arena.html「🎵 Boss 分层」开关按 enterPhase 实时调层。"
+  }
 }

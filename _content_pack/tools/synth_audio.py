@@ -1499,6 +1499,77 @@ def synth_layer_lead(path):
     return total
 
 
+
+# ---------------- Boss 分层组（Round-43 · 92 BPM 厚重小调，与 tide 组同机制） ----------------
+_BOSS_BPM = 92
+_BOSS_BARS = 12
+_BOSS_PROG = [(45, [57, 60, 64]), (41, [53, 57, 60]), (48, [60, 64, 67]), (43, [55, 59, 62])]  # Am F C G 小调厚重
+
+
+def _boss_grid():
+    beat = 60.0 / _BOSS_BPM
+    bar_dur = beat * 4
+    total = _BOSS_BARS * bar_dur
+    return beat, bar_dur, total, int(total * SR), _BOSS_PROG
+
+
+def synth_layer_boss_drums(path):
+    """Boss L1：定音鼓式 kick（每 1/2 拍重压）+ 战争鼓滚奏感。"""
+    beat, bar_dur, total, N, prog = _boss_grid()
+    buf = [0.0] * N
+    for bar in range(_BOSS_BARS):
+        for bt in range(4):
+            t0 = bar * bar_dur + bt * beat
+            i0 = int(t0 * SR)
+            cnt = int(0.20 * SR)
+            for i in range(cnt):
+                idx = i0 + i
+                if idx >= N:
+                    break
+                tt = i / SR
+                f = 110 * math.exp(-10 * i / cnt) + 38
+                amp = 0.60 if bt % 2 == 0 else 0.42
+                buf[idx] += amp * math.exp(-7 * i / cnt) * math.sin(2 * math.pi * f * tt)
+            if bt in (1, 3):                                # 战争鼓双击
+                _layer_noise(buf, N, t0 + beat * 0.5, 0.06, 0.10, tone_hz=150)
+    _loop_crossfade(buf, 0.08)
+    write_wav(path, buf)
+    return total
+
+
+def synth_layer_boss_bass(path):
+    """Boss L2：厚重锯齿低音（根音 -12 半音，半拍顿挫）。"""
+    beat, bar_dur, total, N, prog = _boss_grid()
+    buf = [0.0] * N
+    for bar in range(_BOSS_BARS):
+        root = prog[(bar // 3) % 4][0] - 12
+        for eb in range(4):                                  # 四分顿挫（厚重非密集）
+            t0 = bar * bar_dur + eb * beat
+            _layer_add(buf, N, t0, beat * 0.75, midi_freq(root), 0.30, 'sawtooth', a=0.006, d=0.08, s=0.65, r=0.12)
+    _loop_crossfade(buf, 0.08)
+    write_wav(path, buf)
+    return total
+
+
+def synth_layer_boss_lead(path):
+    """Boss L3：铜管感锯齿 lead（小调琶音上行压迫）+ 不祥钟声（每 4 小节钟动机）。"""
+    beat, bar_dur, total, N, prog = _boss_grid()
+    buf = [0.0] * N
+    rng = random.Random(20260950)
+    for bar in range(_BOSS_BARS):
+        root, chord = prog[(bar // 3) % 4]
+        s0 = bar * bar_dur
+        if bar % 3 == 0:                                     # 钟声动机
+            _layer_add(buf, N, s0, 1.4, midi_freq(chord[0] + 24), 0.05, 'sine', a=0.002, d=0.4, s=0.2, r=0.8)
+        for qt in range(4):                                  # 小调琶音上行
+            seq = [0, 2, 1, 2]
+            note = chord[seq[qt]] + (12 if qt == 3 else 0)
+            _layer_add(buf, N, s0 + qt * beat, beat * 0.8, midi_freq(note), 0.11, 'sawtooth', a=0.01, d=0.06, s=0.6, r=0.15)
+    _loop_crossfade(buf, 0.08)
+    write_wav(path, buf)
+    return total
+
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/audio'
     import os
@@ -1551,6 +1622,9 @@ if __name__ == '__main__':
         ('cp_layer_tide_drums.wav', synth_layer_drums),
         ('cp_layer_tide_bass.wav', synth_layer_bass),
         ('cp_layer_tide_lead.wav', synth_layer_lead),
+        ('cp_layer_boss_drums.wav', synth_layer_boss_drums),
+        ('cp_layer_boss_bass.wav', synth_layer_boss_bass),
+        ('cp_layer_boss_lead.wav', synth_layer_boss_lead),
     ]
     for name, fn in jobs:
         d = fn(f'{out_dir}/{name}')

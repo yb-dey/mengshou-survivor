@@ -89,6 +89,7 @@ DATA_CN = {
     'music_layers': '战斗分层自适应音乐',
     'decors': '场景装饰件',
     'challenge_mods': '挑战修饰符系统',
+    'music_layers_boss': 'Boss 分层组',
 }
 PICKUP_CN = {
     'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',

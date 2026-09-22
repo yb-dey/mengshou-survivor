@@ -31,6 +31,23 @@ for l in LAY:
                         g=l['gain'], trig=trig_txt(l['trigger']), inst=l['instruments']))
 layer_html = ''.join(layer_cards)
 
+BOSS = M.get('bossGroup')
+boss_html = ''
+if BOSS:
+    MIX = BOSS['mixByPhase']
+    mix_rows = ''.join('<tr><th>阶段 %d</th><td>L1 %s · L2 %s · L3 %s</td></tr>' % (
+        pid, ph['L1'], ph['L2'], ph['L3']) for pid, ph in enumerate([MIX['phase1'], MIX['phase2'], MIX['phase3']], 1))
+    bcards = ''.join(
+        '<div class="tier" style="border-color:#e0666666">'
+        '<div class="tier-h" style="color:#e06666">{ico} {id} · {cn} <small><code>{f}</code></small></div>'
+        '<div class="uc-e"><span class="eff">增益 {g}</span><span class="eff">31.30s 循环</span></div>'
+        '<div class="uc-d"><b>乐器：</b>{inst}</div>'
+        '</div>'.format(ico=ICO.get(l['id'], '🎺'), id=l['id'], cn=l['cn'], f=l['file'],
+                        g=l['gain'], inst=l['instruments']) for l in BOSS['layers'])
+    boss_html = ('<div class="card"><h2>👹 Boss 分层组 <small>92 BPM · 31.30s · 按 Boss 阶段混音（boss_arena 消费点）</small></h2>'
+                 '<table class="tbl">' + mix_rows + '</table>' + bcards +
+                 '<div class="note" style="margin-top:8px">' + BOSS['note'] + '</div></div>')
+
 html = '''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -69,6 +86,7 @@ html = '''<!DOCTYPE html>
   <h1>🎚️ 战斗分层自适应音乐</h1>
   <div class="sub">《萌兽消消岛》Adaptive Music 分层规格（纯设计数据，非游戏代码）：3 条**同和声（C-Am-F-G）同 BPM（__BPM__）同长度（__DUR__s）**的三层轨，叠播即完整曲；按<b>场上敌数</b>实时调层（L1 常开 / L2 敌≥8 / L3 敌≥15 或 Boss）——压力越大音乐越满，<b>编曲变满而非换曲</b>。属于 §2.15 Music 通道内部的自适应子层。数据来自 <code>data/music_layers.json</code>，本页由 <code>tools/build_music_layers.py</code> 生成。</div>
   <div class="wrap">
+    __BOSS_HTML__
     <div class="card">
       <h2>🎼 基础参数 <small>三轨对齐的充要条件</small></h2>
       <table class="tbl">
@@ -91,7 +109,8 @@ html = '''<!DOCTYPE html>
 </body>
 </html>'''
 
-html = (html.replace('__BPM__', str(BASE['bpm']))
+html = (html.replace('__BOSS_HTML__', boss_html)
+            .replace('__BPM__', str(BASE['bpm']))
             .replace('__BARS__', str(BASE['bars']))
             .replace('__DUR__', str(BASE['durationSec']))
             .replace('__KEY__', BASE['key'])
