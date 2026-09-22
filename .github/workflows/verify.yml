@@ -158,6 +158,18 @@ jobs:
         run: |
           node ci/bgm-spec-coherence.mjs --selftest
           node ci/bgm-spec-coherence.mjs
+      # 图鉴相对速度断言审计：第 24 个"无人守"的维度。
+      # 【v1.199】病根=**同句式的相对断言，一条真一条假**（肉眼审读会"顺着读过去"）。
+      #   fox   hint="剪影可分, 比兔更快"  spd 158 > rabbit 120  ✅ 真
+      #   raven hint="剪影可分, 比鼠更快"  spd 148 < mouse  150  ❌ 假（鸦比鼠慢 2！）
+      #   ⇒ 只有把断言**翻译成数据比较**才抓得住。这正是"文案是承诺、数据是事实"最阴的一类。
+      #   判据 A 敌表/图鉴各 21 条且 id 集合相等 · B 「比X更快/更慢」必须与 spd 关系一致 · C 至少检出 1 条(防判据腐化)。
+      #   ⚠ 三种失败模式都防：判据太窄→空跑假绿(用句式族) / 太宽→假红(先剥离注释) / 解析退化→假绿(全程下界断言)。
+      #   **硬门禁**（发现断言与数据不符即 exit 1）。
+      - name: 图鉴相对速度断言审计（GATE）
+        run: |
+          node ci/codex-speed-claim.mjs --selftest
+          node ci/codex-speed-claim.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
