@@ -35,6 +35,8 @@ def tone(t, freq, wave='sine', duty=0.5):
         return 4.0 * abs(ph - 0.5) - 1.0
     if wave == 'square':
         return 1.0 if ph < duty else -1.0
+    if wave == 'sawtooth':
+        return 2.0 * ph - 1.0
     return 0.0
 
 def write_wav(path, buf, peak_target=0.85):
@@ -160,12 +162,195 @@ def synth_heal(path):
     write_wav(path, buf)
     return total
 
+# ---------------- 9 个游戏事件音效 ----------------
+# hit / kill / levelup / pickup / hurt / evolve / win / lose / ui
+# 全部沿用 midi_freq/env_adsr/tone/write_wav，纯标准库、零额度、不卡机。
+
+def _noise_rng():
+    return random.Random(20261001)
+
+def synth_hit(path):
+    """受击/命中：低频 thump + 噪声瞬态 + 高频 click。短促有力。"""
+    total = 0.16
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.002, d=0.04, s=0.4, r=0.06):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    add(0, 0.10, midi_freq(48), 0.5, 'sine', a=0.001, d=0.05, s=0.2, r=0.05)
+    r = _noise_rng(); nb = int(0.06 * SR)
+    for i in range(nb):
+        if i < N: buf[i] += (r.random() * 2 - 1) * 0.3 * (1 - i / nb)
+    add(0, 0.02, midi_freq(84), 0.18, 'square', a=0.001, d=0.01, s=0, r=0.01)
+    write_wav(path, buf); return total
+
+def synth_kill(path):
+    """击杀：下行 whoosh（锯齿扫频）+ 明亮 ding。爽快收尾。"""
+    total = 0.34
+    N = int(total * SR); buf = [0.0] * N
+    def sweep(start, dur, m0, m1, amp, wave, a=0.005, d=0.05, s=0.5, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; prog = i / cnt
+            freq = midi_freq(m0 + (m1 - m0) * prog)
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    def add(start, dur, freq, amp, wave, a=0.005, d=0.06, s=0.5, r=0.15):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    sweep(0, 0.18, 76, 52, 0.40, 'sawtooth', a=0.002, d=0.10, s=0.3, r=0.05)
+    add(0.16, 0.18, midi_freq(88), 0.22, 'triangle', a=0.003, d=0.05, s=0.4, r=0.12)
+    add(0.16, 0.12, midi_freq(92), 0.08, 'sine', a=0.002, d=0.03, s=0.3, r=0.10)
+    write_wav(path, buf); return total
+
+def synth_levelup(path):
+    """升级：明亮上行大三和弦琶音（C-E-G-C）。轻快短促。"""
+    notes = [72, 76, 79, 84]
+    step = 0.09; tail = 0.25; total = len(notes) * step + tail
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.004, d=0.05, s=0.6, r=0.20):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    for k, m in enumerate(notes):
+        add(k * step, 0.18, midi_freq(m), 0.24, 'triangle', a=0.003, d=0.04, s=0.6, r=0.12)
+        add(k * step, 0.12, midi_freq(m + 12), 0.07, 'sine', a=0.002, d=0.03, s=0.3, r=0.10)
+    add(len(notes) * step, tail, midi_freq(84), 0.12, 'sine', a=0.02, d=0.10, s=0.7, r=0.20)
+    write_wav(path, buf); return total
+
+def synth_pickup(path):
+    """拾取：双段上行 bloop（松鼠吃坚果感）。极短清脆。"""
+    total = 0.18
+    N = int(total * SR); buf = [0.0] * N
+    def sweep(start, dur, m0, m1, amp, wave, a=0.002, d=0.05, s=0.5, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; prog = i / cnt
+            freq = midi_freq(m0 + (m1 - m0) * prog)
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    sweep(0, 0.10, 76, 88, 0.22, 'sine', a=0.002, d=0.04, s=0.4, r=0.05)
+    sweep(0.09, 0.07, 88, 95, 0.12, 'sine', a=0.002, d=0.03, s=0.3, r=0.04)
+    write_wav(path, buf); return total
+
+def synth_hurt(path):
+    """受伤：下行锯齿 harsh sweep + 噪声毛刺。刺痛感。"""
+    total = 0.26
+    N = int(total * SR); buf = [0.0] * N
+    def sweep(start, dur, m0, m1, amp, wave, a=0.002, d=0.05, s=0.5, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; prog = i / cnt
+            freq = midi_freq(m0 + (m1 - m0) * prog)
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    sweep(0, 0.20, 67, 55, 0.35, 'sawtooth', a=0.002, d=0.08, s=0.4, r=0.06)
+    r = _noise_rng(); nb = int(0.10 * SR)
+    for i in range(nb):
+        if i < N: buf[i] += (r.random() * 2 - 1) * 0.12 * (1 - i / nb)
+    write_wav(path, buf); return total
+
+def synth_evolve(path):
+    """进化：宏大上行琶音 + 收尾和弦 swell。比升级更隆重。"""
+    notes = [60, 64, 67, 72, 76, 79]
+    step = 0.10; tail = 0.45; total = len(notes) * step + tail
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.01, d=0.08, s=0.7, r=0.30):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    for k, m in enumerate(notes):
+        add(k * step, 0.30, midi_freq(m), 0.20, 'triangle', a=0.006, d=0.05, s=0.6, r=0.20)
+        add(k * step, 0.20, midi_freq(m + 12), 0.06, 'sine', a=0.003, d=0.03, s=0.3, r=0.15)
+    for c in [60, 64, 67, 72]:
+        add(len(notes) * step, tail, midi_freq(c), 0.14, 'sine', a=0.04, d=0.20, s=0.8, r=0.40)
+    write_wav(path, buf); return total
+
+def synth_win(path):
+    """胜利：号角式上行琶音 + 尾部和弦。凯旋。"""
+    notes = [72, 76, 79, 84, 88]
+    step = 0.12; tail = 0.50; total = len(notes) * step + tail
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.005, d=0.06, s=0.7, r=0.30):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    for k, m in enumerate(notes):
+        add(k * step, 0.22, midi_freq(m), 0.24, 'triangle', a=0.004, d=0.05, s=0.6, r=0.15)
+        add(k * step, 0.15, midi_freq(m - 12), 0.08, 'sine', a=0.003, d=0.04, s=0.4, r=0.10)
+    for c in [60, 64, 67, 72]:
+        add(len(notes) * step, tail, midi_freq(c), 0.13, 'sine', a=0.03, d=0.15, s=0.8, r=0.40)
+    write_wav(path, buf); return total
+
+def synth_lose(path):
+    """失败：下行小调叹息（G-E-C-G）+ 低沉余音。失落。"""
+    notes = [67, 63, 60, 55]
+    step = 0.16; tail = 0.35; total = len(notes) * step + tail
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.01, d=0.10, s=0.6, r=0.30):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    for k, m in enumerate(notes):
+        add(k * step, 0.30, midi_freq(m), 0.22, 'triangle', a=0.01, d=0.08, s=0.6, r=0.20)
+        add(k * step, 0.20, midi_freq(m - 12), 0.07, 'sine', a=0.008, d=0.06, s=0.4, r=0.15)
+    add(len(notes) * step, tail, midi_freq(48), 0.10, 'sine', a=0.05, d=0.20, s=0.7, r=0.30)
+    write_wav(path, buf); return total
+
+def synth_ui(path):
+    """UI 点击：极短柔 tick。克制不抢戏。"""
+    total = 0.06
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.001, d=0.02, s=0.3, r=0.02):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    add(0, total, midi_freq(84), 0.16, 'sine', a=0.001, d=0.015, s=0.2, r=0.015)
+    write_wav(path, buf); return total
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/audio'
     import os
     os.makedirs(out_dir, exist_ok=True)
-    d1 = synth_bgm(f'{out_dir}/cp_bgm_forest.wav')
-    d2 = synth_summon(f'{out_dir}/cp_sfx_summon.wav')
-    d3 = synth_heal(f'{out_dir}/cp_sfx_heal.wav')
-    for p, d in [('cp_bgm_forest.wav', d1), ('cp_sfx_summon.wav', d2), ('cp_sfx_heal.wav', d3)]:
-        print('WAV OK: %s  %.2fs' % (p, d))
+    jobs = [
+        ('cp_bgm_forest.wav', synth_bgm),
+        ('cp_sfx_summon.wav', synth_summon),
+        ('cp_sfx_heal.wav', synth_heal),
+        ('cp_sfx_hit.wav', synth_hit),
+        ('cp_sfx_kill.wav', synth_kill),
+        ('cp_sfx_levelup.wav', synth_levelup),
+        ('cp_sfx_pickup.wav', synth_pickup),
+        ('cp_sfx_hurt.wav', synth_hurt),
+        ('cp_sfx_evolve.wav', synth_evolve),
+        ('cp_sfx_win.wav', synth_win),
+        ('cp_sfx_lose.wav', synth_lose),
+        ('cp_sfx_ui.wav', synth_ui),
+    ]
+    for name, fn in jobs:
+        d = fn(f'{out_dir}/{name}')
+        print('WAV OK: %-22s %.2fs' % (name, d))

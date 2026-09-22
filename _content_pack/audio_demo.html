@@ -14,18 +14,20 @@
     display:flex; flex-direction:column; align-items:center;
   }
   h1{font-size:30px;letter-spacing:2px;margin-bottom:6px;text-shadow:0 2px 8px rgba(0,0,0,.4)}
-  .sub{opacity:.8;margin-bottom:34px;font-size:14px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;width:100%;max-width:880px}
+  .sub{opacity:.8;margin-bottom:8px;font-size:14px}
+  .hint{opacity:.55;margin-bottom:34px;font-size:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;width:100%;max-width:920px}
   .card{
     background:linear-gradient(160deg,#1f5c3a,#143e28);
-    border:1px solid rgba(232,196,99,.35); border-radius:18px; padding:24px 22px;
-    box-shadow:0 12px 30px rgba(0,0,0,.35); display:flex; flex-direction:column; gap:14px;
+    border:1px solid rgba(232,196,99,.35); border-radius:18px; padding:22px 20px;
+    box-shadow:0 12px 30px rgba(0,0,0,.35); display:flex; flex-direction:column; gap:12px;
     transition:transform .25s ease, box-shadow .25s ease;
   }
   .card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(0,0,0,.45)}
-  .ico{font-size:34px}
+  .card.bgm{border-color:rgba(159,224,180,.55);background:linear-gradient(160deg,#236b45,#16472c)}
+  .ico{font-size:32px}
   .t{font-size:18px;font-weight:700}
-  .d{font-size:13px;opacity:.78;line-height:1.5;min-height:40px}
+  .d{font-size:13px;opacity:.78;line-height:1.5;min-height:38px}
   .meta{font-size:12px;opacity:.6}
   button{
     border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:600;
@@ -42,58 +44,78 @@
   .eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}
   .eq i:nth-child(4){animation-delay:.45s}.eq i:nth-child(5){animation-delay:.6s}
   @keyframes blink{0%,100%{height:4px}50%{height:16px}}
-  footer{margin-top:36px;font-size:12px;opacity:.5}
+  footer{margin-top:36px;font-size:12px;opacity:.5;text-align:center;line-height:1.6}
 </style>
 </head>
 <body>
   <h1>🌿 森灵萌兽 · 音频试听</h1>
   <div class="sub">独立内容包专属原声 · 纯参数化合成 · 双击即听</div>
-  <div class="grid">
-    <div class="card">
-      <div class="ico">🌲</div>
-      <div class="t">森林主题 BGM</div>
-      <div class="d">柔美 pad + 三角波旋律 + 轻贝斯与铃音，I–vi–IV–V 进行，无缝循环，适合探索/秘境场景。</div>
-      <div class="eq" id="eq1"><i></i><i></i><i></i><i></i><i></i></div>
-      <button id="b1" onclick="toggleLoop('a1','b1','eq1')">▶ 播放循环</button>
-      <div class="meta">cp_bgm_forest.wav · 35.6s · 循环</div>
-    </div>
-    <div class="card">
-      <div class="ico">✨</div>
-      <div class="t">召唤音效</div>
-      <div class="d">上行魔法琶音叠加微光泛音，明亮而短促，适用于召唤萌兽/释放技能。</div>
-      <div class="eq" id="eq2"><i></i><i></i><i></i><i></i><i></i></div>
-      <button id="b2" onclick="playOnce('a2','b2','eq2')">▶ 试听</button>
-      <div class="meta">cp_sfx_summon.wav · 0.92s</div>
-    </div>
-    <div class="card">
-      <div class="ico">💚</div>
-      <div class="t">治疗音效</div>
-      <div class="d">暖色上行和弦 swell，舒缓悠长，适用于回复生命/增益状态。</div>
-      <div class="eq" id="eq3"><i></i><i></i><i></i><i></i><i></i></div>
-      <button id="b3" onclick="playOnce('a3','b3','eq3')">▶ 试听</button>
-      <div class="meta">cp_sfx_heal.wav · 1.38s</div>
-    </div>
-  </div>
+  <div class="hint">共 12 条：1 首森林 BGM（可循环）+ 11 个游戏事件音效</div>
+  <div class="grid" id="grid"></div>
 
-  <audio id="a1" src="audio/cp_bgm_forest.wav" loop preload="auto"></audio>
-  <audio id="a2" src="audio/cp_sfx_summon.wav" preload="auto"></audio>
-  <audio id="a3" src="audio/cp_sfx_heal.wav" preload="auto"></audio>
-
-  <footer>萌兽消消岛 · 森灵内容包 · 美术与音频资产（独立命名空间，不改动主游戏文件）</footer>
+  <footer>萌兽消消岛 · 森灵内容包 · 音频资产（独立命名空间，不改动主游戏文件）<br>全部由 tools/synth_audio.py 纯标准库合成，峰值统一 85%，零削波</footer>
 
 <script>
-function setEq(id,on){document.getElementById(id).classList.toggle('on',on);}
-function toggleLoop(aid,bid,eqid){
-  const a=document.getElementById(aid), b=document.getElementById(bid);
-  if(a.paused){a.play();b.textContent='⏸ 停止';b.classList.add('playing');setEq(eqid,true);}
-  else{a.pause();a.currentTime=0;b.textContent='▶ 播放循环';b.classList.remove('playing');setEq(eqid,false);}
-}
-function playOnce(aid,bid,eqid){
-  const a=document.getElementById(aid);
-  a.currentTime=0; setEq(eqid,true);
-  a.play();
-  b=document.getElementById(bid); b.classList.add('playing'); b.textContent='♪ 播放中';
-  a.onended=()=>{setEq(eqid,false);b.classList.remove('playing');b.textContent='▶ 试听';};
+// 音频清单：相对路径引用 audio/*.wav，真正用上资产，规避死资产
+const TRACKS = [
+  {key:'cp_bgm_forest', ico:'🌲', title:'森林主题 BGM', loop:true,
+   desc:'柔美 pad + 三角波旋律 + 轻贝斯与铃音，I–vi–IV–V 进行，无缝循环，适合探索/秘境场景。', dur:'35.6s · 循环'},
+  {key:'cp_sfx_summon', ico:'✨', title:'召唤音效', loop:false,
+   desc:'上行魔法琶音叠加微光泛音，明亮短促，适用召唤萌兽/释放技能。', dur:'0.92s'},
+  {key:'cp_sfx_heal', ico:'💚', title:'治疗音效', loop:false,
+   desc:'暖色上行和弦 swell，舒缓悠长，适用回复生命/增益状态。', dur:'1.38s'},
+  {key:'cp_sfx_hit', ico:'💥', title:'受击·命中', loop:false,
+   desc:'低频 thump + 噪声瞬态 + 高频 click，短促有力，适用敌人受击/暴击反馈。', dur:'0.16s'},
+  {key:'cp_sfx_kill', ico:'⭐', title:'击杀', loop:false,
+   desc:'下行 whoosh（锯齿扫频）接明亮 ding，爽快收尾，适用击杀/爆裂。', dur:'0.34s'},
+  {key:'cp_sfx_levelup', ico:'⬆️', title:'升级', loop:false,
+   desc:'明亮上行大三和弦琶音（C-E-G-C），轻快短促，适用升级/强化。', dur:'0.61s'},
+  {key:'cp_sfx_pickup', ico:'🪙', title:'拾取', loop:false,
+   desc:'双段上行 bloop，极短清脆，适用宝石/金币/道具拾取。', dur:'0.18s'},
+  {key:'cp_sfx_hurt', ico:'😣', title:'受伤', loop:false,
+   desc:'下行锯齿 harsh sweep + 噪声毛刺，刺痛感，适用玩家/友军受创。', dur:'0.26s'},
+  {key:'cp_sfx_evolve', ico:'🌟', title:'进化', loop:false,
+   desc:'宏大上行琶音 + 收尾和弦 swell，比升级更隆重，适用进化/形态变换。', dur:'1.05s'},
+  {key:'cp_sfx_win', ico:'🏆', title:'胜利', loop:false,
+   desc:'号角式上行琶音 + 尾部和弦，凯旋感，适用通关/关卡胜利。', dur:'1.10s'},
+  {key:'cp_sfx_lose', ico:'🌧️', title:'失败', loop:false,
+   desc:'下行小调叹息（G-E-C-G）+ 低沉余音，失落感，适用失败/撤退。', dur:'0.99s'},
+  {key:'cp_sfx_ui', ico:'🔘', title:'UI 点击', loop:false,
+   desc:'极短柔 tick，克制不抢戏，适用按钮/菜单交互。', dur:'0.06s'},
+];
+
+const grid = document.getElementById('grid');
+TRACKS.forEach((tk, i) => {
+  const id = 'a' + i, bid = 'b' + i, eid = 'e' + i;
+  const card = document.createElement('div');
+  card.className = 'card' + (tk.loop ? ' bgm' : '');
+  card.innerHTML =
+    '<div class="ico">' + tk.ico + '</div>' +
+    '<div class="t">' + tk.title + '</div>' +
+    '<div class="d">' + tk.desc + '</div>' +
+    '<div class="eq" id="' + eid + '"><i></i><i></i><i></i><i></i><i></i></div>' +
+    '<button id="' + bid + '">' + (tk.loop ? '▶ 播放循环' : '▶ 试听') + '</button>' +
+    '<div class="meta">' + tk.key + '.wav · ' + tk.dur + '</div>';
+  grid.appendChild(card);
+  const audio = document.createElement('audio');
+  audio.id = id;
+  audio.src = 'audio/' + tk.key + '.wav';
+  audio.loop = !!tk.loop;
+  audio.preload = 'auto';
+  document.body.appendChild(audio);
+  document.getElementById(bid).onclick = () => toggle(tk, id, bid, eid);
+});
+
+function setEq(eid, on){ document.getElementById(eid).classList.toggle('on', on); }
+function toggle(tk, aid, bid, eid){
+  const a = document.getElementById(aid), b = document.getElementById(bid);
+  if(tk.loop){
+    if(a.paused){ a.play(); b.textContent='⏸ 停止'; b.classList.add('playing'); setEq(eid,true); }
+    else { a.pause(); a.currentTime=0; b.textContent='▶ 播放循环'; b.classList.remove('playing'); setEq(eid,false); }
+  } else {
+    a.currentTime=0; setEq(eid,true); b.classList.add('playing'); b.textContent='♪ 播放中'; a.play();
+    a.onended=()=>{ setEq(eid,false); b.classList.remove('playing'); b.textContent='▶ 试听'; };
+  }
 }
 </script>
 </body>

@@ -31,15 +31,24 @@
 
 > 与 §5 的「复用 game/audio/ 接线」并不矛盾：§5 说的是**不在争议文件上接线**、不往 `game/audio/` 塞文件；本包的音效是**在 `_content_pack/audio/` 自己的命名空间里新生成的原型**，零接线、零冲突，可独立试听与替换。
 
-| 文件 | 用途 | 规格 | 时长 |
+| 文件 | 用途 | 规格 / 音色设计 | 时长 |
 |---|---|---|---|
 | `audio/cp_bgm_forest.wav` | 森林主题 BGM（循环） | 44.1k/16bit 单声道，柔 pad+三角波 lead+轻贝斯+铃+软底鼓，无缝循环 | 35.6s |
-| `audio/cp_sfx_summon.wav` | 召唤音效（Boss 召唤藤蔓 / 英雄召唤） | 同上，上行魔法琶音+微光泛音 | 0.92s |
-| `audio/cp_sfx_heal.wav`  | 治疗音效（英雄星辉治疗 / 净化） | 同上，暖色上行和弦 swell | 1.38s |
+| `audio/cp_sfx_summon.wav` | 召唤音效 | 上行魔法琶音 + 微光泛音（三角波+正弦泛音） | 0.92s |
+| `audio/cp_sfx_heal.wav`  | 治疗音效 | 暖色上行和弦 swell（正弦） | 1.38s |
+| `audio/cp_sfx_hit.wav`    | 受击·命中 | 低频 thump + 噪声瞬态 + 高频 square click | 0.16s |
+| `audio/cp_sfx_kill.wav`   | 击杀 | 下行锯齿扫频 whoosh + 明亮三角 ding | 0.34s |
+| `audio/cp_sfx_levelup.wav`| 升级 | 上行大三和弦琶音 C-E-G-C（三角波） | 0.61s |
+| `audio/cp_sfx_pickup.wav` | 拾取 | 双段上行 bloop（正弦扫频） | 0.18s |
+| `audio/cp_sfx_hurt.wav`   | 受伤 | 下行锯齿 harsh sweep + 噪声毛刺 | 0.26s |
+| `audio/cp_sfx_evolve.wav` | 进化 | 宏大上行琶音 + 收尾和弦 swell（比升级隆重） | 1.05s |
+| `audio/cp_sfx_win.wav`    | 胜利 | 号角式上行琶音 + 尾部和弦 | 1.10s |
+| `audio/cp_sfx_lose.wav`   | 失败 | 下行小调叹息 G-E-C-G + 低沉余音 | 0.99s |
+| `audio/cp_sfx_ui.wav`     | UI 点击 | 极短柔 sine tick，克制不抢戏 | 0.06s |
 
-- **合成方式**：`tools/synth_audio.py`（纯 Python 标准库，零依赖、零生成额度、不卡机），确定性种子可复现。
-- **试听页**：`audio_demo.html` 引用相对路径 `audio/*.wav`，双击即听，同样规避死资产。
-- **校验**：三曲峰值均 = 85%（未削波），RMS 15.9% / 22.3% / 23.6%（非空、非静音）。
+- **合成方式**：`tools/synth_audio.py`（纯 Python 标准库，零依赖、零生成额度、不卡机），确定性种子可复现；复用 `midi_freq / env_adsr / tone / write_wav` 四个基础件，新增 `sawtooth` 波形与 `sweep` 扫频原语。
+- **试听页**：`audio_demo.html` 引用相对路径 `audio/*.wav`，双击即听，同样规避死资产；现已改为数据驱动网格，覆盖全部 12 条（1 BGM + 11 SFX）。
+- **校验**：12/12 峰值均 = 85%（未削波），RMS 13.9%–24.8%（非空、非静音）；BGM 35.6s 无缝循环，SFX 0.06s–1.38s 覆盖战斗全事件。
 
 ## 2.2 VFX 特效精灵（本轮新增 · 程序化真透底）
 
@@ -75,16 +84,25 @@ _content_pack/
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
 │   └── <key>.png / <key>.webp
-├── audio/                 # 本包专属音频原型（独立命名空间，零接线）
-│   ├── cp_bgm_forest.wav
-│   ├── cp_sfx_summon.wav
-│   └── cp_sfx_heal.wav
+├── audio/                 # 本包专属音频原型（独立命名空间，零接线，12 条）
+│   ├── cp_bgm_forest.wav  # 森林主题 BGM（无缝循环）
+│   ├── cp_sfx_summon.wav  # 召唤
+│   ├── cp_sfx_heal.wav    # 治疗
+│   ├── cp_sfx_hit.wav     # 受击·命中
+│   ├── cp_sfx_kill.wav    # 击杀
+│   ├── cp_sfx_levelup.wav # 升级
+│   ├── cp_sfx_pickup.wav  # 拾取
+│   ├── cp_sfx_hurt.wav    # 受伤
+│   ├── cp_sfx_evolve.wav  # 进化
+│   ├── cp_sfx_win.wav     # 胜利
+│   ├── cp_sfx_lose.wav    # 失败
+│   └── cp_sfx_ui.wav      # UI 点击
 ├── vfx/                   # 程序化特效精灵（RGBA 真透底）
 │   └── fx_*.png（10 个）
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
-    ├── synth_audio.py     # 森林 BGM + 召唤/治疗音效合成
+    ├── synth_audio.py     # 音频合成（森林 BGM + 11 个游戏事件音效）
     ├── gen_vfx.py         # VFX 特效生成（纯标准库）
     └── build_vfx_demo.py  # 构建 VFX 内联展示页
 ```
@@ -116,7 +134,7 @@ _content_pack/
 ## 6. 验证记录
 
 - 贴图：8/8 生成成功（6 萌兽 + Boss 森林古木 + Hero 灵鹿祭司）；8/8 透底为 RGBA；小兵/宠物 512²、Boss/Hero 1024²；展示页内联校验通过（8 张 `data:image/webp`）。
-- 音频：3/3 合成成功并校验——峰值均 85%（未削波），RMS 15.9% / 22.3% / 23.6%（非空非静音）；试听页引用相对路径可双击播放。
+- 音频：12/12 合成成功并校验——峰值均 85%（未削波），RMS 13.9%–24.8%（非空非静音）；试听页 `audio_demo.html` 数据驱动网格覆盖全部 12 条（1 BGM + 11 SFX），引用相对路径可双击播放。
 - VFX：10/10 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（10 张 `data:image/png`）。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
@@ -125,7 +143,7 @@ _content_pack/
 本内容包已覆盖**美术（8 张精灵）+ 音乐（BGM + 2 SFX）+ 特效（10 个 VFX）+ 图鉴（codex）**四支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
-2. ~~**新 creature 行为音效**~~ ✅ 已交付 `cp_sfx_summon.wav` / `cp_sfx_heal.wav`。
+2. ~~**游戏事件音效库（11 个 SFX）**~~ ✅ 已交付 `cp_sfx_summon / heal / hit / kill / levelup / pickup / hurt / evolve / win / lose / ui.wav`，覆盖战斗全事件；试听页 `audio_demo.html` 升级为数据驱动网格。
 3. ~~**VFX 精灵包**~~ ✅ 已交付 10 个程序化 RGBA 特效（命中火花/火球/护盾泡/治疗光环/斩击弧/星爆/霜晶/升级星环/拾取闪光/毒云）+ `vfx_demo.html` 试看页。
 4. ~~**角色图鉴 Codex**~~ ✅ 已交付 `codex.html`（8 角色背景/属性/对策 + 元素克制环）。
 5. **更多敌种/英雄（待云端出图恢复）**：原计划经云端 Miora 文生图扩种（雷羽鹰/霜甲熊/焰心术士等以补齐元素），但本环境 `miora_text_to_image` 暂不可用；将在云端图像生成恢复后继续，沿用同一 chibi 语言 + 抠图流程。
