@@ -170,6 +170,24 @@ jobs:
         run: |
           node ci/codex-speed-claim.mjs --selftest
           node ci/codex-speed-claim.mjs
+      # 超武分叉 feel 文案审计：第 25 个"无人守"的维度。
+      # 【v1.200】病根=与 v1.199 同族（文案是承诺、数据是事实），但**断言类型不同**：
+      #   v1.199 守的是**相对断言**（"比鼠更快" → 两值比大小）
+      #   本条守的是**绝对数量断言**（"八只近卫"/"四球远轨"/"六砾密环" → 必须等于 bulletCount）
+      #   两类断言在代码里长得完全不像，同一次肉眼审读都会"顺着读过去"，所以必须分开守。
+      #   判据 A DATA_SUPER 20 条 / FORK 10 组 20 分支且 id 集合相等
+      #        B  数量断言：feel 里每个「数字+量词」必须 === 对应字段（量词族 只球砾向叶镖岩发枚道环）
+      #        B2 定性方向词：**同族对照法** —— 同一条武器分叉的两个分支，方向词必须一正一反
+      #           （"四岩**远**砸" orbitR 130 > "六砾**密**环" 62 / "**宽**束慢扫" laserW 40 > "**窄**束瞬斩" 14
+      #            / "连锁雷云" chain 3 > "**短链**快劈" 1 …共 16 条规则；含"余燃"→burnDmg、"地雷"→dropPuddle）
+      #        C  覆盖度下界（数量断言 ≥8、定性方向 ≥7），防判据腐化成恒绿。
+      #   ⚠ 三种失败模式都防：太窄→空跑假绿(量词用族) / 太宽→假红(先 stripComments) / 解析退化→假绿(全程下界断言)。
+      #   ⚠ 阴性对照已证伪 8 条：改数据 / 改文案 / 换单位 / 改方向字段 / 动别处不误报（`_qc/_neg-fork-feel.mjs` 6/6 + selftest 13/13）。
+      #   **硬门禁**（发现断言与数据不符即 exit 1）。
+      - name: 超武分叉 feel 文案审计（GATE）
+        run: |
+          node ci/fork-feel-count.mjs --selftest
+          node ci/fork-feel-count.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
