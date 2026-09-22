@@ -25,7 +25,8 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.190 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.191 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.191 美术】大厅六部位字深苔+奶油发丝(makeHallGearFrame); 槽标外墨约 2.4px 软苔(hallSlotGlyph); 回港条橄榄底+奶油字 #f4f7ec、缘 #5c7044(drawHallReturnToast); 设置盘外缘 2px 软苔(makeModal); 仓库入仓/装备库穿上短墨勾(armEquipInkTick/drawEquipInkTick); SFX_UI 仅穿戴 tick 软 notch(Audio._start)。1.190 强化标题 #2c3a22/早波实心/脚环 0.18/回大厅钮/风纹/擦入/复活奶油保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.190 美术】永久强化行标题深苔(drawUpgradePanel); 早波兔耳/狐吻/鼠耳/蟾眼路径约 +10%(paintEnemySilhouette, makeEnemySprite 边距同比 half); 入账回大厅 2px 苔缘+更深橄榄(makeButton resultfoot); 回港条去金眩仍可读(drawHallReturnToast); 星巅风纹 α≈0.18–0.22(paintStarRidge); 拾珠短墨火花(armBeadInkSpark/drawBeadInkSparks); SFX_GEM 软 notch。1.189 锁章/结算墨点/HUD 字缘/脚环 0.18 保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.189 美术】选章锁定软墨挂锁+闷橄榄填(drawSoftLockBadge/makeChapterCard); 结算回大厅/再领收静(makeButton resultfoot); 结算开场 2–4 粒短命墨点(armSettleInk/drawSettleInk); 结算小字深苔(drawResultPanel); HUD 时钟/生命/杀敌字缘(drawHudClusterFrame); SFX_LOSE 软 notch。1.188 看板脊/复活奶油/边暗角/走路软尘/脚环 0.18 保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.188 美术】大厅装/强/鉴看板软抬唇+2px 苔外墨(makeHallBoardCell); 复活盘奶油填+约 2px 橄榄描边、按钮去金闪(makeModal/drawRevivePanel/comfort); 倒下暗角只压四边 alpha≤0.35(drawDeathCine); 结算小字对比抬一档; 擦入后走路极淡软尘(drawMoveDust); SFX_REVIVE 软 notch。1.187 叠层外墨/擦入/仓库行/脚环 0.18 保持。数值/掉落/进化/复活次数/10 分钟轴不动。
@@ -620,7 +621,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.190",                   // 【v1.190】强化行标题深苔; 早波耳吻眼约 +10%; 回大厅钮 2px 苔缘; 回港条去金; 风纹更可读; 拾珠墨火花; SFX_GEM 软 notch。不改掉率/价格/锻造/进化/复活次数/10 分钟轴
+  version: "1.191",                   // 【v1.191】部位字深苔; 槽标软外墨; 回港条橄榄+奶油字; 设置缘 2px; 穿上短墨勾; SFX_UI 穿戴 notch。不改掉率/价格/锻造/进化/复活次数/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -8549,6 +8550,7 @@ var DATA_SFX = {
   cardtick: { sfx: "SFX_CARD",     rate: 1.18, gain: 0.5, delay: 0.14, node: true },
   levelup: { sfx: "SFX_LEVELUP",   rate: 1,    gain: 1 },
   select:  { sfx: "SFX_UI",        rate: 1,    gain: 1 },     // 【v1.94】按钮专属, 不冒充选卡
+  equiptick: { sfx: "SFX_UI",      rate: 1.22, gain: 0.36 }, // 【v1.191】仓库入仓/装备库穿上短 tick, 仍走 SFX_UI, 更短更轻; 起音软 notch 在 Audio._start
   cardlock: { sfx: "SFX_UI",       rate: 1.5,  gain: 0.5 },   // 【v1.153】三选一点卡锁定: 更短更清的 click(高速档+半增益), 与按钮 select 分键不互吞
   halltab: { sfx: "SFX_UI",        rate: 1.26, gain: 0.40 }, // 【v1.143】大厅切页短清 tick, 仍走原 UI 音
   heropick: { sfx: "SFX_UI",       rate: 1.12, gain: 0.46 }, // 【v1.146】点选英雄卡短 tick, 略满体, 仍走原 UI 音
@@ -13074,6 +13076,13 @@ var Audio = {
         var gGm = g.gain.value;
         g.gain.setValueAtTime(gGm * 0.58, tGm);
         g.gain.linearRampToValueAtTime(gGm, tGm + 0.010);
+      }
+      // 【v1.191】仅穿戴 tick 软 notch: 8ms 从 0.42 爬到同一峰值。其它 SFX_UI(select/暂停/切页)不动, 总线 gain 不动
+      if (prioKey === "equiptick") {
+        var tEq = this.ctx.currentTime + (delay || 0);
+        var gEq = g.gain.value;
+        g.gain.setValueAtTime(gEq * 0.42, tEq);
+        g.gain.linearRampToValueAtTime(gEq, tEq + 0.008);
       }
       src.connect(g);
       if (!this.sfxGain) this._initSfxGain();
@@ -26859,6 +26868,7 @@ function renderGame() {
   drawHallOverlays(ctx);
   drawObtainFx(ctx);
   drawLootPops(ctx, false);
+  drawEquipInkTick(ctx);            // 【v1.191】穿上短墨勾, 盖在仓库/装备库之上
   // 【R7】全屏暗角/闪光层互斥预算: 四条全屏层(超武暗角/收割内闪/低血脉冲/合成白闪)若独立叠加,
   //   最坏等效不透明 0.93 近全屏遮挡战斗视野(实测)。故统一预算钳: 后层透明度受前层剩余额度约束。
   var fxBudget = CONFIG.fxAlphaBudget;   // 全屏层累计不透明上限
@@ -27182,13 +27192,29 @@ function hallSlotGlyphSpec(defId, slotId) {
 function hallSlotGlyph(defId, slotId) {
   var spec = hallSlotGlyphSpec(defId, slotId);
   var key = spec[0] + "|" + spec[1];
-  var cv, c2;
+  var cv, c2, halo, h2, k, ang;
   if (HALL_SLOT_GLYPH[key]) return HALL_SLOT_GLYPH[key];
   cv = document.createElement("canvas");
   cv.width = 64;
   cv.height = 64;
   c2 = cv.getContext("2d");
   paintCuteSil(c2, spec[0], spec[1]);
+  // 【v1.191】部位标外墨再软一档: 约 0.85px 苔晕, 缩进槽井后外缘落在 ~2–2.5px, 弩/甲/坠仍读成具名零件
+  halo = document.createElement("canvas");
+  halo.width = 64;
+  halo.height = 64;
+  h2 = halo.getContext("2d");
+  h2.drawImage(cv, 0, 0);
+  h2.globalCompositeOperation = "source-in";
+  h2.fillStyle = "#3e5234";
+  h2.fillRect(0, 0, 64, 64);
+  c2.save();
+  c2.globalCompositeOperation = "destination-over";
+  for (k = 0; k < 8; k++) {
+    ang = k * Math.PI / 4;
+    c2.drawImage(halo, Math.cos(ang) * 0.85, Math.sin(ang) * 0.85);
+  }
+  c2.restore();
   HALL_SLOT_GLYPH[key] = cv;
   return cv;
 }
@@ -28682,8 +28708,9 @@ function makeModal(id, panelW, panelH, drawPanel) {
         ctx.fillStyle = mossG;
         fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       } catch (eMoss) { /* keep flat panel */ }
-      ctx.strokeStyle = "#2f5a3a";
-      ctx.lineWidth = 2.2;
+      // 【v1.191】设置盘外缘收成约 2px 软苔; 其它模态仍走 2.2px #2f5a3a, 不改内部字阶
+      ctx.strokeStyle = this.id === "settingsmodal" ? "#5c7044" : "#2f5a3a";
+      ctx.lineWidth = this.id === "settingsmodal" ? 2 : 2.2;
       strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       ctx.lineWidth = 1;
       if (drawPanel) drawPanel(ctx, this);
@@ -30793,6 +30820,50 @@ function drawRevivePanel(ctx, m) {
   if (uiBtnGiveUp) uiBtnGiveUp.label = "放弃结算";
 }
 
+function armEquipInkTick(x, y) {
+  // 【v1.191】穿上/入仓短墨勾: 约 0.24s, 纯表现, 不改打造价与装备乘区
+  if (!GAME || GAME.reduceMotion) return;
+  GAME.equipInk = { x: x, y: y, t: 0.24, life: 0.24 };
+}
+function armVaultEquipInk(id) {
+  var list = DATA_HALL_UNLOCK, i, lay, top;
+  for (i = 0; i < list.length; i++) if (list[i].id === id) break;
+  if (i >= list.length || typeof vaultPanelMetrics !== "function") {
+    armEquipInkTick(CONFIG.viewW / 2, 420);
+    return;
+  }
+  lay = vaultPanelMetrics();
+  top = vaultRowTop(i);
+  armEquipInkTick(lay.btnX + lay.btnW / 2, top + lay.btnPadY + lay.btnH / 2);
+}
+function drawEquipInkTick(ctx) {
+  var e = GAME.equipInk, u, a, x, y;
+  if (!e || !(e.t > 0)) return;
+  u = 1 - e.t / (e.life || 0.24);
+  if (u < 0) u = 0;
+  if (u > 1) u = 1;
+  a = u < 0.18 ? (u / 0.18) : (1 - (u - 0.18) / 0.82);
+  if (a < 0) a = 0;
+  x = e.x;
+  y = e.y;
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.globalAlpha = a * 0.72;
+  ctx.strokeStyle = "#f4f7ec";
+  ctx.lineWidth = 3.2;
+  ctx.beginPath();
+  ctx.moveTo(x - 6, y + 1);
+  ctx.lineTo(x - 1.4, y + 5.2);
+  ctx.lineTo(x + 7, y - 5);
+  ctx.stroke();
+  ctx.globalAlpha = a * 0.92;
+  ctx.strokeStyle = "#2c3a22";
+  ctx.lineWidth = 1.7;
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawHallReturnToast(ctx) {
   var t = GAME.hallReturn;
   var a, y, w, h, chipW, gap, i, chips, ch, col;
@@ -30811,10 +30882,10 @@ function drawHallReturnToast(ctx) {
   ];
   ctx.save();
   ctx.globalAlpha = a;
-  // 【v1.190】回港条去金眩: 2px 苔缘 + 奶油字, 对大厅仍可读, 无金闪
-  ctx.fillStyle = "rgba(18,24,16,0.90)";
+  // 【v1.191】回港条再抬一档: 实心橄榄底 + 缘 #5c7044 + 字 #f4f7ec, 仍无金眩
+  ctx.fillStyle = "#314228";
   fillRoundRect(ctx, 20, y, w, h, 12);
-  ctx.strokeStyle = t.win ? "#5c7044" : "#6a8454";
+  ctx.strokeStyle = "#5c7044";
   ctx.lineWidth = 2;
   strokeRoundRect(ctx, 20, y, w, h, 12);
   ctx.lineWidth = 1;
@@ -30823,21 +30894,20 @@ function drawHallReturnToast(ctx) {
   for (i = 0; i < 3; i++) {
     ch = chips[i];
     col = 38 + i * (chipW + gap);
-    ctx.fillStyle = "rgba(16,20,14,0.55)";
+    ctx.fillStyle = "#24321c";
     fillRoundRect(ctx, col, y + 8, chipW, 36, 8);
     ctx.fillStyle = ch.color;
     ctx.fillRect(col + 3, y + 12, 5, 28);
-    ctx.fillStyle = "#fff7e0";
+    ctx.fillStyle = "#f4f7ec";
     ctx.font = "bold 14px " + FONT_STACK;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(ch.line, col + chipW / 2, y + 26);
   }
   ctx.textAlign = "left";
-  ctx.fillStyle = "#e4ecd6";
+  ctx.fillStyle = "#f4f7ec";
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText(t.line1 || "", 38, y + 62);
-  ctx.fillStyle = "#f4f7ec";
   ctx.font = "bold 14px " + FONT_STACK;
   ctx.fillText(t.line2 || "", 38, y + 82);
   ctx.restore();
@@ -31906,7 +31976,8 @@ function onTapVaultCraft(id) {
     vaultClearArm();
     uiVaultOk = true;
     uiVaultMsg = "已入仓 · 下局开局带上 · 连点不再扣";
-    Audio.play("select");
+    armVaultEquipInk(id);
+    Audio.play("equiptick");
   } else {
     deal = hallUnlockDealView(rec);
     vaultClearArm();
@@ -33342,10 +33413,13 @@ function makeHallGearFrame(i, x, y, w, h) {
       gg.addColorStop(1, "rgba(190,208,160,0.96)");
       ctx.fillStyle = gg;
       fillRoundRect(ctx, gx, gy, gico, gico, 8);
-      ctx.strokeStyle = "#2e3c1c";
-      ctx.lineWidth = 2;
+      // 【v1.191】槽标井外墨 2→2.4px 软苔, 鱼骨/壳/弩从奶油井上分开
+      ctx.save();
+      ctx.strokeStyle = "#3e5234";
+      ctx.lineWidth = 2.4;
+      ctx.lineJoin = "round";
       strokeRoundRect(ctx, gx, gy, gico, gico, 8);
-      ctx.lineWidth = 1;
+      ctx.restore();
       var slotGlyph = hallSlotGlyph(d ? d.id : "", sl.id);
       ctx.drawImage(slotGlyph, gx + 3, gy + 3, gico - 6, gico - 6);
       var pip, px;
@@ -33355,9 +33429,16 @@ function makeHallGearFrame(i, x, y, w, h) {
         ctx.fillStyle = (it && (it.rarity | 0) >= pip) ? col : "rgba(201,162,75,0.28)";
         ctx.fillRect(px, r.y + r.h - 22, 7, 5);
       }
-      ctx.fillStyle = "#2e3c1c";
-      ctx.font = "bold 12px " + FONT_STACK;
+      // 【v1.191】部位字深苔 #2c3a22 + 奶油发丝, 14px 仍落在稀有点之下, 手机上读出武器/护甲/…
+      ctx.font = "bold 14px " + FONT_STACK;
+      ctx.lineJoin = "round";
+      ctx.miterLimit = 2;
+      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = "#f4f7ec";
+      ctx.strokeText(sl.name, r.x + r.w / 2, r.y + r.h - 8);
+      ctx.fillStyle = "#2c3a22";
       ctx.fillText(sl.name, r.x + r.w / 2, r.y + r.h - 8);
+      ctx.lineWidth = 1;
     }
   });
 }
@@ -33572,7 +33653,8 @@ function makeGearSlot(i, x, y, w, h) {
           Storage.save(saveData);
           uiGearMsg = "已装备 " + d.name + " · 战力 " + p0 + "→" + hallCombatPower();
           kickHallPower(p0);
-          Audio.play("select");
+          armEquipInkTick(this.rect.x + 46, this.rect.y + 46);
+          Audio.play("equiptick");
           var wearRar = DATA_GEAR_RARITY[saveData.gearBag[uiGearSel].rarity];
           spawnObtainFx(gearSpriteKey(d.id), wearRar ? wearRar.color : "#c9a24b", this.rect.x + 40, this.rect.y + 220, this.rect.x + 46, this.rect.y + 52, 56);
           return;
@@ -35889,6 +35971,7 @@ var GAME = {
   resultPopT: 0,                    // 【v1.11】结算装备弹出剩余秒(rawDt)
   settleInk: null,                  // 【v1.189】结算开场短命墨点(纯表现)
   beadInk: null,                    // 【v1.190】拾珠短墨火花(纯表现)
+  equipInk: null,                   // 【v1.191】穿上/入仓短墨勾(纯表现)
   obtainFx: [],                     // 【v1.11】获得闪光/飞入
   lootPops: [],                     // 【v1.30】拾取/穿装浮字
   gearHudY: 0,                      // 【v1.30】局内六部位条 y(飞入落点)
@@ -36612,6 +36695,7 @@ function startRun(chapterIdx) {
   coinFxQueue.length = 0;                       // 【R4】组1 fx 待喷批次清空(防跨局污染)
   deathMarks.length = 0;                       // 【v1.166】死亡帧清空(防跨局污染)
   GAME.beadInk = null;                          // 【v1.190】拾珠火花不带进下一局
+  GAME.equipInk = null;                         // 【v1.191】穿上墨勾不带进下一局
   resetWaves();
   clearRunEntities();
   recomputeStats();
@@ -36828,6 +36912,10 @@ function frame(t) {
   if (GAME.settleInk && !(GAME.deathCineT > 0)) {
     GAME.settleInk.t += rawDt;
     if (GAME.settleInk.t >= GAME.settleInk.life) GAME.settleInk = null;
+  }
+  if (GAME.equipInk) {
+    GAME.equipInk.t -= rawDt;
+    if (GAME.equipInk.t <= 0) GAME.equipInk = null;
   }
   if (GAME.nodeDuckT > 0) {
     GAME.nodeDuckT -= rawDt;
