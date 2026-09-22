@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 元素克制与技能数值</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; }
+  *{ box-sizing:border-box;margin:0;padding:0 }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:40px 18px; display:flex; flex-direction:column; align-items:center; }
+  h1{ font-size:30px; letter-spacing:2px; margin-bottom:6px }
+  .sub{ opacity:.8; margin-bottom:26px; font-size:14px; text-align:center; max-width:640px; line-height:1.6 }
+  .wrap{ width:100%; max-width:880px; display:flex; flex-direction:column; gap:22px }
+  .card{ background:rgba(15,47,31,.55); border:1px solid rgba(159,224,180,.25); border-radius:16px; padding:22px 24px }
+  .card h2{ font-size:18px; margin-bottom:16px; display:flex; align-items:center; gap:8px }
+  .card h2 small{ opacity:.6; font-weight:400; font-size:13px }
+  table.grid{ border-collapse:collapse; margin:0 auto; font-size:15px }
+  table.grid th,table.grid td{ border:1px solid rgba(159,224,180,.25); padding:10px 14px; text-align:center; min-width:54px }
+  table.grid th{ background:rgba(232,196,99,.12); color:var(--gold); font-weight:700 }
+  .legend{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:14px; font-size:12px; opacity:.85 }
+  .legend span{ display:inline-flex; align-items:center; gap:6px }
+  .legend i{ width:14px;height:14px;border-radius:4px;display:inline-block }
+  .row{ display:flex; align-items:center; gap:12px; margin:10px 0 }
+  .row .nm{ width:96px; font-weight:600 }
+  .row .nm small{ display:block; opacity:.6; font-size:11px; font-weight:400 }
+  .row .track{ flex:1; height:16px; background:rgba(255,255,255,.08); border-radius:8px; overflow:hidden }
+  .row .fill{ height:100%; border-radius:8px }
+  .row .val{ width:130px; text-align:right; font-size:12px; opacity:.85 }
+  footer{ margin-top:26px; font-size:12px; opacity:.5; text-align:center; line-height:1.7; max-width:760px }
+</style>
+</head>
+<body>
+  <h1>⚖️ 元素克制与技能数值</h1>
+  <div class="sub">五元素单一 5 环克制链（强克 1 / 弱于 1，平衡对称），与英雄 8 技能冷却/消耗规格联动。数据来自 <code>data/element_matrix.json</code> 与 <code>data/skill_cooldowns.json</code>，本页由 <code>tools/build_element_chart.py</code> 扫描生成。</div>
+  <div class="wrap">
+    <div class="card">
+      <h2>🔥 五元素克制环 <small>箭头 = 强克方向</small></h2>
+      <div style="display:flex;justify-content:center"><svg viewBox="0 0 400 400" width="360" height="360" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffffff"/></marker></defs><line x1="166.0" y1="84.7" x2="100.8" y2="132.1" stroke="#ffffff" stroke-width="4" stroke-opacity="0.85" marker-end="url(#arrow)"/><line x1="299.2" y1="181.4" x2="151.7" y2="288.6" stroke="#ffffff" stroke-width="4" stroke-opacity="0.85" marker-end="url(#arrow)"/><line x1="295.3" y1="273.3" x2="320.2" y2="196.7" stroke="#ffffff" stroke-width="4" stroke-opacity="0.85" marker-end="url(#arrow)"/><line x1="130.7" y1="273.3" x2="187.0" y2="99.9" stroke="#ffffff" stroke-width="4" stroke-opacity="0.85" marker-end="url(#arrow)"/><line x1="100.8" y1="181.4" x2="248.3" y2="288.6" stroke="#ffffff" stroke-width="4" stroke-opacity="0.85" marker-end="url(#arrow)"/><g><circle cx="200.0" cy="60.0" r="34" fill="#ff7226" stroke="#fff" stroke-width="3"/><text x="200.0" y="60.0" text-anchor="middle" dominant-baseline="central" font-size="26" font-weight="700" fill="#1a1a1a">火</text></g><g><circle cx="333.1" cy="156.7" r="34" fill="#59bfff" stroke="#fff" stroke-width="3"/><text x="333.1" y="156.7" text-anchor="middle" dominant-baseline="central" font-size="26" font-weight="700" fill="#1a1a1a">水</text></g><g><circle cx="282.3" cy="313.3" r="34" fill="#8c6b3f" stroke="#fff" stroke-width="3"/><text x="282.3" y="313.3" text-anchor="middle" dominant-baseline="central" font-size="26" font-weight="700" fill="#1a1a1a">土</text></g><g><circle cx="117.7" cy="313.3" r="34" fill="#ffd83f" stroke="#fff" stroke-width="3"/><text x="117.7" y="313.3" text-anchor="middle" dominant-baseline="central" font-size="26" font-weight="700" fill="#1a1a1a">光</text></g><g><circle cx="66.9" cy="156.7" r="34" fill="#66d859" stroke="#fff" stroke-width="3"/><text x="66.9" y="156.7" text-anchor="middle" dominant-baseline="central" font-size="26" font-weight="700" fill="#1a1a1a">木</text></g></svg></div>
+      <div class="legend">
+        <span><i style="background:#e5484d"></i>强克 ×1.60</span>
+        <span><i style="background:#3fa66a"></i>被克 ×0.60</span>
+        <span><i style="background:#e8c463"></i>同元素 ×0.85</span>
+        <span><i style="background:rgba(255,255,255,.18)"></i>中性 ×1.00</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🎯 克制倍率矩阵 <small>行=攻击方 / 列=防守方</small></h2>
+      <table class="grid"><tr><th></th><th>火</th><th>水</th><th>土</th><th>光</th><th>木</th></tr><tr><th>火</th><td style="background:rgba(232,196,99,.18);color:#e8c463;border-color:#e8c463">×0.85</td><td style="background:rgba(255,255,255,.06);color:rgba(243,247,238,.7);border-color:rgba(159,224,180,.25)">×1.00</td><td style="background:rgba(255,255,255,.06);color:rgba(243,247,238,.7);border-color:rgba(159,224,180,.25)">×1.00</td><td style="background:rgba(63,166,106,.28);color:#9be8b8;border-color:#3fa66a">×0.60</td><td style="background:rgba(229,72,77,.28);color:#ff8a8a;border-color:#e5484d">×1.60</td></tr><tr><th>水</th><td style="background:rgba(255,255,255,.06);color:rgba(243,247,238,.7);border-color:rgba(159,224,180,.25)">×1.00</td><td style="background:rgba(232,196,99,.18);color:#e8c463;border-color:#e8c463">×0.85</td><td style="background:rgba(63,166,106,.28);color:#9be8b8;border-color:#3fa66a">×0.60</td><td style="background:rgba(229,72,77,.28);color:#ff8a8a;border-color:#e5484d">×1.60</td><td style="background:rgba(255,255,255,.06);color:rgba(243,247,238,.7);border-color:rgba(159,224,180,.25)">×1.00</td></tr><tr><th>土</th><td style="background:rgba(255,255,255,.06);color:rgba(243,247,238,.7);border-color:rgba(159,224,180,.25)">×1.00</td><td style="background:rgba(229,72,77,.28);color:#ff8a8a;border-color:#e5484d">×1.60</td><td style="background:rgba(232,196,99,.18);color:#e8c463;border-color:#e8c463">×0.85</td><td style="background:rgba(255,255,255,.06);color:rgba(243,247,238,.7);border-color:rgba(159,224,180,.25)">×1.00</td><td style="background:rgba(63,166,106,.28);color:#9be8b8;border-color:#3fa66a">×0.60</td></tr><tr><th>光</th><td style="background:rgba(229,72,77,.28);color:#ff8a8a;border-color:#e5484d">×1.60</td><td style="background:rgba(63,166,106,.28);color:#9be8b8;border-color:#3fa66a">×0.60</td><td style="background:rgba(255,255,255,.06);color:rgba(243,247,238,.7);border-color:rgba(159,224,180,.25)">×1.00</td><td style="background:rgba(232,196,99,.18);color:#e8c463;border-color:#e8c463">×0.85</td><td style="background:rgba(255,255,255,.06);color:rgba(243,247,238,.7);border-color:rgba(159,224,180,.25)">×1.00</td></tr><tr><th>木</th><td style="background:rgba(63,166,106,.28);color:#9be8b8;border-color:#3fa66a">×0.60</td><td style="background:rgba(255,255,255,.06);color:rgba(243,247,238,.7);border-color:rgba(159,224,180,.25)">×1.00</td><td style="background:rgba(229,72,77,.28);color:#ff8a8a;border-color:#e5484d">×1.60</td><td style="background:rgba(255,255,255,.06);color:rgba(243,247,238,.7);border-color:rgba(159,224,180,.25)">×1.00</td><td style="background:rgba(232,196,99,.18);color:#e8c463;border-color:#e8c463">×0.85</td></tr></table>
+    </div>
+    <div class="card">
+      <h2>⏱️ 技能冷却与法力 <small>8 技能，按冷却比例</small></h2>
+      <div class="row"><div class="nm">火球术<small>火</small></div><div class="track"><div class="fill" style="width:10.0%;background:#ff7226"></div></div><div class="val">1.2s · 12 法力</div></div><div class="row"><div class="nm">治疗<small>光</small></div><div class="track"><div class="fill" style="width:50.0%;background:#ffd83f"></div></div><div class="val">6.0s · 30 法力</div></div><div class="row"><div class="nm">霜冻<small>水</small></div><div class="track"><div class="fill" style="width:25.0%;background:#59bfff"></div></div><div class="val">3.0s · 18 法力</div></div><div class="row"><div class="nm">链雷<small>光</small></div><div class="track"><div class="fill" style="width:33.3%;background:#ffd83f"></div></div><div class="val">4.0s · 22 法力</div></div><div class="row"><div class="nm">藤缚<small>木</small></div><div class="track"><div class="fill" style="width:41.7%;background:#66d859"></div></div><div class="val">5.0s · 20 法力</div></div><div class="row"><div class="nm">地震<small>土</small></div><div class="track"><div class="fill" style="width:66.7%;background:#8c6b3f"></div></div><div class="val">8.0s · 35 法力</div></div><div class="row"><div class="nm">瞬步<small>无</small></div><div class="track"><div class="fill" style="width:20.8%;background:#9fb8d8"></div></div><div class="val">2.5s · 8 法力</div></div><div class="row"><div class="nm">召唤<small>光</small></div><div class="track"><div class="fill" style="width:100.0%;background:#ffd83f"></div></div><div class="val">12.0s · 50 法力</div></div>
+    </div>
+  </div>
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>设计数值规格（非游戏代码），用于平衡参考与后续 playground 机制深化。</footer>
+</body>
+</html>

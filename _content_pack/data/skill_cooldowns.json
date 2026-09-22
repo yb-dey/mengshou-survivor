@@ -1,0 +1,79 @@
+{
+  "version": "1.0",
+  "title": "英雄技能冷却与消耗规格",
+  "note": "与 R19 技能图标（ab_*）一一对应。cooldown 单位秒，mana 为法力消耗；element 关联 element_matrix.json 以触发克制倍率。",
+  "abilities": [
+    {
+      "key": "ab_fireball",
+      "cn": "火球术",
+      "element": "fire",
+      "type": "attack",
+      "cooldown": 1.2,
+      "mana": 12,
+      "desc": "发射火球，单体火焰伤害（克制木）。"
+    },
+    {
+      "key": "ab_heal",
+      "cn": "治疗",
+      "element": "light",
+      "type": "support",
+      "cooldown": 6.0,
+      "mana": 30,
+      "desc": "单体/群体回血，光元素增益。"
+    },
+    {
+      "key": "ab_frost",
+      "cn": "霜冻",
+      "element": "water",
+      "type": "control",
+      "cooldown": 3.0,
+      "mana": 18,
+      "desc": "冰冻减速，控场（克制光）。"
+    },
+    {
+      "key": "ab_chain",
+      "cn": "链雷",
+      "element": "light",
+      "type": "attack",
+      "cooldown": 4.0,
+      "mana": 22,
+      "desc": "链式跳跃雷击（克制火）。"
+    },
+    {
+      "key": "ab_vine",
+      "cn": "藤缚",
+      "element": "wood",
+      "type": "control",
+      "cooldown": 5.0,
+      "mana": 20,
+      "desc": "藤蔓缠绕定身（克制土）。"
+    },
+    {
+      "key": "ab_quake",
+      "cn": "地震",
+      "element": "earth",
+      "type": "attack",
+      "cooldown": 8.0,
+      "mana": 35,
+      "desc": "范围震荡击退（克制水）。"
+    },
+    {
+      "key": "ab_dash",
+      "cn": "瞬步",
+      "element": "none",
+      "type": "movement",
+      "cooldown": 2.5,
+      "mana": 8,
+      "desc": "短距冲刺闪避，无属性。"
+    },
+    {
+      "key": "ab_summon",
+      "cn": "召唤",
+      "element": "light",
+      "type": "summon",
+      "cooldown": 12.0,
+      "mana": 50,
+      "desc": "召唤萌兽协战，高消耗。"
+    }
+  ]
+}

@@ -41,6 +41,7 @@ sprites = uniq_keys(os.path.join(ROOT, 'sprites_alpha'), ('.png',))
 vfx = uniq_keys(os.path.join(ROOT, 'vfx'), ('.png',))
 icons = uniq_keys(os.path.join(ROOT, 'icons'), ('.png',))
 skill = uniq_keys(os.path.join(ROOT, 'skill_icons'), ('.png',))
+data = uniq_keys(os.path.join(ROOT, 'data'), ('.json',))
 audio = uniq_keys(os.path.join(ROOT, 'audio'), ('.wav',))
 bgm = [k for k in audio if k.startswith('cp_bgm_')]
 sfx = [k for k in audio if k.startswith('cp_sfx_')]
@@ -73,6 +74,9 @@ SKILL_CN = {
     'el_fire': '火', 'el_water': '水', 'el_earth': '土', 'el_light': '光', 'el_wood': '木',
     'ab_fireball': '火球术', 'ab_heal': '治疗', 'ab_frost': '霜冻', 'ab_chain': '链雷',
     'ab_vine': '藤缚', 'ab_quake': '地震', 'ab_dash': '瞬步', 'ab_summon': '召唤',
+}
+DATA_CN = {
+    'element_matrix': '五元素克制矩阵', 'skill_cooldowns': '技能冷却数值',
 }
 
 sprite_list = []
@@ -114,15 +118,21 @@ for k in audio:
         'bytes': os.path.getsize(p), **info,
     })
 
+data_list = []
+for k in data:
+    p = os.path.join(ROOT, 'data', k + '.json')
+    data_list.append({'key': k, 'cn': DATA_CN.get(k, ''), 'bytes': os.path.getsize(p)})
+
 manifest = {
     'generated_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     'namespace': '_content_pack',
     'counts': {
         'sprites': len(sprites), 'vfx': len(vfx), 'icons': len(icons),
-        'skill_icons': len(skill), 'audio': len(audio), 'bgm': len(bgm), 'sfx': len(sfx),
+        'skill_icons': len(skill), 'design_data': len(data), 'audio': len(audio),
+        'bgm': len(bgm), 'sfx': len(sfx),
     },
     'sprites': sprite_list, 'vfx': vfx_list, 'icons': icon_list,
-    'skill_icons': skill_list, 'audio': audio_list,
+    'skill_icons': skill_list, 'design_data': data_list, 'audio': audio_list,
 }
 
 out = os.path.join(ROOT, 'manifest.json')
@@ -130,4 +140,4 @@ with open(out, 'w', encoding='utf-8') as f:
     json.dump(manifest, f, ensure_ascii=False, indent=2)
 print('manifest.json written:', os.path.getsize(out), 'bytes;',
       len(sprites), 'sprites /', len(vfx), 'vfx /', len(icons), 'icons /',
-      len(skill), 'skill /', len(audio), 'audio')
+      len(skill), 'skill /', len(data), 'data /', len(audio), 'audio')

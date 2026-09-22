@@ -16,6 +16,7 @@ sprites = uniq_keys(os.path.join(ROOT, 'sprites_alpha'), ('.png', '.webp'))
 vfx = uniq_keys(os.path.join(ROOT, 'vfx'), ('.png',))
 icons = uniq_keys(os.path.join(ROOT, 'icons'), ('.png',))
 skill = uniq_keys(os.path.join(ROOT, 'skill_icons'), ('.png',))
+data = uniq_keys(os.path.join(ROOT, 'data'), ('.json',))
 audio = uniq_keys(os.path.join(ROOT, 'audio'), ('.wav',))
 
 bgm = [k for k in audio if k.startswith('cp_bgm_')]
@@ -56,6 +57,9 @@ SKILL_CN = {
     'el_fire': '火', 'el_water': '水', 'el_earth': '土', 'el_light': '光', 'el_wood': '木',
     'ab_fireball': '火球术', 'ab_heal': '治疗', 'ab_frost': '霜冻', 'ab_chain': '链雷',
     'ab_vine': '藤缚', 'ab_quake': '地震', 'ab_dash': '瞬步', 'ab_summon': '召唤',
+}
+DATA_CN = {
+    'element_matrix': '五元素克制矩阵', 'skill_cooldowns': '技能冷却数值',
 }
 
 def chips(keys, cn):
@@ -124,6 +128,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="skill_icons_demo.html" target="_blank">
       <div class="ico">⚡</div><div class="t">技能 / 元素图标</div>
       <div class="d">{len(skill)} 个（5 元素徽章 + 8 技能按钮），六边符印与方面板双底盘。</div></a>
+    <a class="ncard" href="element_chart.html" target="_blank">
+      <div class="ico">⚖️</div><div class="t">元素克制 / 技能数值</div>
+      <div class="d">五元素 5 环克制环 + 倍率矩阵 + 8 技能冷却/法力条，设计参考。</div></a>
     <a class="ncard" href="audio_demo.html" target="_blank">
       <div class="ico">🎵</div><div class="t">音频试听</div>
       <div class="d">{len(audio)} 条音频（{len(bgm)} BGM 可循环 + {len(sfx)} SFX），单击即听。</div></a>
@@ -140,6 +147,8 @@ html = f'''<!DOCTYPE html>
       {chips(icons, ICON_CN)}</div>
     <div class="blk"><h2>⚡ 技能 / 元素图标 <small>{len(skill)} 个</small></h2>
       {chips(skill, SKILL_CN)}</div>
+    <div class="blk"><h2>⚖️ 设计数值规格 <small>{len(data)} 份 JSON</small></h2>
+      {chips(data, DATA_CN)}</div>
     <div class="blk"><h2>🎵 音频 <small>{len(bgm)} BGM + {len(sfx)} SFX</small></h2>
       {chips(bgm, BGM_CN)}{chips(sfx, SFX_CN)}</div>
     <div class="blk"><h2>📖 图鉴 <small>1 页</small></h2>
@@ -157,4 +166,4 @@ with open(out, 'w', encoding='utf-8') as f:
     f.write(html)
 print('index.html written:', os.path.getsize(out), 'bytes;',
       len(sprites), 'sprites /', len(vfx), 'vfx /', len(icons), 'icons /',
-      len(skill), 'skill /', len(audio), 'audio')
+      len(skill), 'skill /', len(data), 'data /', len(audio), 'audio')

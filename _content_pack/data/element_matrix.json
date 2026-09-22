@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "title": "五元素克制矩阵",
+  "note": "与 R18 元素命中 VFX/SFX、R19 元素身份 UI 配套的战斗规则规格。单一 5 环克制链，每个元素强克 1 个、弱于 1 个，保证平衡对称。",
+  "elements": ["fire", "water", "earth", "light", "wood"],
+  "cn": {
+    "fire": "火",
+    "water": "水",
+    "earth": "土",
+    "light": "光",
+    "wood": "木"
+  },
+  "colors": {
+    "fire": [1.00, 0.45, 0.15],
+    "water": [0.35, 0.75, 1.00],
+    "earth": [0.55, 0.42, 0.25],
+    "light": [1.00, 0.85, 0.25],
+    "wood": [0.40, 0.85, 0.35]
+  },
+  "cycle": {
+    "fire": "wood",
+    "wood": "earth",
+    "earth": "water",
+    "water": "light",
+    "light": "fire"
+  },
+  "multipliers": {
+    "strong": 1.6,
+    "weak": 0.6,
+    "same": 0.85,
+    "neutral": 1.0
+  },
+  "rationale": {
+    "fire_wood": "火焚木：火焰吞噬草木。",
+    "wood_earth": "木破土：根系穿裂岩土。",
+    "earth_water": "土遏水：厚土筑堤拦水。",
+    "water_light": "水熄辉：激流浇灭圣光。",
+    "light_fire": "光净火：圣辉净化烈焰。"
+  }
+}

@@ -127,11 +127,11 @@
 
 | 文件 | 中文名 | 底盘 | 用途 |
 |---|---|---|---|
-| `skill_icons/el_fire.png` | 火 | 六边符印 | 火元素身份 · 灼烧系 · 克制木 |
-| `skill_icons/el_water.png` | 水 | 六边符印 | 水元素身份 · 水弹系 · 克制火 |
-| `skill_icons/el_earth.png` | 土 | 六边符印 | 土元素身份 · 岩甲系 · 克制雷 |
-| `skill_icons/el_light.png` | 光 | 六边符印 | 光元素身份 · 圣辉系 · 克制暗 |
-| `skill_icons/el_wood.png` | 木 | 六边符印 | 木元素身份 · 藤蔓系 · 克制水 |
+| `skill_icons/el_fire.png` | 火 | 六边符印 | 火元素身份 · 灼烧系 · 强克木 |
+| `skill_icons/el_water.png` | 水 | 六边符印 | 水元素身份 · 水弹系 · 强克光 |
+| `skill_icons/el_earth.png` | 土 | 六边符印 | 土元素身份 · 岩甲系 · 强克水 |
+| `skill_icons/el_light.png` | 光 | 六边符印 | 光元素身份 · 圣辉系 · 强克火 |
+| `skill_icons/el_wood.png` | 木 | 六边符印 | 木元素身份 · 藤蔓系 · 强克土 |
 | `skill_icons/ab_fireball.png` | 火球术 | 圆角方面板 | 英雄主动技 · 火球弹道伤害 |
 | `skill_icons/ab_heal.png` | 治疗 | 圆角方面板 | 英雄主动技 · 单体/群体回血 |
 | `skill_icons/ab_frost.png` | 霜冻 | 圆角方面板 | 英雄主动技 · 冰冻减速控场 |
@@ -145,6 +145,20 @@
 - **试看页**：`skill_icons_demo.html`（13 张 base64 内联，按 元素徽章 / 技能图标 两组彩色标签分类，双击即看）。
 - **设计要点**：元素徽章与 R18 的元素命中 VFX（fx_water_splash / fx_earth_shard / fx_leaf_burst）+ 元素命中音效（cp_sfx_hit_fire/water/earth/light/wood）构成「元素身份 → 命中反馈」闭环；生成器已做**底盘去重**（曾发现 el_fire 与 st_burn 同盘同色同符号导致视觉重复，遂改为六边符印）。
 - **校验**：13/13 均为 `colorType=6` RGBA（64×64），体积 1.6KB–4.6KB；逐张目检通过（叶符号叶轴/中脉同向、星芒可见、面板元素色可辨）。
+
+## 2.5 元素克制与技能数值（设计规格 · 本轮新增）
+
+> 与 §2.4 的「元素身份 UI」、R18 的「元素命中反馈」配套的**战斗规则规格**（非游戏代码，仅作平衡参考与后续 playground 机制深化的数据底座）。五元素采用**单一 5 环克制链**——每个元素强克 1 个、弱于 1 个，保证对称平衡：火→木→土→水→光→火（强克方向；反方向即被克）。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `data/element_matrix.json` | 五元素环 / 倍率 / 配色 / 克制理由 | 攻击方对防守方的伤害倍率（强克 ×1.6 / 被克 ×0.6 / 同元素 ×0.85 / 中性 ×1.0）数据底座 |
+| `data/skill_cooldowns.json` | 8 技能冷却 / 法力 / 元素 / 类型 | 与 `skill_icons/ab_*` 一一对应，驱动 playground 技能释放节奏 |
+| `element_chart.html` | 五边形克制环 + 倍率矩阵 + 冷却条 | 由两份 JSON 数据驱动生成的可视化参考页（内联 SVG，零图片生成） |
+
+- **生成器**：`tools/build_element_chart.py`（读 `data/*.json`，纯标准库渲染 SVG 与表格，零依赖、不卡机）。
+- **设计要点**：元素配色复用 §2.4 的徽章色（火/水/土/光/木），克制环与元素身份 UI、元素命中 VFX/SFX 三件套在视觉与规则层完全对齐；倍率矩阵可直接被 §4 接入主游戏时读取为伤害公式参数。
+- **校验**：两份 JSON 均为合法 JSON（`json.load` 通过）；`element_chart.html` 由脚本校验（含 `<svg>` 节点、5×5 克制矩阵 6 行、8 技能冷却条）。
 
 ## 3. 目录结构
 
@@ -160,6 +174,7 @@ _content_pack/
 ├── vfx_demo.html          # VFX 试看页（PNG base64 内联，21 个）
 ├── icons_demo.html         # 状态图标试看页（PNG base64 内联，12 个，按类别分组）
 ├── skill_icons_demo.html  # 技能 / 元素图标试看页（PNG base64 内联，13 个，按 元素徽章/技能图标 分组）
+├── element_chart.html      # 元素克制环 + 倍率矩阵 + 技能冷却条（数据驱动，内联 SVG）
 ├── sprites/               # 原始生成图（RGB，未抠）
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
@@ -192,6 +207,9 @@ _content_pack/
 ├── skill_icons/           # 技能 / 元素图标（RGBA 真透底，六边符印 + 圆角方面板双底盘）
 │   ├── el_*.png（5 个元素徽章）
 │   └── ab_*.png（8 个技能按钮）
+├── data/                  # 设计数值规格（JSON，非图片/音频）
+│   ├── element_matrix.json    # 五元素克制环 / 倍率 / 配色 / 克制理由
+│   └── skill_cooldowns.json   # 8 技能 冷却/法力/元素/类型
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -203,7 +221,8 @@ _content_pack/
     ├── gen_icons.py       # 状态图标生成（纯标准库，复用 gen_vfx.Canvas）
     ├── build_icons_demo.py# 构建状态图标内联展示页
     ├── gen_skill_icons.py # 技能 / 元素图标生成（纯标准库，hexplate + panel 双底盘）
-    └── build_skill_icons_demo.py # 构建技能 / 元素图标内联展示页
+    ├── build_skill_icons_demo.py # 构建技能 / 元素图标内联展示页
+    ├── build_element_chart.py # 由 data/*.json 生成元素克制环 + 倍率矩阵 + 冷却条参考页
 ```
 
 ## 4. 接入游戏路径（待主文件释放后）
@@ -237,12 +256,13 @@ _content_pack/
 - VFX：24/24 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（24 张 `data:image/png`）。
 - 状态图标：12/12 程序化生成成功并校验——均为 `colorType=6` RGBA（64×64），体积 1.46KB–2.52KB（实心徽章 + 白色符号，内容饱满非空白）；按 控制 / 持续伤害 / 负面 / 增益 四组分类，与 24 个 VFX 爆发特效共同构成「状态机制」视觉闭环；试看页 `icons_demo.html` 内联校验通过（12 张 `data:image/png`）。
 - 技能 / 元素图标：13/13 程序化生成成功并校验——均为 `colorType=6` RGBA（64×64），体积 1.6KB–4.6KB；逐张目检通过（叶片轴与中脉同向、星芒可见、面板元素色可辨、六边符印与圆盘/方面板三底盘不混淆）；试看页 `skill_icons_demo.html` 内联校验通过（13 张 `data:image/png`）。
-- 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、24 VFX（尺寸 / 体积）、12 状态图标（尺寸 / 体积）、30 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
+- 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、24 VFX（尺寸 / 体积）、12 状态图标（尺寸 / 体积）、13 技能/元素图标（尺寸 / 体积 / 分组）、2 设计数值 JSON（字节数）、30 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
+- 设计数值：`data/element_matrix.json` 与 `data/skill_cooldowns.json` 均为合法 JSON（`json.load` 通过）；`element_chart.html` 由 `tools/build_element_chart.py` 数据驱动生成，校验含 `<svg>` 节点、5×5 倍率矩阵（6 行）、8 技能冷却条；五元素 5 环克制链对称（火→木→土→水→光→火），与 §2.4 元素徽章「强克」文案一致。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张精灵）+ 音乐（6 首 BGM + 24 SFX）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）**六支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张精灵）+ 音乐（6 首 BGM + 24 SFX）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（2 份 JSON + 可视化参考）**七支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -259,5 +279,6 @@ _content_pack/
 13. ~~**BGM 升级变体（音乐深化·wave→elite→boss 听觉层次）**~~ ✅ 已交付 3 首升级层 BGM：`cp_bgm_tide.wav`（116 BPM 森林主题升级层，潮涌 LFO，常规波次涌动感）、`cp_bgm_elite.wav`（124 BPM 紧张对立项，低音 drone+小二度摩擦 ostinato+警报 ping，精英来袭不安张力）、`cp_bgm_boss2.wav`（124 BPM 狂暴对立项，四踩底鼓+双倍贝斯+八度叠加锯齿 lead+升半音转调，Boss 二阶段狂暴）；`synth_audio.py` 加 3 合成函数（复用 kick/clap/snare/hat 鼓组与 bass/lead/pad 骨架并提升紧张度）、`audio_demo.html` 加 3 试听卡（共 25 条）、README/manifest/index 同步；6 首 BGM 形成「探索→交战→首领→潮次涌动→精英→二阶段」完整情绪曲线。
 14. ~~**元素克制听觉/视觉签名（五元素系统补全）**~~ ✅ 已交付 3 个缺失元素的命中 VFX（水花 / 碎石 / 叶爆，128² RGBA 真透底，程序化生成）与 5 个元素命中音效（火/水/土/光/木，0.22s–0.34s，纯标准库合成），补足原 fx_fireball/fx_lightning/fx_frost 仅覆盖火/光/冰、缺 水/土/木 的空白；`gen_vfx.py` 加 3 特效函数、`synth_audio.py` 加 5 合成函数、`audio_demo.html` 加 5 试听卡（共 30 条）、`vfx_demo.html` 加 3 展示卡、README/manifest/index 同步；五元素命中反馈（视觉 VFX + 听觉 SFX）全配对，为后续按元素分发伤害与克制倍率提供素材基础。
 15. ~~**技能 / 元素图标（英雄技能栏 + 五元素身份 UI）**~~ ✅ 已交付 13 个程序化 RGBA 图标（`skill_icons/`）：5 个元素徽章（`el_fire/water/earth/light/wood`，六边符印底盘，与 R18 元素命中 VFX/SFX 构成「元素身份→命中反馈」闭环）+ 8 个技能按钮（`ab_fireball/heal/frost/chain/vine/quake/dash/summon`，圆角方面板底盘，覆盖 火球/治疗/霜冻/链雷/藤缚/地震/瞬步/召唤）；`tools/gen_skill_icons.py`（hexplate + panel 双底盘 + 4 新符号）+ `tools/build_skill_icons_demo.py` 分组展示页；与状态图标（圆牌）形成「圆牌=状态 / 六边=元素 / 方板=技能」三系 UI 语言；生成期发现 el_fire 与 st_burn 同盘同色同符号的视觉重复，已通过底盘去重解决。
+16. ~~**元素克制与技能数值（设计规格）**~~ ✅ 已交付 2 份设计数值 JSON（`data/element_matrix.json` 五元素 5 环克制链 + 倍率 + 配色 + 克制理由；`data/skill_cooldowns.json` 8 技能冷却/法力/元素/类型）+ 数据驱动可视化参考页 `element_chart.html`（五边形克制环 SVG + 5×5 倍率矩阵 + 8 技能冷却条）；`tools/build_element_chart.py` 读 JSON 纯标准库渲染，零依赖、不卡机；与 §2.4 元素身份 UI、R18 元素命中反馈三件套在规则与视觉层对齐，为 §4 接入主游戏时的伤害公式与技能节奏提供数据底座。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。
