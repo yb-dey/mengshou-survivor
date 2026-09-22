@@ -82,6 +82,7 @@ DATA_CN = {
     'reactions': '元素反应系统', 'upgrades': '局内成长系统',
     'meta_upgrades': '局外成长系统', 'economy': '经济系统',
     'achievements': '成就与任务系统', 'pickups': '局内拾取物系统',
+    'endless': '无尽模式',
 }
 PICKUP_CN = {
     'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',

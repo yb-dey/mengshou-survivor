@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23 05:08:07",
+  "generated_at": "2026-09-23 05:18:34",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
@@ -7,7 +7,7 @@
     "icons": 12,
     "skill_icons": 13,
     "pickups": 8,
-    "design_data": 10,
+    "design_data": 11,
     "audio": 40,
     "bgm": 7,
     "sfx": 33
@@ -518,6 +518,11 @@
       "key": "element_matrix",
       "cn": "五元素克制矩阵",
       "bytes": 1110
+    },
+    {
+      "key": "endless",
+      "cn": "无尽模式",
+      "bytes": 3332
     },
     {
       "key": "meta_upgrades",

@@ -1,0 +1,39 @@
+{
+  "system": "森灵无尽模式",
+  "version": 1,
+  "description": "《萌兽消消岛》无尽模式生成器规格（纯设计数据，非游戏代码）。通关战役 10 关后的长线挑战玩法：波次无限推进，刷怪预算、敌人生命与伤害按二次曲线缩放，敌种池按四阶段轮换（单元素教学→双元素混编→三元素+精英→五元素全混编），精英每 5 波、Boss 每 10 波周期登场。复用 wave_design 全部敌种、element_matrix 克制链与 pickups 掉落系统（零新资产）。经济边界：无尽为**挑战玩法而非刷币玩法**，每波币产出按 max(2, 10-floor(w/3)) 递减——防止无限刷突破 economy.json 四 faucet 总口径；全流程经济仍由战役 10 关主导。",
+  "references": [
+    "Vampire Survivors 无尽循环：波次时长固定、怪量与属性随时间多项式缩放、精英/Boss 周期登场，玩家成长速度与难度增速赛跑（vampire-survivors.fandom.com）",
+    "幸存品类无尽模式通用惯例：里程碑（存活时长）给非货币荣誉奖励，长线留存靠「再撑一波」而非数值刷取"
+  ],
+  "rules": {
+    "waveIntervalSec": 20,
+    "budgetFormula": "budget(w) = round(6 + 2*(w-1) + 0.15*(w-1)^2)",
+    "hpScaleFormula": "hpMul(w) = 1 + 0.22*(w-1) + 0.012*(w-1)^2",
+    "dmgScaleFormula": "dmgMul(w) = 1 + 0.10*(w-1) + 0.005*(w-1)^2",
+    "coinsFormula": "coinsPerWave(w) = max(2, 10 - floor(w/3))  # 收益递减：30 波后每波仅 2 币",
+    "maxOnScreen": 30,
+    "note": "预算超过 maxOnScreen 时多余部分截断（生成节奏加密补足压力）；敌人 hp/dmg 按公式对 wave_design 基础值缩放。"
+  },
+  "cycles": {
+    "eliteEveryWaves": 5,
+    "eliteHpMul": 6,
+    "eliteNote": "精英为当波敌种的强化版（HP×6、体型放大），必掉宝箱（pickups.chest）。",
+    "bossEveryWaves": 10,
+    "bossBase": { "key": "forest_ancient", "hp": 200 },
+    "bossNote": "Boss=森林古木强化版（HP×hpMul(w)），击败掉落双宝箱。"
+  },
+  "phases": [
+    { "id": 1, "from": 1, "to": 4, "name": "单元素巡林", "pool": ["sprout_bunny", "water_frog"] },
+    { "id": 2, "from": 5, "to": 9, "name": "双元素混编", "pool": ["sprout_bunny", "water_frog", "flame_fox", "star_bird"] },
+    { "id": 3, "from": 10, "to": 14, "name": "三元素+精英", "pool": ["sprout_bunny", "water_frog", "flame_fox", "star_bird", "stone_turtle"] },
+    { "id": 4, "from": 15, "to": null, "name": "五元素狂潮", "pool": ["sprout_bunny", "water_frog", "flame_fox", "star_bird", "stone_turtle"] }
+  ],
+  "milestones": [
+    { "atSec": 300, "cn": "守林人", "reward": "称号「守林人」" },
+    { "atSec": 600, "cn": "无尽行者", "reward": "称号「无尽行者」" },
+    { "atSec": 1200, "cn": "永恒纹章", "reward": "头像框「永恒纹章」" }
+  ],
+  "milestonesNote": "里程碑奖励与成就系统同口径：只发称号/头像框等非货币荣誉，不发森灵币。",
+  "economyNote": "无尽每波币产出按 coinsFormula 递减（第 30 波起每波仅 2 币），且金币袋/宝箱掉落照常计入 economy.json kill/clear 既有口径——无尽定位「挑战自己的存活纪录」，不是无限刷币入口；全流程经济总量与积压率 0.22 仍由战役循环主导，不受无尽模式破坏。"
+}

@@ -268,6 +268,19 @@
 - **生成器**：`tools/gen_pickups.py`（复用 gen_vfx.Canvas 距离场画法，8 形状函数：圆/圆角矩形/水滴/多瓣花）+ `tools/build_pickup_chart.py`（读 JSON 纯标准库渲染）。
 - **联动**：幸运骰 ↔ §2.10 升级三选一（重抽库存）；金币袋/宝箱币 ↔ §2.11 经济表（kill/clear 口径，积压率 0.22 不变）；宝箱掉落者 ↔ §2.6 波次精英与 Boss；磁石吸附 ↔ 经验晶露与 §2.10 经验曲线。
 - **校验**：`data/pickups.json` 合法 JSON；两掉落权重表和均=100；8 icon + 8 sfx 引用零缺失；8 精灵均 64×64 RGBA（colorType=6）非空行占比 73–80%；`pickup_chart.html` 0 占位符、8 名称全在、8 图标引用均存在；`pickup_lab.html` 内联 `<script>` 经 `node --check` 通过，内联 `PICKUP`/`DROP`/`CHEST` 与 JSON 逐项比对一致（8 拾取物 / 6% 掉落 / 两权重表无漂移），经济边界断言通过（货币拾取物单一额 ≤ 50，无新增 faucet）。
+## 2.14 无尽模式（生成器规格 + 难度曲线可视化 + 可玩实验室 · 本轮新增）
+
+> 「通关战役 10 关之后玩什么」的长线答案：波次无限推进，**刷怪预算 / 敌人生命 / 敌人伤害**按二次曲线缩放（玩家成长与难度增速赛跑），敌种池按四阶段轮换（w1–4 单元素巡林 → w5–9 双元素混编 → w10–14 三元素+精英 → w15+ 五元素狂潮），精英每 5 波（HP×6 必掉宝箱）、Boss 每 10 波（森林古木强化版掉双宝箱）。全部复用 wave_design 敌种、element_matrix 克制链与 pickups 掉落（零新资产）。**经济边界**：无尽定位挑战玩法而非刷币玩法——每波币产出按 `max(2, 10-floor(w/3))` 递减（30 波后每波仅 2 币），里程碑只发非货币荣誉，不突破 economy.json 四 faucet 总口径。设计锚定：Vampire Survivors 波次循环与属性多项式缩放。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `data/endless.json` | 无尽模式生成器规格 | `rules`（波次间隔 20s / 预算·生命·伤害·币产出四公式 / 屏上限 30）+ `cycles`（精英 5 波 HP×6 / Boss 10 波）+ `phases`（4 阶段敌种池，from/to 区间）+ `milestones`（5/10/20 分钟非货币荣誉） |
+| `endless_chart.html` | 难度曲线可视化 | budget / hpMul×10 / dmgMul×10 三条 SVG 曲线（w1→30）+ 币产出递减表 + 阶段池卡组（带精灵图）+ 里程碑表 |
+| `endless_lab.html` | 无尽模式可玩实验室 | 纯前端 `file://` 校验场：鼠标移动英雄 + 自动攻击（火元素按克制链 ×1.6/×0.6 结算）→ 波次按曲线刷怪 → 精英/Boss 周期登场 → 掉落拾取物真实生效 → 死亡结算（存活波数/时长/击杀/入账），里程碑达成播成就 Jingle |
+
+- **生成器**：`tools/build_endless_chart.py`（读 `data/endless.json` + wave_design 敌种表 + element_matrix 配色，纯标准库渲染，零依赖、不卡机）。
+- **四规格同循环联动**：本实验室把 §2.6 波次敌种表、§2.5 元素克制、§2.13 拾取物掉落、§2.12 成就 Jingle 四份规格在同一个无尽循环里真跑——是内容包迄今最完整的端到端校验场。
+- **校验**：`data/endless.json` 合法 JSON；阶段池 6 敌种引用全部存在于 wave_design、Boss key 有效、阶段 from/to 区间连续覆盖（1–4/5–9/10–14/15+）、里程碑有序；`endless_chart.html` 0 占位符、含 `<svg>` 曲线、名称与精灵图零缺失；`endless_lab.html` 内联 `<script>` 经 `node --check` 通过，内联 `RULES`（17 公式参数）/`PHASES`（4 阶段）/`ENEMIES`（6 敌种 cn/element/hp）与两份 JSON 逐项比对 **DATA_SYNC_OK**（含四公式字符串防漂移检查）。
 ## 3. 目录结构
 
 ```
@@ -294,6 +307,8 @@ _content_pack/
 ├── achievement_lab.html    # 留存系统可玩实验室（achievements.json 真跑起来，进度→达成→发奖，纯前端 file:// 双击即开）
 ├── pickup_chart.html       # 局内拾取物系统：击杀掉落表 + 宝箱开箱表 + 8 种拾取物卡组（数据驱动，内联 SVG/HTML）
 ├── pickup_lab.html         # 拾取物可玩实验室（pickups.json 真跑起来，触碰即生效，纯前端 file:// 双击即开）
+├── endless_chart.html      # 无尽模式：难度二次曲线 SVG + 币产出递减 + 四阶段敌种池 + 里程碑（数据驱动）
+├── endless_lab.html        # 无尽模式可玩实验室（endless.json 真跑起来，波次缩放+精英/Boss周期+掉落联动，file:// 双击即开）
 ├── boss_arena.html         # BOSS 竞技场（boss_phases.json 三阶段可玩校验场，纯前端 file:// 双击即开）
 ├── campaign.html          # 战役模式（wave_design.json 10 关 × 多波次可玩校验场，逐波刷怪，纯前端 file:// 双击即开）
 ├── sprites/               # 原始生成图（RGB，未抠）
@@ -350,7 +365,8 @@ _content_pack/
 │   ├── meta_upgrades.json     # 局外成长系统：18 项永久强化 × 5 类 + 几何成本曲线
 │   ├── economy.json           # 森灵币经济水槽模型：1 货币 / 4 产出 / 2 水槽 / 积压率 0.22
 │   ├── achievements.json      # 成就与任务系统：19 成就 × 5 组 + 每日任务池（economy 两水龙头判定来源）
-│   └── pickups.json           # 局内拾取物系统：8 种拾取物 + 击杀掉落表 + 宝箱开箱表
+│   ├── pickups.json           # 局内拾取物系统：8 种拾取物 + 击杀掉落表 + 宝箱开箱表
+│   └── endless.json           # 无尽模式：四条难度公式 + 精英/Boss 周期 + 四阶段敌种池 + 里程碑
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -370,7 +386,8 @@ _content_pack/
     ├── build_meta_chart.py    # 由 data/meta_upgrades.json + data/economy.json 生成 经济水槽 + 永久强化参考页
     ├── build_achievement_chart.py # 由 data/achievements.json 生成 奖励政策 + 成就卡组 + 任务池参考页
     ├── gen_pickups.py        # 拾取物精灵生成（纯标准库，复用 gen_vfx.Canvas）
-    └── build_pickup_chart.py # 由 data/pickups.json 生成 掉落表 + 拾取物卡组参考页
+    ├── build_pickup_chart.py # 由 data/pickups.json 生成 掉落表 + 拾取物卡组参考页
+    └── build_endless_chart.py # 由 data/endless.json 生成 难度曲线 + 阶段池 + 里程碑参考页
 ```
 
 ## 4. 接入游戏路径（待主文件释放后）
@@ -415,11 +432,12 @@ _content_pack/
 - 经济系统：`data/economy.json` 经 `game-economy` 技能 `check` 校验 E1–E4 全 PASS（货币 1 / 产出入口 4 / 回收水槽 2 / 积压率 0.22 ≤ 0.3）；内部自洽（faucets 求和=total_faucet 41,946、drains 求和=total_drain 32,718、积压率=(产出-消耗)/产出 一致、drains 与 meta_upgrades 总成本跨表一致），经济不通胀、不枯竭。
 - 成就与任务系统：`data/achievements.json` 为合法 JSON（19 成就 × 5 组 + 每日任务池 6 模板；group/metric.type 枚举全合法，levelClear 目标 ∈ 关卡 id 1–10，reactionKinds ≤ 10、statusKinds ≤ 7 跨表引用全存在）；`achievement_chart.html` 由 `tools/build_achievement_chart.py` 数据驱动生成，校验 0 占位符、25 个名称全在、17 图标引用均存在；`achievement_lab.html` 内联 `<script>` 经 `node --check` 通过，内联 `ACH`/`DPOOL`/`DPICK`/`DREWARD` 与 JSON 逐项比对一致（19 成就 / 6 任务 / 抽 3 / 20 币无漂移）；经济边界断言通过——成就本体零货币奖励，唯二货币出口（首通→first_clear、每日→daily）均为 economy.json 既有水龙头，积压率 0.22 不受影响。
 - 局内拾取物系统：`data/pickups.json` 为合法 JSON（8 种拾取物：常见 3 / 稀有 5；击杀掉落表与宝箱开箱表权重和均=100；8 icon + 8 sfx 引用零缺失）；8 个精灵由 `tools/gen_pickups.py` 程序化生成并校验——均 64×64 `colorType=6` RGBA，非空行占比 73%–80%（内容饱满非空白）；`pickup_chart.html` 由 `tools/build_pickup_chart.py` 数据驱动生成，校验 0 占位符、8 名称全在、8 图标引用均存在；`pickup_lab.html` 为可玩实验室，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `PICKUP`/`DROP`/`CHEST` 已与 `pickups.json` 逐项比对一致（8 拾取物 / 6% 掉落 / 两权重表无漂移）；经济边界断言通过——货币型拾取物（金币袋 +15 / 宝箱小袋 +30 / 大袋 +80）全部计入 economy.json 既有 kill/clear 口径，不新增 faucet、积压率 0.22 不变。
+- 无尽模式：`data/endless.json` 为合法 JSON（四条难度公式 + 精英每 5 波 HP×6 / Boss 每 10 波 + 四阶段敌种池 6 敌种全部存在于 wave_design、阶段区间连续覆盖、里程碑 5/10/20 分钟有序）；`endless_chart.html` 由 `tools/build_endless_chart.py` 数据驱动生成，校验 0 占位符、含 `<svg>` 难度曲线、5 精灵引用均存在；`endless_lab.html` 为可玩实验室，内联 `<script>` 经 `node --check` 通过（file:// 双击可用，无 fetch），内联 `RULES` 17 参数 / `PHASES` 4 阶段 / `ENEMIES` 6 敌种与 `endless.json`+`wave_design.json` 逐项比对一致（含四公式字符串防漂移检查）；经济边界——币产出 `max(2, 10-floor(w/3))` 递减（w30 起每波 2 币）、里程碑零货币，economy.json 四 faucet 总口径与积压率 0.22 不受无尽模式影响。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵）+ 音乐（7 首 BGM + 33 SFX）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（10 份 JSON）+ 可视化参考页与可玩校验场（7 参考页 + 5 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵）+ 音乐（7 首 BGM + 33 SFX）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（11 份 JSON）+ 可视化参考页与可玩校验场（8 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -455,4 +473,5 @@ _content_pack/
 26. ~~**成就与任务系统（设计规格 + 可玩实验室）**~~ ✅ 已交付 `data/achievements.json`（19 个一次性成就 × 5 组 + 每日任务池 6 模板抽 3/天、各 +20 🍀；17 种指标口径全部取自既有系统：波次击杀/反应触发/构筑拿卡/永久强化/货币积累）+ 数据驱动可视化 `achievement_chart.html`（奖励政策流向表 + 5 组成就卡 + 每日任务池 + 指标词汇表）+ 可玩实验室 `achievement_lab.html`（纯前端 `file://` 双击即开：事件推进 → 成就进度实时填充、达成弹金框 → 每日任务按日期种子抽取、完成入账 → 首通触发 economy.first_clear 双倍结算横幅）。经济边界：成就本体从不发币（只发称号/图鉴/头像框），唯二货币出口严格对应 economy.json 既有 first_clear/daily 两水龙头，不突破四 faucet 总量、积压率 0.22 不变；校验含跨表引用存在性（关卡 id/反应种类/状态种类）与 `node --check` + DATA_SYNC_OK（19/6/3/20 无漂移）；`index.html` 加 🏅 导航卡、`README` §2.12/§3/§6/§7 同步。补齐留存支柱，使内容包形成「波次→Boss→元素→反应→局内构筑→局外养成→经济→成就」完整设计链，为 §4 接入主游戏时的留存系统提供端到端验证样本。
 27. ~~**系统事件音效包（成就 / 任务 / 首通 / 大额入账 + 大厅 BGM · 音乐侧接线）**~~ ✅ 已交付 5 条新音频（`cp_bgm_lobby` 34.3s 84 BPM I–V–vi–IV 大厅松弛曲无缝循环；`cp_sfx_achievement` 1.25s D 大调五音琶音隆重 Jingle；`cp_sfx_daily` 0.46s 暖木琴双音轻巧；`cp_sfx_first_clear` 1.38s 号角三连 Fanfare；`cp_sfx_coin_big` 1.10s 固定种子 9 枚金属 ping 迸发）。其中 `synth_achievement`/`synth_daily`/`synth_bgm_lobby` 三个函数此前已写好但**从未接入 jobs 列表**（wav 从未生成）——本轮补接线并新增 `synth_first_clear`/`synth_coin_big` 两函数；全部 40 条音频重合成回归通过（峰值均 85% 无削波、RMS 10.9%–30.0% 非静音）。**每条新音频均接线真实消费点**（规避「零消费」死资产）：`achievement_lab.html` 成就达成→Jingle、每日任务完成→双音、首通结算→Fanfare；`meta_lab.html` 本局结算入账→coin_big（替换原 win）、新增 🎵 大厅 BGM 开关按钮（loop 循环）；`audio_demo.html` 加 5 试听卡（40 条全覆盖）；`manifest.json`/`index.html` 重生成（audio 35→40，bgm 6→7）；`README` §2.1/§3/§6/§7/引言同步（顺手修复 §6 清单段「4 设计数值 JSON」跨轮漂移 → 9）。为 §4 接入主游戏时的成就/任务/结算音效与大厅场景 BGM 提供素材底座。
 29. ~~**局内拾取物系统（设计规格 + 程序化精灵 + 可玩实验室）**~~ ✅ 已交付 `data/pickups.json`（8 种拾取物：治愈果实 20% 回血 / 金币袋 +15 币 / 经验晶露 +50 EXP / 磁石吸附 5s / 震地菇全屏 50 伤 / 灵盾花挡 3 次 / 幸运骰重抽 +1 / 宝箱开箱表结算；击杀 6% 掉落权重表 + 宝箱开箱权重表均和=100）+ **8 个程序化新精灵** `pickups/*.png`（64×64 RGBA 真透底，`tools/gen_pickups.py` 复用 gen_vfx.Canvas 距离场画法生成——治愈果实/金币袋/磁石/震地菇/宝箱/经验晶露/灵盾花/幸运骰，零外部素材、零生成额度）+ 数据驱动可视化 `pickup_chart.html`（双掉落权重条 + 稀有度分组卡组）+ 可玩实验室 `pickup_lab.html`（纯前端 `file://` 双击即开：鼠标移动英雄 → 触碰拾取物即时生效（回血飘字/磁石全场吸附动画/清屏 CSS 屏震/护盾环/开箱加权结算），「模拟击杀」与「精英必掉」按钮真实按权重表抽卡）。经济边界：所有货币产出计入 economy.json 既有 faucet，不新增水龙头；校验含两表权重和=100、图标/音效引用零缺失、`node --check` + DATA_SYNC_OK（8/6%/两表无漂移）；`index.html` 加 🍒 导航卡与拾取物资产块、`manifest.json` 加 pickups 类目（counts.pickups=8）、`README` §2.13/§3/§6/§7/引言同步。补齐「走位即决策」反馈层支柱，为 §4 接入主游戏时的拾取物系统提供端到端验证样本。
+31. ~~**无尽模式（生成器规格 + 难度曲线 + 可玩实验室）**~~ ✅ 已交付 `data/endless.json`（波次 20s：预算 `6+2(w-1)+0.15(w-1)²`、生命 `1+0.22(w-1)+0.012(w-1)²`、伤害 `1+0.10(w-1)+0.005(w-1)²`、币产出 `max(2, 10-floor(w/3))` 递减；精英每 5 波 HP×6 必掉宝箱、Boss 每 10 波掉双宝箱；敌种池四阶段 w1–4 单元素 → w15+ 五元素狂潮；里程碑 5/10/20 分钟非货币荣誉）+ `endless_chart.html`（三条 SVG 难度曲线 + 币递减表 + 阶段池精灵卡组）+ 可玩实验室 `endless_lab.html`（纯前端 `file://`：鼠标走位 + 火元素自动攻击按克制链结算 ×1.6/×0.6、波次曲线刷怪受屏上限 30 截断、精英/Boss 周期登场、击杀 6% 掉落拾取物真实生效、死亡结算存活纪录、里程碑播成就 Jingle）。**四规格同循环**：wave_design 敌种 + element_matrix 克制 + pickups 掉落 + achievements 音效在同一个无尽循环里真跑，是内容包最完整的端到端校验场。经济边界：币产出递减 + 里程碑零货币，防无限刷突破 economy.json 四 faucet 口径；校验含跨表敌种引用、阶段区间连续性、`node --check` + DATA_SYNC_OK（17 参数/4 阶段/6 敌种 + 四公式防漂移）；`index.html` 加 ♾️ 导航卡、`README` §2.14/§3/§6/§7 同步。补齐长线留存「通关后玩什么」，为 §4 接入主游戏时的无尽模式提供端到端验证样本。
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。
