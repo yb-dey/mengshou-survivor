@@ -220,6 +220,19 @@ jobs:
         run: |
           node ci/hall-cond-time.mjs --selftest
           node ci/hall-cond-time.mjs
+      # 第 28 维度（v1.203）：赋值目标键名完整性 —— 防 sed 替换污染标识符。
+      #   病根：早前 sed 替换把 `giftRarColorText: rarD.textDark` 误写成 `$1giftRarColorText: …`。
+      #     `$1giftRarColorText` 是**合法标识符**（语法不报错），但生成的键名是字面的 `$1giftRarColorText`，
+      #     渲染点读 `view.giftRarColorText` 永远 undefined → 回退低对比图形色 ⇒ v1.192 的
+      #     textDark/textLight 对比度修复对结算页/房间牌**从未生效**。同族还有 bagRarColorText（4 处）。
+      #   判据：A 脚本内不得有 `$N`+标识符 的 sed 残留 · B 渲染点读的 view.X 键必须有同名赋值
+      #     （防"值读到了但键名被污染永远赋不进去"）。既有 rarity-contrast 判据 D 只查"来源被读"，
+      #     查不到"赋值目标键名错"——这是它的盲区。
+      #   **硬门禁**（发现 $N 残留 / 失赋值键即 exit 1）。
+      - name: 赋值键名完整性审计（GATE）
+        run: |
+          node ci/assign-key-integrity.mjs --selftest
+          node ci/assign-key-integrity.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
