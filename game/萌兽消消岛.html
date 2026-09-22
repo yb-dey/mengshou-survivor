@@ -1389,6 +1389,12 @@ var CONFIG = {
     dedupMs: 60,                   // 同音效去重窗口 ms(先查重后占配额) [建议]
     nodeDuckMul: 0.58,            // 【v1.80】节点音期间 BGM 再压一档, 节点/首领仍压过垫乐
     nodeDuckSec: 0.68,            // 【v1.80】节点鸭避让持续秒(rawDt, 模态钟冻结也能回)
+    nodeDuckCover: true,         // 【v1.191】duck 窗口按"实际可听段"覆盖: max(nodeDuckSec, delay + 音长/rate)
+                                  //   实测 sfx_lose 实响 1.35s 而窗口仅 0.68s → 0.68s 处电平仍 86.7% 峰值,
+                                  //   0.20s 可辨尾音落在 BGM 回满之后(压垫乐意图后半段失效)。
+                                  //   证伪记录: bosswarn/sfx_revive 窗口外能量 0.0%、sfx_win 2.9% → 非缺陷;
+                                  //   revivecard 走 overlay 分支(REVIVE_MODAL) → 与 nodeDuckSec 无关。
+                                  //   关掉它即退回 v1.190 的固定 0.68s 行为, 便于对照。
     overlayDuckMul: 0.72,         // 【v1.83】过场/弹层 BGM 稳压一档, 全程不跟节点音脉冲乱跳
     overlayDuckTc: 0.18,          // 【v1.83】过场/弹层压/回时间常数
     levelupDuckMul: 0.62,         // 【v1.154】升级三选一开窗垫乐再压一档(读卡更静), 关窗经 syncDuck 自动回
@@ -12683,7 +12689,14 @@ var Audio = {
       this.lastNode = name;
       this.cueSkip = "";
       if (ev.duck) {
-        GAME.nodeDuckT = CONFIG.audio.nodeDuckSec;
+      GAME.nodeDuckT = CONFIG.audio.nodeDuckSec;
+      /* v1.191 duck 覆盖可听段 */
+      //   窗口 = max(nodeDuckSec, 本音起点 + 本音实响时长)；实响 = buf.duration / (rate*rateMul)。
+      //   目的: 让"压垫乐"覆盖整条可听段, 而不是固定 0.68s 后放尾音裸奔。
+      if (CONFIG.audio.nodeDuckCover && buf && buf.duration > 0) {
+        var duckNeed = (delay || 0) + buf.duration / ((rate || 1) * (this.rateMul || 1));
+        if (duckNeed > GAME.nodeDuckT) GAME.nodeDuckT = duckNeed;
+      }
         this.syncDuck(false);       // 【v1.83】过场/弹层内不跟节点音再压一跳
       }
     }
