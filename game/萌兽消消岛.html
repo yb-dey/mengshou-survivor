@@ -3142,7 +3142,7 @@ function chapterRewardView(ch, mode) {
     giftStat: def ? gearStatLine(def, rarMin) : "",
     giftRarName: rarD.name,
     giftRarColor: rarD.color,
-$1giftRarColorText: rarD.textDark,
+    giftRarColorText: rarD.textDark,
     giftWear: "",
     giftKind: gift ? "preview" : "none",
     win: false,
@@ -3178,7 +3178,7 @@ $1giftRarColorText: rarD.textDark,
     view.giftWear = runSummary.gearGiftAuto ? "立刻穿上" : "入包";
     view.giftRarName = rarD.name;
     view.giftRarColor = rarD.color;
-$1view.giftRarColorText = rarD.textDark;
+    view.giftRarColorText = rarD.textDark;
   } else if (!gift) {
     view.giftKind = "none";
   } else {
@@ -3392,7 +3392,7 @@ function roomRewardView(tierIdx, mode, extra) {
     bagRar: rarFloor,
     bagRarName: rarD.name,
     bagRarColor: rarD.color,
-$1bagRarColorText: rarD.textLight,
+    bagRarColorText: rarD.textLight,
     bagBoostName: boostD.name,
     bagMiss: extra.bagMiss || "",
     gemKind: gemKind,
@@ -3417,7 +3417,7 @@ $1bagRarColorText: rarD.textLight,
     rarD = DATA_GEAR_RARITY[view.bagRar] || rarD;
     view.bagRarName = rarD.name;
     view.bagRarColor = rarD.color;
-$1view.bagRarColorText = rarD.textLight;
+    view.bagRarColorText = rarD.textLight;
     gems = roomGemStats(tier, view.speed);
     view.gemN = gems.n;
     view.gemXp = gems.xp;
