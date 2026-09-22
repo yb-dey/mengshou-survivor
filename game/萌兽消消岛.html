@@ -25,7 +25,8 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.185 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.186 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.186 美术】脚环/焦点辉光再静(playerRingAlpha≤0.2, heroGlowAlpha≤0.035); 连击 xN 改软墨小标(drawSoftComboBadge); 头顶名牌细墨少黄; 鸡腿世界脉冲更细更淡; 永久强化花费钮/路径格去金霓虹改苔奶油; 升级卡锁定改苔墨缘; SFX_LEVELUP 软 notch。早波实心/风纹/咆哮/仓库 crumb 保持 1.185。数值/掉落/进化/10 分钟轴不动。
 // 【v1.185 美术】早波杂兵填体 alpha≥0.92(solidifyEarlyTrashAlpha)+PLAYING vignette 改边框不压中场, 奶油/灰/橙/绿再可指名; 星巅远脊 quiet wind-grain(paintStarRidge); 「咆哮」skill 圆盘外墨收静+苔橄榄填; 珠拾取薄 UL 受光抬一档(无鸡腿橙晕); 仓库兑换 strip 短获取 crumb; SFX_FIRE 软 notch。命中墨星/击杀 puff 尺寸保持 1.184。1.175–1.184 大厅草簇/选章获取条/苔碗/脚环/怎么玩/粉彩杂兵/咆哮/HP 同步保留。数值/掉落/进化/10 分钟轴不动。
 // 【v1.184 美术】大厅奶油地板草簇加密+台下软土路纹(备案 HALL); 命中四尖墨星抬到手机可读(~12px/0.22s); 击杀软墨点多留 ~0.05s; 鸡腿/珠世界辉光收薄减橙晕; PLAYING 静边 vignette 托英雄; 选章入袋→现在→下一步获取条+卡外墨抬; SFX_CHEST 软 notch。1.175–1.183 睡莲垫/苔碗/脚环/怎么玩/粉彩杂兵/咆哮/HP 同步保留。数值/掉落/进化/10 分钟轴不动。
 // 【v1.183 美术】大厅落地台改睡莲垫缘(~3px 外墨)+叶脉受光+软影苔粒(备案 HALL); 星巅台地 props 改橄榄苔碗/木桩软填(不再 UI 绿桶); 脚环/焦点辉光再静(软墨环优先于金橙晕); 幽灵摇杆闲时更淡; 磁吸助线再细; 「怎么玩」分区墨与获取式步骤对比抬; 杂兵命中加微型四尖墨星(纯表现); SFX_START 软一档 notch。1.175–1.182 获取条/粉彩杂兵/咆哮/HP 同步保留。数值/掉落/进化/10 分钟轴不动。
@@ -602,20 +603,20 @@ var CONFIG = {
   playerHp: 100,                    // 初始生命
   playerSpeed: 180,                 // 移速 px/s
   playerR: 14,                      // 判定半径 px
-  playerRingAlpha: 0.24,            // 【v1.183】脚环再静: alpha ~0.24, 软墨环优先于亮晕
-  playerRingWidth: 1.35,            // 【v1.183】略抬线宽换辨识, 仍靠浣熊剪影不靠厚环
+  playerRingAlpha: 0.18,            // 【v1.186】脚环再静: alpha ≤0.2, 身份仍靠浣熊剪影
+  playerRingWidth: 1.15,            // 【v1.186】线再收一档, 不靠厚环抢焦点
   // 【v1.167】主角焦点辉光：暗场（底 0.017）上把主角"托"出来；同色柔光，预渲染缓存、零新增资产。
   //   实测动机：主角有细标识环但**没有光层**，而敌人有读感环 → 最该突出的主角在"光"上不占优。
   //   关闭：置 0；低画质档自动跳过（与落地影同门槛）。
-  // 【v1.183】辉光再收, 改软墨奶油晕(见 drawHeroFocusGlow), 不再金橙喊
-  heroGlowAlpha: 0.045,
+  // 【v1.186】辉光再收一档(≤0.035), 软墨奶油晕不再托亮脚底
+  heroGlowAlpha: 0.030,
   heroGlowScale: 1.95,              // 光斑半径 = 角色半径 × 该系数
   playerRingRAdd: 5,                // 【v1.183】环半径再收, 少占脚下一圈
   playerInvSec: 0.5,                // 受击无敌秒 [来源]
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.185",                   // 【v1.185】早波杂兵实心粉彩≥0.92; 星巅风纹脊; skill 盘静墨; 珠 UL 受光; 仓库获取 crumb; SFX_FIRE 软。命中星/puff 保持 1.184。不改掉率/价格/锻造/进化/10 分钟轴
+  version: "1.186",                   // 【v1.186】脚环/辉光再静; xN 软墨; 名牌少黄; 鸡腿脉冲收; 强化页去亮; 升级卡苔缘; SFX_LEVELUP 软。实心杂兵/风纹/咆哮保持 1.185。不改掉率/价格/锻造/进化/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -12070,9 +12071,10 @@ var Audio = {
       // 【v1.153】升级琶音起音放缓一档(5ms→14ms)+各层增益略收, 仍清亮可读但不炸耳
       // 【v1.161】残余毛刺再柔一档(对照 CARDSHOW 族仍偏亮): 起音 14→20ms、持音 0.28→0.18/0.12、
       //   顶层 988Hz 增益 0.7→0.68 压高频簇(层增益保留作归一锚点), 上行三音轮廓/时长不动, 归一后响度不升
-      this._tone(out, sr, { wave: "sine", f0: 659, t0: 0, dur: 0.26, a: 0.02, d: 0.1, s: 0.18, r: 0.1, gain: 0.9 });
-      this._tone(out, sr, { wave: "sine", f0: 784, t0: 0.1, dur: 0.26, a: 0.02, d: 0.1, s: 0.16, r: 0.1, gain: 0.8 });
-      this._tone(out, sr, { wave: "sine", f0: 988, t0: 0.2, dur: 0.22, a: 0.02, d: 0.1, s: 0.12, r: 0.1, gain: 0.68 });
+      // 【v1.186】软 notch: 起音 20→28ms, 持音再收, 顶层 988Hz 0.68→0.58; 三音轮廓/0.42s 时长不动
+      this._tone(out, sr, { wave: "sine", f0: 659, t0: 0, dur: 0.26, a: 0.028, d: 0.1, s: 0.14, r: 0.1, gain: 0.86 });
+      this._tone(out, sr, { wave: "sine", f0: 784, t0: 0.1, dur: 0.26, a: 0.028, d: 0.1, s: 0.12, r: 0.1, gain: 0.74 });
+      this._tone(out, sr, { wave: "sine", f0: 988, t0: 0.2, dur: 0.22, a: 0.028, d: 0.1, s: 0.10, r: 0.1, gain: 0.58 });
     } else if (id === "SFX_CARD") { len = 0.18; out = this._alloc(len, sr);
       this._tone(out, sr, { wave: "triangle", f0: 523, t0: 0, dur: 0.18, a: 0.002, d: 0.12, s: 0, r: 0.06, gain: 1 });
       this._tone(out, sr, { wave: "triangle", f0: 784, t0: 0, dur: 0.14, a: 0.002, d: 0.1, s: 0, r: 0.06, gain: 0.22 });
@@ -13839,27 +13841,40 @@ function updateKillFx(dt) {
     if (f.t >= f.life) f.active = false;
   }
 }
+function drawSoftComboBadge(ctx, n, x, y, scale, alpha) {
+  var atlas, val, d2, d1, d0, dn, cw, ch, tx;
+  atlas = COMBO_SOFT;
+  if (!atlas || !atlas.canvas || !atlas.x || !(n >= 2) || !(scale > 0)) return;
+  val = n > 999 ? 999 : (n | 0);
+  d2 = (val / 100) | 0;
+  d1 = ((val / 10) | 0) % 10;
+  d0 = val % 10;
+  dn = val >= 100 ? 3 : (val >= 10 ? 2 : 1);
+  cw = atlas.cellW * scale;
+  ch = atlas.cellH * scale;
+  ctx.globalAlpha = alpha < 0 ? 0 : (alpha > 1 ? 1 : alpha);
+  ctx.drawImage(atlas.x, x, y, cw, ch);
+  tx = x + cw;
+  if (dn >= 3) { ctx.drawImage(atlas.canvas, d2 * atlas.cellW, 0, atlas.cellW, atlas.cellH, tx, y, cw, ch); tx += cw; }
+  if (dn >= 2) { ctx.drawImage(atlas.canvas, d1 * atlas.cellW, 0, atlas.cellW, atlas.cellH, tx, y, cw, ch); tx += cw; }
+  ctx.drawImage(atlas.canvas, d0 * atlas.cellW, 0, atlas.cellW, atlas.cellH, tx, y, cw, ch);
+  ctx.globalAlpha = 1;
+}
 function drawKillCombo(ctx) {
-  var n, s, a, val, d1, d0, dn, cw, ch, x, y, tx;
+  var n, s, a, dn, cw, x, y;
   n = GAME.killComboN | 0;
   if (n < (CONFIG.killComboMin || 2) || GAME.killComboT <= 0) return;
   if (juiceLevel() < 1 || GAME.reduceMotion) return;
-  if (!DIGIT_ATLAS.canvas || !SPRITES.comboX) return;
-  s = juiceLevel() >= 2 ? 0.78 : 0.68;
+  if (!COMBO_SOFT.canvas || !COMBO_SOFT.x) return;
+  // 【v1.186】连斩 xN 改软墨小标, 不再借伤害红图集抢尸体剪影
+  s = juiceLevel() >= 2 ? 0.72 : 0.64;
   a = GAME.killComboT < 0.16 ? GAME.killComboT / 0.16 : 1;
   if (a > 1) a = 1;
-  val = n > 99 ? 99 : n;
-  d1 = ((val / 10) | 0) % 10; d0 = val % 10;
-  dn = val >= 10 ? 2 : 1;
-  cw = DIGIT_ATLAS.cellW * s; ch = DIGIT_ATLAS.cellH * s;
+  dn = n >= 10 ? 2 : 1;
+  cw = COMBO_SOFT.cellW * s;
   x = GAME.killComboX - (1 + dn) * cw / 2;
-  y = GAME.killComboY - ch / 2;
-  ctx.globalAlpha = 0.92 * a;
-  ctx.drawImage(SPRITES.comboX, x, y, cw, ch);
-  tx = x + cw;
-  if (dn >= 2) { ctx.drawImage(DIGIT_ATLAS.canvas, d1 * DIGIT_ATLAS.cellW, 0, DIGIT_ATLAS.cellW, DIGIT_ATLAS.cellH, tx, y, cw, ch); tx += cw; }
-  ctx.drawImage(DIGIT_ATLAS.canvas, d0 * DIGIT_ATLAS.cellW, 0, DIGIT_ATLAS.cellW, DIGIT_ATLAS.cellH, tx, y, cw, ch);
-  ctx.globalAlpha = 1;
+  y = GAME.killComboY - (COMBO_SOFT.cellH * s) / 2;
+  drawSoftComboBadge(ctx, n > 99 ? 99 : n, x, y, s, 0.52 * a);
 }
 function drawClearBreath(ctx) {
   var u, r, a, life, r1;
@@ -24443,8 +24458,8 @@ function drawHeroFocusGlow(ctx, x, y, r) {
   var a = CONFIG.heroGlowAlpha;
   if (!a || !(r > 0)) return;
   if (!(typeof fxTideQuiet !== "function" || !(fxTideQuiet() && juiceLevel() < 1))) return;   // 与落地影同质量门
-  // 【v1.183】软墨奶油晕(非 heroAccent 金橙喊), 脚环身份靠墨环
-  var spr = heroGlowSprite("rgba(236,244,214,0.85)");
+  // 【v1.186】软墨奶油晕再收(精灵内 alpha 0.85→0.62), 脚环身份靠细墨环
+  var spr = heroGlowSprite("rgba(226,232,206,0.62)");
   if (!spr) return;
   var R = r * (CONFIG.heroGlowScale || 2.4);
   ctx.globalAlpha = a;
@@ -25107,7 +25122,7 @@ function drawPlayerInRun(ctx, dpr, wtx, wty) {
   }
   drawCastFx(ctx);
   drawMuzzle(ctx);
-  // 【v1.183】脚环软墨细环(alpha/宽见 CONFIG), 身份靠浣熊剪影
+  // 【v1.186】脚环软墨更细更淡(alpha≤0.2), 身份靠浣熊剪影
   ctx.globalAlpha = CONFIG.playerRingAlpha;
   ctx.strokeStyle = CONFIG.colors.playerRing || "rgba(46,60,28,0.78)";
   ctx.lineWidth = CONFIG.playerRingWidth;
@@ -25116,15 +25131,17 @@ function drawPlayerInRun(ctx, dpr, wtx, wty) {
   ctx.stroke();
   ctx.globalAlpha = 1;
   if (GAME.heroBriefT > 0) {
+    // 【v1.186】头顶名牌: 描边 ~1.5px 苔墨, 填色去金黄并降 alpha, 不压剪影
     hbA = Math.min(1, GAME.heroBriefT / 0.4);
     ctx.save();
-    ctx.globalAlpha = 0.92 * hbA;
-    ctx.fillStyle = "rgba(16,20,14,0.78)";
+    ctx.globalAlpha = 0.58 * hbA;
+    ctx.fillStyle = "rgba(28,32,22,0.55)";
     fillRoundRect(ctx, player.x - 54, player.y - player.r - 36, 108, 22, 6);
-    ctx.strokeStyle = heroAccent();
+    ctx.strokeStyle = "rgba(58,72,40,0.82)";
     ctx.lineWidth = 1.5;
     strokeRoundRect(ctx, player.x - 54, player.y - player.r - 36, 108, 22, 6);
-    ctx.fillStyle = heroAccent();
+    ctx.globalAlpha = 0.74 * hbA;
+    ctx.fillStyle = "rgba(232,228,206,0.92)";
     ctx.font = "bold 13px " + FONT_STACK;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -25508,10 +25525,12 @@ function renderGame() {
     var fNear = distSq(fd.x, fd.y, player.x, player.y) <= Math.pow(CONFIG.fieldPickR * (CONFIG.fieldApproachMul || 2.1), 2);
     // 【v1.160】场地拾取物落地: 柔影对齐宝石族比例与浓度(0.28/rgba(12,16,14,0.45)), 鸡腿/磁铁/炸弹像 1.158 演员一样坐在路径上
     // 【v1.184】世界辉光收薄: 脉冲更细、填色 alpha 降、橙晕不喊; 标签仍软
+    // 【v1.186】鸡腿脉冲再收: 描边更细、填/描 alpha 再降; 珠 UL 受光不动
+    var legPulse = fKind === "heal";
     ctx.globalAlpha = 0.28 * fblink;
     ctx.fillStyle = "rgba(12,16,14,0.45)";
     fillDropShadow(ctx, fd.x, fd.y + fsz * 0.36, fsz * 0.46, fsz * 0.17);
-    ctx.globalAlpha = 0.07 * fblink;
+    ctx.globalAlpha = (legPulse ? 0.035 : 0.07) * fblink;
     ctx.fillStyle = fdef.color;
     ctx.beginPath();
     if (fKind === "bomb") {
@@ -25522,9 +25541,9 @@ function renderGame() {
       ctx.closePath();
     } else ctx.arc(fhx, fhy, CONFIG.fieldHaloR * fpulse * 0.88, 0, CONFIG.TWO_PI);
     ctx.fill();
-    ctx.globalAlpha = 0.34 * fblink;
+    ctx.globalAlpha = (legPulse ? 0.16 : 0.34) * fblink;
     ctx.strokeStyle = fdef.color;
-    ctx.lineWidth = 1.25;
+    ctx.lineWidth = legPulse ? 0.75 : 1.25;
     ctx.beginPath();
     if (fKind === "bomb") {
       ctx.moveTo(fhx, fhy - fhr);
@@ -26052,23 +26071,16 @@ function renderGame() {
     ctx.drawImage(fAtlas.canvas, ft.d0 * cw, 0, cw, ch, tx, ty, cw, ch);
     ctx.globalAlpha = 1;
   }
-  // 宝石连击 HUD(R2): 玩家上方 "xN" 脉动字, 复用 0-9 图集 + 预渲染 x 字形; 正弦 scale 零分配
-  if (gemCombo.n >= 2 && gemCombo.t > 0 && DIGIT_ATLAS.canvas && SPRITES.comboX) {
-    var cbS = 1 + 0.25 * Math.sin(GAME.time * CONFIG.gemComboPulseSpd);
+  // 宝石连击 HUD(R2): 玩家上方 "xN"。【v1.186】改软墨小标, 不再用伤害红图集抢浣熊剪影
+  if (gemCombo.n >= 2 && gemCombo.t > 0 && COMBO_SOFT.canvas && COMBO_SOFT.x) {
+    var cbS = 0.74 + 0.05 * Math.sin(GAME.time * CONFIG.gemComboPulseSpd);
     var cbA = gemCombo.t < 0.4 ? gemCombo.t / 0.4 : 1;
     var cbVal = gemCombo.n > 999 ? 999 : gemCombo.n;
-    var cbd2 = (cbVal / 100) | 0, cbd1 = ((cbVal / 10) | 0) % 10, cbd0 = cbVal % 10;
     var cbn = cbVal >= 100 ? 3 : (cbVal >= 10 ? 2 : 1);
-    var cbCellW = DIGIT_ATLAS.cellW * cbS, cbCellH = DIGIT_ATLAS.cellH * cbS;
+    var cbCellW = COMBO_SOFT.cellW * cbS, cbCellH = COMBO_SOFT.cellH * cbS;
     var cbX = player.x - (1 + cbn) * cbCellW / 2;
-    var cbY = player.y - player.r - 40 - cbCellH / 2;
-    ctx.globalAlpha = cbA < 0 ? 0 : cbA;
-    ctx.drawImage(SPRITES.comboX, cbX, cbY, cbCellW, cbCellH);
-    var cbTx = cbX + cbCellW;
-    if (cbn >= 3) { ctx.drawImage(DIGIT_ATLAS.canvas, cbd2 * DIGIT_ATLAS.cellW, 0, DIGIT_ATLAS.cellW, DIGIT_ATLAS.cellH, cbTx, cbY, cbCellW, cbCellH); cbTx += cbCellW; }
-    if (cbn >= 2) { ctx.drawImage(DIGIT_ATLAS.canvas, cbd1 * DIGIT_ATLAS.cellW, 0, DIGIT_ATLAS.cellW, DIGIT_ATLAS.cellH, cbTx, cbY, cbCellW, cbCellH); cbTx += cbCellW; }
-    ctx.drawImage(DIGIT_ATLAS.canvas, cbd0 * DIGIT_ATLAS.cellW, 0, DIGIT_ATLAS.cellW, DIGIT_ATLAS.cellH, cbTx, cbY, cbCellW, cbCellH);
-    ctx.globalAlpha = 1;
+    var cbY = player.y - player.r - 46 - cbCellH / 2;
+    drawSoftComboBadge(ctx, cbVal, cbX, cbY, cbS, (cbA < 0 ? 0 : cbA) * 0.58);
   }
   drawPetReadFx(ctx);
   // 世界层结束: 恢复屏幕坐标(震动只偏世界层, HUD/摇杆不偏)(R1)
@@ -26590,6 +26602,7 @@ function renderGame() {
 // R1: 双图集 — 普通(红)与高伤(橙, 1.3x 预放大, 渲染零缩放开销)。
 var DIGIT_ATLAS = { canvas: null, cellW: 20, cellH: 28 };
 var DIGIT_ATLAS_HIGH = { canvas: null, cellW: 26, cellH: 36 };   // 高伤图集(R1): 20x1.3 / 28x1.3 预放大
+var COMBO_SOFT = { canvas: null, x: null, cellW: 14, cellH: 18 };   // 【v1.186】连击 xN 软墨小图集, 不改伤害飘字红墨
 function buildDigitAtlasInto(atlas, colorHex, fontPx) {
   var cv = document.createElement("canvas");
   cv.width = atlas.cellW * 10;
@@ -26610,6 +26623,41 @@ function buildDigitAtlasInto(atlas, colorHex, fontPx) {
   }
   atlas.canvas = cv;
 }
+function bakeSoftComboAtlas() {
+  var atlas = COMBO_SOFT;
+  var cv = document.createElement("canvas");
+  var fontPx = 14;
+  var i, xcv, xc2, c2;
+  cv.width = atlas.cellW * 10;
+  cv.height = atlas.cellH;
+  c2 = cv.getContext("2d");
+  c2.font = "bold " + fontPx + "px 'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei','Noto Sans CJK SC',sans-serif";
+  c2.textAlign = "center";
+  c2.textBaseline = "middle";
+  c2.lineJoin = "round";
+  for (i = 0; i <= 9; i++) {
+    c2.strokeStyle = "rgba(42,36,28,0.38)";
+    c2.lineWidth = 1.15;
+    c2.strokeText("" + i, i * atlas.cellW + atlas.cellW / 2, atlas.cellH / 2 + 1);
+    c2.fillStyle = "#6e5c4c";
+    c2.fillText("" + i, i * atlas.cellW + atlas.cellW / 2, atlas.cellH / 2 + 1);
+  }
+  atlas.canvas = cv;
+  xcv = document.createElement("canvas");
+  xcv.width = atlas.cellW;
+  xcv.height = atlas.cellH;
+  xc2 = xcv.getContext("2d");
+  xc2.strokeStyle = "#6e5c4c";
+  xc2.lineWidth = 1.6;
+  xc2.lineCap = "round";
+  xc2.beginPath();
+  xc2.moveTo(3, 4);
+  xc2.lineTo(atlas.cellW - 3, atlas.cellH - 4);
+  xc2.moveTo(atlas.cellW - 3, 4);
+  xc2.lineTo(3, atlas.cellH - 4);
+  xc2.stroke();
+  atlas.x = xcv;
+}
 function buildDigitAtlas() {
   buildDigitAtlasInto(DIGIT_ATLAS, CONFIG.colors.dmgText, 24);
   buildDigitAtlasInto(DIGIT_ATLAS_HIGH, CONFIG.colors.dmgTextHigh, 31);   // 24x1.3≈31 预放大(R1)
@@ -26629,6 +26677,7 @@ function buildDigitAtlas() {
   xc2.stroke();
   xcv.half = DIGIT_ATLAS.cellW / 2;
   SPRITES.comboX = xcv;
+  bakeSoftComboAtlas();   // 【v1.186】xN 软墨, 伤害图集不动
 }
 
 // FPS 采样: 每秒结算一次均值, 字符串一秒一建。
@@ -27740,6 +27789,26 @@ function makeButton(id, x, y, w, h, label, onTap) {
         endWidgetPress(ctx, pressed);
         return;
       }
+      if (skin === "upcost") {
+        // 【v1.186】永久强化花费钮: 苔奶油填 + 软墨, 不再金/霓虹块; 「差N」用深墨保证可读
+        if (tone === "ok") { fill = "#d5e0c0"; stroke = "rgba(58,74,40,0.62)"; ink = "#243018"; }
+        else if (tone === "done") { fill = "#dde6cc"; stroke = "rgba(58,74,40,0.40)"; ink = "#4a5640"; }
+        else if (tone === "locked") { fill = "rgba(220,228,204,0.62)"; stroke = "rgba(58,74,40,0.28)"; ink = "#6a7260"; }
+        else { fill = "#e4ead6"; stroke = "rgba(70,78,48,0.50)"; ink = "#3c3420"; }
+        ctx.fillStyle = fill;
+        fillRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = widgetPressed(this) ? 2 : 1.5;
+        strokeRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
+        ctx.lineWidth = 1;
+        ctx.fillStyle = ink;
+        ctx.font = r.h >= 64 ? FONT_UI : FONT_UI_S;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(this.label, r.x + r.w / 2, r.y + r.h / 2);
+        endWidgetPress(ctx, pressed);
+        return;
+      }
       if (tone === "ok") { fill = "#2e8b47"; stroke = "#fff7e0"; ink = "#ffffff"; }
       else if (tone === "locked") { /* 【v1.167e】vaultLockedQuiet：锁住的状态该“安静”——原深灰实心(#5a5348)+浅字比可操作态还重，且与卡内“未解锁”小签重复喊话；改浅色描边 ghost 样式（墨字 4.74:1 达标），响亮留给可操作态。回退：fill=#5a5348 / stroke=#8a7a58 / ink=#efe6c8 */ fill = "rgba(16,20,14,0.06)"; stroke = "rgba(42,58,24,0.35)"; ink = "#6a6a58"; }
       // 【v1.157】done 档(满级/已入仓/静音关)去金盘: 苔纸+细墨缘+深墨字, 对齐仓库行卡状态签; 按下态仍走 widgetPressed 加粗
@@ -28315,8 +28384,9 @@ function drawLevelupCard(ctx, card) {
   drawLevelupCardFrame(ctx, r.x, r.y, r.w, r.h, cardRarityColor(card.opt), armed);
   // 【v1.96】三选一走战场同一套苔纸+墨线, 不再另开奶油贴纸; 【v1.153】框收到 2.5px 墨线+柔盘影
   if (armed) {
-    ctx.strokeStyle = "#ffe082";
-    ctx.lineWidth = 4;
+    // 【v1.186】点卡锁定改苔墨缘, 不再亮金圈
+    ctx.strokeStyle = "rgba(62,84,46,0.78)";
+    ctx.lineWidth = 2;
     strokeRoundRect(ctx, r.x + 2, r.y + 2, r.w - 4, r.h - 4, 12);
     ctx.lineWidth = 1;
   }
@@ -28397,13 +28467,13 @@ function drawLevelupCard(ctx, card) {
   cue = levelupCardCue(card.idx, card.opt);
   cueH = 32;
   cueY = r.y + r.h - cueH - 10;
-  ctx.fillStyle = armed ? "#b86a10" : "rgba(46,139,71,0.42)";
+  ctx.fillStyle = armed ? "#6a7c52" : "rgba(46,139,71,0.42)";
   fillRoundRect(ctx, r.x + 16, cueY, r.w - 32, cueH, 10);
-  ctx.strokeStyle = armed ? "#ffe082" : "rgba(216,245,168,0.55)";
+  ctx.strokeStyle = armed ? "rgba(46,62,32,0.72)" : "rgba(216,245,168,0.55)";
   ctx.lineWidth = 1.4;
   strokeRoundRect(ctx, r.x + 16, cueY, r.w - 32, cueH, 10);
   ctx.lineWidth = 1;
-  ctx.fillStyle = armed ? "#fff7e0" : "#d8f5a8";
+  ctx.fillStyle = armed ? "#eef4dc" : "#d8f5a8";
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -28411,9 +28481,10 @@ function drawLevelupCard(ctx, card) {
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   if (popU < 0.85) {
-    ctx.globalAlpha = 0.28 * (1 - popU);
-    ctx.strokeStyle = "#fff7e0";
-    ctx.lineWidth = 3;
+    // 【v1.186】亮卡闪改淡苔墨缘, 不再奶油金闪
+    ctx.globalAlpha = 0.16 * (1 - popU);
+    ctx.strokeStyle = "rgba(62,84,46,0.85)";
+    ctx.lineWidth = 1.5;
     strokeRoundRect(ctx, r.x + 4, r.y + 4, r.w - 8, r.h - 8, 10);
     ctx.lineWidth = 1;
     ctx.globalAlpha = 1;
@@ -29650,12 +29721,14 @@ function registerUi() {
   uiUpBtns = [];
   for (var u = 0; u < UPGRADE_DEFS.length; u++) {
     uiUpBtns.push(makeButton("upbuy" + u, 500, upPy + 180 + u * 104, 130, 70, "升级", makeUpBuyTap(UPGRADE_DEFS[u].id)));
+    uiUpBtns[uiUpBtns.length - 1].skin = "upcost";
   }
   // 【R22】路径节点购买钮: 两卡右列(锋芒 x=195 / 磐石 x=455), 行距 100, 复用 makeUpBuyTap/buyUpgrade 链路
   //   【R32】x 195/455→238/498(w100→90): 原位盖住节点名/描述尾部(实测 18px 名尾 492>455); 价格改由按钮标签显示
   for (var p = 0; p < PATH_NODE_DEFS.length; p++) {
     var pcol = PATH_NODE_DEFS[p].path === "fury" ? 238 : 498;
     uiUpBtns.push(makeButton("uppath" + p, pcol, upPy + 780 + (p % 3) * 100, 90, 60, "升级", makeUpBuyTap(PATH_NODE_DEFS[p].id)));
+    uiUpBtns[uiUpBtns.length - 1].skin = "upcost";
   }
   uiUpClose = makeButton("upclose", CONFIG.viewW / 2 - 110, upPy + 1150, 220, 64, "返回", onTapCloseUpgrade);
   // 【v1.72/v1.85】仓库兑换/浅天赋: HOME 模态。行卡点选看账, 右钮两下才扣, 不抢正片出击。
@@ -30789,7 +30862,7 @@ function drawUpgradeTicks(ctx, x, y, lv, maxLv, canBuy) {
   for (i = 0; i < n; i++) {
     xx = x + i * (tw + gap);
     if (i < lv) ctx.fillStyle = "#2e8b47";
-    else if (i === lv && canBuy) ctx.fillStyle = "#d4a024";
+    else if (i === lv && canBuy) ctx.fillStyle = "#8eaa74";
     else ctx.fillStyle = "rgba(58,90,32,0.20)";
     fillRoundRect(ctx, xx, y, tw, h, 2);
   }
@@ -30834,13 +30907,13 @@ function drawUpgradeWalletBar(ctx, x, y, w, h, spend) {
   if (next && next.price > 0) {
     need = next.price;
     u = Math.min(1, coins / need);
-    ctx.fillStyle = next.canBuy ? "#3faf5a" : "#e0a020";
+    ctx.fillStyle = next.canBuy ? "#8eaa74" : "#c6cda8";
     fillW = Math.round(w * u);
     if (fillW > 0) fillRoundRect(ctx, x, y, Math.max(8, fillW), h, 8);
     label = "金币 " + coins + " / 下一档" + (next.alias || upgradeShortName(next.d)) + " " + need +
       (next.canBuy ? " · 可升" : (" · 差" + next.short + "金"));
   } else {
-    ctx.fillStyle = "#3faf5a";
+    ctx.fillStyle = "#8eaa74";
     fillRoundRect(ctx, x, y, w, h, 8);
     label = "金币 " + coins + " · 养成已满";
   }
@@ -30897,12 +30970,12 @@ function drawUpgradePanel(ctx, m) {
     rowY = py + 180 + i * 104;
     hot = spend.cheapest && spend.cheapest.id === d.id;
     flash = GAME.hallUpFlash && GAME.hallUpFlash.id === d.id && GAME.hallUpFlash.t > 0;
-    // 【v1.155】强化行热区/闪光收敛: 不再重金框, 闪光改淡金薄框, 可升绿/差钱墨, 对齐 drawBuildChip 墨重
+    // 【v1.186】热区/闪光去金: 苔奶油薄填 + 软墨缘, 可升不再霓虹绿框
     if (flash || hot) {
-      ctx.fillStyle = flash ? "rgba(212,160,36,0.13)" : (v.canBuy ? "rgba(46,139,71,0.10)" : "rgba(90,98,84,0.10)");
+      ctx.fillStyle = flash ? "rgba(120,138,88,0.12)" : (v.canBuy ? "rgba(90,112,68,0.10)" : "rgba(90,98,84,0.10)");
       fillRoundRect(ctx, 56, rowY - 4, 408, 96, 10);
-      ctx.strokeStyle = flash ? "rgba(212,160,36,0.72)" : (v.canBuy ? "#2e8b47" : "rgba(42,58,24,0.55)");
-      ctx.lineWidth = flash ? 2 : 1.5;
+      ctx.strokeStyle = flash ? "rgba(70,88,48,0.55)" : (v.canBuy ? "rgba(70,96,52,0.62)" : "rgba(42,58,24,0.55)");
+      ctx.lineWidth = flash ? 1.5 : 1.5;
       strokeRoundRect(ctx, 56, rowY - 4, 408, 96, 10);
       ctx.lineWidth = 1;
     }
@@ -30927,7 +31000,7 @@ function drawUpgradePanel(ctx, m) {
     } else {
       ctx.fillText(v.stat0 + " → " + v.stat1 + " · 战力 " + v.power0 + "→" + v.power1, 118, rowY + 52);
     }
-    ctx.fillStyle = v.canBuy ? "#2e8b47" : (v.maxed ? c.cardDesc : "#a06a10");
+    ctx.fillStyle = v.canBuy ? "#3d6844" : (v.maxed ? c.cardDesc : "#4a4028");
     ctx.font = "bold 15px " + FONT_STACK;
     ctx.fillText(v.goldLine, 118, rowY + 74);
     btn = uiUpBtns[i];
@@ -30950,19 +31023,19 @@ function drawUpgradePanel(ctx, m) {
     plocked = v.locked;
     hot = spend.cheapest && spend.cheapest.id === pdef2.id;
     flash = GAME.hallUpFlash && GAME.hallUpFlash.id === pdef2.id && GAME.hallUpFlash.t > 0;
-    // 【v1.155】路径节点补苔纸底卡+细墨框(锁定压淡), 热区/闪光只剩薄框, 不再裸字贴面板
+    // 【v1.186】路径格改更闷的苔奶油填 + 软墨框, 闪光不再金边
     ctx.fillStyle = "rgba(16,20,14,0.10)";
     fillRoundRect(ctx, pcardX + 1, prowY + 1, 248, 90, 8);
-    ctx.fillStyle = plocked ? "rgba(212,228,184,0.50)" : "rgba(222,232,198,0.94)";
+    ctx.fillStyle = plocked ? "rgba(196,206,176,0.55)" : "rgba(206,214,184,0.94)";
     fillRoundRect(ctx, pcardX, prowY - 2, 248, 90, 8);
-    ctx.strokeStyle = plocked ? "rgba(42,58,24,0.32)" : "rgba(42,58,24,0.80)";
+    ctx.strokeStyle = plocked ? "rgba(42,58,24,0.32)" : "rgba(42,58,24,0.62)";
     ctx.lineWidth = 1.5;
     strokeRoundRect(ctx, pcardX, prowY - 2, 248, 90, 8);
     ctx.lineWidth = 1;
     if (flash || (hot && !plocked)) {
-      ctx.fillStyle = flash ? "rgba(212,160,36,0.13)" : "rgba(46,139,71,0.10)";
+      ctx.fillStyle = flash ? "rgba(120,138,88,0.14)" : "rgba(90,112,68,0.12)";
       fillRoundRect(ctx, pcardX, prowY - 2, 248, 90, 8);
-      ctx.strokeStyle = flash ? "rgba(212,160,36,0.72)" : "#2e8b47";
+      ctx.strokeStyle = flash ? "rgba(70,88,48,0.55)" : "rgba(70,96,52,0.62)";
       ctx.lineWidth = 1.5;
       strokeRoundRect(ctx, pcardX, prowY - 2, 248, 90, 8);
       ctx.lineWidth = 1;
@@ -30978,7 +31051,7 @@ function drawUpgradePanel(ctx, m) {
     } else {
       ctx.fillText(v.stat0 + "→" + v.stat1 + " · 战力+" + v.powerDelta, pcardX + 8, prowY + 42);
     }
-    ctx.fillStyle = plocked ? "#777777" : (v.canBuy ? "#2e8b47" : "#a06a10");
+    ctx.fillStyle = plocked ? "#777777" : (v.canBuy ? "#3d6844" : "#4a4028");
     ctx.font = "bold 13px " + FONT_STACK;
     if (!plocked && !v.maxed) ctx.fillText(v.goldLine, pcardX + 8, prowY + 64);
     else if (v.maxed) ctx.fillText("已满级", pcardX + 8, prowY + 64);
