@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 音频试听</title>
+<style>
+  :root{ --leaf:#3fa66a; --leaf-d:#1f7a47; --bark:#6b4a2b; --cream:#f3f7ee; --gold:#e8c463; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(120% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:48px 20px;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  h1{font-size:30px;letter-spacing:2px;margin-bottom:6px;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+  .sub{opacity:.8;margin-bottom:8px;font-size:14px}
+  .hint{opacity:.55;margin-bottom:34px;font-size:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;width:100%;max-width:920px}
+  .card{
+    background:linear-gradient(160deg,#1f5c3a,#143e28);
+    border:1px solid rgba(232,196,99,.35); border-radius:18px; padding:22px 20px;
+    box-shadow:0 12px 30px rgba(0,0,0,.35); display:flex; flex-direction:column; gap:12px;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(0,0,0,.45)}
+  .card.bgm{border-color:rgba(159,224,180,.55);background:linear-gradient(160deg,#236b45,#16472c)}
+  .ico{font-size:32px}
+  .t{font-size:18px;font-weight:700}
+  .d{font-size:13px;opacity:.78;line-height:1.5;min-height:38px}
+  .meta{font-size:12px;opacity:.6}
+  button{
+    border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:600;
+    padding:11px 16px;border-radius:12px;color:#0f2f1f;
+    background:linear-gradient(180deg,var(--gold),#d2a83f);
+    transition:filter .2s ease, transform .1s ease;
+  }
+  button:hover{filter:brightness(1.08)}
+  button:active{transform:scale(.97)}
+  button.playing{background:linear-gradient(180deg,#9fe0b4,#5cba84);color:#0f2f1f}
+  .eq{display:flex;gap:3px;height:16px;align-items:flex-end;opacity:0;transition:opacity .2s}
+  .eq.on{opacity:1}
+  .eq i{width:4px;background:var(--gold);border-radius:2px;animation:blink 0.9s infinite ease-in-out}
+  .eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}
+  .eq i:nth-child(4){animation-delay:.45s}.eq i:nth-child(5){animation-delay:.6s}
+  @keyframes blink{0%,100%{height:4px}50%{height:16px}}
+  footer{margin-top:36px;font-size:12px;opacity:.5;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+  <h1>🌿 森灵萌兽 · 音频试听</h1>
+  <div class="sub">独立内容包专属原声 · 纯参数化合成 · 双击即听</div>
+  <div class="hint">共 25 条：6 首 BGM（可循环）+ 19 个游戏事件音效</div>
+  <div class="grid" id="grid"></div>
+
+  <footer>萌兽消消岛 · 森灵内容包 · 音频资产（独立命名空间，不改动主游戏文件）<br>全部由 tools/synth_audio.py 纯标准库合成，峰值统一 85%，零削波</footer>
+
+<script>
+// 音频清单：相对路径引用 audio/*.wav，真正用上资产，规避死资产
+const TRACKS = [
+  {key:'cp_bgm_forest', ico:'🌲', title:'森林主题 BGM', loop:true,
+   desc:'柔美 pad + 三角波旋律 + 轻贝斯与铃音，I–vi–IV–V 进行，无缝循环，适合探索/秘境场景。', dur:'35.6s · 循环'},
+  {key:'cp_bgm_battle', ico:'⚔️', title:'战斗主题 BGM', loop:true,
+   desc:'更快节奏（128 BPM）+ 驱动贝斯 + 能量琶音 + kick/snare/hi-hat 鼓组，Am–F–C–G 进行，无缝循环，适合潮次/精英战。', dur:'30.0s · 循环'},
+  {key:'cp_bgm_boss', ico:'👹', title:'BOSS 主题 BGM', loop:true,
+   desc:'更慢更沉重的史诗小调（92 BPM）+ 厚低频 + 铜管感锯齿 lead + 定音鼓 kick + 不祥钟声，Am–F–C–G 进行，无缝循环，适合 Boss/首领战。', dur:'31.3s · 循环'},
+  {key:'cp_bgm_tide', ico:'🌊', title:'潮次涌动 BGM', loop:true,
+   desc:'森林主题的升级层（116 BPM）：滚动八分贝斯 + 十六分水花琶音 + 4/4 轻底鼓 + 拍手军鼓 + 八分 hi-hat，叠加「潮涌」幅度 LFO，让常规波次有涌动推进感。I–vi–IV–V 进行，无缝循环，适合普通潮次/小怪波。', dur:'33.1s · 循环'},
+  {key:'cp_bgm_elite', ico:'🛡️', title:'精英遭遇 BGM', loop:true,
+   desc:'战斗主题的紧张对立项（124 BPM）：持续低音 drone + 小二度摩擦 ostinato + 16 分 hi-hat 织体 + 每小节警报 ping，制造「精英来袭」的不安张力。Am–F–C–G 进行，无缝循环，适合精英怪/特殊遭遇。', dur:'31.0s · 循环'},
+  {key:'cp_bgm_boss2', ico:'🔥', title:'BOSS 二阶段 BGM', loop:true,
+   desc:'Boss 主题的狂暴对立项（124 BPM）：四踩底鼓 + 双倍驱动贝斯 + 八度叠加锯齿英雄动机（比一阶段更尖锐）+ 切分军鼓 + 整体升半音「狂暴」转调。Am–F–C–G（+1 半音）进行，无缝循环，适合 Boss 二阶段/狂暴。', dur:'23.2s · 循环'},
+  {key:'cp_sfx_summon', ico:'✨', title:'召唤音效', loop:false,
+   desc:'上行魔法琶音叠加微光泛音，明亮短促，适用召唤萌兽/释放技能。', dur:'0.92s'},
+  {key:'cp_sfx_heal', ico:'💚', title:'治疗音效', loop:false,
+   desc:'暖色上行和弦 swell，舒缓悠长，适用回复生命/增益状态。', dur:'1.38s'},
+  {key:'cp_sfx_hit', ico:'💥', title:'受击·命中', loop:false,
+   desc:'低频 thump + 噪声瞬态 + 高频 click，短促有力，适用敌人受击/暴击反馈。', dur:'0.16s'},
+  {key:'cp_sfx_kill', ico:'⭐', title:'击杀', loop:false,
+   desc:'下行 whoosh（锯齿扫频）接明亮 ding，爽快收尾，适用击杀/爆裂。', dur:'0.34s'},
+  {key:'cp_sfx_levelup', ico:'⬆️', title:'升级', loop:false,
+   desc:'明亮上行大三和弦琶音（C-E-G-C），轻快短促，适用升级/强化。', dur:'0.61s'},
+  {key:'cp_sfx_pickup', ico:'🪙', title:'拾取', loop:false,
+   desc:'双段上行 bloop，极短清脆，适用宝石/金币/道具拾取。', dur:'0.18s'},
+  {key:'cp_sfx_hurt', ico:'😣', title:'受伤', loop:false,
+   desc:'下行锯齿 harsh sweep + 噪声毛刺，刺痛感，适用玩家/友军受创。', dur:'0.26s'},
+  {key:'cp_sfx_evolve', ico:'🌟', title:'进化', loop:false,
+   desc:'宏大上行琶音 + 收尾和弦 swell，比升级更隆重，适用进化/形态变换。', dur:'1.05s'},
+  {key:'cp_sfx_win', ico:'🏆', title:'胜利', loop:false,
+   desc:'号角式上行琶音 + 尾部和弦，凯旋感，适用通关/关卡胜利。', dur:'1.10s'},
+  {key:'cp_sfx_lose', ico:'🌧️', title:'失败', loop:false,
+   desc:'下行小调叹息（G-E-C-G）+ 低沉余音，失落感，适用失败/撤退。', dur:'0.99s'},
+  {key:'cp_sfx_ui', ico:'🔘', title:'UI 点击', loop:false,
+   desc:'极短柔 tick，克制不抢戏，适用按钮/菜单交互。', dur:'0.06s'},
+  {key:'cp_sfx_explosion', ico:'🔥', title:'爆炸 / 范围冲击', loop:false,
+   desc:'低频 boom + 噪声爆破 + 碎片脆响，适用大爆裂 / AoE 释放（配套 fx_explosion / fx_shockwave）。', dur:'0.40s'},
+  {key:'cp_sfx_dash', ico:'💨', title:'位移 / 闪避', loop:false,
+   desc:'快速上行扫频 + 风噪 whoosh，适用冲刺 / 闪避（配套 fx_dash_trail）。', dur:'0.22s'},
+  {key:'cp_sfx_portal', ico:'🌀', title:'召唤门 / 传送', loop:false,
+   desc:'失谐正弦琶音 + 缓慢调制漩涡感，适用召唤 / 传送（配套 fx_portal）。', dur:'0.70s'},
+  {key:'cp_sfx_coin', ico:'💰', title:'金币 / 得分', loop:false,
+   desc:'经典双音叮（B5→E6），适用金币 / 得分拾取（配套 fx_coin_burst）。', dur:'0.18s'},
+  {key:'cp_sfx_warning', ico:'⚠️', title:'预警 / 警示', loop:false,
+   desc:'紧张双音警报（小二度叠置），急促，适用 Boss AoE 地面预警（配套 fx_telegraph）。', dur:'0.44s'},
+  {key:'cp_sfx_freeze', ico:'❄️', title:'冻结 / 碎冰', loop:false,
+   desc:'高频玻璃质碎裂叮 + 冷色下扫 + 霜噪微闪，适用冰冻命中 / 碎冰解控（配套 fx_freeze_shatter）。', dur:'0.34s'},
+  {key:'cp_sfx_buff', ico:'🟢', title:'增益 / 强化', loop:false,
+   desc:'明亮上行大三和弦 + 金光泛音，比治疗更「赋能」，适用攻防增益 / 强化生效（配套 fx_buff）。', dur:'0.54s'},
+  {key:'cp_sfx_debuff', ico:'🟣', title:'减益 / 诅咒', loop:false,
+   desc:'下行阴郁小调 + 低频闷响，适用减速 / 虚弱 / 诅咒生效（配套 fx_debuff）。', dur:'0.70s'},
+];
+
+const grid = document.getElementById('grid');
+TRACKS.forEach((tk, i) => {
+  const id = 'a' + i, bid = 'b' + i, eid = 'e' + i;
+  const card = document.createElement('div');
+  card.className = 'card' + (tk.loop ? ' bgm' : '');
+  card.innerHTML =
+    '<div class="ico">' + tk.ico + '</div>' +
+    '<div class="t">' + tk.title + '</div>' +
+    '<div class="d">' + tk.desc + '</div>' +
+    '<div class="eq" id="' + eid + '"><i></i><i></i><i></i><i></i><i></i></div>' +
+    '<button id="' + bid + '">' + (tk.loop ? '▶ 播放循环' : '▶ 试听') + '</button>' +
+    '<div class="meta">' + tk.key + '.wav · ' + tk.dur + '</div>';
+  grid.appendChild(card);
+  const audio = document.createElement('audio');
+  audio.id = id;
+  audio.src = 'audio/' + tk.key + '.wav';
+  audio.loop = !!tk.loop;
+  audio.preload = 'auto';
+  document.body.appendChild(audio);
+  document.getElementById(bid).onclick = () => toggle(tk, id, bid, eid);
+});
+
+function setEq(eid, on){ document.getElementById(eid).classList.toggle('on', on); }
+function toggle(tk, aid, bid, eid){
+  const a = document.getElementById(aid), b = document.getElementById(bid);
+  if(tk.loop){
+    if(a.paused){ a.play(); b.textContent='⏸ 停止'; b.classList.add('playing'); setEq(eid,true); }
+    else { a.pause(); a.currentTime=0; b.textContent='▶ 播放循环'; b.classList.remove('playing'); setEq(eid,false); }
+  } else {
+    a.currentTime=0; setEq(eid,true); b.classList.add('playing'); b.textContent='♪ 播放中'; a.play();
+    a.onended=()=>{ setEq(eid,false); b.classList.remove('playing'); b.textContent='▶ 试听'; };
+  }
+}
+</script>
+</body>
+</html>
