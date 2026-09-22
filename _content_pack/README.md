@@ -186,6 +186,18 @@
 - **资产复用**：英雄用 `spirit_deer`、Boss 用 `forest_ancient`、召唤物用 `sprout_bunny/flame_fox/star_bird`（均 `sprites_alpha/`）；能力触发播 `fx_telegraph` 预警圈 + 对应元素 `cp_sfx_hit_*`；通关/失败播 `cp_sfx_win/lose`。
 - **校验**：内联 `<script>` 经 `node --check` 语法校验通过（无 fetch，file:// 双击可用）；与 §2.6 规格在阶段阈值 / 能力冷却 / 召唤增援三处逐一对应。
 
+## 2.8 战役模式（关卡波次 · 可玩校验场）
+
+> 把 §2.6 的 `data/wave_design.json` **真正跑起来**的关卡流程 demo（非游戏代码，纯前端，`file://` 双击即开），用于验证 10 关 × 多波次设计在「可玩」形态下是否成立：逐关逐波刷怪节奏、元素聚焦、弱点提示、奖励、过关/失败/重试是否如规格所述联动。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `campaign.html` | 10 关 × 多波次战役流程 | 每关按 `waves` 顺序刷怪，清空一波→下一波、清空一关→下一关；先选「攻击元素」再点敌人输出，伤害按 `element_matrix.json` 倍率结算；英雄独立血条，撑过 10 关=通关、英雄阵亡=重试本关；第 10 关含 Boss（森林古木 200HP 木） |
+
+- **机制对齐**：关卡顺序 / 波次刷怪 / 元素聚焦 / 奖励与 `wave_design.json` 一致；弱点提示用 `counterOf()` 算每波最多敌种元素的最强克元素（强克 ×1.6）；过关按 `lv.id*10` 计分 + levelup sfx；失败自动重置本关（英雄 HP 满、重新 `loadLevel`）。第 10 关 Boss 按 §2.6 高 HP 木敌呈现（森林古木 200HP 木，弱火），与 `boss_arena.html` 共享同一五元素系统。
+- **资产复用**：敌种用 `sprites_alpha`（芽芽兔/火苗狐/水滴蛙/星羽鸟/石甲龟/森林古木）；命中/击杀播 `fx_hit_spark`/`fx_slash`/`fx_star` + `fx_explosion`/`fx_coin_burst` + `cp_sfx_hit_*`/`cp_sfx_kill`/`cp_sfx_levelup`/`cp_sfx_win`/`cp_sfx_lose`，可开 `cp_bgm_battle` 循环。
+- **校验**：内联 `<script>` 经 `node --check` 语法校验通过（无 fetch，file:// 双击可用）；内联 `WAVE` 数据已与 `wave_design.json` 逐项比对一致（6 敌种 key/hp/element、10 关 id/波次数/每关总敌数 均无漂移）；11 项引用资产（6 精灵 png + 5 vfx png + 12 音频 wav）路径经 `ls` 核验存在，无断裂引用。
+
 ## 3. 目录结构
 
 ```
@@ -203,6 +215,7 @@ _content_pack/
 ├── element_chart.html      # 元素克制环 + 倍率矩阵 + 技能冷却条（数据驱动，内联 SVG）
 ├── wave_chart.html         # 关卡波次 + BOSS 三阶段可视化（数据驱动，内联 SVG/HTML）
 ├── boss_arena.html         # BOSS 竞技场（boss_phases.json 三阶段可玩校验场，纯前端 file:// 双击即开）
+├── campaign.html          # 战役模式（wave_design.json 10 关 × 多波次可玩校验场，逐波刷怪，纯前端 file:// 双击即开）
 ├── sprites/               # 原始生成图（RGB，未抠）
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
@@ -295,6 +308,7 @@ _content_pack/
 - 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、24 VFX（尺寸 / 体积）、12 状态图标（尺寸 / 体积）、13 技能/元素图标（尺寸 / 体积 / 分组）、4 设计数值 JSON（字节数）、35 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
 - 设计数值：`data/element_matrix.json`、`data/skill_cooldowns.json`、`data/wave_design.json`、`data/boss_phases.json` 均为合法 JSON（`json.load` 通过）；`element_chart.html` 由 `tools/build_element_chart.py` 数据驱动生成，校验含 `<svg>` 节点、5×5 倍率矩阵（6 行）、8 技能冷却条；`wave_chart.html` 由 `tools/build_wave_chart.py` 数据驱动生成，校验含 10 关卡片、难度曲线柱状、BOSS HP 三段分段条、3 阶段能力卡 + 冷却压缩对比；五元素 5 环克制链对称（火→木→土→水→光→火），与 §2.4 元素徽章「强克」文案一致；关卡/Boss 规格与 §2.5 克制链、敌种表对齐（教学关单元素 → 后期逼迫切元素；Boss 三阶段随血量压缩冷却）。
 - 可玩校验：`boss_arena.html` 为 `data/boss_phases.json` 三阶段脚本的可玩校验场，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch）；阶段阈值（66% / 33%）、能力冷却（随阶段压缩）、召唤增援（阶段登场 + 每 8s 周期混召，6 只上限）与规格逐一对应；英雄/BOSS 血条独立，元素克制倍率（火 强克 木 Boss ×1.6）接入 §2.5 矩阵，复用 `sprites_alpha`/`vfx`/`audio` 真实资产。
+- 可玩校验：`campaign.html` 为 `data/wave_design.json` 10 关 × 多波次的可玩校验场，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch）；逐关逐波刷怪（清空一波→下一波、清空一关→下一关）、元素聚焦 HUD、弱点提示（`counterOf()` 算最强克元素）、过关计分 + levelup、失败自动重试本关；内联 `WAVE` 数据已与 `wave_design.json` 逐项比对一致（6 敌种 key/hp/element、10 关 id/波次数/每关总敌数 均无漂移）；第 10 关含 Boss（森林古木 200HP 木）按 §2.6 高 HP 木敌呈现；元素克制倍率接入 §2.5 矩阵，复用 `sprites_alpha`/`vfx`/`audio` 真实资产。
 - 演练场机制深化：`playground.html` 已接入五元素系统——每个敌种带 `element` 属性并显示元素徽章，玩家选攻击元素后伤害按 `element_matrix.json` 倍率结算（强克 ×1.6 / 被克 ×0.6 / 同元素 ×0.85 / 中性 ×1.0），并启用该元素代表技能的冷却（`skill_cooldowns.json` 数据）；命中飘字显示克制倍率。脚本经 `node --check` 语法校验通过（内联数据，file:// 双击可用，无需 fetch）。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
@@ -325,5 +339,7 @@ _content_pack/
 19. ~~**关卡波次与 BOSS 多阶段（设计规格 · 关卡/Boss 数据底座）**~~ ✅ 已交付 2 份设计数值 JSON（`data/wave_design.json` 10 关 × 多波次敌种组合 + 元素分布，难度曲线 单元素教学→双元素混编→五元素精英→BOSS；`data/boss_phases.json` 森林古木三阶段脚本，baseHp 200，阈值 66%/33%，冷却随阶段压缩 + 混召多属性增援）+ 数据驱动可视化参考页 `wave_chart.html`（关卡地图卡片 + 难度曲线柱状 + BOSS HP 三段分段条 + 3 阶段能力卡 + 冷却压缩对比）；`tools/build_wave_chart.py` 读两份 JSON 并复用 `data/element_matrix.json` 五元素配色纯标准库渲染，零依赖、不卡机；与 §2.5 克制链、敌种表对齐，为 §4 接入主游戏时的波次生成与 Boss AI 状态机提供数据底座。
 
 20. ~~**BOSS 竞技场（Boss 阶段脚本 · 可玩校验场）**~~ ✅ 已交付 `boss_arena.html`（纯前端，`file://` 双击即开，无 fetch）：把 §2.6 的 `data/boss_phases.json` 三阶段真跑起来的迷你 Boss 战——Boss 按 `hpLow`（66%/33%）切阶段、每阶段 `abilities` 按各自 `cooldown` 在 250ms tick 自动释放（藤蔓召唤→范围践踏→藤蔓缠绕+木刺喷射→古木狂暴，后期冷却压缩）、`summon` 在阶段登场与每 8s 周期混召（6 只上限）；玩家选攻击元素后伤害按 §2.5 `element_matrix.json` 倍率结算（火 强克 木 Boss ×1.6）。资产复用 `sprites_alpha`（灵鹿祭司/森林古木/芽芽兔/火苗狐/星羽鸟）+ `vfx/fx_telegraph` 预警圈 + `cp_sfx_hit_*`/`cp_sfx_win/lose`；内联 `<script>` 经 `node --check` 语法校验通过；`index.html` 加 🌳 导航卡、`README` §2.7/§3/§6/§7 同步。设计规格→可视化→可玩校验 闭环，为 §4 接入主游戏时的 Boss AI 提供端到端验证样本。
+
+21. ~~**战役模式（关卡波次 · 可玩校验场）**~~ ✅ 已交付 `campaign.html`（纯前端，`file://` 双击即开，无 fetch）：把 §2.6 的 `data/wave_design.json` 10 关 × 多波次真跑起来的关卡流程 demo——逐关逐波刷怪（清空一波→下一波、清空一关→下一关）、元素聚焦 HUD、弱点提示（`counterOf()` 算最强克元素，强克 ×1.6）、过关按 `lv.id*10` 计分 + levelup、失败后自动重试本关；第 10 关含 Boss（森林古木 200HP 木，弱火）按 §2.6 高 HP 木敌呈现。内联 `<script>` 经 `node --check` 语法校验通过；内联 `WAVE` 数据已与 `wave_design.json` 逐项比对一致（敌种 key/hp/element、10 关 id/波次数/每关总敌数均无漂移）；11 项引用资产（6 精灵 png + 5 vfx png + 12 音频 wav）路径核验存在，无断裂引用；`index.html` 加 🗺️ 导航卡、`README` §2.8/§3/§6/§7 同步。与 `boss_arena.html` 共同构成「设计规格→可视化→可玩校验」双闭环，为 §4 接入主游戏时的波次生成器与逐波推进状态机提供端到端验证样本。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

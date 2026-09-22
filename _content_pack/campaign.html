@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 战役模式（关卡波次实跑）</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; --ink:#0f2f1f; }
+  *{ box-sizing:border-box;margin:0;padding:0; }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:22px 16px; display:flex; flex-direction:column; align-items:center; }
+  h1{ font-size:25px; letter-spacing:2px; margin-bottom:6px; text-shadow:0 2px 10px rgba(0,0,0,.45) }
+  .hint{ opacity:.78; font-size:12.5px; max-width:840px; text-align:center; line-height:1.6; margin-bottom:12px }
+  .bar{ display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; justify-content:center }
+  .btn{ background:linear-gradient(160deg,#1f5c3a,#143e28); border:1px solid rgba(232,196,99,.4);
+    color:var(--cream); padding:8px 15px; border-radius:10px; cursor:pointer; font-size:14px; transition:transform .15s }
+  .btn:hover{ transform:translateY(-2px) }
+  .btn.on{ background:linear-gradient(160deg,#e8c463,#caa23f); color:var(--ink) }
+  .elems{ display:flex; gap:7px; align-items:center; flex-wrap:wrap; justify-content:center }
+  .elem{ position:relative; width:42px; height:42px; border-radius:11px; border:2px solid rgba(255,255,255,.25);
+    background:rgba(15,47,31,.6); color:var(--cream); cursor:pointer; font-size:18px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; transition:transform .12s }
+  .elem:hover{ transform:translateY(-2px) }
+  .elem .cd{ position:absolute; inset:0; background:rgba(0,0,0,.62); border-radius:9px; color:#fff;
+    font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; pointer-events:none }
+  .elem.on{ box-shadow:0 0 0 3px var(--gold) inset; }
+  .elem.cd-active{ opacity:.5; cursor:not-allowed }
+
+  #hud{ width:100%; max-width:880px; background:rgba(15,47,31,.5); border:1px solid rgba(159,224,180,.25);
+    border-radius:14px; padding:12px 16px; margin-bottom:12px }
+  .lvlrow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap }
+  .lvlrow b{ font-size:16px; color:var(--gold) }
+  .theme{ font-size:12px; opacity:.72 }
+  .focus{ display:flex; gap:6px; margin-left:auto; align-items:center }
+  .focus i{ width:11px; height:11px; border-radius:50%; display:inline-block }
+  .focus small{ font-size:11px; opacity:.7; margin-right:2px }
+  .reward{ font-size:12px; color:var(--gold); opacity:.9 }
+  .wavebar{ display:flex; gap:6px; margin-top:10px; align-items:center }
+  .wavebar .wv{ font-size:12px; opacity:.75 }
+  .wvdots{ display:flex; gap:5px; flex:1 }
+  .wvdots span{ flex:1; height:7px; border-radius:4px; background:rgba(255,255,255,.12) }
+  .wvdots span.done{ background:var(--leaf) }
+  .wvdots span.cur{ background:var(--gold) }
+  .weak{ font-size:12px; margin-top:8px; opacity:.85 }
+  .weak b{ color:var(--gold) }
+
+  #field{ width:100%; max-width:880px; background:rgba(15,47,31,.45); border:1px solid rgba(159,224,180,.22);
+    border-radius:16px; padding:16px; display:grid; grid-template-columns:repeat(auto-fill,minmax(118px,1fr)); gap:12px; min-height:160px; align-content:start }
+  .enemy{ position:relative; background:rgba(15,47,31,.6); border:1px solid rgba(159,224,180,.22);
+    border-radius:14px; padding:8px; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; transition:transform .12s }
+  .enemy:hover{ transform:translateY(-3px) }
+  .enemy.dead{ opacity:0; transform:scale(.6); pointer-events:none; transition:opacity .45s, transform .45s }
+  .enemy.boss{ border-color:rgba(232,99,99,.6); box-shadow:0 0 0 1px rgba(232,99,99,.3) inset }
+  .enemy img{ width:78px; height:78px; animation:bob 2.1s ease-in-out infinite }
+  .enemy .nm{ font-size:12px; font-weight:600 }
+  .enemy .ebadge{ font-size:10px; opacity:.8; display:flex; align-items:center; gap:3px }
+  .enemy .ebadge i{ width:8px; height:8px; border-radius:50%; display:inline-block }
+  .hpwrap{ width:100%; height:6px; background:rgba(0,0,0,.35); border-radius:3px; overflow:hidden }
+  .hpwrap i{ display:block; height:100%; background:linear-gradient(90deg,#6fe39a,#3fa66a); transition:width .2s }
+  .hpwrap i.low{ background:linear-gradient(90deg,#f0a04b,#e06a2c) }
+  .vfx{ position:absolute; left:50%; top:40%; width:84px; height:84px; margin:-42px 0 0 -42px; pointer-events:none; animation:pop .5s ease-out forwards; z-index:5 }
+  .dmg{ position:absolute; left:50%; top:16%; transform:translateX(-50%); color:#fff; font-weight:800; font-size:16px; text-shadow:0 1px 3px #000; pointer-events:none; animation:rise .7s ease-out forwards; z-index:6 }
+  .dmg.crit{ color:var(--gold); font-size:22px }
+  .floatmove{ position:fixed; left:50%; top:22%; transform:translateX(-50%); background:rgba(15,47,31,.92); border:1px solid var(--gold); color:var(--gold); padding:6px 16px; border-radius:10px; font-size:15px; font-weight:700; z-index:80; animation:rise .9s ease-out forwards }
+  #herohp{ width:100%; max-width:880px; margin-top:12px; display:flex; align-items:center; gap:10px }
+  #herohp .lab{ font-size:12px; opacity:.8 }
+  #herohp .track{ flex:1; height:14px; background:rgba(0,0,0,.4); border-radius:7px; overflow:hidden }
+  #herohp .track i{ display:block; height:100%; width:100%; background:linear-gradient(90deg,#6fe3c0,#3fa6a6); transition:width .25s }
+  #herohp .track i.low{ background:linear-gradient(90deg,#f0a04b,#e06a2c) }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-6px) } }
+  @keyframes pop{ 0%{ transform:scale(.4); opacity:0 } 25%{ transform:scale(1.15); opacity:1 } 100%{ transform:scale(.9); opacity:0 } }
+  @keyframes rise{ 0%{ opacity:0; transform:translate(-50%,6px) } 20%{ opacity:1 } 100%{ opacity:0; transform:translate(-50%,-26px) } }
+  footer{ margin-top:18px; font-size:12px; opacity:.5; text-align:center; line-height:1.7; max-width:820px }
+</style>
+</head>
+<body>
+  <h1>🗺️ 森灵萌兽 · 战役模式</h1>
+  <div class="hint">把 <b>data/wave_design.json</b>（10 关 × 多波次）真正跑起来的关卡流程 demo：每关按 `waves` 顺序刷怪，清空一波进入下一波、清空一关进入下一关；先选下方「攻击元素」（火 强克 木、木 强克 土……），再点敌人输出，伤害按 data/element_matrix.json 倍率结算。撑过 10 关即通关。本页纯前端，双击即开，资产走相对路径。</div>
+  <div class="bar">
+    <button class="btn" id="start">⚔️ 开始战役</button>
+    <button class="btn" id="bgm">🎵 战斗 BGM</button>
+    <div class="elems" id="elems"></div>
+  </div>
+
+  <div id="hud">
+    <div class="lvlrow"><b id="lvlName">—</b><span class="theme" id="lvlTheme"></span>
+      <div class="focus"><small>元素聚焦</small><span id="focusChips"></span></div></div>
+    <div class="wavebar"><span class="wv" id="waveTxt">波次 —</span><div class="wvdots" id="wvdots"></div>
+      <span class="reward" id="lvlReward"></span></div>
+    <div class="weak" id="weakHint"></div>
+  </div>
+
+  <div id="field"></div>
+
+  <div id="herohp"><span class="lab">英雄</span><div class="track"><i id="heroHp"></i></div></div>
+
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>
+  本页为关卡波次设计（data/wave_design.json）的<b>可玩校验场</b>：关卡顺序 / 波次刷怪 / 元素聚焦 / 奖励 与规格一致；第 10 关含 Boss（森林古木）按 data/boss_phases.json 同款高 HP 木敌呈现。伤害按 data/element_matrix.json 五元素倍率结算。不修改也不依赖主游戏文件，与 GROK 路线零冲突。</footer>
+
+<script>
+  // ===== 五元素系统（与 data/element_matrix.json 一致；file:// 下内联，不 fetch）=====
+  const ELEMENTS = {
+    fire:{cn:'火',color:'#ff7a3c'}, water:{cn:'水',color:'#5ab6ff'},
+    earth:{cn:'土',color:'#8c6a40'}, light:{cn:'光',color:'#ffd740'}, wood:{cn:'木',color:'#66d957'},
+  };
+  const CYCLE = { fire:'wood', wood:'earth', earth:'water', water:'light', light:'fire' }; // 强克方向
+  const MUL = { strong:1.6, weak:0.6, same:0.85, neutral:1.0 };
+  const CD  = { fire:1.2, water:3.0, earth:8.0, light:4.0, wood:5.0 };
+  function rel(a,d){
+    if(a===d) return {k:'same',v:MUL.same};
+    if(CYCLE[a]===d) return {k:'strong',v:MUL.strong};
+    if(CYCLE[d]===a) return {k:'weak',v:MUL.weak};
+    return {k:'neutral',v:MUL.neutral};
+  }
+  function counterOf(el){ for(const k in CYCLE){ if(CYCLE[k]===el) return k; } return null; }
+
+  // ===== 关卡波次设计（内联自 data/wave_design.json）=====
+  const WAVE = {
+    enemies: {
+      sprout_bunny:{cn:'芽芽兔',element:'wood',role:'小兵·分裂',hp:30},
+      flame_fox:{cn:'火苗狐',element:'fire',role:'快速·灼烧',hp:36},
+      water_frog:{cn:'水滴蛙',element:'water',role:'远程·水弹',hp:50},
+      star_bird:{cn:'星羽鸟',element:'light',role:'飞行·俯冲',hp:44},
+      stone_turtle:{cn:'石甲龟',element:'earth',role:'坦克·减伤',hp:90},
+      forest_ancient:{cn:'森林古木',element:'wood',role:'BOSS·召唤',hp:200},
+    },
+    levels: [
+      {id:1,name:'林间初醒',theme:'教学·木',focus:['wood'],reward:'宝石 ×20',
+        waves:[{spawns:[{key:'sprout_bunny',count:8}]}]},
+      {id:2,name:'火狐出没',theme:'火',focus:['fire'],reward:'宝石 ×24',
+        waves:[{spawns:[{key:'flame_fox',count:6}]}]},
+      {id:3,name:'蛙鸣浅滩',theme:'水',focus:['water'],reward:'宝石 ×24',
+        waves:[{spawns:[{key:'water_frog',count:6}]}]},
+      {id:4,name:'羽翼窥伺',theme:'光',focus:['light'],reward:'宝石 ×28',
+        waves:[{spawns:[{key:'star_bird',count:4}]},{spawns:[{key:'star_bird',count:4}]}]},
+      {id:5,name:'磐甲压境',theme:'土',focus:['earth'],reward:'宝石 ×30',
+        waves:[{spawns:[{key:'stone_turtle',count:3}]},{spawns:[{key:'stone_turtle',count:3}]}]},
+      {id:6,name:'光火交织',theme:'光+火',focus:['light','fire'],reward:'宝石 ×34',
+        waves:[{spawns:[{key:'star_bird',count:4},{key:'flame_fox',count:4}]}]},
+      {id:7,name:'草木共生',theme:'木+水',focus:['wood','water'],reward:'宝石 ×36',
+        waves:[{spawns:[{key:'sprout_bunny',count:5},{key:'water_frog',count:4}]},{spawns:[{key:'sprout_bunny',count:4}]}]},
+      {id:8,name:'土光封锁',theme:'土+光',focus:['earth','light'],reward:'宝石 ×40',
+        waves:[{spawns:[{key:'stone_turtle',count:3},{key:'star_bird',count:4}]},{spawns:[{key:'stone_turtle',count:2},{key:'star_bird',count:3}]}]},
+      {id:9,name:'五灵齐鸣',theme:'全元素·精英',focus:['fire','water','earth','light','wood'],reward:'宝石 ×50 · 精英宝箱',
+        waves:[{spawns:[{key:'sprout_bunny',count:3},{key:'flame_fox',count:3}]},
+               {spawns:[{key:'water_frog',count:3},{key:'star_bird',count:3}]},
+               {spawns:[{key:'stone_turtle',count:2},{key:'sprout_bunny',count:2}]}]},
+      {id:10,name:'古木苏生',theme:'BOSS',focus:['wood'],reward:'通关宝箱 · 内容包纪念章',
+        waves:[{spawns:[{key:'forest_ancient',count:1},{key:'sprout_bunny',count:4}]},
+               {spawns:[{key:'sprout_bunny',count:3},{key:'flame_fox',count:2}]}]},
+    ]
+  };
+  const HIT_VFX = ['fx_hit_spark.png','fx_slash.png','fx_star.png'];
+  const KILL_VFX = ['fx_explosion.png','fx_coin_burst.png'];
+
+  let curElem='light', heroHp=120, heroMax=120, levelIdx=0, waveIdx=0, running=false, loop=null, alive=0;
+  const cdUntil={}, elemBtns={};
+  const field=document.getElementById('field');
+  const heroHpEl=document.getElementById('heroHp');
+  const lvlName=document.getElementById('lvlName'), lvlTheme=document.getElementById('lvlTheme');
+  const focusChips=document.getElementById('focusChips'), lvlReward=document.getElementById('lvlReward');
+  const waveTxt=document.getElementById('waveTxt'), wvdots=document.getElementById('wvdots');
+  const weakHint=document.getElementById('weakHint');
+  const enemiesOnField=[];
+
+  function audio(src){ const a=new Audio(src); a.volume=0.55; return a; }
+  function playSfx(k){ audio('audio/'+k).play().catch(()=>{}); }
+  function spawnVfx(parent,file){
+    const img=document.createElement('img'); img.className='vfx'; img.src='vfx/'+file;
+    img.onanimationend=()=>img.remove(); parent.appendChild(img);
+  }
+  function floatDmg(parent,txt,crit){
+    const d=document.createElement('div'); d.className='dmg'+(crit?' crit':''); d.textContent=txt;
+    d.onanimationend=()=>d.remove(); parent.appendChild(d);
+  }
+  function floatMove(txt){
+    const d=document.createElement('div'); d.className='floatmove'; d.textContent=txt;
+    d.onanimationend=()=>d.remove(); document.body.appendChild(d);
+  }
+  function banner(txt){
+    const b=document.createElement('div');
+    b.style.cssText='position:fixed;left:50%;top:32%;transform:translateX(-50%);background:rgba(15,47,31,.94);border:2px solid var(--gold);color:var(--gold);padding:15px 30px;border-radius:14px;font-size:22px;font-weight:800;z-index:99';
+    b.textContent=txt; document.body.appendChild(b); setTimeout(()=>b.remove(),2200);
+  }
+
+  function buildElems(){
+    const wrap=document.getElementById('elems'); wrap.innerHTML='';
+    Object.keys(ELEMENTS).forEach(k=>{
+      const b=document.createElement('div');
+      b.className='elem'+(k===curElem?' on':''); b.style.borderColor=ELEMENTS[k].color;
+      b.innerHTML=ELEMENTS[k].cn+'<span class="cd"></span>'; b.title=ELEMENTS[k].cn+'元素 · 攻击冷却 '+CD[k]+'s';
+      b.addEventListener('click',()=>{ curElem=k; document.querySelectorAll('.elem').forEach(x=>x.classList.remove('on')); b.classList.add('on'); });
+      elemBtns[k]=b; wrap.appendChild(b);
+    });
+  }
+  function refreshElem(a){
+    const b=elemBtns[a]; if(!b) return;
+    const remain=(cdUntil[a]||0)-performance.now();
+    if(remain>0){ b.classList.add('cd-active'); b.querySelector('.cd').textContent=(remain/1000).toFixed(1);
+      b._raf=requestAnimationFrame(()=>refreshElem(a)); }
+    else { b.classList.remove('cd-active'); const c=b.querySelector('.cd'); if(c) c.textContent=''; if(b._raf) cancelAnimationFrame(b._raf); }
+  }
+  function flashCD(a){ const b=elemBtns[a]; if(!b) return;
+    b.animate([{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'translateX(0)'}],{duration:160}); }
+
+  function enemyDmg(e){ return Math.max(2, Math.round(e.max/15)) + Math.floor(Math.random()*3); }
+
+  function playerAttack(e){
+    if(e.dead) return;
+    const now=performance.now();
+    if(cdUntil[curElem] && now<cdUntil[curElem]){ flashCD(curElem); return; }
+    const r=rel(curElem, e.element);
+    const crit=Math.random()<0.22;
+    let dmg=(crit?1.8:1)*(10+Math.floor(Math.random()*10))|0;
+    dmg=Math.max(1,Math.round(dmg*r.v));
+    e.hp-=dmg;
+    spawnVfx(e.card, HIT_VFX[Math.floor(Math.random()*HIT_VFX.length)]);
+    const tag=r.k==='strong'?' ×'+r.v.toFixed(2)+' 克!':(r.k==='weak'?' ×'+r.v.toFixed(2):(r.k==='same'?' ×'+r.v.toFixed(2):''));
+    floatDmg(e.card,'-'+dmg+tag, crit||r.k==='strong');
+    playSfx('cp_sfx_hit_'+e.element+'.wav');
+    cdUntil[curElem]=now+CD[curElem]*1000; refreshElem(curElem);
+    const pct=Math.max(0,e.hp/e.max*100); const bar=e.card.querySelector('.hpwrap i');
+    bar.style.width=pct+'%'; if(pct<40) bar.classList.add('low');
+    if(e.hp<=0){
+      e.dead=true; e.card.classList.add('dead'); KILL_VFX.forEach(f=>spawnVfx(e.card,f));
+      playSfx('cp_sfx_kill.wav');
+      if(e.isBoss){ setTimeout(()=>playSfx('cp_sfx_win.wav'),80); }
+      setTimeout(()=>{ alive--; checkWaveClear(); }, 200);
+    }
+  }
+
+  function spawnWave(w){
+    const lv=WAVE.levels[levelIdx]; const wave=lv.waves[w];
+    waveTxt.textContent='波次 '+(w+1)+' / '+lv.waves.length;
+    // dots
+    wvdots.innerHTML='';
+    for(let i=0;i<lv.waves.length;i++){ const s=document.createElement('span'); s.className=i<w?'done':(i===w?'cur':''); wvdots.appendChild(s); }
+    // weakness hint = counter of the most common enemy element in this wave
+    const cnt={};
+    wave.spawns.forEach(s=>{ const el=WAVE.enemies[s.key].element; cnt[el]=(cnt[el]||0)+s.count; });
+    let domEl=null,domN=0; for(const el in cnt){ if(cnt[el]>domN){ domN=cnt[el]; domEl=el; } }
+    const ctr=counterOf(domEl);
+    weakHint.innerHTML = '本波弱点：用 <b style="color:'+(ctr?ELEMENTS[ctr].color:'#fff')+'">'+(ctr?ELEMENTS[ctr].cn:'—')+'</b> 打 <b>'+ELEMENTS[domEl].cn+'</b> 更高效（强克 ×1.6）';
+
+    field.innerHTML=''; enemiesOnField.length=0; alive=0;
+    wave.spawns.forEach(s=>{
+      const def=WAVE.enemies[s.key];
+      for(let i=0;i<s.count;i++){
+        const e={ key:s.key, cn:def.cn, element:def.element, max:def.hp, hp:def.hp, isBoss:(s.key==='forest_ancient'), dead:false, nextAt:performance.now()+2500+Math.random()*1500 };
+        const card=document.createElement('div'); card.className='enemy'+(e.isBoss?' boss':'');
+        card.innerHTML='<img src="sprites_alpha/'+s.key+'.png" alt="'+def.cn+'">'+
+          '<div class="nm">'+def.cn+(e.isBoss?' 👑':'')+'</div>'+
+          '<div class="ebadge"><i style="background:'+ELEMENTS[def.element].color+'"></i>'+ELEMENTS[def.element].cn+'</div>'+
+          '<div class="hpwrap"><i style="width:100%"></i></div>';
+        card.addEventListener('click',()=>playerAttack(e));
+        field.appendChild(card); e.card=card;
+        enemiesOnField.push(e); alive++;
+      }
+    });
+  }
+
+  function checkWaveClear(){
+    if(!running) return;
+    if(alive>0) return;
+    const lv=WAVE.levels[levelIdx];
+    if(waveIdx < lv.waves.length-1){
+      waveIdx++; setTimeout(()=>{ if(running) spawnWave(waveIdx); }, 900);
+    } else {
+      levelComplete();
+    }
+  }
+
+  function levelComplete(){
+    const lv=WAVE.levels[levelIdx];
+    const pts = lv.id*10;
+    score += pts;
+    floatMove('✅ '+lv.name+' 通关 · +'+pts);
+    playSfx('cp_sfx_levelup.wav');
+    setTimeout(()=>{
+      if(!running) return;
+      if(levelIdx < WAVE.levels.length-1){ levelIdx++; waveIdx=0; loadLevel(levelIdx); }
+      else { win(); }
+    }, 1300);
+  }
+
+  function loadLevel(i){
+    const lv=WAVE.levels[i];
+    lvlName.textContent='L'+lv.id+' · '+lv.name;
+    lvlTheme.textContent='主题 '+lv.theme;
+    lvlReward.textContent='奖励 '+lv.reward;
+    focusChips.innerHTML=''; lv.focus.forEach(f=>{ const i=document.createElement('i'); i.style.background=ELEMENTS[f].color; i.title=ELEMENTS[f].cn; focusChips.appendChild(i); });
+    waveIdx=0; spawnWave(0);
+    banner('🌿 第 '+lv.id+' 关 · '+lv.name);
+  }
+
+  function tick(){
+    if(!running) return;
+    const now=performance.now();
+    for(const e of enemiesOnField){
+      if(e.dead) continue;
+      if(now>=e.nextAt){ e.nextAt=now+2800+Math.random()*800; hitHero(enemyDmg(e)); }
+    }
+  }
+  function hitHero(dmg){
+    if(!running) return;
+    heroHp=Math.max(0, heroHp-dmg);
+    heroHpEl.style.width=(heroHp/heroMax*100)+'%';
+    if(heroHp<40) heroHpEl.classList.add('low');
+    if(heroHp<=0) lose();
+  }
+
+  function win(){
+    running=false; if(loop) clearInterval(loop);
+    banner('🏆 十关全清！战役通关'); playSfx('cp_sfx_win.wav');
+    setTimeout(()=>playSfx('cp_sfx_coin.wav'),200);
+  }
+  function lose(){
+    running=false; if(loop) clearInterval(loop);
+    banner('💀 英雄倒下……重试本关'); playSfx('cp_sfx_lose.wav');
+    setTimeout(()=>{ if(levelIdx>=0){ heroHp=heroMax; heroHpEl.style.width='100%'; heroHpEl.classList.remove('low'); running=true; waveIdx=0; loadLevel(levelIdx); if(!loop) loop=setInterval(tick,250); } }, 1400);
+  }
+
+  let score=0;
+  document.getElementById('start').addEventListener('click',()=>{
+    score=0; heroHp=heroMax; heroHpEl.style.width='100%'; heroHpEl.classList.remove('low');
+    levelIdx=0; waveIdx=0; running=true;
+    if(loop) clearInterval(loop); loop=setInterval(tick,250);
+    loadLevel(0);
+  });
+  let bgmOn=false, bgmAudio=null;
+  document.getElementById('bgm').addEventListener('click',(ev)=>{
+    const btn=ev.currentTarget;
+    if(!bgmOn){ bgmAudio=new Audio('audio/cp_bgm_battle.wav'); bgmAudio.loop=true; bgmAudio.volume=0.5; bgmAudio.play().catch(()=>{}); btn.classList.add('on'); btn.textContent='🎵 停止 BGM'; bgmOn=true; }
+    else { bgmAudio.pause(); btn.classList.remove('on'); btn.textContent='🎵 战斗 BGM'; bgmOn=false; }
+  });
+
+  buildElems();
+</script>
+</body>
+</html>
