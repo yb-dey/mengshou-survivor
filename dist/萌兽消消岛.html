@@ -23858,24 +23858,19 @@ function paintMesaButte(c2, x, y, bw, bh) {
 }
 function paintStarRidge(c2, w, y0, amp) {
   // 【v1.177】远脊左右同高, 横铺接得上。顶面吃左上光, 正面落暗。
-  var x, seg, topY, faceY, g, flat;
-  faceY = y0 + amp * 0.72;
+  // 【v1.178】改圆滑丘脊: 缺 PNG 平铺时读作夜山轮廓, 不再一段段硬梯形。
+  var g, faceY, midY, topY;
+  faceY = y0 + amp * 0.78;
+  midY = y0 + amp * 0.42;
+  topY = y0 + amp * 0.18;
   c2.beginPath();
-  c2.moveTo(0, y0 + amp * 0.62);
-  x = 0;
-  while (x < w - 1) {
-    seg = Math.min(w - x, w * 0.16);
-    if (x + seg >= w - 2) seg = w - x;
-    flat = (x < 1) || (x + seg >= w - 1);
-    topY = flat ? (y0 + amp * 0.62) : (y0 + amp * (0.16 + ((Math.floor(x / (w * 0.16)) % 3) * 0.12)));
-    c2.lineTo(x, faceY);
-    c2.lineTo(x + seg * 0.12, topY);
-    c2.lineTo(x + seg * 0.88, topY + amp * 0.05);
-    c2.lineTo(Math.min(w, x + seg), faceY);
-    x += seg;
-  }
-  c2.lineTo(w, y0 + amp * 1.15);
-  c2.lineTo(0, y0 + amp * 1.15);
+  c2.moveTo(0, faceY);
+  c2.quadraticCurveTo(w * 0.12, topY, w * 0.26, midY);
+  c2.quadraticCurveTo(w * 0.40, y0 + amp * 0.10, w * 0.54, midY * 0.92 + topY * 0.08);
+  c2.quadraticCurveTo(w * 0.70, topY * 0.85, w * 0.84, midY);
+  c2.quadraticCurveTo(w * 0.94, faceY * 0.9, w, faceY);
+  c2.lineTo(w, y0 + amp * 1.2);
+  c2.lineTo(0, y0 + amp * 1.2);
   c2.closePath();
   g = c2.createLinearGradient(0, y0, w * 0.62, y0 + amp);
   g.addColorStop(0, "#9eb0e0");
@@ -23883,14 +23878,14 @@ function paintStarRidge(c2, w, y0, amp) {
   g.addColorStop(1, "#121a34");
   c2.fillStyle = g;
   c2.fill();
-  c2.strokeStyle = "rgba(6, 8, 18, 0.95)";
-  c2.lineWidth = Math.max(5.5, amp * 0.09);
+  c2.strokeStyle = "rgba(6, 8, 18, 0.92)";
+  c2.lineWidth = Math.max(5.0, amp * 0.08);
   c2.stroke();
-  c2.strokeStyle = "rgba(220, 230, 255, 0.35)";
+  c2.strokeStyle = "rgba(220, 230, 255, 0.38)";
   c2.lineWidth = Math.max(2, amp * 0.035);
   c2.beginPath();
-  c2.moveTo(0, y0 + amp * 0.42);
-  c2.lineTo(w * 0.55, y0 + amp * 0.28);
+  c2.moveTo(0, y0 + amp * 0.40);
+  c2.quadraticCurveTo(w * 0.35, y0 + amp * 0.22, w * 0.62, y0 + amp * 0.30);
   c2.stroke();
   c2.lineWidth = 1;
 }
