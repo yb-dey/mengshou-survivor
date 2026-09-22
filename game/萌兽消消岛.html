@@ -8139,6 +8139,13 @@ function drawBeatSoonBanner(ctx) {
 }
 
 // 【v1.5】曲目解析: 主题绑定 或 玩家在设置里锁一首。胜负 jingle / BOSS / 怪潮仍走功能轨。
+// 【v1.196】BATTLE_A 改为**读章节 bgmId**：该字段自 R3 起就声明在 DATA_CHAPTER（注释明写
+//   "战斗曲轨 id"），但此前全项目**零读取点**（对照：同族 bgmRate 有 7 处读取）——
+//   `bgmTrackByScene.BATTLE_A` 硬编码 "march"，三个切歌点只传 bgmRate。
+//   现改为 `ch.bgmId || "march"`：**当前 6 章值全为 "march" ⇒ 行为逐字节不变**，
+//   只是把"字段写了没人读"的豁口封上；将来换某章曲目只需改那一个数据值。
+//   ⚠ 若将来给某章填非 march 的曲：新曲**必须**登记进 ci/bgm-melody.py 的 TRACKS
+//     （旋律/垫层/低音音高集合），否则该曲的层掩蔽判据会被**静默跳过**。
 var BGM_CHOICE_ORDER = ["theme", "harbor", "meadow", "city", "dune", "frost", "march"];
 function resolveBgmScene(scene) {
   if (scene === "WIN") return "win";
@@ -8148,6 +8155,11 @@ function resolveBgmScene(scene) {
   var choice = (saveData && saveData.bgmChoice) ? saveData.bgmChoice : "theme";
   if (choice !== "theme" && DATA_BGM[choice]) return choice;
   if (scene === "HOME") return worldThemeOf().homeTrack;
+  if (scene === "BATTLE_A") {
+    var _bch = (typeof chapterOf === "function") ? chapterOf() : null;
+    var _bid = (_bch && _bch.bgmId) || "";
+    if (_bid && DATA_BGM[_bid]) return _bid;
+  }
   return "march";
 }
 function setBgmChoice(id) {
