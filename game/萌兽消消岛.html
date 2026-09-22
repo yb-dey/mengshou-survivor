@@ -3634,7 +3634,7 @@ function armEnterCine(kind, extra) {
         kicker: rule ? "加菜局 · 可跳过" : ("第" + ((GAME.chapterIdx | 0) + 1) + "章"),
         title: rule ? rule.name : (ch ? ch.name : "出击"),
         land: chapterLandLine(ch),
-        knife: rule ? "" : chapterKnifeLine(ch),
+        knife: rule ? (rule.knife || "") : chapterKnifeLine(ch),
         theme: mapThemeLine(ch),
         goal: chapterGoalLine(ch),
         giftHead: rule ? "加菜回礼" : "本章回礼",
@@ -11304,18 +11304,21 @@ var DATA_DAILY = {
   d_tide: {
     id: "d_tide", name: "潮汐加压", desc: "潮汐提前加压",
     rule: "加菜约5分钟：潮汐提前加压，打完回大厅。",
+    knife: "潮水提前不是催你，是它也怕来不及。",
     chapterIdx: 1, durMin: 5, giftCoins: 42, color: "#e07a2a",
     hordeShift: -24, hordeCountMul: 1.22, hordeDensMul: 1.15
   },
   d_elite: {
     id: "d_elite", name: "精英更密", desc: "精英更密",
     rule: "加菜约6分钟：精英更密，清掉换金币回礼。",
+    knife: "都挤过来不是趁火，是这里还亮着。",
     chapterIdx: 2, durMin: 6, giftCoins: 48, color: "#8a5ac2",
     eliteEveryMul: 0.52
   },
   d_ban: {
     id: "d_ban", name: "禁珠开局补", desc: "少掉经验珠，开局补给补偿",
     rule: "加菜约5分钟：少掉经验珠，开局补给补偿。",
+    knife: "少掉的不是扣下，是先塞进你手里。",
     chapterIdx: 1, durMin: 5, giftCoins: 40, color: "#3aa0c8",
     banGems: true, startBombs: 2, startFields: ["magnet", "drumstick"],
     playerHpMul: 1.12, fieldBias: "magnet"
