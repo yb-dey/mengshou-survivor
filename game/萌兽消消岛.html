@@ -26368,38 +26368,38 @@ function drawHomeBase(ctx) {
   ctx.restore();
   drawHallAmbi(ctx);
   ctx.lineWidth = 1;
-  // 【v1.175】落地台体积: 近缘暗唇下移一圈, 受光盘盖在上面, 只露出一条暗新月。
-  //   光从左上(与单位亮面同一侧), 墨线勾外轮廓。不改英雄贴图, 不加白环。
-  ctx.fillStyle = "rgba(16,20,14,0.34)";
+  // 【v1.175】落地台体积。角色卡从 y=344 往下盖住台面, 所以暗唇必须落在卡沿之上才看得见。
+  //   近缘一整圈深苔当台身, 左上受光盘只盖上半, 卡沿前留下一截深色正面。墨线勾外轮廓。不改英雄贴图。
+  ctx.fillStyle = "rgba(16,20,14,0.28)";
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(378, 392, 150, 12, 0, 0, CONFIG.TWO_PI);
-  else ctx.arc(378, 392, 76, 0, CONFIG.TWO_PI);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(372, 338, 168, 14, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(372, 338, 84, 0, CONFIG.TWO_PI);
   ctx.fill();
-  ctx.fillStyle = "#4e6240";
+  ctx.fillStyle = "#3a4e30";
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(364, 328, 198, 72, 0, 0, CONFIG.TWO_PI);
-  else ctx.arc(364, 328, 120, 0, CONFIG.TWO_PI);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(362, 312, 204, 56, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(362, 312, 124, 0, CONFIG.TWO_PI);
   ctx.fill();
   ctx.strokeStyle = "#1c1810";
-  ctx.lineWidth = 2.8;
+  ctx.lineWidth = 3;
   ctx.stroke();
-  var stageG = ctx.createRadialGradient(292, 268, 12, 372, 330, 210);
-  stageG.addColorStop(0, "#f3f6e4");
-  stageG.addColorStop(0.38, plat);
-  stageG.addColorStop(1, "#6d8454");
+  var stageG = ctx.createRadialGradient(300, 250, 10, 368, 300, 180);
+  stageG.addColorStop(0, "#f4f8e4");
+  stageG.addColorStop(0.42, plat);
+  stageG.addColorStop(1, "#7d9458");
   ctx.fillStyle = stageG;
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 306, 186, 60, 0, 0, CONFIG.TWO_PI);
-  else ctx.arc(360, 306, 110, 0, CONFIG.TWO_PI);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(354, 272, 160, 32, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(354, 272, 96, 0, CONFIG.TWO_PI);
   ctx.fill();
   ctx.strokeStyle = "#1c1810";
   ctx.lineWidth = 2.2;
   ctx.stroke();
-  ctx.strokeStyle = "rgba(244,248,228,0.70)";
-  ctx.lineWidth = 1.4;
+  ctx.strokeStyle = "rgba(244,248,228,0.75)";
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(348, 298, 148, 44, 0, Math.PI * 1.15, Math.PI * 1.58);
-  else ctx.arc(348, 298, 86, Math.PI * 1.15, Math.PI * 1.58);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(342, 266, 120, 20, 0, Math.PI * 1.15, Math.PI * 1.55);
+  else ctx.arc(342, 266, 70, Math.PI * 1.15, Math.PI * 1.55);
   ctx.stroke();
   ctx.lineWidth = 1;
   ctx.fillStyle = "#5a3a10";
@@ -30559,6 +30559,7 @@ function vaultPathSteps(tab, deal, rec) {
     else if (deal && deal.spendLine && deal.spendLine !== "未解锁") spend = deal.spendLine;
     else spend = price;
     gain = (deal && deal.gainLine) ? deal.gainLine : (rec.gainText || "下局开局带");
+    if (gain.indexOf("下局") === 0) gain = gain.slice(2);
     return [
       { k: "条件", v: rec.condText, hot: !(deal && deal.locked) },
       { k: "花费", v: spend, hot: !!(deal && deal.ok && !deal.maxed) },
