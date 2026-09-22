@@ -21,6 +21,9 @@ meta = [
     ('fx_heal_burst','治疗爆发', '群体治疗 / 回血爆发', 'pulse'),
     ('fx_dash_trail','冲刺残影', '位移 / 闪避',         'swing'),
     ('fx_telegraph', '预警圈',   'Boss AoE / 地面警示', 'breathe'),
+    ('fx_shockwave', '冲击波环', 'AoE 释放 / 范围冲击',  'pulse'),
+    ('fx_portal',    '召唤门',   '召唤 / 传送',         'spin'),
+    ('fx_coin_burst','金币迸发', '金币 / 得分拾取',     'pop'),
 ]
 
 def b64(name):

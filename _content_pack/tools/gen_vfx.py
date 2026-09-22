@@ -319,6 +319,54 @@ def fx_telegraph(path, size=128):
             c.blend(cx+ox, y, 1.0, 0.85, 0.40, 0.9)
     save(c, path)
 
+def fx_shockwave(path, size=128):
+    """冲击波环 / AoE 释放：青白同心环 + 放射脉冲（区别于 fx_explosion 的火核，作通用冲击标记）。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.ring(cx, cy, size*0.34, size*0.46, (0.60, 0.95, 1.0), 0.8)   # 主冲击环
+    c.ring(cx, cy, size*0.20, size*0.27, (0.80, 1.0, 1.0), 0.55)   # 内环
+    rng = random.Random(31)
+    for _ in range(16):                                              # 径向脉冲
+        ang = rng.uniform(0, 2*math.pi)
+        r0 = size*0.26; r1 = size*(0.40 + rng.random()*0.10)
+        c.line(cx+math.cos(ang)*r0, cy+math.sin(ang)*r0,
+               cx+math.cos(ang)*r1, cy+math.sin(ang)*r1, (0.70, 0.95, 1.0), 0.6, width=size*0.012)
+    c.glow(cx, cy, size*0.10, (0.85, 1.0, 1.0), 0.35, soft=1.8)
+    save(c, path)
+
+def fx_portal(path, size=128):
+    """召唤门 / 传送：紫罗兰旋涡 + 内吸亮核（召唤/传送事件，与 summon 音效配套）。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.44, (0.65, 0.35, 1.0), 0.22, soft=1.2)    # 紫晕
+    c.ring(cx, cy, size*0.30, size*0.44, (0.78, 0.45, 1.0), 0.7)    # 外环
+    rng = random.Random(27)
+    for k in range(3):                                               # 三段螺旋弧
+        base = k*2*math.pi/3
+        for s in range(28):
+            t = s/28.0
+            ang = base + t*math.pi*1.6
+            r = size*(0.10 + t*0.30)
+            x = cx + math.cos(ang)*r; y = cy + math.sin(ang)*r
+            c.glow(x, y, size*0.03, (0.85, 0.55, 1.0), 0.7*(1-t)+0.2, soft=1.7)
+    c.glow(cx, cy, size*0.09, (0.95, 0.80, 1.0), 0.9, soft=2.0)     # 内吸亮核
+    save(c, path)
+
+def fx_coin_burst(path, size=96):
+    """金币迸发 / 得分：金色币粒四散 + 暖辉（金币/分数拾取，区别于 fx_pickup 的宝石菱形）。"""
+    c = Canvas(size, size)
+    cx = cy = size/2
+    c.glow(cx, cy, size*0.30, (1.0, 0.82, 0.25), 0.45, soft=1.6)
+    rng = random.Random(41)
+    for _ in range(10):                                              # 四散金币
+        ang = rng.uniform(0, 2*math.pi)
+        r = size*(0.18 + rng.random()*0.26)
+        x = cx + math.cos(ang)*r; y = cy + math.sin(ang)*r
+        c.glow(x, y, size*0.07, (1.0, 0.85, 0.35), 0.85, soft=1.8)
+        c.ring(x, y, size*0.045, size*0.065, (1.0, 0.95, 0.55), 0.7)
+    c.glow(cx, cy, size*0.07, (1.0, 1.0, 0.85), 1.0, soft=2.2)
+    save(c, path)
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/vfx'
     import os
@@ -338,8 +386,11 @@ if __name__ == '__main__':
     fx_heal_burst(f'{out_dir}/fx_heal_burst.png')
     fx_dash_trail(f'{out_dir}/fx_dash_trail.png')
     fx_telegraph(f'{out_dir}/fx_telegraph.png')
+    fx_shockwave(f'{out_dir}/fx_shockwave.png')
+    fx_portal(f'{out_dir}/fx_portal.png')
+    fx_coin_burst(f'{out_dir}/fx_coin_burst.png')
     for f in ['fx_hit_spark','fx_fireball','fx_shield','fx_heal','fx_slash','fx_star','fx_frost',
               'fx_levelup','fx_pickup','fx_poison','fx_explosion','fx_lightning','fx_heal_burst',
-              'fx_dash_trail','fx_telegraph']:
+              'fx_dash_trail','fx_telegraph','fx_shockwave','fx_portal','fx_coin_burst']:
         print('PNG OK:', f)
 
