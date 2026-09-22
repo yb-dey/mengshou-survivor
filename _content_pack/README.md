@@ -91,6 +91,7 @@
 ```
 _content_pack/
 ├── README.md              # 本文件
+├── index.html             # 内容包总览·入口页（导航 4 大展示页 + 资产清单，零依赖生成）
 ├── showcase.html          # 自包含展示页（精灵已内联，8 张）
 ├── audio_demo.html        # 音频试听页（引用 audio/*.wav）
 ├── codex.html             # 图鉴页（8 角色 背景/属性/对策 + 元素克制环）
@@ -119,6 +120,7 @@ _content_pack/
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
+    ├── build_index.py     # 生成 index.html（扫描真实目录，零依赖）
     ├── synth_audio.py     # 音频合成（3 首 BGM：森林/战斗/BOSS + 16 个游戏事件音效）
     ├── gen_vfx.py         # VFX 特效生成（纯标准库）
     └── build_vfx_demo.py  # 构建 VFX 内联展示页
@@ -166,5 +168,6 @@ _content_pack/
 5. ~~**角色图鉴 Codex**~~ ✅ 已交付 `codex.html`（8 角色背景/属性/对策 + 元素克制环）。
 6. **更多敌种/英雄（待云端出图恢复）**：原计划经云端 Miora 文生图扩种（雷羽鹰/霜甲熊/焰心术士等以补齐元素），但本环境 `miora_text_to_image` 暂不可用；将在云端图像生成恢复后继续，沿用同一 chibi 语言 + 抠图流程。
 7. **音频接线桥接（待主文件释放）**：当 `game/萌兽消消岛.html` 可编辑时，将 `cp_*` 三条原型音轨以「独立 key」登记进 `sfxFiles/DATA_SFX`（不影响现有 29 音源集），实现零冲突接入。
+8. ~~**内容包总览入口页**~~ ✅ 已交付 `index.html`（扫描真实目录生成，导航 showcase/vfx_demo/audio_demo/codex 四页 + 资产清单 8 精灵/18 VFX/19 音频，零依赖、不卡机）。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。
