@@ -25,7 +25,8 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.148 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.176 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.176 美术】大厅地面草簇+路唇(左上受光)、六部位墨线剪影、三角色苔纸选边、落地台暗唇收成台缘、强化/图鉴苔盘、局内拾取墨缘。1.175 获取路径保留。数值/掉落/进化/10 分钟轴不动。
 // 【2026-09-22 定名】玩家可见主标题从「萌兽幸存者」改为「萌兽不好惹」
 //   （原"XX幸存者"与一堆同类型撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子）。
 //   历史别名「萌兽消消岛」（文件名沿用此名，仅内部标识；平台/软著只认登记名）。
@@ -604,7 +605,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.175",                   // 【v1.175】备案系统读面: 装备入袋/现在/下一步(跟选中件的章、品、合成或升品走) / 图鉴跟选中条目的解锁·出处·配方 / 仓库条件→花费→下局 / 暂停与结算武器入局链。大厅落地台近缘暗唇+左上受光。不改掉率/价格/锻造/进化/10 分钟轴
+  version: "1.176",                   // 【v1.176】可见美术抬档: 大厅地面草簇+路唇纵深(左上受光)、六部位符形更可指名、三角色卡苔纸+#2f5a3a 选边、落地台暗唇收成台缘非黑洞、强化/图鉴苔盘再净一档、局内拾取剪影可读。1.175 获取路径系统保留。不改掉率/价格/锻造/进化/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -1569,8 +1570,8 @@ var CONFIG = {
     xpBar: "#f2b632",
     xpBarBg: "rgba(0,0,0,0.22)",
     modalMask: "rgba(0,0,0,0.5)",
-    modalPanel: "#eef4dc",
-    modalBorder: "#2a3a18",
+    modalPanel: "#e8f0d4",            // 【v1.176】苔盘略深一档, 强化/图鉴备案不洗白
+    modalBorder: "#2f5a3a",
     cardBg: "#e8f0d4",
     cardBorder: "#8aa85a",
     cardTitle: "#3a5a20",
@@ -17104,74 +17105,126 @@ function paintCuteSil(c2, kind, fill) {
     c2.beginPath(); c2.arc(x, y, r, 0, CONFIG.TWO_PI); c2.fill();
     c2.fillStyle = fill;
   }
-  if (kind === "cone") {
-    // 【v1.143】松果弩侧影: 左弓臂 + 横托 + 松果身, 不是领结也不是三角棍
-    c2.lineWidth = 3.4;
+  if (kind === "xbow") {
+    // 【v1.176】大厅武器井专用: 横托+弓臂+松果头, 小尺寸先读「弩」而不是棍/棒
+    c2.lineWidth = 3.6;
     c2.beginPath();
-    c2.moveTo(20, 6);
-    c2.quadraticCurveTo(2, 32, 20, 58);
-    c2.lineTo(26, 52);
-    c2.quadraticCurveTo(12, 32, 26, 12);
+    c2.moveTo(8, 18);
+    c2.quadraticCurveTo(4, 32, 8, 46);
+    c2.lineTo(16, 42);
+    c2.quadraticCurveTo(10, 32, 16, 22);
     c2.closePath();
     fs();
     c2.beginPath();
-    c2.moveTo(22, 10);
-    c2.lineTo(22, 54);
-    c2.stroke();
-    c2.beginPath();
-    c2.moveTo(20, 28);
-    c2.lineTo(56, 26);
-    c2.quadraticCurveTo(60, 32, 56, 38);
-    c2.lineTo(20, 36);
+    c2.moveTo(48, 18);
+    c2.quadraticCurveTo(60, 32, 48, 46);
+    c2.lineTo(40, 42);
+    c2.quadraticCurveTo(52, 32, 40, 22);
     c2.closePath();
     fs();
     c2.beginPath();
-    c2.moveTo(40, 12);
-    c2.bezierCurveTo(28, 16, 26, 30, 30, 42);
-    c2.bezierCurveTo(34, 52, 46, 52, 50, 42);
-    c2.bezierCurveTo(54, 30, 52, 16, 40, 12);
+    c2.moveTo(12, 28);
+    c2.lineTo(52, 28);
+    c2.lineTo(52, 36);
+    c2.lineTo(12, 36);
+    c2.closePath();
+    fs();
+    c2.beginPath();
+    c2.moveTo(28, 22);
+    c2.lineTo(28, 52);
+    c2.lineTo(36, 52);
+    c2.lineTo(36, 40);
+    c2.lineTo(44, 40);
+    c2.lineTo(44, 32);
+    c2.lineTo(36, 32);
+    c2.lineTo(36, 22);
+    c2.closePath();
+    fs();
+    c2.beginPath();
+    c2.moveTo(32, 8);
+    c2.bezierCurveTo(24, 10, 22, 20, 26, 28);
+    c2.bezierCurveTo(30, 34, 38, 34, 42, 28);
+    c2.bezierCurveTo(46, 20, 42, 10, 32, 8);
     c2.closePath();
     fs();
     c2.lineWidth = 2.4;
     c2.beginPath();
-    c2.moveTo(32, 22); c2.quadraticCurveTo(40, 26, 48, 22);
-    c2.moveTo(31, 32); c2.quadraticCurveTo(40, 36, 49, 32);
-    c2.moveTo(33, 42); c2.quadraticCurveTo(40, 46, 47, 42);
+    c2.moveTo(26, 14); c2.quadraticCurveTo(32, 17, 38, 14);
+    c2.moveTo(25, 20); c2.quadraticCurveTo(32, 23, 39, 20);
     c2.stroke();
-    hi(34, 20, 3);
-    c2.lineWidth = 3.4;
+    hi(28, 14, 2.8);
+    c2.lineWidth = 3.6;
+    c2.strokeStyle = ink;
+  } else if (kind === "cone") {
+    // 【v1.143】松果弩侧影: 左弓臂 + 横托 + 松果身, 不是领结也不是三角棍
+    // 【v1.176】弓臂更满、松果鳞纹更清楚, 小井里先读「弩」
+    c2.lineWidth = 3.6;
+    c2.beginPath();
+    c2.moveTo(18, 4);
+    c2.quadraticCurveTo(0, 32, 18, 60);
+    c2.lineTo(26, 54);
+    c2.quadraticCurveTo(10, 32, 26, 10);
+    c2.closePath();
+    fs();
+    c2.beginPath();
+    c2.moveTo(22, 8);
+    c2.lineTo(22, 56);
+    c2.stroke();
+    c2.beginPath();
+    c2.moveTo(20, 26);
+    c2.lineTo(58, 24);
+    c2.quadraticCurveTo(62, 32, 58, 40);
+    c2.lineTo(20, 38);
+    c2.closePath();
+    fs();
+    c2.beginPath();
+    c2.moveTo(40, 10);
+    c2.bezierCurveTo(28, 14, 24, 28, 28, 44);
+    c2.bezierCurveTo(32, 54, 48, 54, 52, 42);
+    c2.bezierCurveTo(56, 28, 52, 14, 40, 10);
+    c2.closePath();
+    fs();
+    c2.lineWidth = 2.6;
+    c2.beginPath();
+    c2.moveTo(30, 20); c2.quadraticCurveTo(40, 24, 50, 20);
+    c2.moveTo(29, 30); c2.quadraticCurveTo(40, 34, 51, 30);
+    c2.moveTo(31, 40); c2.quadraticCurveTo(40, 44, 49, 40);
+    c2.stroke();
+    hi(34, 18, 3.2);
+    c2.lineWidth = 3.6;
     c2.strokeStyle = ink;
   } else if (kind === "leaf3") {
     // 【v1.143】叶织甲: 三片宽鳞从上往下叠, 读成胸甲不是十字/三叶草
-    c2.lineWidth = 3.4;
+    // 【v1.176】肩线更宽、鳞层更分明, 小井里先读「甲」
+    c2.lineWidth = 3.6;
     c2.beginPath();
-    c2.moveTo(32, 5);
-    c2.bezierCurveTo(20, 8, 16, 16, 20, 22);
-    c2.lineTo(44, 22);
-    c2.bezierCurveTo(48, 16, 44, 8, 32, 5);
+    c2.moveTo(32, 3);
+    c2.bezierCurveTo(18, 6, 12, 14, 16, 22);
+    c2.lineTo(48, 22);
+    c2.bezierCurveTo(52, 14, 46, 6, 32, 3);
     c2.closePath();
     fs();
     c2.beginPath();
-    c2.moveTo(12, 20);
-    c2.bezierCurveTo(6, 26, 8, 36, 16, 40);
-    c2.lineTo(48, 40);
-    c2.bezierCurveTo(56, 36, 58, 26, 52, 20);
+    c2.moveTo(10, 18);
+    c2.bezierCurveTo(2, 26, 4, 38, 14, 42);
+    c2.lineTo(50, 42);
+    c2.bezierCurveTo(60, 38, 62, 26, 54, 18);
     c2.closePath();
     fs();
     c2.beginPath();
-    c2.moveTo(8, 38);
-    c2.bezierCurveTo(4, 46, 10, 56, 32, 60);
-    c2.bezierCurveTo(54, 56, 60, 46, 56, 38);
+    c2.moveTo(6, 38);
+    c2.bezierCurveTo(2, 48, 10, 58, 32, 62);
+    c2.bezierCurveTo(54, 58, 62, 48, 58, 38);
     c2.closePath();
     fs();
-    c2.lineWidth = 2.4;
+    c2.lineWidth = 2.6;
     c2.beginPath();
-    c2.moveTo(32, 8); c2.lineTo(32, 20);
-    c2.moveTo(32, 24); c2.lineTo(32, 38);
-    c2.moveTo(32, 42); c2.lineTo(32, 56);
+    c2.moveTo(32, 6); c2.lineTo(32, 20);
+    c2.moveTo(32, 24); c2.lineTo(32, 40);
+    c2.moveTo(32, 44); c2.lineTo(32, 58);
     c2.stroke();
-    hi(22, 12, 3);
-    c2.lineWidth = 3.4;
+    hi(20, 12, 3.2);
+    c2.lineWidth = 3.6;
     c2.strokeStyle = ink;
   } else if (kind === "leaf4") {
   } else if (kind === "leaf4") {
@@ -17261,22 +17314,23 @@ function paintCuteSil(c2, kind, fill) {
     c2.stroke();
   } else if (kind === "dew") {
     // 【v1.143】露珠坠: 圆滴+吊环, 一点高光
-    c2.lineWidth = 3.4;
+    // 【v1.176】泪滴形更尖、吊环更清楚, 小井里先读「坠」
+    c2.lineWidth = 3.6;
     c2.beginPath();
-    c2.arc(32, 12, 5.4, 0, CONFIG.TWO_PI);
+    c2.arc(32, 10, 6, 0, CONFIG.TWO_PI);
     c2.stroke();
     c2.beginPath();
-    c2.arc(32, 38, 16.5, 0, CONFIG.TWO_PI);
-    fs();
-    c2.beginPath();
-    c2.moveTo(26, 24);
-    c2.quadraticCurveTo(32, 15, 38, 24);
-    c2.lineTo(36, 26);
-    c2.quadraticCurveTo(32, 20, 28, 26);
+    c2.moveTo(32, 16);
+    c2.bezierCurveTo(18, 22, 14, 38, 32, 56);
+    c2.bezierCurveTo(50, 38, 46, 22, 32, 16);
     c2.closePath();
     fs();
-    hi(25, 32, 4.4);
-    c2.lineWidth = 3.4;
+    c2.beginPath();
+    c2.moveTo(26, 18);
+    c2.quadraticCurveTo(32, 12, 38, 18);
+    c2.stroke();
+    hi(24, 30, 4.6);
+    c2.lineWidth = 3.6;
     c2.strokeStyle = ink;
   } else if (kind === "tide") {
   } else if (kind === "tide") {
@@ -17364,35 +17418,42 @@ function paintCuteSil(c2, kind, fill) {
     hi(32, 22, 5);
   } else if (kind === "twig") {
     // 【v1.143】藤蔓带: 腰带环+结, 不是细树枝
-    c2.lineWidth = 7.2;
+    // 【v1.176】环更厚、叶结更点名, 小井里先读「带」
+    c2.lineWidth = 8.4;
     c2.strokeStyle = fill;
     c2.beginPath();
-    if (typeof c2.ellipse === "function") c2.ellipse(32, 28, 17, 14, 0, 0, CONFIG.TWO_PI);
-    else c2.arc(32, 28, 15, 0, CONFIG.TWO_PI);
+    if (typeof c2.ellipse === "function") c2.ellipse(32, 26, 18, 15, 0, 0, CONFIG.TWO_PI);
+    else c2.arc(32, 26, 16, 0, CONFIG.TWO_PI);
     c2.stroke();
     c2.strokeStyle = ink;
-    c2.lineWidth = 3.4;
+    c2.lineWidth = 3.6;
     c2.beginPath();
-    if (typeof c2.ellipse === "function") c2.ellipse(32, 28, 20.6, 17.6, 0, 0, CONFIG.TWO_PI);
-    else c2.arc(32, 28, 19, 0, CONFIG.TWO_PI);
+    if (typeof c2.ellipse === "function") c2.ellipse(32, 26, 22, 19, 0, 0, CONFIG.TWO_PI);
+    else c2.arc(32, 26, 20, 0, CONFIG.TWO_PI);
     c2.stroke();
     c2.beginPath();
-    if (typeof c2.ellipse === "function") c2.ellipse(32, 28, 13.2, 10.4, 0, 0, CONFIG.TWO_PI);
-    else c2.arc(32, 28, 11, 0, CONFIG.TWO_PI);
+    if (typeof c2.ellipse === "function") c2.ellipse(32, 26, 12.4, 9.6, 0, 0, CONFIG.TWO_PI);
+    else c2.arc(32, 26, 10, 0, CONFIG.TWO_PI);
     c2.stroke();
     c2.fillStyle = fill;
     c2.beginPath();
-    if (typeof c2.ellipse === "function") c2.ellipse(32, 46, 8.5, 7, 0, 0, CONFIG.TWO_PI);
-    else c2.arc(32, 46, 7, 0, CONFIG.TWO_PI);
+    if (typeof c2.ellipse === "function") c2.ellipse(32, 48, 10, 8, 0, 0, CONFIG.TWO_PI);
+    else c2.arc(32, 48, 8, 0, CONFIG.TWO_PI);
     fs();
     c2.beginPath();
-    c2.moveTo(26, 50);
-    c2.quadraticCurveTo(20, 58, 16, 56);
-    c2.moveTo(38, 50);
-    c2.quadraticCurveTo(44, 58, 48, 56);
+    c2.moveTo(24, 50);
+    c2.quadraticCurveTo(16, 60, 12, 56);
+    c2.moveTo(40, 50);
+    c2.quadraticCurveTo(48, 60, 52, 56);
     c2.stroke();
-    hi(22, 20, 3);
-    c2.lineWidth = 3.4;
+    c2.beginPath();
+    c2.moveTo(32, 42);
+    c2.lineTo(28, 58);
+    c2.moveTo(32, 42);
+    c2.lineTo(36, 58);
+    c2.stroke();
+    hi(22, 18, 3.2);
+    c2.lineWidth = 3.6;
     c2.strokeStyle = ink;
     c2.fillStyle = fill;
   } else if (kind === "shell") {
@@ -17408,62 +17469,64 @@ function paintCuteSil(c2, kind, fill) {
     hi(30, 28, 4);
   } else if (kind === "paw") {
     // 【v1.143】爪套侧影: 腕套+掌+三指尖爪, 不是肉垫脚印
-    c2.lineWidth = 3.4;
+    // 【v1.176】腕套更厚、三爪更尖, 小井里先读「爪套」
+    c2.lineWidth = 3.6;
     c2.beginPath();
-    c2.moveTo(8, 38);
-    c2.lineTo(6, 58);
-    c2.lineTo(28, 60);
-    c2.lineTo(32, 40);
+    c2.moveTo(6, 36);
+    c2.lineTo(4, 60);
+    c2.lineTo(30, 62);
+    c2.lineTo(34, 38);
     c2.closePath();
     fs();
     c2.beginPath();
-    c2.moveTo(10, 38);
-    c2.bezierCurveTo(6, 22, 18, 14, 32, 16);
-    c2.bezierCurveTo(48, 18, 58, 30, 54, 44);
-    c2.quadraticCurveTo(36, 50, 10, 38);
+    c2.moveTo(8, 36);
+    c2.bezierCurveTo(4, 18, 16, 10, 32, 12);
+    c2.bezierCurveTo(50, 14, 60, 28, 56, 46);
+    c2.quadraticCurveTo(34, 52, 8, 36);
     c2.closePath();
     fs();
     c2.beginPath();
-    c2.moveTo(20, 16); c2.lineTo(14, 3); c2.lineTo(26, 12); c2.closePath();
-    c2.moveTo(34, 14); c2.lineTo(36, 1); c2.lineTo(44, 12); c2.closePath();
-    c2.moveTo(48, 18); c2.lineTo(58, 6); c2.lineTo(56, 20); c2.closePath();
+    c2.moveTo(18, 14); c2.lineTo(10, 0); c2.lineTo(26, 10); c2.closePath();
+    c2.moveTo(34, 12); c2.lineTo(36, -2); c2.lineTo(46, 10); c2.closePath();
+    c2.moveTo(50, 16); c2.lineTo(62, 2); c2.lineTo(58, 18); c2.closePath();
     fs();
-    hi(22, 28, 3.2);
-    c2.lineWidth = 3.4;
+    hi(22, 28, 3.4);
+    c2.lineWidth = 3.6;
     c2.strokeStyle = ink;
     c2.fillStyle = fill;
   } else if (kind === "boot") {
     // 【v1.143】软步靴: 侧影筒+脚+厚底
-    c2.lineWidth = 3.4;
+    // 【v1.176】筒口更方、厚底更点名, 小井里先读「靴」
+    c2.lineWidth = 3.6;
     c2.beginPath();
-    c2.moveTo(18, 7);
-    c2.lineTo(38, 7);
-    c2.quadraticCurveTo(43, 10, 40, 28);
-    c2.lineTo(20, 30);
-    c2.quadraticCurveTo(15, 18, 18, 7);
+    c2.moveTo(16, 4);
+    c2.lineTo(40, 4);
+    c2.quadraticCurveTo(46, 8, 42, 28);
+    c2.lineTo(18, 30);
+    c2.quadraticCurveTo(12, 16, 16, 4);
     c2.closePath();
     fs();
     c2.beginPath();
-    c2.moveTo(16, 30);
-    c2.lineTo(39, 28);
-    c2.quadraticCurveTo(50, 30, 56, 40);
-    c2.quadraticCurveTo(58, 48, 52, 52);
-    c2.lineTo(14, 52);
-    c2.quadraticCurveTo(9, 48, 11, 40);
-    c2.quadraticCurveTo(13, 32, 16, 30);
+    c2.moveTo(14, 30);
+    c2.lineTo(41, 28);
+    c2.quadraticCurveTo(52, 30, 58, 40);
+    c2.quadraticCurveTo(60, 48, 54, 52);
+    c2.lineTo(12, 52);
+    c2.quadraticCurveTo(6, 48, 8, 40);
+    c2.quadraticCurveTo(10, 32, 14, 30);
     c2.closePath();
     fs();
     c2.fillStyle = silShade(fill, 0.36);
     c2.beginPath();
-    c2.moveTo(11, 50);
-    c2.lineTo(53, 50);
-    c2.quadraticCurveTo(58, 54, 52, 57);
-    c2.lineTo(13, 57);
-    c2.quadraticCurveTo(7, 54, 11, 50);
+    c2.moveTo(9, 50);
+    c2.lineTo(55, 50);
+    c2.quadraticCurveTo(60, 54, 54, 58);
+    c2.lineTo(11, 58);
+    c2.quadraticCurveTo(5, 54, 9, 50);
     c2.closePath();
     fs();
-    hi(24, 16, 3.4);
-    c2.lineWidth = 3.4;
+    hi(24, 14, 3.4);
+    c2.lineWidth = 3.6;
     c2.strokeStyle = ink;
     c2.fillStyle = fill;
   } else if (kind === "mag") {
@@ -17478,10 +17541,36 @@ function paintCuteSil(c2, kind, fill) {
     c2.beginPath(); c2.arc(34, 32, 16, -0.6, 0.6); c2.stroke();
     c2.beginPath(); c2.arc(38, 32, 22, -0.5, 0.5); c2.stroke();
   } else if (kind === "drum") {
-    c2.beginPath(); c2.ellipse(28, 36, 16, 10, -0.5, 0, CONFIG.TWO_PI); fs();
-    c2.fillStyle = "#ffe082"; c2.beginPath(); c2.ellipse(26, 33, 10, 6, -0.5, 0, CONFIG.TWO_PI); c2.fill();
-    c2.strokeStyle = "#fff7e0"; c2.beginPath(); c2.moveTo(40, 22); c2.lineTo(52, 12); c2.stroke();
+    // 【v1.176】局内鸡腿拾取: 肉块+骨柄剪影更可指名, 墨外轮廓加厚(咆哮钮文案不动)
+    c2.lineWidth = 3.8;
+    c2.beginPath();
+    c2.ellipse(26, 38, 18, 12, -0.55, 0, CONFIG.TWO_PI);
+    fs();
+    c2.fillStyle = silShade(fill, 0.28);
+    c2.beginPath();
+    c2.ellipse(28, 42, 12, 7, -0.55, 0, CONFIG.TWO_PI);
+    c2.fill();
+    c2.fillStyle = "#ffe082";
+    c2.beginPath();
+    c2.ellipse(24, 34, 11, 7, -0.55, 0, CONFIG.TWO_PI);
+    c2.fill();
     c2.strokeStyle = ink;
+    c2.lineWidth = 3.4;
+    c2.beginPath();
+    c2.moveTo(38, 24);
+    c2.lineTo(54, 8);
+    c2.lineTo(58, 12);
+    c2.lineTo(42, 28);
+    c2.closePath();
+    fs();
+    c2.fillStyle = "#fff7e0";
+    c2.beginPath();
+    c2.arc(56, 8, 3.2, 0, CONFIG.TWO_PI);
+    c2.fill();
+    c2.stroke();
+    hi(18, 32, 3.4);
+    c2.strokeStyle = ink;
+    c2.fillStyle = fill;
   } else if (kind === "honey") {
     c2.beginPath(); c2.ellipse(28, 36, 16, 10, -0.55, 0, CONFIG.TWO_PI); fs();
     c2.fillStyle = "#ffe082"; c2.beginPath(); c2.ellipse(26, 33, 11, 6, -0.55, 0, CONFIG.TWO_PI); c2.fill();
@@ -23837,27 +23926,97 @@ function hallGroundSkipPng() {
   return true; // 【v1.96】大厅走平坦苔色底, 不铺木纹 PNG, 不堆散斑
 }
 function paintHallGround(c2, w, h, th) {
-  var n, x, y, seed = 4217;
+  var n, x, y, rw, rh, seed = 4217;
+  var g;
   function rnd() { seed = (seed * 1664525 + 1013904223) | 0; return ((seed >>> 8) & 0xffff) / 65536; }
   void th;
   // 【v1.143】浅鼠尾草绿纸, 少苔少饱和, 让薄荷出击和绿浣熊跳出来。不重做 1.139 整页纸面。
   // 【v1.152】洗更净: 草丛 4→2 簇且更小更淡, 大色块再柔一档, 舞台/英雄/出击是主角
-  c2.fillStyle = "#e6efd8";
+  // 【v1.176】瓦片只留左上受光+稀疏草团。路唇改在 drawHallStageGround 画一次, 避免平铺成条纹。
+  c2.fillStyle = "#dce8c8";
   c2.fillRect(0, 0, w, h);
+  try {
+    g = c2.createLinearGradient(0, 0, w * 0.72, h * 0.9);
+    g.addColorStop(0, "#f2f6e4");
+    g.addColorStop(0.42, "#e4eed4");
+    g.addColorStop(1, "#c6d6ae");
+    c2.fillStyle = g;
+    c2.fillRect(0, 0, w, h);
+  } catch (eHg) { /* keep flat base */ }
   c2.lineJoin = "round";
   c2.lineCap = "round";
-  for (n = 0; n < 3; n++) {
+  for (n = 0; n < 4; n++) {
     x = 80 + rnd() * (w - 160);
     y = 80 + rnd() * (h - 160);
-    c2.fillStyle = n % 2 ? "#dde8ca" : "#eff5e4";
+    rw = 90 + rnd() * 70;
+    rh = 40 + rnd() * 36;
+    c2.fillStyle = n % 2 ? "rgba(210,224,184,0.85)" : "rgba(236,244,220,0.7)";
     c2.beginPath();
-    if (typeof c2.ellipse === "function") c2.ellipse(x, y, 140 + rnd() * 80, 64 + rnd() * 48, rnd() * 0.5, 0, CONFIG.TWO_PI);
-    else c2.arc(x, y, 88, 0, CONFIG.TWO_PI);
+    if (typeof c2.ellipse === "function") c2.ellipse(x, y, rw, rh, rnd() * 0.4, 0, CONFIG.TWO_PI);
+    else c2.arc(x, y, rw * 0.5, 0, CONFIG.TWO_PI);
     c2.fill();
   }
-  for (n = 0; n < 2; n++) {
-    paintInkTuft(c2, 56 + rnd() * (w - 112), 56 + rnd() * (h - 112), 22 + rnd() * 8, "#9ab884");
+  for (n = 0; n < 4; n++) {
+    paintInkTuft(c2, 70 + rnd() * (w - 140), 70 + rnd() * (h - 140), 18 + rnd() * 10, n % 2 ? "#6a9a4a" : "#5a8a3a");
   }
+  c2.lineWidth = 1;
+}
+function drawHallStageGround(ctx) {
+  // 【v1.176】舞台后景只画一次: 左上受光。草簇/路唇改在落地台绘制后走 drawHallStageAccent, 避免被台身盖住。
+  var g;
+  ctx.save();
+  try {
+    g = ctx.createLinearGradient(90, 36, 580, 380);
+    g.addColorStop(0, "rgba(248,252,236,0.55)");
+    g.addColorStop(0.35, "rgba(220,232,190,0.14)");
+    g.addColorStop(1, "rgba(46,60,28,0.16)");
+    ctx.fillStyle = g;
+    ctx.fillRect(110, 40, 480, 300);
+  } catch (eSg) { /* skip */ }
+  ctx.restore();
+}
+function drawHallStageAccent(ctx) {
+  // 【v1.176】台缘路唇 + 两侧草簇: 落在落地台之后、角色卡之前, 侧槽/英雄不被盖。
+  var i, clumps;
+  ctx.save();
+  ctx.fillStyle = "rgba(184,132,88,0.48)";
+  ctx.beginPath();
+  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 332, 196, 18, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(360, 332, 110, 0, CONFIG.TWO_PI);
+  ctx.fill();
+  ctx.fillStyle = "rgba(200,236,200,0.38)";
+  ctx.beginPath();
+  if (typeof ctx.ellipse === "function") ctx.ellipse(352, 326, 168, 10, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(352, 326, 90, 0, CONFIG.TWO_PI);
+  ctx.fill();
+  ctx.strokeStyle = "#2e3c1c";
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 332, 196, 18, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(360, 332, 110, 0, CONFIG.TWO_PI);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(244,248,228,0.62)";
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  if (typeof ctx.ellipse === "function") ctx.ellipse(348, 322, 140, 8, 0, Math.PI * 1.15, Math.PI * 1.75);
+  else ctx.arc(348, 322, 80, Math.PI * 1.15, Math.PI * 1.75);
+  ctx.stroke();
+  // 两侧沟: 装备框与舞台之间, 草簇一眼可读
+  clumps = [
+    [128, 236, 18, "#5a8a3a"],
+    [148, 268, 22, "#6a9a4a"],
+    [132, 300, 16, "#4e7a34"],
+    [156, 328, 14, "#5a8a3a"],
+    [570, 230, 18, "#5a8a3a"],
+    [552, 262, 22, "#6a9a4a"],
+    [576, 296, 16, "#4e7a34"],
+    [548, 324, 14, "#5a8a3a"]
+  ];
+  for (i = 0; i < clumps.length; i++) {
+    paintInkTuft(ctx, clumps[i][0], clumps[i][1], clumps[i][2], clumps[i][3]);
+  }
+  ctx.lineWidth = 1;
+  ctx.restore();
 }
 function bakeHallGround() {
   var th = worldThemeOf();
@@ -24594,17 +24753,18 @@ function renderGame() {
       ctx.fillText(fdef.label, fd.x, fd.y + fyOff);
     }
     // 【v1.160】墨缘外环+本色细内环(宝石族同款): 拾取物有墨边才像演员, 不再是漂在路径上的裸图标
+    // 【v1.176】墨外轮廓再抬一档: 局内鸡腿/磁铁/炸弹剪影一眼可指名, 咆哮钮文案不动
     ctx.strokeStyle = "#1c1810";
-    ctx.globalAlpha = 0.9 * fblink;
-    ctx.lineWidth = 1.8;
+    ctx.globalAlpha = 0.94 * fblink;
+    ctx.lineWidth = 2.6;
     ctx.beginPath();
-    ctx.arc(fd.x, fd.y + fyOff, CONFIG.fieldDrawR + 2.2, 0, CONFIG.TWO_PI);
+    ctx.arc(fd.x, fd.y + fyOff, CONFIG.fieldDrawR + 3.0, 0, CONFIG.TWO_PI);
     ctx.stroke();
     ctx.strokeStyle = fdef.color;
-    ctx.globalAlpha = 0.85 * fblink;
+    ctx.globalAlpha = 0.88 * fblink;
     ctx.lineWidth = 2.2;
     ctx.beginPath();
-    ctx.arc(fd.x, fd.y + fyOff, CONFIG.fieldDrawR + 0.6, 0, CONFIG.TWO_PI);
+    ctx.arc(fd.x, fd.y + fyOff, CONFIG.fieldDrawR + 0.8, 0, CONFIG.TWO_PI);
     ctx.stroke();
     ctx.globalAlpha = 1;
     ctx.lineWidth = 1;
@@ -24612,19 +24772,19 @@ function renderGame() {
     var fLabW = fNear ? 108 : 72;
     var fLabH = fNear ? 32 : 20;
     ctx.globalAlpha = 0.94 * fblink;
-    ctx.fillStyle = "rgba(212,228,184,0.94)";
+    ctx.fillStyle = "rgba(232,240,200,0.96)";
     fillRoundRect(ctx, fd.x - fLabW / 2, fd.y + fyOff + fsz / 2 + 2, fLabW, fLabH, 8);
-    ctx.strokeStyle = "#2a3a18";
-    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = "#2f5a3a";
+    ctx.lineWidth = 1.8;
     strokeRoundRect(ctx, fd.x - fLabW / 2, fd.y + fyOff + fsz / 2 + 2, fLabW, fLabH, 8);
     ctx.lineWidth = 1;
-    ctx.fillStyle = "#2a3a18";
+    ctx.fillStyle = "#2e3c1c";
     ctx.font = "bold 14px " + FONT_STACK;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(fLabel, fd.x, fd.y + fyOff + fsz / 2 + (fNear ? 12 : 12));
     if (fNear) {
-      ctx.fillStyle = "#3f7a32";
+      ctx.fillStyle = "#2f5a3a";
       ctx.font = "bold 12px " + FONT_STACK;
       ctx.fillText("走近才捡", fd.x, fd.y + fyOff + fsz / 2 + 24);
     }
@@ -25914,6 +26074,44 @@ function gearSpriteKey(defId) {
   if (d && d.icon) return d.icon;
   return defId ? ("gear_" + defId) : "";
 }
+var HALL_SLOT_GLYPH = {};
+function hallSlotGlyphSpec(defId, slotId) {
+  // 【v1.176】大厅六槽用墨线剪影, 小井里先读出武器/护甲/项链/腰带/手套/鞋子。装备库仍走原贴图。
+  var table = {
+    pinebow: ["xbow", "#b8733a"],
+    thornbow: ["xbow", "#2f6a28"],
+    leafmail: ["leaf3", "#5eae42"],
+    barkplate: ["log", "#8a6238"],
+    dewdrop: ["dew", "#42b4c4"],
+    sunbead: ["bead", "#e0b040"],
+    vinebelt: ["twig", "#4a8c38"],
+    seedbelt: ["seed", "#c9a24a"],
+    paws: ["paw", "#e0909e"],
+    thornpaws: ["pepper", "#6b3a22"],
+    softstep: ["boot", "#c9a06c"],
+    windstep: ["boot", "#3aa0c8"]
+  };
+  if (defId && table[defId]) return table[defId];
+  if (slotId === "armor") return ["leaf3", "#5eae42"];
+  if (slotId === "necklace") return ["dew", "#42b4c4"];
+  if (slotId === "belt") return ["twig", "#4a8c38"];
+  if (slotId === "gloves") return ["paw", "#e0909e"];
+  if (slotId === "shoes") return ["boot", "#c9a06c"];
+  return ["xbow", "#b8733a"];
+}
+function hallSlotGlyph(defId, slotId) {
+  var spec = hallSlotGlyphSpec(defId, slotId);
+  var key = spec[0] + "|" + spec[1];
+  var cv, c2;
+  if (HALL_SLOT_GLYPH[key]) return HALL_SLOT_GLYPH[key];
+  cv = document.createElement("canvas");
+  cv.width = 64;
+  cv.height = 64;
+  c2 = cv.getContext("2d");
+  paintCuteSil(c2, spec[0], spec[1]);
+  HALL_SLOT_GLYPH[key] = cv;
+  return cv;
+}
 function weaponSpriteKey(id) {
   if (!id) return "";
   if (SPRITES["wpn_" + id] && SPRITES["wpn_" + id].width > 0) return "wpn_" + id;
@@ -26367,21 +26565,23 @@ function drawHomeBase(ctx) {
   ctx.fillRect(0, y0, CONFIG.viewW, y1 - y0);
   ctx.restore();
   drawHallAmbi(ctx);
+  drawHallStageGround(ctx);
   ctx.lineWidth = 1;
   // 【v1.175】落地台体积。角色卡从 y=344 往下盖住台面, 所以暗唇必须落在卡沿之上才看得见。
   //   近缘一整圈深苔当台身, 左上受光盘只盖上半, 卡沿前留下一截深色正面。墨线勾外轮廓。不改英雄贴图。
-  ctx.fillStyle = "rgba(16,20,14,0.28)";
+  // 【v1.176】暗唇收成台缘: 近缘改苔褐而不是近黑椭圆, 读成立体垫唇而不是脚下黑洞。左上受光保留。
+  ctx.fillStyle = "rgba(58, 70, 38, 0.34)";
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(372, 338, 168, 14, 0, 0, CONFIG.TWO_PI);
-  else ctx.arc(372, 338, 84, 0, CONFIG.TWO_PI);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(372, 340, 170, 12, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(372, 340, 84, 0, CONFIG.TWO_PI);
   ctx.fill();
-  ctx.fillStyle = "#3a4e30";
+  ctx.fillStyle = "#3a4626";
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(362, 312, 204, 56, 0, 0, CONFIG.TWO_PI);
-  else ctx.arc(362, 312, 124, 0, CONFIG.TWO_PI);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(362, 314, 204, 54, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(362, 314, 124, 0, CONFIG.TWO_PI);
   ctx.fill();
-  ctx.strokeStyle = "#1c1810";
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#2e3c1c";
+  ctx.lineWidth = 2.8;
   ctx.stroke();
   var stageG = ctx.createRadialGradient(300, 250, 10, 368, 300, 180);
   stageG.addColorStop(0, "#f4f8e4");
@@ -26389,19 +26589,27 @@ function drawHomeBase(ctx) {
   stageG.addColorStop(1, "#7d9458");
   ctx.fillStyle = stageG;
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(354, 272, 160, 32, 0, 0, CONFIG.TWO_PI);
-  else ctx.arc(354, 272, 96, 0, CONFIG.TWO_PI);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(354, 274, 158, 30, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(354, 274, 96, 0, CONFIG.TWO_PI);
   ctx.fill();
-  ctx.strokeStyle = "#1c1810";
-  ctx.lineWidth = 2.2;
+  ctx.strokeStyle = "#2f5a3a";
+  ctx.lineWidth = 2.4;
   ctx.stroke();
-  ctx.strokeStyle = "rgba(244,248,228,0.75)";
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "rgba(244,248,228,0.78)";
+  ctx.lineWidth = 1.6;
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(342, 266, 120, 20, 0, Math.PI * 1.15, Math.PI * 1.55);
-  else ctx.arc(342, 266, 70, Math.PI * 1.15, Math.PI * 1.55);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(342, 268, 118, 18, 0, Math.PI * 1.15, Math.PI * 1.55);
+  else ctx.arc(342, 268, 70, Math.PI * 1.15, Math.PI * 1.55);
+  ctx.stroke();
+  // 近缘苔唇亮带: 台身与卡托之间留一截可读正面, 不再整块暗死
+  ctx.strokeStyle = "rgba(200, 236, 200, 0.42)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 298, 148, 22, 0, Math.PI * 0.12, Math.PI * 0.88);
+  else ctx.arc(360, 298, 90, Math.PI * 0.12, Math.PI * 0.88);
   ctx.stroke();
   ctx.lineWidth = 1;
+  drawHallStageAccent(ctx);
   ctx.fillStyle = "#5a3a10";
   ctx.fillRect(18, 64, 8, 92);
   // 【v1.157】出战签去金盘: 金块改苔纸+细墨缘+深墨字(对齐 dock/看板苔纸族), 金不再作大厅主贴片色
@@ -26471,9 +26679,10 @@ function drawHomeBase(ctx) {
   ctx.fillStyle = "#E8D5A0";
   ctx.fillText(hudFitText(ctx, loreHallChip(), 168), 112, 150);
   if (SPRITES.player || heroSprite()) {
-    ctx.fillStyle = "rgba(16,20,14,0.28)";
+    // 【v1.176】脚下接触影改苔褐软椭圆, 不再叠近黑「黑洞」
+    ctx.fillStyle = "rgba(58, 70, 38, 0.30)";
     ctx.beginPath();
-    ctx.ellipse(368, 352, 86, 10, 0, 0, CONFIG.TWO_PI);
+    ctx.ellipse(368, 352, 82, 8, 0, 0, CONFIG.TWO_PI);
     ctx.fill();
     // 【v1.146】大厅舞台再放大到约 312px 高, 头脸孔隙在 390 宽上能读; 仍走 heroSprite 同一烘焙
     var hallSpr = heroSprite();
@@ -26485,11 +26694,14 @@ function drawHomeBase(ctx) {
   drawHallReturnToast(ctx);
   var heroTrayY = CONFIG.hallHeroY || 348;
   var heroTrayH = CONFIG.hallHeroH || 116;
-  ctx.fillStyle = "#d4e6c0";
-  fillRoundRect(ctx, 124, heroTrayY - 4, 472, heroTrayH + 8, 14);
-  ctx.strokeStyle = "#1c1810";
-  ctx.lineWidth = 2.4;
-  strokeRoundRect(ctx, 124, heroTrayY - 4, 472, heroTrayH + 8, 14);
+  // 【v1.176】三角色托盘苔纸+深苔外框, 读成角色选择系统底板
+  ctx.fillStyle = "rgba(16,20,14,0.12)";
+  fillRoundRect(ctx, 122, heroTrayY - 2, 476, heroTrayH + 12, 16);
+  ctx.fillStyle = "#e8f0d4";
+  fillRoundRect(ctx, 120, heroTrayY - 6, 476, heroTrayH + 12, 16);
+  ctx.strokeStyle = "#2f5a3a";
+  ctx.lineWidth = 2.6;
+  strokeRoundRect(ctx, 120, heroTrayY - 6, 476, heroTrayH + 12, 16);
   ctx.lineWidth = 1;
   var startY = CONFIG.homeStartY || 536;
   var startH = CONFIG.homeStartH || 104;
@@ -27260,17 +27472,27 @@ function makeModal(id, panelW, panelH, drawPanel) {
     onTap: function () { /* 遮罩吞点击 */ },
     draw: function (ctx) {
       var c = CONFIG.colors;
-      ctx.fillStyle = c.modalMask;
-      ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
       var px = (CONFIG.viewW - this.panelW) / 2;
       var py = (CONFIG.viewH - this.panelH) / 2;
+      var mossG;
+      ctx.fillStyle = c.modalMask;
+      ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
       // 【v1.153】模态盘统一圆角+一块柔影, 不再是硬边纸块
-      ctx.fillStyle = "rgba(16,20,14,0.20)";
+      // 【v1.176】苔盘再净一档: 左上柔光 + #2f5a3a 墨缘, 强化/图鉴备案截图不显洗白
+      ctx.fillStyle = "rgba(16,20,14,0.18)";
       fillRoundRect(ctx, px + 3, py + 6, this.panelW, this.panelH, 18);
       ctx.fillStyle = c.modalPanel;
       fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
-      ctx.strokeStyle = c.modalBorder;
-      ctx.lineWidth = 2;
+      try {
+        mossG = ctx.createLinearGradient(px, py, px + this.panelW * 0.7, py + this.panelH * 0.55);
+        mossG.addColorStop(0, "rgba(255,252,238,0.42)");
+        mossG.addColorStop(0.45, "rgba(232,240,200,0.10)");
+        mossG.addColorStop(1, "rgba(58,70,38,0.06)");
+        ctx.fillStyle = mossG;
+        fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
+      } catch (eMoss) { /* keep flat panel */ }
+      ctx.strokeStyle = "#2f5a3a";
+      ctx.lineWidth = 2.2;
       strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       ctx.lineWidth = 1;
       if (drawPanel) drawPanel(ctx, this);
@@ -30763,14 +30985,24 @@ function drawVaultPanel(ctx, m) {
 
 // ---- 图鉴页(步骤11 / 【v1.45】): 跟宠/敌人/配方三页一眼能查; 点跟宠仍走解锁/协战 ----
 function drawCodexFrame(ctx, x, y, w, h, selected, accent) {
-  ctx.fillStyle = selected ? "rgba(220,232,186,0.96)" : "rgba(212,228,184,0.94)";
+  // 【v1.176】图鉴条目苔盘再净: 柔影+左上柔光+#2f5a3a 墨缘, 空洗区不显稀疏
+  ctx.fillStyle = "rgba(16,20,14,0.10)";
+  fillRoundRect(ctx, x + 1, y + 3, w, h, 12);
+  ctx.fillStyle = selected ? "rgba(232,240,200,0.97)" : "rgba(222,232,198,0.95)";
   fillRoundRect(ctx, x, y, w, h, 12);
-  ctx.strokeStyle = selected ? (accent || "#5a7a32") : "#2a3a18";
-  ctx.lineWidth = selected ? 3 : 2;
+  try {
+    var cg = ctx.createLinearGradient(x, y, x + w * 0.6, y + h * 0.5);
+    cg.addColorStop(0, "rgba(255,252,238,0.38)");
+    cg.addColorStop(1, "rgba(255,252,238,0)");
+    ctx.fillStyle = cg;
+    fillRoundRect(ctx, x, y, w, h, 12);
+  } catch (eCf) { /* keep flat */ }
+  ctx.strokeStyle = selected ? (accent || "#2f5a3a") : "#2f5a3a";
+  ctx.lineWidth = selected ? 2.8 : 1.8;
   strokeRoundRect(ctx, x, y, w, h, 12);
   ctx.lineWidth = 1;
-  ctx.fillStyle = selected ? (accent || "#e0a020") : "#6a8a4a";
-  ctx.fillRect(x + 4, y + 10, 8, h - 20);
+  ctx.fillStyle = selected ? (accent || "#3faf5a") : "#5a7a32";
+  fillRoundRect(ctx, x + 4, y + 10, 6, h - 20, 2);
 }
 function drawCodexChip(ctx, x, y, w, h, text, fill, ink) {
   // 【v1.155】小签统一补细墨缘, 色块不再裸贴苔纸
@@ -31471,13 +31703,23 @@ function makeHeroChip(i, x, y, w, h) {
         ctx.scale(pop, pop);
         ctx.translate(-cx, -cy);
       }
-      ctx.fillStyle = selected ? "#1a5a2a" : "#2a2218";
+      // 【v1.176】角色卡苔奶油盘 + #2f5a3a 选边: 三英雄读成角色选择系统, 副类型字保留
+      ctx.fillStyle = "rgba(16,20,14,0.12)";
+      fillRoundRect(ctx, r.x + 1, r.y + 3, r.w, r.h, 12);
+      ctx.fillStyle = selected ? "#eef6dc" : "#e4ecd0";
       fillRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
-      ctx.fillStyle = acc;
+      ctx.fillStyle = selected ? "#2f5a3a" : acc;
       ctx.fillRect(r.x + 4, r.y + 10, 5, r.h - 20);
-      ctx.strokeStyle = selected ? acc : "#c9a24b";
-      ctx.lineWidth = selected ? 4.8 : 2;
+      ctx.strokeStyle = selected ? "#2f5a3a" : "rgba(47,90,58,0.55)";
+      ctx.lineWidth = selected ? 4.2 : 2;
       strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
+      ctx.lineWidth = 1;
+      // 立绘小盘: 苔纸井 + 墨缘, 肖像从卡面跳出来
+      ctx.fillStyle = "rgba(244,248,228,0.96)";
+      fillRoundRect(ctx, r.x + 8, r.y + 4, 50, 48, 10);
+      ctx.strokeStyle = selected ? "#2f5a3a" : "rgba(46,60,28,0.70)";
+      ctx.lineWidth = selected ? 2 : 1.4;
+      strokeRoundRect(ctx, r.x + 8, r.y + 4, 50, 48, 10);
       ctx.lineWidth = 1;
       spr = heroSprite(d);
       if (spr) {
@@ -31487,7 +31729,7 @@ function makeHeroChip(i, x, y, w, h) {
       drawItemSprite(ctx, weaponSpriteKey(d.startWeapon), r.x + r.w - 30, r.y + 8, 24);
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = "#fff7e0";
+      ctx.fillStyle = "#2e3c1c";
       ctx.font = "bold 14px " + FONT_STACK;
       ctx.save();
       ctx.beginPath();
@@ -31495,28 +31737,28 @@ function makeHeroChip(i, x, y, w, h) {
       ctx.clip();
       ctx.fillText(d.name, r.x + 58, r.y + 16);
       ctx.restore();
-      ctx.fillStyle = selected ? "#b8f0c0" : "#ffe082";
+      ctx.fillStyle = selected ? "#2f5a3a" : "#5a7040";
       ctx.font = "bold 11px " + FONT_STACK;
       ctx.fillText(d.tagline, r.x + 58, r.y + 34);
       barW = r.w - 58;
-      ctx.fillStyle = "#f0a0a0";
+      ctx.fillStyle = "#c05050";
       ctx.fillText("血", r.x + 10, r.y + 58);
       drawHeroMeter(ctx, r.x + 28, r.y + 52, barW - 28, 10, sheet.hp / caps.hp, "#e74c3c");
-      ctx.fillStyle = "#fff7e0";
+      ctx.fillStyle = "#2e3c1c";
       ctx.textAlign = "right";
       ctx.fillText("" + sheet.hp, r.x + r.w - 8, r.y + 58);
       ctx.textAlign = "left";
-      ctx.fillStyle = "#a8d8f0";
+      ctx.fillStyle = "#3a7a98";
       ctx.fillText("速", r.x + 10, r.y + 74);
       drawHeroMeter(ctx, r.x + 28, r.y + 68, barW - 28, 10, sheet.spd / caps.spd, "#3aa0c8");
-      ctx.fillStyle = "#fff7e0";
+      ctx.fillStyle = "#2e3c1c";
       ctx.textAlign = "right";
       ctx.fillText("" + sheet.spd, r.x + r.w - 8, r.y + 74);
       ctx.textAlign = "center";
-      ctx.fillStyle = selected ? "#b8f0c0" : "#ffe9b0";
+      ctx.fillStyle = selected ? "#2f5a3a" : "#3a4626";
       ctx.font = "bold 11px " + FONT_STACK;
       ctx.fillText(sheet.wpn, cx, r.y + 92);
-      ctx.fillStyle = acc;
+      ctx.fillStyle = mixHex(acc, "#2e3c1c", 0.42);
       ctx.fillText(sheet.spec, cx, r.y + 106);
       ctx.restore();
     }
@@ -31550,15 +31792,18 @@ function makeHallGearFrame(i, x, y, w, h) {
       var aff = it ? enhanceAfford(it) : { ok: false };
       // 【v1.154】大厅部位框静一档: 底更淡 + 框 3→2px 且降 alpha + 顶签 4→3px 圆角, 冒险者舞台仍是主角; 稀有色/可升品金条语义保留
       // 【v1.162】再静一档微标: 底/框/顶签更淡, 不跟落地台上的英雄抢字; 热区/升品语义不动
+      // 【v1.176】苔纸井 + 墨外轮廓抬可读: 六部位符形一眼可指名(武/甲/坠/带/爪/靴), 1纹→精良顶签仍可读
       var frameCol = flash ? "#ffe082" : col;
-      ctx.fillStyle = rar ? "rgba(16,20,14,0.48)" : "rgba(40,28,10,0.38)";
+      ctx.fillStyle = "rgba(16,20,14,0.16)";
+      fillRoundRect(ctx, r.x + 1, r.y + 3, r.w, r.h, 10);
+      ctx.fillStyle = rar ? "rgba(232,240,212,0.94)" : "rgba(226,234,204,0.90)";
       fillRoundRect(ctx, r.x, r.y, r.w, r.h, 10);
       // 【v1.175】外轮廓改墨线(稀有色仍只作顶签), 侧槽不再是半透明泥块
-      ctx.strokeStyle = flash ? frameCol : "rgba(28,24,16,0.78)";
-      ctx.lineWidth = flash ? 2.2 : 1.6;
+      ctx.strokeStyle = flash ? frameCol : "#2f5a3a";
+      ctx.lineWidth = flash ? 2.2 : 1.8;
       strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 10);
       ctx.lineWidth = 1;
-      ctx.globalAlpha = flash ? 1 : 0.46;
+      ctx.globalAlpha = flash ? 1 : 0.55;
       ctx.fillStyle = frameCol;
       fillRoundRect(ctx, r.x + 8, r.y + 6, r.w - 16, 2, 1);
       ctx.globalAlpha = 1;
@@ -31588,18 +31833,21 @@ function makeHallGearFrame(i, x, y, w, h) {
       var gx = r.x + (r.w - gico) / 2;
       var gy = r.y + (aff.ok ? 24 : 8);
       // 【v1.175】符形井: 左上受光苔纸, 右下略暗, 1.6px 墨外轮廓, 剪影才从木地板上分开
-      ctx.fillStyle = "rgba(16,20,14,0.20)";
+      // 【v1.176】井更深一档: 左上受光更亮 + 2px 墨缘, 剪影名物可读
+      ctx.fillStyle = "rgba(16,20,14,0.18)";
       fillRoundRect(ctx, gx + 1, gy + 2, gico, gico, 8);
       var gg = ctx.createLinearGradient(gx, gy, gx + gico, gy + gico);
-      gg.addColorStop(0, "rgba(244,248,228,0.98)");
-      gg.addColorStop(1, "rgba(198,212,170,0.96)");
+      gg.addColorStop(0, "rgba(248,252,236,0.99)");
+      gg.addColorStop(0.55, "rgba(232,240,212,0.97)");
+      gg.addColorStop(1, "rgba(190,208,160,0.96)");
       ctx.fillStyle = gg;
       fillRoundRect(ctx, gx, gy, gico, gico, 8);
-      ctx.strokeStyle = "#1c1810";
-      ctx.lineWidth = 1.6;
+      ctx.strokeStyle = "#2e3c1c";
+      ctx.lineWidth = 2;
       strokeRoundRect(ctx, gx, gy, gico, gico, 8);
       ctx.lineWidth = 1;
-      drawItemSprite(ctx, d ? gearSpriteKey(d.id) : "", gx + 2, gy + 2, gico - 4);
+      var slotGlyph = hallSlotGlyph(d ? d.id : "", sl.id);
+      ctx.drawImage(slotGlyph, gx + 3, gy + 3, gico - 6, gico - 6);
       var pip, px;
       ctx.fillStyle = "#3a3228";
       for (pip = 0; pip < 5; pip++) {
@@ -31607,7 +31855,7 @@ function makeHallGearFrame(i, x, y, w, h) {
         ctx.fillStyle = (it && (it.rarity | 0) >= pip) ? col : "rgba(201,162,75,0.28)";
         ctx.fillRect(px, r.y + r.h - 22, 7, 5);
       }
-      ctx.fillStyle = "#e7efd4";
+      ctx.fillStyle = "#2e3c1c";
       ctx.font = "bold 12px " + FONT_STACK;
       ctx.fillText(sl.name, r.x + r.w / 2, r.y + r.h - 8);
     }
