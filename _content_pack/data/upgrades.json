@@ -1,0 +1,197 @@
+{
+  "system": "森灵局内成长系统",
+  "version": 1,
+  "description": "《萌兽消消岛》单局内的「升级三选一 + 构筑」成长规格（纯设计数据，非游戏代码）。玩家在局内累积经验升级，每次升级从加权池中抽 3 张升级卡选 1，逐步把角色从「基础五元素」构筑成某一流派（元素专精 / 反应连锁 / 生存续航 / 召唤兽群）。本规格填补内容包此前缺失的一环：已有波次(wave_design)、Boss(boss_phases)、元素(element_matrix)、反应(reactions)，但缺少「局内成长」这一幸存品类核心循环。",
+  "references": [
+    "Vampire Survivors 局内升级：每次升级三选一（可 reroll/banish），稀有度权重随等级与运气浮动，同类升级可叠层且有上限（vampire-survivors.fandom.com）",
+    "Soulstone Survivors 成长：技能/被动分稀有度（common→legendary），独立乘区相乘而非加和，构筑围绕「主技能 + 增伤乘区」展开（soulstone-survivors.fandom.com）",
+    "Brotato / 20 Minutes Till Dawn 构筑：属性分「攻击/防御/ utility」三类，稀有度越高单卡收益越大但出现率越低，鼓励围绕 1–2 个乘区深挖（brotato.wiki.gg）"
+  ],
+  "levelUp": {
+    "cards": 3,
+    "note": "每次升级抽 3 张互不相同的卡（不重复、不含已达 maxStacks 的升级）；玩家选 1 张，其余弃掉。权重按稀有度抽样，高稀有度权重随等级缓增。",
+    "weights": { "common": 100, "rare": 45, "epic": 15, "legendary": 4 },
+    "scaling": { "epicPerLevel": 2, "legendaryPerLevel": 0.6 },
+    "scalingNote": "实际权重： epic = 15 + 2*(L-1)，legendary = 4 + 0.6*(L-1)；common/rare 恒定。即越到后期越容易见到高稀有度卡，避免前期被传奇卡碾压、后期无追求。"
+  },
+  "expCurve": {
+    "maxLevel": 20,
+    "base": 8,
+    "linear": 6,
+    "quad": 1.2,
+    "formula": "required(L) = round(base + linear*(L-1) + quad*(L-1)^2)",
+    "note": "升到 L+1 级所需经验。二次项让后期升级变慢，配合高稀有度权重上升，形成「前期快速成型、后期精雕构筑」的节奏。"
+  },
+  "rarity": {
+    "common":    { "cn": "普通", "color": "#b9c6bd", "weight": 100 },
+    "rare":      { "cn": "稀有", "color": "#5ab6ff", "weight": 45 },
+    "epic":      { "cn": "史诗", "color": "#b06cf0", "weight": 15 },
+    "legendary": { "cn": "传说", "color": "#e8c463", "weight": 4 }
+  },
+  "stats": {
+    "atkPct": "伤害加成（百分比，加法叠加后作为独立乘区）",
+    "maxHp": "最大生命（固定值累加）",
+    "armorFlat": "固定减伤（每次受击减去的伤害）",
+    "moveSpdPct": "移动速度加成（百分比）",
+    "cdrPct": "技能冷却缩减（百分点，上限 80）",
+    "critRate": "暴击率（0–1，加法叠加，上限 1）",
+    "critDmg": "暴击伤害倍率增量（基础 1.5）",
+    "lifestealPct": "吸血：造成伤害的百分比转化为生命",
+    "expGainPct": "经验获取加成（百分比）",
+    "projectiles": "额外投射物数量",
+    "shieldOnLevel": "每次升级时获得的护盾值",
+    "revive": "阵亡后自动复活次数（恢复 50% 生命）",
+    "elementDmgPct": "按元素区分的伤害加成（百分比，与 element_matrix 五元素一一对应）",
+    "reactionDmgPct": "元素反应伤害加成（百分比，放大 R26 反应结算）",
+    "reactionDurPct": "元素反应附加状态的时长加成（百分比）",
+    "auraDurPct": "附著(aura)持续时间加成（百分比，延长可反应窗口）",
+    "dotDmgPct": "持续伤害(DoT)加成（百分比，作用于灼烧/中毒）",
+    "summonCount": "常驻召唤物数量"
+  },
+  "upgrades": {
+    "up_atk": {
+      "cn": "锐爪", "rarity": "common", "maxStacks": 5, "tags": ["damage"],
+      "icon": "icons/st_atk_up.png", "sfx": "cp_sfx_buff.wav",
+      "effects": { "atkPct": 8 },
+      "desc": "所有伤害 +8%。最朴素也最稳的乘区，任何流派都能吃。"
+    },
+    "up_hp": {
+      "cn": "厚皮", "rarity": "common", "maxStacks": 5, "tags": ["defense"],
+      "icon": "icons/st_heal.png", "sfx": "cp_sfx_buff.wav",
+      "effects": { "maxHp": 15 },
+      "desc": "最大生命 +15。前期生存底子，配合护盾/吸血可转成续航流。"
+    },
+    "up_armor": {
+      "cn": "硬壳", "rarity": "common", "maxStacks": 5, "tags": ["defense"],
+      "icon": "icons/st_def_up.png", "sfx": "cp_sfx_buff.wav",
+      "effects": { "armorFlat": 2 },
+      "desc": "每次受击固定减伤 +2。对高频小伤（小兵围殴）收益极高。"
+    },
+    "up_spd": {
+      "cn": "疾风", "rarity": "common", "maxStacks": 5, "tags": ["utility"],
+      "icon": "skill_icons/ab_dash.png", "sfx": "cp_sfx_buff.wav",
+      "effects": { "moveSpdPct": 6 },
+      "desc": "移动速度 +6%。拉扯与躲技能的基础，风筝流前置。"
+    },
+    "up_cdr": {
+      "cn": "熟练", "rarity": "common", "maxStacks": 5, "tags": ["utility"],
+      "icon": "icons/st_haste.png", "sfx": "cp_sfx_buff.wav",
+      "effects": { "cdrPct": 5 },
+      "desc": "技能冷却缩减 +5%（上限 80%）。释放频率即 DPS，反应流尤其吃这个。"
+    },
+    "up_crit_rate": {
+      "cn": "洞察", "rarity": "rare", "maxStacks": 4, "tags": ["damage"],
+      "icon": "icons/st_mark.png", "sfx": "cp_sfx_buff.wav",
+      "effects": { "critRate": 0.05 },
+      "desc": "暴击率 +5%。需搭配「致命」才划算，单独拿收益一般。"
+    },
+    "up_crit_dmg": {
+      "cn": "致命", "rarity": "rare", "maxStacks": 4, "tags": ["damage"],
+      "icon": "icons/st_mark.png", "sfx": "cp_sfx_buff.wav",
+      "effects": { "critDmg": 0.25 },
+      "desc": "暴击伤害倍率 +0.25（基础 1.5）。暴击流的核心乘区。"
+    },
+    "up_fire": {
+      "cn": "焚心", "rarity": "rare", "maxStacks": 4, "tags": ["damage", "element"],
+      "icon": "skill_icons/el_fire.png", "sfx": "cp_sfx_hit_fire.wav",
+      "effects": { "elementDmgPct": { "fire": 12 } },
+      "desc": "火元素伤害 +12%。与「燃烧 / 熔岩 / 爆燃」三条灼烧线直接叠加。"
+    },
+    "up_water": {
+      "cn": "潮汐", "rarity": "rare", "maxStacks": 4, "tags": ["damage", "element"],
+      "icon": "skill_icons/el_water.png", "sfx": "cp_sfx_hit_water.wav",
+      "effects": { "elementDmgPct": { "water": 12 } },
+      "desc": "水元素伤害 +12%。与「蒸发(×2.0) / 泥泞 / 折射」联动。"
+    },
+    "up_earth": {
+      "cn": "磐岩", "rarity": "rare", "maxStacks": 4, "tags": ["damage", "element"],
+      "icon": "skill_icons/el_earth.png", "sfx": "cp_sfx_hit_earth.wav",
+      "effects": { "elementDmgPct": { "earth": 12 } },
+      "desc": "土元素伤害 +12%。与「结晶(护盾) / 熔岩 / 缠绕」联动，偏攻防一体。"
+    },
+    "up_light": {
+      "cn": "圣辉", "rarity": "rare", "maxStacks": 4, "tags": ["damage", "element"],
+      "icon": "skill_icons/el_light.png", "sfx": "cp_sfx_hit_light.wav",
+      "effects": { "elementDmgPct": { "light": 12 } },
+      "desc": "光元素伤害 +12%。与「结晶 / 光合(回血+急速) / 折射」联动。"
+    },
+    "up_wood": {
+      "cn": "森语", "rarity": "rare", "maxStacks": 4, "tags": ["damage", "element"],
+      "icon": "skill_icons/el_wood.png", "sfx": "cp_sfx_hit_wood.wav",
+      "effects": { "elementDmgPct": { "wood": 12 } },
+      "desc": "木元素伤害 +12%。与「腐朽(中毒蔓延) / 光合 / 缠绕」联动，DoT 流核心。"
+    },
+    "up_reaction_dmg": {
+      "cn": "共鸣", "rarity": "rare", "maxStacks": 3, "tags": ["damage", "reaction"],
+      "icon": "icons/st_burn.png", "sfx": "cp_sfx_buff.wav",
+      "effects": { "reactionDmgPct": 15 },
+      "desc": "元素反应伤害 +15%。直接放大 R26 反应的结算结果，反应流第一优先。"
+    },
+    "up_reaction_dur": {
+      "cn": "绵延", "rarity": "rare", "maxStacks": 3, "tags": ["reaction"],
+      "icon": "icons/st_poison.png", "sfx": "cp_sfx_debuff.wav",
+      "effects": { "reactionDurPct": 20 },
+      "desc": "反应附加状态时长 +20%。让灼烧/中毒/减速/眩晕覆盖更久，DoT 与控场都用得上。"
+    },
+    "up_lifesteal": {
+      "cn": "汲取", "rarity": "rare", "maxStacks": 3, "tags": ["defense"],
+      "icon": "icons/st_bleed.png", "sfx": "cp_sfx_heal.wav",
+      "effects": { "lifestealPct": 3 },
+      "desc": "吸血 +3%（造成伤害的百分比回血）。高频攻击流的最强续航来源。"
+    },
+    "up_exp": {
+      "cn": "好学", "rarity": "rare", "maxStacks": 3, "tags": ["utility"],
+      "icon": "vfx/fx_levelup.png", "sfx": "cp_sfx_levelup.wav",
+      "effects": { "expGainPct": 10 },
+      "desc": "经验获取 +10%。前期投资型卡，换更多升级次数（也就换更多构筑卡）。"
+    },
+    "up_aura_dur": {
+      "cn": "附著大师", "rarity": "epic", "maxStacks": 2, "tags": ["reaction"],
+      "icon": "skill_icons/el_wood.png", "sfx": "cp_sfx_buff.wav",
+      "effects": { "auraDurPct": 30 },
+      "desc": "附著(aura)持续时间 +30%。延长「可触发反应」的窗口，让双元素循环更从容——反应流的关键质变卡。"
+    },
+    "up_multistrike": {
+      "cn": "连击", "rarity": "epic", "maxStacks": 2, "tags": ["damage"],
+      "icon": "skill_icons/ab_chain.png", "sfx": "cp_sfx_buff.wav",
+      "effects": { "projectiles": 1 },
+      "desc": "每次攻击额外 +1 投射物。等效于成倍提升触发反应的机会，元素/反应流收益放大。"
+    },
+    "up_shield_lvl": {
+      "cn": "护体", "rarity": "epic", "maxStacks": 3, "tags": ["defense"],
+      "icon": "icons/st_shield.png", "sfx": "cp_sfx_buff.wav",
+      "effects": { "shieldOnLevel": 15 },
+      "desc": "每次升级获得 15 点护盾。把「升级」本身变成生存资源，续航流质变卡。"
+    },
+    "up_cdr_big": {
+      "cn": "疾咏", "rarity": "epic", "maxStacks": 2, "tags": ["utility"],
+      "icon": "skill_icons/ab_frost.png", "sfx": "cp_sfx_buff.wav",
+      "effects": { "cdrPct": 12 },
+      "desc": "技能冷却缩减 +12%（「熟练」的两倍多）。冲到冷却上限的关键卡。"
+    },
+    "up_dot_dmg": {
+      "cn": "剧毒蔓延", "rarity": "epic", "maxStacks": 2, "tags": ["damage", "reaction"],
+      "icon": "icons/st_poison.png", "sfx": "cp_sfx_debuff.wav",
+      "effects": { "dotDmgPct": 25 },
+      "desc": "持续伤害(DoT) +25%。灼烧/中毒的每跳伤害提升，配合「绵延」滚雪球。"
+    },
+    "up_summon": {
+      "cn": "兽群", "rarity": "epic", "maxStacks": 2, "tags": ["utility"],
+      "icon": "skill_icons/ab_summon.png", "sfx": "cp_sfx_summon.wav",
+      "effects": { "summonCount": 1 },
+      "desc": "常驻召唤物 +1。召唤物分担仇恨并自动输出，安逸流核心。"
+    },
+    "up_revive": {
+      "cn": "不灭", "rarity": "legendary", "maxStacks": 1, "tags": ["defense"],
+      "icon": "icons/st_heal.png", "sfx": "cp_sfx_win.wav",
+      "effects": { "revive": 1 },
+      "desc": "阵亡后自动复活一次并恢复 50% 生命（仅 1 层）。一次容错，冲高关卡的保险。"
+    },
+    "up_omni": {
+      "cn": "元素共鸣", "rarity": "legendary", "maxStacks": 1, "tags": ["damage", "element", "reaction"],
+      "icon": "skill_icons/el_light.png", "sfx": "cp_sfx_levelup.wav",
+      "effects": { "elementDmgPct": { "fire": 15, "water": 15, "earth": 15, "light": 15, "wood": 15 }, "reactionDmgPct": 20 },
+      "desc": "全元素伤害 +15%，且元素反应伤害 +20%。不再挑元素，是所有反应都能吃的终极乘区。"
+    }
+  }
+}

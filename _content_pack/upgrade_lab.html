@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 局内成长实验室</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; --ink:#0f2f1f; }
+  *{ box-sizing:border-box;margin:0;padding:0 }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:24px 16px; display:flex; flex-direction:column; align-items:center }
+  h1{ font-size:25px; letter-spacing:2px; margin-bottom:6px; text-shadow:0 2px 10px rgba(0,0,0,.45) }
+  .hint{ opacity:.8; font-size:12.5px; max-width:900px; text-align:center; line-height:1.6; margin-bottom:14px }
+  .hint b{ color:var(--gold) }
+  .main{ display:flex; gap:16px; width:100%; max-width:1000px; align-items:flex-start; flex-wrap:wrap; justify-content:center }
+  .panel{ background:rgba(15,47,31,.55); border:1px solid rgba(159,224,180,.25); border-radius:14px; padding:14px 16px }
+  .panel h3{ font-size:14px; margin-bottom:10px; color:var(--gold); letter-spacing:1px }
+  .col-l{ width:250px } .col-r{ width:250px }
+  #arena{ width:340px; display:flex; flex-direction:column; align-items:center; gap:12px }
+  #dummyWrap{ position:relative; width:180px; height:180px; border-radius:18px; display:flex;
+    align-items:center; justify-content:center; border:3px solid rgba(255,255,255,.18); transition:border-color .2s }
+  #dummy{ width:130px; height:130px; animation:bob 2.2s ease-in-out infinite }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-6px) } }
+  .dmg{ position:absolute; left:50%; top:16%; transform:translateX(-50%); font-weight:800; font-size:16px;
+    color:#fff; text-shadow:0 1px 3px #000; pointer-events:none; animation:rise .7s ease-out forwards; z-index:6 }
+  .dmg.crit{ color:var(--gold); font-size:22px }
+  @keyframes rise{ 0%{ opacity:0; transform:translate(-50%,6px) } 20%{ opacity:1 } 100%{ opacity:0; transform:translate(-50%,-32px) } }
+  #hpTrack{ width:240px; height:14px; background:rgba(0,0,0,.4); border-radius:7px; overflow:hidden }
+  #hpTrack i{ display:block; height:100%; width:100%; background:linear-gradient(90deg,#6fe39a,#3fa66a); transition:width .2s }
+  #xpTrack{ width:240px; height:12px; background:rgba(0,0,0,.4); border-radius:6px; overflow:hidden }
+  #xpTrack i{ display:block; height:100%; width:0; background:linear-gradient(90deg,#e8c463,#c9a13f); transition:width .25s }
+  .bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center; margin-bottom:12px }
+  .btn{ background:linear-gradient(160deg,#1f5c3a,#143e28); border:1px solid rgba(232,196,99,.4);
+    color:var(--cream); padding:7px 14px; border-radius:10px; cursor:pointer; font-size:14px; transition:transform .15s }
+  .btn:hover{ transform:translateY(-2px) }
+  .elem{ width:40px; height:40px; border-radius:10px; border:2px solid rgba(255,255,255,.25);
+    color:var(--ink); cursor:pointer; font-size:17px; font-weight:800; display:flex; align-items:center; justify-content:center }
+  .elem.on{ box-shadow:0 0 0 3px var(--gold) inset }
+  .stat{ display:flex; justify-content:space-between; font-size:12.5px; padding:3px 0; border-bottom:1px dashed rgba(159,224,180,.15) }
+  .stat b{ color:var(--gold) }
+  .elstat{ display:flex; justify-content:space-between; font-size:12px; padding:2px 0; opacity:.9 }
+  .chip{ display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,.06);
+    border:1px solid rgba(159,224,180,.3); border-radius:8px; padding:3px 8px; margin:3px; font-size:12px }
+  .chip img{ width:22px; height:22px }
+  .chip .n{ color:var(--gold); font-weight:700 }
+  #dps{ font-size:22px; font-weight:800; color:var(--gold) }
+  #overlay{ position:fixed; inset:0; background:rgba(5,20,12,.86); display:none; align-items:center;
+    justify-content:center; z-index:50; padding:20px }
+  #overlay.show{ display:flex }
+  #modal{ background:#143e28; border:1px solid rgba(232,196,99,.45); border-radius:18px; padding:22px;
+    max-width:860px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,.6) }
+  #modal h2{ font-size:19px; margin-bottom:4px; text-align:center }
+  #modal .msub{ font-size:12.5px; opacity:.75; text-align:center; margin-bottom:16px }
+  .cards{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center }
+  .ucard{ width:250px; background:rgba(255,255,255,.05); border:2px solid; border-radius:14px;
+    padding:14px; cursor:pointer; transition:transform .18s, box-shadow .18s; display:flex; gap:10px; align-items:flex-start }
+  .ucard:hover{ transform:translateY(-5px); box-shadow:0 12px 28px rgba(0,0,0,.45) }
+  .ucard img{ width:44px; height:44px; flex:none }
+  .ucard .b{ flex:1; min-width:0 }
+  .ucard .nm{ font-size:16px; font-weight:800; display:flex; align-items:center; gap:6px; flex-wrap:wrap }
+  .ucard .rar{ font-size:10.5px; color:var(--ink); padding:1px 7px; border-radius:5px; font-weight:700 }
+  .ucard .stk{ font-size:10.5px; opacity:.7 }
+  .ucard .ef{ font-size:11.5px; margin:6px 0 5px; line-height:1.5 }
+  .ucard .ds{ font-size:11.5px; opacity:.75; line-height:1.5 }
+  footer{ margin-top:20px; font-size:12px; opacity:.5; text-align:center; line-height:1.7; max-width:860px }
+</style>
+</head>
+<body>
+  <h1>🎲 森灵萌兽 · 局内成长实验室</h1>
+  <div class="hint">把 <b>data/upgrades.json</b>（局内成长系统）真正跑起来的<b>可玩校验场</b>：英雄自动攻击木桩累积经验，<b>每次升级抽 3 张升级卡选 1</b>，选到的卡立刻改变属性面板与 <b>DPS</b>。用它验证「构筑是否真的会带来成长」——堆元素专精、堆反应加成、还是堆生存续航，右侧面板与 DPS 读数会立刻告诉你差别。纯前端，双击即开，资产走相对路径。</div>
+  <div class="bar">
+    <div class="elems" id="elems" style="display:flex;gap:8px"></div>
+    <button class="btn" id="toggle">⏸ 暂停</button>
+    <button class="btn" id="reset">🔄 重开一局</button>
+  </div>
+  <div class="main">
+    <div class="panel col-l">
+      <h3>📊 角色状态</h3>
+      <div class="stat"><span>等级</span><b id="s_lv">1</b></div>
+      <div class="stat"><span>经验</span><b id="s_xp">0 / 8</b></div>
+      <div class="stat"><span>伤害加成</span><b id="s_atk">+0%</b></div>
+      <div class="stat"><span>暴击率 / 暴伤</span><b id="s_crit">5% / ×1.5</b></div>
+      <div class="stat"><span>攻击间隔</span><b id="s_int">1.00s</b></div>
+      <div class="stat"><span>投射物</span><b id="s_proj">1</b></div>
+      <div class="stat"><span>最大生命 / 减伤</span><b id="s_hp">100 / 0</b></div>
+      <div class="stat"><span>吸血 / 移速</span><b id="s_ls">0% / +0%</b></div>
+      <div class="stat"><span>反应伤害 / 时长</span><b id="s_react">+0% / +0%</b></div>
+      <div class="stat"><span>附著时长 / DoT</span><b id="s_aura">+0% / +0%</b></div>
+      <div class="stat"><span>召唤物 / 复活</span><b id="s_sum">0 / 0</b></div>
+      <h3 style="margin-top:12px">🔥 元素伤害加成</h3>
+      <div id="elstats"></div>
+    </div>
+    <div class="panel" id="arena">
+      <div id="dummyWrap"><img id="dummy" src="sprites_alpha/stone_turtle.png" alt="木桩"></div>
+      <div id="hpTrack"><i id="hp"></i></div>
+      <div style="font-size:12px;opacity:.8" id="dummyInfo">木桩 HP 200</div>
+      <div id="xpTrack"><i id="xp"></i></div>
+      <div style="text-align:center"><span style="font-size:12px;opacity:.8">DPS </span><span id="dps">0</span></div>
+    </div>
+    <div class="panel col-r">
+      <h3>🧩 当前构筑</h3>
+      <div id="build"><span style="opacity:.5;font-size:12px">尚未获得升级</span></div>
+    </div>
+  </div>
+  <div id="overlay"><div id="modal">
+    <h2>⬆️ 升级！选择一张升级卡</h2>
+    <div class="msub" id="msub"></div>
+    <div class="cards" id="cards"></div>
+  </div></div>
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>
+  本页为局内成长设计（data/upgrades.json）的<b>可玩校验场</b>：24 张升级卡 / 4 稀有度 / 经验曲线 / 权重缩放 与规格一致，抽卡按稀有度加权且排除已叠满的卡。不修改也不依赖主游戏文件，与 GROK 路线零冲突。</footer>
+
+<script>
+  // ===== 内联自 data/upgrades.json + data/element_matrix.json（file:// 不 fetch）=====
+  const ELEMENTS = {
+    fire:{cn:'火',color:'#ff7a3c'}, water:{cn:'水',color:'#5ab6ff'},
+    earth:{cn:'土',color:'#8c6a40'}, light:{cn:'光',color:'#ffd740'}, wood:{cn:'木',color:'#66d957'}
+  };
+  const RARITY = {
+    common:{cn:'普通',color:'#b9c6bd',weight:100},
+    rare:{cn:'稀有',color:'#5ab6ff',weight:45},
+    epic:{cn:'史诗',color:'#b06cf0',weight:15},
+    legendary:{cn:'传说',color:'#e8c463',weight:4}
+  };
+  const LEVELUP = { cards:3, weights:{common:100,rare:45,epic:15,legendary:4},
+    scaling:{epicPerLevel:2, legendaryPerLevel:0.6} };
+  const CURVE = { maxLevel:20, base:8, linear:6, quad:1.2 };
+  const UP = {
+    up_atk:{cn:'锐爪',rarity:'common',maxStacks:5,tags:['damage'],icon:'icons/st_atk_up.png',sfx:'cp_sfx_buff.wav',effects:{atkPct:8},desc:'所有伤害 +8%。最朴素也最稳的乘区，任何流派都能吃。'},
+    up_hp:{cn:'厚皮',rarity:'common',maxStacks:5,tags:['defense'],icon:'icons/st_heal.png',sfx:'cp_sfx_buff.wav',effects:{maxHp:15},desc:'最大生命 +15。前期生存底子，配合护盾/吸血可转成续航流。'},
+    up_armor:{cn:'硬壳',rarity:'common',maxStacks:5,tags:['defense'],icon:'icons/st_def_up.png',sfx:'cp_sfx_buff.wav',effects:{armorFlat:2},desc:'每次受击固定减伤 +2。对高频小伤（小兵围殴）收益极高。'},
+    up_spd:{cn:'疾风',rarity:'common',maxStacks:5,tags:['utility'],icon:'skill_icons/ab_dash.png',sfx:'cp_sfx_buff.wav',effects:{moveSpdPct:6},desc:'移动速度 +6%。拉扯与躲技能的基础，风筝流前置。'},
+    up_cdr:{cn:'熟练',rarity:'common',maxStacks:5,tags:['utility'],icon:'icons/st_haste.png',sfx:'cp_sfx_buff.wav',effects:{cdrPct:5},desc:'技能冷却缩减 +5%（上限 80%）。释放频率即 DPS，反应流尤其吃这个。'},
+    up_crit_rate:{cn:'洞察',rarity:'rare',maxStacks:4,tags:['damage'],icon:'icons/st_mark.png',sfx:'cp_sfx_buff.wav',effects:{critRate:0.05},desc:'暴击率 +5%。需搭配「致命」才划算，单独拿收益一般。'},
+    up_crit_dmg:{cn:'致命',rarity:'rare',maxStacks:4,tags:['damage'],icon:'icons/st_mark.png',sfx:'cp_sfx_buff.wav',effects:{critDmg:0.25},desc:'暴击伤害倍率 +0.25（基础 1.5）。暴击流的核心乘区。'},
+    up_fire:{cn:'焚心',rarity:'rare',maxStacks:4,tags:['damage','element'],icon:'skill_icons/el_fire.png',sfx:'cp_sfx_hit_fire.wav',effects:{elementDmgPct:{fire:12}},desc:'火元素伤害 +12%。与「燃烧 / 熔岩 / 爆燃」三条灼烧线直接叠加。'},
+    up_water:{cn:'潮汐',rarity:'rare',maxStacks:4,tags:['damage','element'],icon:'skill_icons/el_water.png',sfx:'cp_sfx_hit_water.wav',effects:{elementDmgPct:{water:12}},desc:'水元素伤害 +12%。与「蒸发(×2.0) / 泥泞 / 折射」联动。'},
+    up_earth:{cn:'磐岩',rarity:'rare',maxStacks:4,tags:['damage','element'],icon:'skill_icons/el_earth.png',sfx:'cp_sfx_hit_earth.wav',effects:{elementDmgPct:{earth:12}},desc:'土元素伤害 +12%。与「结晶(护盾) / 熔岩 / 缠绕」联动，偏攻防一体。'},
+    up_light:{cn:'圣辉',rarity:'rare',maxStacks:4,tags:['damage','element'],icon:'skill_icons/el_light.png',sfx:'cp_sfx_hit_light.wav',effects:{elementDmgPct:{light:12}},desc:'光元素伤害 +12%。与「结晶 / 光合(回血+急速) / 折射」联动。'},
+    up_wood:{cn:'森语',rarity:'rare',maxStacks:4,tags:['damage','element'],icon:'skill_icons/el_wood.png',sfx:'cp_sfx_hit_wood.wav',effects:{elementDmgPct:{wood:12}},desc:'木元素伤害 +12%。与「腐朽(中毒蔓延) / 光合 / 缠绕」联动，DoT 流核心。'},
+    up_reaction_dmg:{cn:'共鸣',rarity:'rare',maxStacks:3,tags:['damage','reaction'],icon:'icons/st_burn.png',sfx:'cp_sfx_buff.wav',effects:{reactionDmgPct:15},desc:'元素反应伤害 +15%。直接放大 R26 反应的结算结果，反应流第一优先。'},
+    up_reaction_dur:{cn:'绵延',rarity:'rare',maxStacks:3,tags:['reaction'],icon:'icons/st_poison.png',sfx:'cp_sfx_debuff.wav',effects:{reactionDurPct:20},desc:'反应附加状态时长 +20%。让灼烧/中毒/减速/眩晕覆盖更久，DoT 与控场都用得上。'},
+    up_lifesteal:{cn:'汲取',rarity:'rare',maxStacks:3,tags:['defense'],icon:'icons/st_bleed.png',sfx:'cp_sfx_heal.wav',effects:{lifestealPct:3},desc:'吸血 +3%（造成伤害的百分比回血）。高频攻击流的最强续航来源。'},
+    up_exp:{cn:'好学',rarity:'rare',maxStacks:3,tags:['utility'],icon:'vfx/fx_levelup.png',sfx:'cp_sfx_levelup.wav',effects:{expGainPct:10},desc:'经验获取 +10%。前期投资型卡，换更多升级次数（也就换更多构筑卡）。'},
+    up_aura_dur:{cn:'附著大师',rarity:'epic',maxStacks:2,tags:['reaction'],icon:'skill_icons/el_wood.png',sfx:'cp_sfx_buff.wav',effects:{auraDurPct:30},desc:'附著(aura)持续时间 +30%。延长「可触发反应」的窗口，让双元素循环更从容——反应流的关键质变卡。'},
+    up_multistrike:{cn:'连击',rarity:'epic',maxStacks:2,tags:['damage'],icon:'skill_icons/ab_chain.png',sfx:'cp_sfx_buff.wav',effects:{projectiles:1},desc:'每次攻击额外 +1 投射物。等效于成倍提升触发反应的机会，元素/反应流收益放大。'},
+    up_shield_lvl:{cn:'护体',rarity:'epic',maxStacks:3,tags:['defense'],icon:'icons/st_shield.png',sfx:'cp_sfx_buff.wav',effects:{shieldOnLevel:15},desc:'每次升级获得 15 点护盾。把「升级」本身变成生存资源，续航流质变卡。'},
+    up_cdr_big:{cn:'疾咏',rarity:'epic',maxStacks:2,tags:['utility'],icon:'skill_icons/ab_frost.png',sfx:'cp_sfx_buff.wav',effects:{cdrPct:12},desc:'技能冷却缩减 +12%（「熟练」的两倍多）。冲到冷却上限的关键卡。'},
+    up_dot_dmg:{cn:'剧毒蔓延',rarity:'epic',maxStacks:2,tags:['damage','reaction'],icon:'icons/st_poison.png',sfx:'cp_sfx_debuff.wav',effects:{dotDmgPct:25},desc:'持续伤害(DoT) +25%。灼烧/中毒的每跳伤害提升，配合「绵延」滚雪球。'},
+    up_summon:{cn:'兽群',rarity:'epic',maxStacks:2,tags:['utility'],icon:'skill_icons/ab_summon.png',sfx:'cp_sfx_summon.wav',effects:{summonCount:1},desc:'常驻召唤物 +1。召唤物分担仇恨并自动输出，安逸流核心。'},
+    up_revive:{cn:'不灭',rarity:'legendary',maxStacks:1,tags:['defense'],icon:'icons/st_heal.png',sfx:'cp_sfx_win.wav',effects:{revive:1},desc:'阵亡后自动复活一次并恢复 50% 生命（仅 1 层）。一次容错，冲高关卡的保险。'},
+    up_omni:{cn:'元素共鸣',rarity:'legendary',maxStacks:1,tags:['damage','element','reaction'],icon:'skill_icons/el_light.png',sfx:'cp_sfx_levelup.wav',effects:{elementDmgPct:{fire:15,water:15,earth:15,light:15,wood:15},reactionDmgPct:20},desc:'全元素伤害 +15%，且元素反应伤害 +20%。不再挑元素，是所有反应都能吃的终极乘区。'}
+  };
+
+  const BASE = { atk:10, maxHp:100, critRate:0.05, critDmg:1.5, projectiles:1, cdr:0 };
+  let level=1, xp=0, taken={}, curEl='fire', running=true, acc=0, dummyHp=200, dummyMax=200;
+  let dmgLog=[], loop=null;
+
+  const $=id=>document.getElementById(id);
+  function playSfx(k){ const a=new Audio('audio/'+k); a.volume=0.45; a.play().catch(()=>{}); }
+  function required(lv){ return Math.round(CURVE.base + CURVE.linear*(lv-1) + CURVE.quad*(lv-1)*(lv-1)); }
+
+  function derived(){
+    const d={atkPct:0,maxHp:0,armorFlat:0,moveSpdPct:0,cdrPct:0,critRate:0,critDmg:0,lifestealPct:0,
+      expGainPct:0,projectiles:0,shieldOnLevel:0,revive:0,reactionDmgPct:0,reactionDurPct:0,
+      auraDurPct:0,dotDmgPct:0,summonCount:0,elementDmgPct:{fire:0,water:0,earth:0,light:0,wood:0}};
+    for(const k in taken){
+      const n=taken[k]; if(!n) continue;
+      const e=UP[k].effects;
+      for(const f in e){
+        if(f==='elementDmgPct'){ for(const el in e[f]) d.elementDmgPct[el]+=e[f][el]*n; }
+        else d[f]=(d[f]||0)+e[f]*n;
+      }
+    }
+    return d;
+  }
+
+  function rollCards(){
+    const pool=Object.keys(UP).filter(k=>(taken[k]||0)<UP[k].maxStacks);
+    const lw={common:LEVELUP.weights.common, rare:LEVELUP.weights.rare,
+      epic:LEVELUP.weights.epic+LEVELUP.scaling.epicPerLevel*(level-1),
+      legendary:LEVELUP.weights.legendary+LEVELUP.scaling.legendaryPerLevel*(level-1)};
+    const picked=[];
+    while(picked.length<LEVELUP.cards && pool.length){
+      let tot=0; const avail={};
+      for(const r in lw){ if(pool.some(p=>UP[p].rarity===r)){ avail[r]=lw[r]; tot+=lw[r]; } }
+      let rnd=Math.random()*tot, rar=null;
+      for(const r in avail){ rnd-=avail[r]; if(rnd<=0){ rar=r; break; } }
+      if(!rar) rar=UP[pool[0]].rarity;
+      const cand=pool.filter(p=>UP[p].rarity===rar);
+      const pick=cand[Math.floor(Math.random()*cand.length)];
+      picked.push(pick); pool.splice(pool.indexOf(pick),1);
+    }
+    return picked;
+  }
+
+  function effectText(e){
+    const L={atkPct:'伤害+%s%%',maxHp:'生命+%s',armorFlat:'减伤+%s',moveSpdPct:'移速+%s%%',
+      cdrPct:'冷却缩减+%s%%',critRate:'暴击率+%s%%',critDmg:'暴伤+%s',lifestealPct:'吸血+%s%%',
+      expGainPct:'经验+%s%%',projectiles:'投射物+%s',shieldOnLevel:'升级获盾+%s',revive:'复活+%s',
+      reactionDmgPct:'反应伤害+%s%%',reactionDurPct:'状态时长+%s%%',auraDurPct:'附著时长+%s%%',
+      dotDmgPct:'持续伤害+%s%%',summonCount:'召唤物+%s'};
+    const out=[];
+    for(const k in e){
+      if(k==='elementDmgPct'){
+        for(const el in e[k]) out.push(ELEMENTS[el].cn+'伤+'+e[k][el]+'%');
+      } else {
+        const v=(k==='critRate')? Math.round(e[k]*100) : e[k];
+        out.push(L[k].replace('%s',v));
+      }
+    }
+    return out.join(' · ');
+  }
+
+  function showCards(){
+    const keys=rollCards();
+    $('msub').textContent='等级 '+level+' → '+(level+1)+'　（高稀有度权重随等级提升）';
+    $('cards').innerHTML=keys.map(k=>{
+      const u=UP[k], r=RARITY[u.rarity], n=taken[k]||0;
+      return '<div class="ucard" style="border-color:'+r.color+'" data-k="'+k+'">'
+        +'<img src="'+u.icon+'" alt="'+u.cn+'">'
+        +'<div class="b"><div class="nm"><span style="color:'+r.color+'">'+u.cn+'</span>'
+        +'<span class="rar" style="background:'+r.color+'">'+r.cn+'</span>'
+        +'<span class="stk">'+(n?('已有 '+n+'/'+u.maxStacks):('可叠 '+u.maxStacks))+'</span></div>'
+        +'<div class="ef" style="color:'+r.color+'">'+effectText(u.effects)+'</div>'
+        +'<div class="ds">'+u.desc+'</div></div></div>';
+    }).join('');
+    $('cards').querySelectorAll('.ucard').forEach(c=>{
+      c.addEventListener('click',()=>pickUpgrade(c.dataset.k));
+    });
+    $('overlay').classList.add('show');
+  }
+
+  function pickUpgrade(k){
+    taken[k]=(taken[k]||0)+1;
+    $('overlay').classList.remove('show');
+    playSfx(UP[k].sfx||'cp_sfx_buff.wav');
+    level++; xp=0;
+    renderAll();
+    if(level>=CURVE.maxLevel){
+      running=false;
+      $('dummyInfo').textContent='已满级（Lv.'+CURVE.maxLevel+'）—— 构筑完成，可继续打木桩看 DPS';
+    }
+  }
+
+  function attack(){
+    const d=derived();
+    const elMul=1+(d.elementDmgPct[curEl]||0)/100;
+    const reactMul=1+d.reactionDmgPct/100;
+    const proj=BASE.projectiles+d.projectiles;
+    const crit=Math.random()<Math.min(1,BASE.critRate+d.critRate);
+    const cm=crit?(BASE.critDmg+d.critDmg):1;
+    const dmg=BASE.atk*(1+d.atkPct/100)*elMul*reactMul*cm*proj;
+    dummyHp=Math.max(0,dummyHp-dmg);
+    const fl=document.createElement('div'); fl.className='dmg'+(crit?' crit':'');
+    fl.textContent='-'+Math.round(dmg); fl.onanimationend=()=>fl.remove();
+    $('dummyWrap').appendChild(fl);
+    dmgLog.push({t:Date.now(), d:dmg});
+    updateHp();
+    const xpGain=2*(1+d.expGainPct/100);
+    if(level<CURVE.maxLevel){ xp+=xpGain; if(xp>=required(level)){ xp=0; showCards(); } renderXp(); }
+    if(dummyHp<=0){
+      dummyMax=200+60*(level-1); dummyHp=dummyMax; updateHp();
+      if(level<CURVE.maxLevel){ xp+=10*(1+d.expGainPct/100); if(xp>=required(level)){ xp=0; showCards(); } renderXp(); }
+      playSfx('cp_sfx_kill.wav');
+    } else {
+      playSfx('cp_sfx_hit_'+curEl+'.wav');
+    }
+  }
+
+  function tick(){
+    if(!running) return;
+    const d=derived();
+    const interval=1000*(1-Math.min(80,BASE.cdr+d.cdrPct)/100);
+    acc+=100;
+    while(acc>=interval){ acc-=interval; attack(); }
+    const now=Date.now();
+    dmgLog=dmgLog.filter(x=>now-x.t<2000);
+    const sum=dmgLog.reduce((a,b)=>a+b.d,0);
+    $('dps').textContent=Math.round(sum/2);
+  }
+
+  function updateHp(){
+    $('hp').style.width=(dummyHp/dummyMax*100)+'%';
+    $('dummyInfo').textContent='木桩 HP '+Math.round(dummyHp)+' / '+dummyMax;
+  }
+  function renderXp(){
+    const need=required(level);
+    $('xp').style.width=Math.min(100,xp/need*100)+'%';
+    $('s_xp').textContent=Math.round(xp)+' / '+need;
+  }
+  function renderAll(){
+    const d=derived();
+    const interval=1000*(1-Math.min(80,BASE.cdr+d.cdrPct)/100);
+    $('s_lv').textContent=level+(level>=CURVE.maxLevel?' (满级)':'');
+    $('s_atk').textContent='+'+d.atkPct+'%';
+    $('s_crit').textContent=Math.round((BASE.critRate+d.critRate)*100)+'% / ×'+(BASE.critDmg+d.critDmg).toFixed(2);
+    $('s_int').textContent=(interval/1000).toFixed(2)+'s';
+    $('s_proj').textContent=BASE.projectiles+d.projectiles;
+    $('s_hp').textContent=(BASE.maxHp+d.maxHp)+' / '+d.armorFlat;
+    $('s_ls').textContent=d.lifestealPct+'% / +'+d.moveSpdPct+'%';
+    $('s_react').textContent='+'+d.reactionDmgPct+'% / +'+d.reactionDurPct+'%';
+    $('s_aura').textContent='+'+d.auraDurPct+'% / +'+d.dotDmgPct+'%';
+    $('s_sum').textContent=d.summonCount+' / '+d.revive;
+    $('elstats').innerHTML=Object.keys(ELEMENTS).map(e=>
+      '<div class="elstat"><span style="color:'+ELEMENTS[e].color+'">'+ELEMENTS[e].cn+'</span>'
+      +'<b>+'+d.elementDmgPct[e]+'%</b></div>').join('');
+    const ks=Object.keys(taken).filter(k=>taken[k]>0);
+    $('build').innerHTML=ks.length? ks.map(k=>{
+      const u=UP[k], r=RARITY[u.rarity];
+      return '<span class="chip" style="border-color:'+r.color+'"><img src="'+u.icon+'" alt="'+u.cn+'">'
+        +'<span style="color:'+r.color+'">'+u.cn+'</span><span class="n">×'+taken[k]+'</span></span>';
+    }).join('') : '<span style="opacity:.5;font-size:12px">尚未获得升级</span>';
+    renderXp(); updateHp();
+  }
+
+  function buildElems(){
+    const w=$('elems'); w.innerHTML='';
+    Object.keys(ELEMENTS).forEach(k=>{
+      const b=document.createElement('div'); b.className='elem'+(k===curEl?' on':'');
+      b.textContent=ELEMENTS[k].cn; b.style.background=ELEMENTS[k].color; b.title=ELEMENTS[k].cn+'元素';
+      b.addEventListener('click',()=>{ curEl=k; buildElems(); });
+      w.appendChild(b);
+    });
+  }
+  $('toggle').addEventListener('click',()=>{
+    running=!running; $('toggle').textContent=running?'⏸ 暂停':'▶️ 继续';
+  });
+  $('reset').addEventListener('click',()=>{
+    level=1; xp=0; taken={}; acc=0; dummyMax=200; dummyHp=200; dmgLog=[]; running=true;
+    $('toggle').textContent='⏸ 暂停'; $('overlay').classList.remove('show');
+    $('dummyInfo').textContent='木桩 HP 200';
+    renderAll();
+  });
+
+  buildElems(); renderAll(); loop=setInterval(tick,100);
+</script>
+</body>
+</html>

@@ -61,7 +61,7 @@ SKILL_CN = {
 DATA_CN = {
     'element_matrix': '五元素克制矩阵', 'skill_cooldowns': '技能冷却数值',
     'wave_design': '关卡波次设计', 'boss_phases': 'BOSS 多阶段脚本',
-    'reactions': '元素反应系统',
+    'reactions': '元素反应系统', 'upgrades': '局内成长系统',
 }
 
 def chips(keys, cn):
@@ -145,6 +145,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="campaign.html" target="_blank">
       <div class="ico">🗺️</div><div class="t">战役模式</div>
       <div class="d">把 wave_design.json 10 关 × 多波次真跑起来的关卡流程 demo：逐波刷怪 / 元素聚焦 / 奖励，第 10 关含 Boss。</div></a>
+    <a class="ncard" href="upgrade_chart.html" target="_blank">
+      <div class="ico">🎲</div><div class="t">局内成长系统</div>
+      <div class="d">升级三选一 + 构筑：24 张升级卡 × 4 稀有度（加权抽取 / 可叠层 / 流派标签），含可玩实验室 upgrade_lab.html。</div></a>
     <a class="ncard" href="audio_demo.html" target="_blank">
       <div class="ico">🎵</div><div class="t">音频试听</div>
       <div class="d">{len(audio)} 条音频（{len(bgm)} BGM 可循环 + {len(sfx)} SFX），单击即听。</div></a>

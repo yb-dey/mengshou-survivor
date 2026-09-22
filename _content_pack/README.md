@@ -212,6 +212,20 @@
 - **设计要点**：7 状态全部映射到既有 `icons/st_*.png` 图标 + `fx_*`/`cp_sfx_*` 资产（零新资产）；反应「消耗附著、需重新附著」复刻 Genshin 的 aura/trigger 循环；与 §2.5 五元素克制链、§2.3 状态图标、§2.1 状态音效在规则与素材层完全对齐。
 - **校验**：`data/reactions.json` 为合法 JSON（C(5,2)=10 对全覆盖、无多余、status 引用均存在，amplifying 的 `fire+water` 状态为 null 即无状态，符合设计）；`reaction_chart.html` 由脚本校验（0 占位符、10 反应名全在、7 状态图标路径均存在）；`reaction_lab.html` 内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `REACT`/`STATUS`/`ELEMENTS` 已与 `reactions.json` 逐项比对一致（5 元素 / 7 状态 / 10 反应 均无漂移），逆触发 +20% 时长已在 `applyStatus` 真正生效。
 
+## 2.10 局内成长系统（设计规格 + 可玩实验室 · 本轮新增）
+
+> 填补内容包缺失的一环：已有波次(wave_design)、Boss(boss_phases)、元素(element_matrix)、反应(reactions)，但缺少**幸存品类的核心循环——局内「升级三选一 + 构筑」**。本规格定义升级卡池、稀有度加权抽取、叠层上限与经验曲线，让玩家在单局内把角色从「基础五元素」构筑成某一流派（元素专精 / 反应连锁 / 生存续航 / 召唤兽群）。设计锚定：Vampire Survivors 的三选一 + 叠层上限、Soulstone Survivors 的稀有度分档与独立乘区、Brotato 的「围绕 1–2 个乘区深挖」构筑思路。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `data/upgrades.json` | 局内成长系统规格 | 24 张升级卡（普通 5 / 稀有 11 / 史诗 6 / 传说 2），每张含 `rarity / maxStacks / tags / effects / icon / sfx`；另含 `levelUp`（抽 3 张、稀有度权重 + 等级缩放）、`expCurve`（二次曲线，上限 Lv.20）、`stats`（18 个属性字段口径） |
+| `upgrade_chart.html` | 经验曲线 + 权重缩放 + 升级卡清单可视化 | 由 `data/upgrades.json` 数据驱动生成（内联 SVG 柱状 + 稀有度分层卡组 + 流派标签分布，零图片生成） |
+| `upgrade_lab.html` | 局内成长可玩实验室 | 把规格真跑起来的纯前端 `file://` 校验场：英雄自动攻击木桩累积经验 → 升级弹三选一 → 选卡立刻改变属性面板与 DPS；用它验证「构筑是否真的带来成长」 |
+
+- **生成器**：`tools/build_upgrade_chart.py`（读 `data/upgrades.json`，复用 `data/element_matrix.json` 五元素配色，纯标准库渲染，零依赖、不卡机）。
+- **设计要点**：三类乘区分明——**元素专精**（5 张单元素卡，与 §2.5 克制链、§2.9 反应一一联动）、**反应连锁**（共鸣 / 绵延 / 附著大师 / 剧毒蔓延，放大 §2.9 反应结算）、**生存续航**（厚皮 / 硬壳 / 汲取 / 护体 / 不灭）；传说卡「元素共鸣」不再挑元素，是通用终极乘区。全部 24 张卡的图标复用既有 `icons/st_*` / `skill_icons/el_*·ab_*` / `vfx/fx_*`、音效复用 `cp_sfx_*`（**零新资产**）。
+- **校验**：`data/upgrades.json` 为合法 JSON；24 张卡的 icon / sfx 引用经 `os.path.exists` 核验**零缺失**；`upgrade_chart.html` 由脚本校验（0 占位符、含 `<svg>`、24 张卡名全在、19 个图标引用均存在）；`upgrade_lab.html` 内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `UP` / `RARITY` / `LEVELUP` / `CURVE` 已与 `upgrades.json` 逐项比对一致（24 卡 / 4 稀有度 / 抽卡规则 / 经验曲线 均无漂移）。
+
 ## 3. 目录结构
 
 ```
@@ -228,6 +242,10 @@ _content_pack/
 ├── skill_icons_demo.html  # 技能 / 元素图标试看页（PNG base64 内联，13 个，按 元素徽章/技能图标 分组）
 ├── element_chart.html      # 元素克制环 + 倍率矩阵 + 技能冷却条（数据驱动，内联 SVG）
 ├── wave_chart.html         # 关卡波次 + BOSS 三阶段可视化（数据驱动，内联 SVG/HTML）
+├── reaction_chart.html     # 元素反应系统：5×5 反应矩阵 + 10 反应卡 + 7 状态图例（数据驱动，内联 SVG/HTML）
+├── reaction_lab.html       # 元素反应可玩实验室（reactions.json 真跑起来，纯前端 file:// 双击即开）
+├── upgrade_chart.html      # 局内成长系统：经验曲线 + 稀有度权重缩放 + 24 张升级卡（数据驱动，内联 SVG/HTML）
+├── upgrade_lab.html        # 局内成长可玩实验室（upgrades.json 真跑起来，升级三选一 + DPS 验证，纯前端 file:// 双击即开）
 ├── boss_arena.html         # BOSS 竞技场（boss_phases.json 三阶段可玩校验场，纯前端 file:// 双击即开）
 ├── campaign.html          # 战役模式（wave_design.json 10 关 × 多波次可玩校验场，逐波刷怪，纯前端 file:// 双击即开）
 ├── sprites/               # 原始生成图（RGB，未抠）
@@ -271,7 +289,9 @@ _content_pack/
 │   ├── element_matrix.json    # 五元素克制环 / 倍率 / 配色 / 克制理由
 │   ├── skill_cooldowns.json   # 8 技能 冷却/法力/元素/类型
 │   ├── wave_design.json       # 10 关 × 多波次敌种组合 + 元素分布
-│   └── boss_phases.json       # 森林古木三阶段 Boss 脚本（baseHp 200，3 阶段）
+│   ├── boss_phases.json       # 森林古木三阶段 Boss 脚本（baseHp 200，3 阶段）
+│   ├── reactions.json         # 五元素反应系统：10 组元素对 × 5 元素 × 7 状态
+│   └── upgrades.json          # 局内成长系统：24 张升级卡 × 4 稀有度 + 经验曲线 + 抽卡权重
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -286,7 +306,8 @@ _content_pack/
     ├── build_skill_icons_demo.py # 构建技能 / 元素图标内联展示页
     ├── build_element_chart.py # 由 data/*.json 生成元素克制环 + 倍率矩阵 + 冷却条参考页
     ├── build_wave_chart.py   # 由 data/wave_design.json + data/boss_phases.json 生成关卡/Boss 参考页
-    └── build_reaction_chart.py # 由 data/reactions.json 生成 5×5 反应矩阵 + 反应卡 + 状态图例参考页
+    ├── build_reaction_chart.py # 由 data/reactions.json 生成 5×5 反应矩阵 + 反应卡 + 状态图例参考页
+    └── build_upgrade_chart.py  # 由 data/upgrades.json 生成 经验曲线 + 权重缩放 + 24 张升级卡参考页
 ```
 
 ## 4. 接入游戏路径（待主文件释放后）
@@ -325,6 +346,8 @@ _content_pack/
 - 可玩校验：`boss_arena.html` 为 `data/boss_phases.json` 三阶段脚本的可玩校验场，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch）；阶段阈值（66% / 33%）、能力冷却（随阶段压缩）、召唤增援（阶段登场 + 每 8s 周期混召，6 只上限）与规格逐一对应；英雄/BOSS 血条独立，元素克制倍率（火 强克 木 Boss ×1.6）接入 §2.5 矩阵，复用 `sprites_alpha`/`vfx`/`audio` 真实资产。
 - 可玩校验：`campaign.html` 为 `data/wave_design.json` 10 关 × 多波次的可玩校验场，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch）；逐关逐波刷怪（清空一波→下一波、清空一关→下一关）、元素聚焦 HUD、弱点提示（`counterOf()` 算最强克元素）、过关计分 + levelup、失败自动重试本关；内联 `WAVE` 数据已与 `wave_design.json` 逐项比对一致（6 敌种 key/hp/element、10 关 id/波次数/每关总敌数 均无漂移）；第 10 关含 Boss（森林古木 200HP 木）按 §2.6 高 HP 木敌呈现；元素克制倍率接入 §2.5 矩阵，复用 `sprites_alpha`/`vfx`/`audio` 真实资产。
 - 演练场机制深化：`playground.html` 已接入五元素系统——每个敌种带 `element` 属性并显示元素徽章，玩家选攻击元素后伤害按 `element_matrix.json` 倍率结算（强克 ×1.6 / 被克 ×0.6 / 同元素 ×0.85 / 中性 ×1.0），并启用该元素代表技能的冷却（`skill_cooldowns.json` 数据）；命中飘字显示克制倍率。脚本经 `node --check` 语法校验通过（内联数据，file:// 双击可用，无需 fetch）。
+- 元素反应系统：`data/reactions.json` 为合法 JSON（C(5,2)=10 对全覆盖、无多余、status 引用均存在，`fire+water` 增幅类状态为 null 符合设计）；`reaction_chart.html` 由 `tools/build_reaction_chart.py` 数据驱动生成，校验 0 占位符、10 反应名全在、7 状态图标路径均存在；`reaction_lab.html` 为可玩实验室，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `REACT`/`STATUS`/`ELEMENTS` 已与 `reactions.json` 逐项比对一致（5 元素 / 7 状态 / 10 反应 均无漂移），逆触发 +20% 状态时长已在 `applyStatus` 真正生效；7 状态全部映射到既有 `icons/st_*.png` + `fx_*`/`cp_sfx_*` 资产（零新资产）。
+- 局内成长系统：`data/upgrades.json` 为合法 JSON（24 张升级卡：普通 5 / 稀有 11 / 史诗 6 / 传说 2，每张含 rarity / maxStacks / tags / effects / icon / sfx）；24 张卡的 icon / sfx 引用经 `os.path.exists` 核验零缺失；`upgrade_chart.html` 由 `tools/build_upgrade_chart.py` 数据驱动生成，校验 0 占位符、含 `<svg>`、24 张卡名全在、19 个图标引用均存在；`upgrade_lab.html` 为可玩实验室，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch），内联 `UP`/`RARITY`/`LEVELUP`/`CURVE` 已与 `upgrades.json` 逐项比对一致（24 卡 / 4 稀有度 / 抽卡规则 / 经验曲线 均无漂移）。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
@@ -358,5 +381,7 @@ _content_pack/
 21. ~~**战役模式（关卡波次 · 可玩校验场）**~~ ✅ 已交付 `campaign.html`（纯前端，`file://` 双击即开，无 fetch）：把 §2.6 的 `data/wave_design.json` 10 关 × 多波次真跑起来的关卡流程 demo——逐关逐波刷怪（清空一波→下一波、清空一关→下一关）、元素聚焦 HUD、弱点提示（`counterOf()` 算最强克元素，强克 ×1.6）、过关按 `lv.id*10` 计分 + levelup、失败后自动重试本关；第 10 关含 Boss（森林古木 200HP 木，弱火）按 §2.6 高 HP 木敌呈现。内联 `<script>` 经 `node --check` 语法校验通过；内联 `WAVE` 数据已与 `wave_design.json` 逐项比对一致（敌种 key/hp/element、10 关 id/波次数/每关总敌数均无漂移）；11 项引用资产（6 精灵 png + 5 vfx png + 12 音频 wav）路径核验存在，无断裂引用；`index.html` 加 🗺️ 导航卡、`README` §2.8/§3/§6/§7 同步。与 `boss_arena.html` 共同构成「设计规格→可视化→可玩校验」双闭环，为 §4 接入主游戏时的波次生成器与逐波推进状态机提供端到端验证样本。
 
 22. ~~**元素反应系统（设计规格 + 可玩实验室）**~~ ✅ 已交付 `data/reactions.json`（五元素反应系统规格：5 元素 / 7 状态 / 10 组元素对；增幅类按触发方向倍率、聚变类附著状态，顺/逆以元素名字母序判定、逆触发 +20% 状态时长）+ 数据驱动可视化 `reaction_chart.html`（5×5 反应矩阵 + 10 反应卡 + 7 状态图例）+ 可玩实验室 `reaction_lab.html`（纯前端 `file://` 双击即开，把规格真跑起来：附著→触发结算增幅/聚变、逆触发 +20% 时长可见、状态 HUD 实时倒计时）。`tools/build_reaction_chart.py` 读 JSON 纯标准库渲染（零依赖、不卡机）；7 状态全部映射到既有 `icons/st_*.png` + `fx_*`/`cp_sfx_*` 资产（零新资产）；`data/reactions.json` 合法 JSON（C(5,2)=10 对全覆盖），`reaction_lab.html` 内联数据与 JSON 逐项比对一致（5 元素 / 7 状态 / 10 反应 均无漂移）、内联脚本 `node --check` 语法校验通过；`index.html` 加 ⚗️ 导航卡、`README` §2.9/§3/§6/§7 同步。在 §2.5 五元素克制链 + §2.3 状态图标 + §2.1 状态音效 基础上接入「元素反应」新设计支柱，为 §4 接入主游戏时的反应结算与状态机提供端到端验证样本。
+
+23. ~~**局内成长系统（设计规格 + 可玩实验室）**~~ ✅ 已交付 `data/upgrades.json`（24 张升级卡 × 4 稀有度；抽 3 选 1、稀有度权重随等级缩放、叠层上限、二次经验曲线至 Lv.20）+ 数据驱动可视化 `upgrade_chart.html`（经验曲线 SVG + 权重缩放表 + 流派标签分布 + 分层卡组）+ 可玩实验室 `upgrade_lab.html`（纯前端 `file://` 双击即开：自动攻击累积经验 → 升级弹三选一 → 选卡立刻改变属性面板与 DPS，验证「构筑是否真带来成长」）。`tools/build_upgrade_chart.py` 读 JSON 纯标准库渲染（零依赖、不卡机）；三类乘区分明（元素专精 5 卡 / 反应连锁 4 卡 / 生存续航 5 卡 / 功能 5 卡），与 §2.5 克制链、§2.9 元素反应一一联动；24 张卡通通复用既有 `icons/st_*` + `skill_icons/el_*·ab_*` + `vfx/fx_*` + `cp_sfx_*` 资产（零新资产）；`upgrade_lab.html` 内联数据与 JSON 逐项比对一致、内联脚本 `node --check` 通过；`index.html` 加 🎲 导航卡、`README` §2.10/§3/§6/§7 同步。填补内容包长期缺失的一环（此前有波次 / Boss / 元素 / 反应，独缺局内成长），为 §4 接入主游戏时的升级流程与构筑系统提供端到端验证样本。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。
