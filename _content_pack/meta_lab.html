@@ -67,6 +67,7 @@
       <div style="display:flex;gap:8px;margin:14px 0">
         <button class="btn gold" id="btnStart">▶ 开始本局</button>
         <button class="btn red" id="btnEnd" disabled>■ 结束本局</button>
+        <button class="btn gray" id="btnBgm">🎵 大厅 BGM：关</button>
       </div>
       <h2>✨ 永久加成 <small>已购强化对本局的提升</small></h2>
       <div id="perm"></div>
@@ -234,7 +235,7 @@ function endRun(){
   profile.coins += Math.floor(run.coins);
   document.getElementById("btnStart").disabled = false;
   document.getElementById("btnEnd").disabled = true;
-  try{ new Audio("audio/cp_sfx_win.wav").play(); }catch(e){}
+  try{ new Audio("audio/cp_sfx_coin_big.wav").play(); }catch(e){}
   renderShop(); renderPerm(); renderRun();
 }
 
@@ -276,6 +277,12 @@ function tick(){
 
 document.getElementById("btnStart").addEventListener("click", startRun);
 document.getElementById("btnEnd").addEventListener("click", endRun);
+var bgmAudio = null;
+document.getElementById("btnBgm").addEventListener("click", function(){
+  if(!bgmAudio){ bgmAudio = new Audio("audio/cp_bgm_lobby.wav"); bgmAudio.loop = true; }
+  if(bgmAudio.paused){ bgmAudio.play(); this.textContent = "🎵 大厅 BGM：开"; }
+  else { bgmAudio.pause(); this.textContent = "🎵 大厅 BGM：关"; }
+});
 renderShop(); renderPerm(); renderRun();
 setInterval(tick, 250);
 </script>

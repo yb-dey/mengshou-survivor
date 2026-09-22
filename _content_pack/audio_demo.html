@@ -118,6 +118,16 @@ const TRACKS = [
    desc:'闪亮铃音琶音（高正弦 + 七度泛音）+ 长 shimmer，五元素身份听觉签名，无缝短循环。', dur:'4.36s'},
   {key:'cp_sfx_elem_wood', ico:'🌿', title:'木元素主题动机', loop:false,
    desc:'有机叩击（木鱼式 knock + 干裂 rustle 切分律动），五元素身份听觉签名，无缝短循环。', dur:'4.62s'},
+  {key:'cp_bgm_lobby', ico:'🏛️', title:'大厅 BGM', loop:true,
+   desc:'大厅松弛曲（84 BPM · 12 小节）：I–V–vi–IV（C–G–Am–F）暖 pad + 二分音符稀疏游走旋律（五声音阶 45% 留白）+ 每 2 小节轻铃，无缝循环，适用局外大厅 / 局外成长页（meta_lab 可开关试听）。', dur:'34.3s · 循环'},
+  {key:'cp_sfx_achievement', ico:'🏅', title:'成就达成 Jingle', loop:false,
+   desc:'D 大调五音琶音（D–F♯–A–D–E）木琴主体 + 双八度衬底 + 长尾大和弦与 shimmer，隆重但不拖沓（比 win 胜利音更有「荣誉」重量），成就解锁时播放。', dur:'1.25s'},
+  {key:'cp_sfx_daily', ico:'📋', title:'每日任务完成', loop:false,
+   desc:'暖木琴双音上行（E5→A5 纯四度）+ 纯五度泛音木琴暖感，轻巧不打扰，与成就 jingle 区分大小奖励，每日任务完成入账时播放。', dur:'0.46s'},
+  {key:'cp_sfx_first_clear', ico:'🚩', title:'首通 Fanfare', loop:false,
+   desc:'C4→G4→C5 号角三连（锯齿波 + 方波双层铜管质感）+ 尾音 C 大调大和弦与高铃 shimmer，庄重明亮，仅关卡首次通关时播放（economy.first_clear 双倍结算）。', dur:'1.38s'},
+  {key:'cp_sfx_coin_big', ico:'💰', title:'大额金币入账', loop:false,
+   desc:'固定种子 9 枚金属 ping 密集迸发（B5–E7 随机音高 + 泛音亮片）+ 低频哗啦衬底 + 末枚定音高铃，「丰收」感，结算大额奖励时播放（区别于单枚 coin 双音）。', dur:'1.10s'},
 ];
 
 const grid = document.getElementById('grid');

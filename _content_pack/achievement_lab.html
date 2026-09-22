@@ -223,6 +223,7 @@ function settle(){
     if(curOf(a.metric.type)>=a.metric.target){
       done.add(k);
       banner("🏅 成就达成："+a.cn+"（"+rewardText(a.reward)+"）");
+      try{ new Audio("audio/cp_sfx_achievement.wav").play(); }catch(e){}
       feed("🏅 成就达成「"+a.cn+"」→ "+rewardText(a.reward), true);
     }
   });
@@ -232,6 +233,7 @@ function settle(){
       d._paid=true;
       st.coins+=DREWARD; st.earnToday+=DREWARD;
       banner("📋 每日任务完成："+d.cn+"（+"+DREWARD+"🍀）");
+      try{ new Audio("audio/cp_sfx_daily.wav").play(); }catch(e){}
       feed("📋 每日任务「"+d.cn+"」完成 → 入账 +"+DREWARD+" 🍀（economy.daily 口径）", true);
     }
   });
@@ -266,6 +268,7 @@ function clearNext(){
     const gain=100+lv*10;
     st.coins+=gain; st.earnToday+=gain;
     feed("🏁 通关第 "+lv+" 关 → 首通双倍结算 +"+gain+" 🍀（economy.first_clear 口径）", true);
+    try{ new Audio("audio/cp_sfx_first_clear.wav").play(); }catch(e){}
   } else {
     feed("🏁 通关第 "+lv+" 关（重复通关，无首通加成）");
   }

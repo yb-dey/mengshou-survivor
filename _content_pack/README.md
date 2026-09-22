@@ -60,8 +60,8 @@
 | `audio/cp_sfx_debuff.wav`| 减益 / 诅咒 | 下行阴郁小调 + 低频闷响（配套 fx_debuff） | 0.70s |
 
 - **合成方式**：`tools/synth_audio.py`（纯 Python 标准库，零依赖、零生成额度、不卡机），确定性种子可复现；复用 `midi_freq / env_adsr / tone / write_wav` 四个基础件，新增 `sawtooth` 波形与 `sweep` 扫频原语。
-- **试听页**：`audio_demo.html` 引用相对路径 `audio/*.wav`，双击即听，同样规避死资产；现已改为数据驱动网格，覆盖全部 35 条（6 BGM + 29 SFX）。
-- **校验**：35/35 峰值均 = 85%（未削波），RMS 13.4%–30.0%（非空、非静音）；6 首 BGM（35.6s / 30.0s / 31.3s / 33.1s / 31.0s / 23.2s）无缝循环，29 个 SFX 0.06s–1.38s 覆盖战斗全事件、五元素命中与音画配套特效，另含 5 条五元素主题动机 4.00s–5.71s（元素身份听觉签名，无缝短循环）。
+- **试听页**：`audio_demo.html` 引用相对路径 `audio/*.wav`，双击即听，同样规避死资产；现已改为数据驱动网格，覆盖全部 40 条（7 BGM + 33 SFX）。
+- **校验**：40/40 峰值均 = 85%（未削波），RMS 10.9%–30.0%（非空、非静音）；7 首 BGM（35.6s / 30.0s / 31.3s / 33.1s / 31.0s / 23.2s / 34.3s）无缝循环，33 个 SFX 0.06s–1.38s 覆盖战斗全事件、五元素命中、音画配套特效、系统事件（成就/任务/首通/大额入账），另含 5 条五元素主题动机 4.00s–5.71s（元素身份听觉签名，无缝短循环）。
 
 ## 2.2 VFX 特效精灵（本轮新增 · 程序化真透底）
 
@@ -284,7 +284,7 @@ _content_pack/
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
 │   └── <key>.png / <key>.webp
-├── audio/                 # 本包专属音频原型（独立命名空间，零接线，35 条）
+├── audio/                 # 本包专属音频原型（独立命名空间，零接线，40 条）
 │   ├── cp_bgm_forest.wav  # 森林主题 BGM（无缝循环）
 │   ├── cp_bgm_battle.wav  # 战斗主题 BGM（128 BPM，无缝循环）
 │   ├── cp_bgm_boss.wav    # BOSS 主题 BGM（92 BPM，无缝循环）
@@ -309,7 +309,12 @@ _content_pack/
 │   ├── cp_sfx_elem_water.wav # 水元素主题动机（听觉签名，无缝短循环）
 │   ├── cp_sfx_elem_earth.wav # 土元素主题动机（听觉签名，无缝短循环）
 │   ├── cp_sfx_elem_light.wav # 光元素主题动机（听觉签名，无缝短循环）
-│   └── cp_sfx_elem_wood.wav  # 木元素主题动机（听觉签名，无缝短循环）
+│   ├── cp_sfx_elem_wood.wav  # 木元素主题动机（听觉签名，无缝短循环）
+│   ├── cp_bgm_lobby.wav      # 大厅 BGM（84 BPM，I–V–vi–IV 松弛曲，无缝循环）
+│   ├── cp_sfx_achievement.wav # 成就达成 Jingle（D 大调五音琶音，隆重）
+│   ├── cp_sfx_daily.wav      # 每日任务完成（暖木琴双音，轻巧）
+│   ├── cp_sfx_first_clear.wav # 首通 Fanfare（号角三连，economy.first_clear 结算）
+│   └── cp_sfx_coin_big.wav   # 大额金币入账（9 枚金属 ping 迸发，丰收感）
 ├── vfx/                   # 程序化特效精灵（RGBA 真透底）
 │   └── fx_*.png（24 个）
 ├── icons/                 # 状态图标（RGBA 真透底，常驻 HUD 指示）
@@ -374,11 +379,11 @@ _content_pack/
 ## 6. 验证记录
 
 - 贴图：8/8 生成成功（6 萌兽 + Boss 森林古木 + Hero 灵鹿祭司）；8/8 透底为 RGBA；小兵/宠物 512²、Boss/Hero 1024²；展示页内联校验通过（8 张 `data:image/webp`）。
-- 音频：35/35 合成成功并校验——峰值均 85%（未削波），RMS 13.4%–30.0%（非空非静音）；试听页 `audio_demo.html` 数据驱动网格覆盖全部 35 条（6 BGM + 29 SFX），引用相对路径可双击播放。
+- 音频：40/40 合成成功并校验——峰值均 85%（未削波），RMS 10.9%–30.0%（非空非静音）；试听页 `audio_demo.html` 数据驱动网格覆盖全部 40 条（7 BGM + 33 SFX），引用相对路径可双击播放；Round-30 新增 5 条系统事件音频（大厅 BGM / 成就 Jingle / 每日任务 / 首通 Fanfare / 大额金币）全部接线到真实消费点（`achievement_lab.html` 3 处事件音 + `meta_lab.html` 结算音与大厅 BGM 开关），无「零消费」死资产。
 - VFX：24/24 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（24 张 `data:image/png`）。
 - 状态图标：12/12 程序化生成成功并校验——均为 `colorType=6` RGBA（64×64），体积 1.46KB–2.52KB（实心徽章 + 白色符号，内容饱满非空白）；按 控制 / 持续伤害 / 负面 / 增益 四组分类，与 24 个 VFX 爆发特效共同构成「状态机制」视觉闭环；试看页 `icons_demo.html` 内联校验通过（12 张 `data:image/png`）。
 - 技能 / 元素图标：13/13 程序化生成成功并校验——均为 `colorType=6` RGBA（64×64），体积 1.6KB–4.6KB；逐张目检通过（叶片轴与中脉同向、星芒可见、面板元素色可辨、六边符印与圆盘/方面板三底盘不混淆）；试看页 `skill_icons_demo.html` 内联校验通过（13 张 `data:image/png`）。
-- 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、24 VFX（尺寸 / 体积）、12 状态图标（尺寸 / 体积）、13 技能/元素图标（尺寸 / 体积 / 分组）、4 设计数值 JSON（字节数）、35 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
+含 8 精灵（尺寸 / PNG+WebP 体积）、24 VFX（尺寸 / 体积）、12 状态图标（尺寸 / 体积）、13 技能/元素图标（尺寸 / 体积 / 分组）、9 设计数值 JSON（字节数）、40 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
 - 设计数值：`data/element_matrix.json`、`data/skill_cooldowns.json`、`data/wave_design.json`、`data/boss_phases.json` 均为合法 JSON（`json.load` 通过）；`element_chart.html` 由 `tools/build_element_chart.py` 数据驱动生成，校验含 `<svg>` 节点、5×5 倍率矩阵（6 行）、8 技能冷却条；`wave_chart.html` 由 `tools/build_wave_chart.py` 数据驱动生成，校验含 10 关卡片、难度曲线柱状、BOSS HP 三段分段条、3 阶段能力卡 + 冷却压缩对比；五元素 5 环克制链对称（火→木→土→水→光→火），与 §2.4 元素徽章「强克」文案一致；关卡/Boss 规格与 §2.5 克制链、敌种表对齐（教学关单元素 → 后期逼迫切元素；Boss 三阶段随血量压缩冷却）。
 - 可玩校验：`boss_arena.html` 为 `data/boss_phases.json` 三阶段脚本的可玩校验场，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch）；阶段阈值（66% / 33%）、能力冷却（随阶段压缩）、召唤增援（阶段登场 + 每 8s 周期混召，6 只上限）与规格逐一对应；英雄/BOSS 血条独立，元素克制倍率（火 强克 木 Boss ×1.6）接入 §2.5 矩阵，复用 `sprites_alpha`/`vfx`/`audio` 真实资产。
 - 可玩校验：`campaign.html` 为 `data/wave_design.json` 10 关 × 多波次的可玩校验场，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch）；逐关逐波刷怪（清空一波→下一波、清空一关→下一关）、元素聚焦 HUD、弱点提示（`counterOf()` 算最强克元素）、过关计分 + levelup、失败自动重试本关；内联 `WAVE` 数据已与 `wave_design.json` 逐项比对一致（6 敌种 key/hp/element、10 关 id/波次数/每关总敌数 均无漂移）；第 10 关含 Boss（森林古木 200HP 木）按 §2.6 高 HP 木敌呈现；元素克制倍率接入 §2.5 矩阵，复用 `sprites_alpha`/`vfx`/`audio` 真实资产。
@@ -392,7 +397,7 @@ _content_pack/
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张精灵）+ 音乐（6 首 BGM + 29 SFX）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（9 份 JSON）+ 可视化参考页与可玩校验场（6 参考页 + 4 实验室 + 竞技场 + 战役 + 演练场）**九大支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张精灵）+ 音乐（7 首 BGM + 33 SFX）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（9 份 JSON）+ 可视化参考页与可玩校验场（6 参考页 + 4 实验室 + 竞技场 + 战役 + 演练场）**九大支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -426,4 +431,5 @@ _content_pack/
 
 24. ~~**局外成长系统（设计规格 + 可玩实验室）**~~ ✅ 已交付 `data/meta_upgrades.json`（18 项永久强化 × 5 类：基础属性 / 元素亲和 / 经济加成 / 生存续航 / 英雄解锁；几何成本 `cost(l)=round(base*growth^(l-1))`）+ `data/economy.json`（森灵币产出-消耗水槽模型：1 货币 / 4 产出入口 / 2 回收水槽 / 积压率 0.22）+ 数据驱动可视化 `meta_chart.html`（积压率仪表 SVG + 五类总消耗对比 + 18 项强化卡组）+ 可玩实验室 `meta_lab.html`（纯前端 `file://` 双击即开：本局自动战斗 20s 赚币 → 局外大厅买永久强化 → 下一局伤害/生命/金币收益更高，验证「跨局养成」闭环）。`tools/build_meta_chart.py` 读两份 JSON 纯标准库渲染（零依赖、不卡机）；经济表经 `game-economy` 技能 `check` E1–E4 全 PASS（积压率 0.22 < 0.3 健康）；18 项复用既有 `icons/`+`skill_icons/`+`vfx/`+`sprites/`+`cp_sfx_*` 资产（零新资产，英雄解锁项用现有精灵作占位图待云端出图替换）；`meta_lab.html` 内联数据与 JSON 逐项比对一致、内联脚本 `node --check` 通过；`index.html` 加 🌱 导航卡、`README` §2.11/§3/§6/§7 同步。与 §2.10 局内成长共同构成幸存品类「局内构筑 + 局外养成」双层循环，为 §4 接入主游戏时的局外养成与货币系统提供端到端验证样本。
 26. ~~**成就与任务系统（设计规格 + 可玩实验室）**~~ ✅ 已交付 `data/achievements.json`（19 个一次性成就 × 5 组 + 每日任务池 6 模板抽 3/天、各 +20 🍀；17 种指标口径全部取自既有系统：波次击杀/反应触发/构筑拿卡/永久强化/货币积累）+ 数据驱动可视化 `achievement_chart.html`（奖励政策流向表 + 5 组成就卡 + 每日任务池 + 指标词汇表）+ 可玩实验室 `achievement_lab.html`（纯前端 `file://` 双击即开：事件推进 → 成就进度实时填充、达成弹金框 → 每日任务按日期种子抽取、完成入账 → 首通触发 economy.first_clear 双倍结算横幅）。经济边界：成就本体从不发币（只发称号/图鉴/头像框），唯二货币出口严格对应 economy.json 既有 first_clear/daily 两水龙头，不突破四 faucet 总量、积压率 0.22 不变；校验含跨表引用存在性（关卡 id/反应种类/状态种类）与 `node --check` + DATA_SYNC_OK（19/6/3/20 无漂移）；`index.html` 加 🏅 导航卡、`README` §2.12/§3/§6/§7 同步。补齐留存支柱，使内容包形成「波次→Boss→元素→反应→局内构筑→局外养成→经济→成就」完整设计链，为 §4 接入主游戏时的留存系统提供端到端验证样本。
+27. ~~**系统事件音效包（成就 / 任务 / 首通 / 大额入账 + 大厅 BGM · 音乐侧接线）**~~ ✅ 已交付 5 条新音频（`cp_bgm_lobby` 34.3s 84 BPM I–V–vi–IV 大厅松弛曲无缝循环；`cp_sfx_achievement` 1.25s D 大调五音琶音隆重 Jingle；`cp_sfx_daily` 0.46s 暖木琴双音轻巧；`cp_sfx_first_clear` 1.38s 号角三连 Fanfare；`cp_sfx_coin_big` 1.10s 固定种子 9 枚金属 ping 迸发）。其中 `synth_achievement`/`synth_daily`/`synth_bgm_lobby` 三个函数此前已写好但**从未接入 jobs 列表**（wav 从未生成）——本轮补接线并新增 `synth_first_clear`/`synth_coin_big` 两函数；全部 40 条音频重合成回归通过（峰值均 85% 无削波、RMS 10.9%–30.0% 非静音）。**每条新音频均接线真实消费点**（规避「零消费」死资产）：`achievement_lab.html` 成就达成→Jingle、每日任务完成→双音、首通结算→Fanfare；`meta_lab.html` 本局结算入账→coin_big（替换原 win）、新增 🎵 大厅 BGM 开关按钮（loop 循环）；`audio_demo.html` 加 5 试听卡（40 条全覆盖）；`manifest.json`/`index.html` 重生成（audio 35→40，bgm 6→7）；`README` §2.1/§3/§6/§7/引言同步（顺手修复 §6 清单段「4 设计数值 JSON」跨轮漂移 → 9）。为 §4 接入主游戏时的成就/任务/结算音效与大厅场景 BGM 提供素材底座。
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

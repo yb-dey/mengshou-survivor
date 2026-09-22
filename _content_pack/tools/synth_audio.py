@@ -1121,6 +1121,148 @@ def synth_motif_wood(path, bars=2, bpm=104, fade=0.05):
             p = i / nb; buf[i] += (r.random() * 2 - 1) * 0.10 * (1 - p) ** 1.5
     _loop_crossfade(buf, fade); write_wav(path, buf); return total
 
+# ---------------- 大厅 / 养成主题 BGM（Round-30 · 局外大厅的专属听觉氛围） ----------------
+# 与森林主题同族（C 系五声 + 柔 pad），但更慢更安宁：84 BPM、无底鼓、lead 稀疏长音、
+# 进行 I–V–vi–IV（C–G–Am–F，终止感=「回家」），定位局外大厅/养成/成就页氛围。
+def synth_bgm_lobby(path, bars=12, bpm=84, fade=0.10):
+    beat = 60.0 / bpm
+    bar_dur = beat * 4
+    total = bars * bar_dur
+    N = int(total * SR)
+    buf = [0.0] * N
+    rng = random.Random(20260923)
+    # I–V–vi–IV（C G Am F），每 4 小节一轮；第二轮 lead 上移八度点缀
+    prog = [(60, [60, 64, 67]), (55, [55, 59, 62]), (57, [57, 60, 64]), (53, [53, 57, 60])]
+    penta = [72, 74, 76, 79, 81, 84, 86]
+
+    def add(start, dur, freq, amp, wave, a=0.01, d=0.05, s=0.7, r=0.08):
+        i0 = int(start * SR)
+        cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+
+    deg = 2
+    for bar in range(bars):
+        root_midi, chord = prog[(bar // 4) % 4]
+        s0 = bar * bar_dur
+        round_up = 1 if bar >= 8 else 0  # 第三轮 lead 高八度，避免 3 轮同型
+        # pad：整小节和弦 + 低八度根音垫底（长 attack 柔入，暖）
+        for c in chord:
+            add(s0, bar_dur * 0.99, midi_freq(c), 0.09, 'sine', a=0.40, d=0.10, s=0.85, r=0.50)
+        add(s0, bar_dur * 0.99, midi_freq(chord[0] - 12), 0.06, 'triangle', a=0.35, d=0.10, s=0.80, r=0.50)
+        # 贝斯：每小节 1 拍长根音（安宁，无切分）
+        add(s0, beat * 3.2, midi_freq(root_midi - 24), 0.17, 'sine', a=0.02, d=0.10, s=0.75, r=0.30)
+        # 铃：每 2 小节小节头轻 ping
+        if bar % 2 == 0:
+            add(s0, 0.8, midi_freq(chord[2] + 12), 0.045, 'sine', a=0.004, d=0.25, s=0.0, r=0.45)
+        # lead：二分音符为主、稀疏游走（慢而疏=大厅的松弛）
+        for e in range(2):
+            if rng.random() < 0.45:  # 留白
+                continue
+            t = s0 + e * (beat * 2)
+            deg = max(0, min(len(penta) - 1, deg + rng.choice([0, 1, -1, 2, -2])))
+            add(t, beat * 1.7, midi_freq(penta[deg] + 12 * round_up), 0.13, 'triangle',
+                a=0.05, d=0.08, s=0.65, r=0.40)
+
+    _loop_crossfade(buf, fade)
+    write_wav(path, buf)
+    return total
+
+
+# ---------------- 成就达成 jingle（Round-30 · 隆重仪式感，比 win 更有「荣誉」重量） ----------------
+def synth_achievement(path):
+    """成就达成：D 大调五音琶音 + 双八度衬底 + 长尾大和弦与 shimmer。隆重但不拖沓。"""
+    notes = [74, 78, 81, 86, 90]
+    step = 0.11; tail = 0.70; total = len(notes) * step + tail
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.004, d=0.05, s=0.6, r=0.20):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    for k, m in enumerate(notes):
+        add(k * step, 0.20, midi_freq(m), 0.22, 'triangle', a=0.003, d=0.04, s=0.6, r=0.14)  # 木琴主体
+        add(k * step, 0.14, midi_freq(m + 12), 0.06, 'sine', a=0.002, d=0.03, s=0.3, r=0.10)  # 高频 sparkle
+        add(k * step, 0.26, midi_freq(m - 12), 0.07, 'sine', a=0.004, d=0.05, s=0.5, r=0.16)  # 低八度衬底（隆重）
+    for c in [74, 78, 81, 86]:  # 尾音 D 大调大和弦
+        add(len(notes) * step, tail, midi_freq(c), 0.11, 'sine', a=0.03, d=0.15, s=0.8, r=0.45)
+    add(len(notes) * step + 0.05, tail - 0.10, midi_freq(98), 0.05, 'sine', a=0.10, d=0.30, s=0.4, r=0.50)  # shimmer 高铃
+    write_wav(path, buf); return total
+
+
+# ---------------- 每日任务完成 jingle（Round-30 · 轻巧木琴双音，与成就 jingle 区分大小奖励） ----------------
+def synth_daily(path):
+    """每日任务：暖木琴双音上行（E5→A5 纯四度），轻快不打扰。"""
+    notes = [76, 81]
+    step = 0.14; tail = 0.18; total = len(notes) * step + tail
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.003, d=0.04, s=0.55, r=0.14):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    for k, m in enumerate(notes):
+        add(k * step, 0.16, midi_freq(m), 0.24, 'triangle', a=0.002, d=0.035, s=0.55, r=0.10)
+        add(k * step, 0.10, midi_freq(m + 7), 0.06, 'sine', a=0.002, d=0.03, s=0.3, r=0.08)  # 纯五度泛音=木琴暖感
+    add(len(notes) * step - 0.02, tail, midi_freq(88), 0.08, 'sine', a=0.02, d=0.08, s=0.4, r=0.16)
+    write_wav(path, buf); return total
+
+
+# ---------------- 首通 fanfare（Round-30 · 比 win 更庄重的号角三连，只在该关第一次通关时响起） ----------------
+def synth_first_clear(path):
+    """首通结算：C4→G4→C5 号角三连（saw+square 双层=铜管质感）+ 尾音大和弦与高铃。庄重而明亮。"""
+    notes = [60, 67, 72]
+    step = 0.16; tail = 0.90; total = len(notes) * step + tail
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.004, d=0.05, s=0.65, r=0.20):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    for k, m in enumerate(notes):
+        add(k * step, 0.24, midi_freq(m), 0.17, 'sawtooth', a=0.006, d=0.05, s=0.6, r=0.12)   # 号角主体
+        add(k * step, 0.20, midi_freq(m), 0.10, 'square', a=0.005, d=0.04, s=0.5, r=0.10)     # 方波增亮
+        add(k * step, 0.16, midi_freq(m - 12), 0.07, 'sine', a=0.004, d=0.04, s=0.4, r=0.10)  # 低八度衬底
+    for c in [60, 64, 67, 72]:  # 尾音 C 大调大和弦
+        add(len(notes) * step, tail, midi_freq(c), 0.10, 'sine', a=0.03, d=0.18, s=0.8, r=0.50)
+    add(len(notes) * step + 0.06, tail - 0.12, midi_freq(96), 0.045, 'sine', a=0.10, d=0.35, s=0.3, r=0.55)  # shimmer
+    write_wav(path, buf); return total
+
+
+# ---------------- 大额金币入账（Round-30 · 首通/结算大额奖励的「哗啦」迸发，区别于单枚 coin 双音） ----------------
+def synth_coin_big(path):
+    """大额金币：固定种子的 9 枚金属 ping 密集迸发（B5–E7 随机音高）+ 低频哗啦衬底。丰收感。"""
+    total = 1.10
+    N = int(total * SR); buf = [0.0] * N
+    rng = random.Random(20260930)
+    def add(start, dur, freq, amp, wave, a=0.001, d=0.02, s=0.3, r=0.06):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    for k in range(9):  # 9 枚金币：前 0.45s 密集、后半稀疏收尾
+        start = 0.02 + k * (0.05 if k < 6 else 0.13) + rng.uniform(0, 0.02)
+        m = rng.randint(83, 100)  # B5–E7
+        amp = 0.20 if k < 6 else 0.12
+        add(start, 0.09, midi_freq(m), amp, 'sine', a=0.001, d=0.015, s=0.15, r=0.05)
+        add(start, 0.05, midi_freq(m + 12), amp * 0.35, 'sine', a=0.001, d=0.01, s=0.1, r=0.03)  # 泛音亮片
+    add(0.0, 0.30, midi_freq(48), 0.10, 'square', a=0.004, d=0.05, s=0.2, r=0.10)   # 低频哗啦衬底
+    add(0.42, 0.22, midi_freq(55), 0.06, 'square', a=0.004, d=0.04, s=0.15, r=0.08)
+    add(0.95, 0.13, midi_freq(100), 0.10, 'sine', a=0.002, d=0.03, s=0.2, r=0.06)   # 末枚定音高铃
+    write_wav(path, buf); return total
+
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/audio'
     import os
@@ -1161,6 +1303,11 @@ if __name__ == '__main__':
         ('cp_sfx_elem_earth.wav', synth_motif_earth),
         ('cp_sfx_elem_light.wav', synth_motif_light),
         ('cp_sfx_elem_wood.wav', synth_motif_wood),
+        ('cp_bgm_lobby.wav', synth_bgm_lobby),
+        ('cp_sfx_achievement.wav', synth_achievement),
+        ('cp_sfx_daily.wav', synth_daily),
+        ('cp_sfx_first_clear.wav', synth_first_clear),
+        ('cp_sfx_coin_big.wav', synth_coin_big),
     ]
     for name, fn in jobs:
         d = fn(f'{out_dir}/{name}')
