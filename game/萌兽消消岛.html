@@ -599,14 +599,15 @@ var CONFIG = {
   playerHp: 100,                    // 初始生命
   playerSpeed: 180,                 // 移速 px/s
   playerR: 14,                      // 判定半径 px
-  playerRingAlpha: 0.42,            // 【v1.182】脚环再静: alpha 0.66→0.42, 仍可读「这是你」
-  playerRingWidth: 1.35,            // 【v1.182】脚环描边再细, 身份靠浣熊剪影不靠环厚
+  playerRingAlpha: 0.38,            // 【v1.182】脚环再静: alpha ~0.38, 仍可读「这是你」
+  playerRingWidth: 1.2,             // 【v1.182】脚环描边再细, 身份靠浣熊剪影不靠环厚
   // 【v1.167】主角焦点辉光：暗场（底 0.017）上把主角"托"出来；同色柔光，预渲染缓存、零新增资产。
   //   实测动机：主角有细标识环但**没有光层**，而敌人有读感环 → 最该突出的主角在"光"上不占优。
   //   关闭：置 0；低画质档自动跳过（与落地影同门槛）。
-  heroGlowAlpha: 0.16,
-  heroGlowScale: 2.4,               // 光斑半径 = 角色半径 × 该系数
-  playerRingRAdd: 8,                // 【R9】标识环半径外扩 px(R10: 5→8, 环 r=playerR+8=22 越过贴图纵向剪影半高 21, 横向留 7px)
+  // 【v1.182】辉光再收, 少跟脚环叠成厚白盘
+  heroGlowAlpha: 0.10,
+  heroGlowScale: 2.2,               // 光斑半径 = 角色半径 × 该系数
+  playerRingRAdd: 6,                // 【v1.182】环半径略收, 少占脚下一圈白
   playerInvSec: 0.5,                // 受击无敌秒 [来源]
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
@@ -1535,11 +1536,11 @@ var CONFIG = {
     joyHat: "rgba(60,80,40,0.38)",      // 【v1.155】摇杆帽同步降一档, 靠墨缘读形
     pauseText: "#3a5a20",
     fpsText: "#9ab88a",
-    enemyRabbit: "#efe6d0",           // 【v1.182】奶油兔: 命名填色, 夜巅一眼可读, 非近黑剪影
+    enemyRabbit: "#f5ead4",           // 【v1.182】奶油兔: 再亮一档, 夜巅一眼可读
     enemyBear: "#8a5a3a",
-    enemyMouse: "#b8b0a6",            // 【v1.182】灰鼠: 命名填色, 与兔/狐/蟾分色
-    enemyFox: "#e07a2a",            // 【v1.182】橙狐: 命名填色保留
-    enemyfox: "#e07a2a",
+    enemyMouse: "#c8c0b4",            // 【v1.182】灰鼠: 再亮一档, 与兔/狐/蟾分色
+    enemyFox: "#f08a38",            // 【v1.182】橙狐: 命名填色略抬
+    enemyfox: "#f08a38",
     enemyRaven: "#4a4a68",          // 【v1.13】夜啼鸦(复用鼠剪影)
     enemyraven: "#4a4a68",
     enemyorbitcrab: "#c45a38",      // 【v1.14】环甲蟹(绕圈扑人)
@@ -1552,8 +1553,8 @@ var CONFIG = {
     enemyChargerhino: "#5a3220",
     enemyshieldbug: "#2a8a8a",      // 【v1.15】盾甲虫(光环减伤)
     enemyShieldbug: "#2a8a8a",
-    enemyleaptoad: "#6db84a",       // 【v1.29】跳跳蟾(落点拍)
-    enemyLeaptoad: "#6db84a",
+    enemyleaptoad: "#7ec85a",       // 【v1.182】绿蟾: 命名填色略抬
+    enemyLeaptoad: "#7ec85a",
     enemyburrowmole: "#8a5a32",    // 【v1.29】钻钻鼹(破土)
     enemyBurrowmole: "#8a5a32",
     enemyhoneypot: "#e07090",       // 【v1.39】蜜罐猬(奶源)
@@ -1819,14 +1820,14 @@ var DATA_ENEMY = {
   boss2:  { id: "boss2",  name: "熔岩狮",   spd: 130, hp: 5000,  dmg: 40, r: 40, xp: 200, coinRate: 1, coinNum: 30, cat: "boss", shotDmg: 14, shotIv: 2.2, shotSpd: 260, shotR: 10, shotPattern: "burst" },   // 【R21】弹幕模式: 双发速射(±0.09rad, 每发 0.55×shotDmg)——速攻型贴脸双弹, 近身惩罚加重
   boss3:  { id: "boss3",  name: "深渊鲸王", spd: 135, hp: 7000, dmg: 50, r: 48, xp: 300, coinRate: 1, coinNum: 50, cat: "boss", shotDmg: 18, shotIv: 1.8, shotSpd: 280, shotR: 11, shotPattern: "ring" },   // 【R9】15000->7000: 原 phase2(x4)x章节系数 有效 HP 87k/96k/105k 造 ch4-6 零通关; 设计线 GOD 免死隔离实验证实主因=DPS-gate(非生存); 同bot同种子A/B: 0/4->2/4(ch4) 0/3->1/3(ch6)。7000 -> 40.6k/44.8k/49k, TTK 50-70s = ch3 终局(26k/43-47s)的 1.2-1.6x。【R21】弹幕模式: 八向环弹(每 45°, 每发 0.22×shotDmg)——终局型全域 area denial, 弹幕地狱视觉
   hedgehog: { id: "hedgehog", name: "喷嚏猬", spd: 85, hp: 45, dmg: 10, r: 14, xp: 8, coinRate: 0.08, coinNum: 1, tint: "#c4a15a", shotDmg: 8, shotIv: 2.6, shotSpd: 200, shotR: 7 },   // 【R16】新小怪(远程威胁型, 填补全近战池真空): 血量梯度 鼠8<兔10<熊30<猬45; 无 cat=普通怪占 200 上限; 周期喷刺(shotIv 2.6s)+射后驻停 0.4s 走位窗口(CONFIG.hedgehogStopSec)
-  fox: { id: "fox", name: "疾风狐", spd: 158, hp: 14, dmg: 9, r: 13, xp: 7, coinRate: 0.1, coinNum: 1, skin: "rabbit", tint: "#e07a2a" },   // 【v1.96】尖耳蓬尾剪影, 身份靠形色不靠橙环
+  fox: { id: "fox", name: "疾风狐", spd: 158, hp: 14, dmg: 9, r: 13, xp: 7, coinRate: 0.1, coinNum: 1, skin: "rabbit", tint: "#f08a38" },   // 【v1.182】橙狐命名色; 碰撞/数值同前
   raven: { id: "raven", name: "夜啼鸦", spd: 148, hp: 9, dmg: 7, r: 11, xp: 6, coinRate: 0.08, coinNum: 1, skin: "mouse", tint: "#5a4a88" },   // 【v1.96】喙翼剪影, 身份靠形色不靠紫环
   orbitcrab: { id: "orbitcrab", name: "环甲蟹", spd: 128, hp: 16, dmg: 8, r: 12, xp: 8, coinRate: 0.1, coinNum: 1, skin: "mouse", tint: "#c45a38", ai: "orbit", aiTag: "绕" },   // 【v1.95】独立蟹钳剪影, 绕圈后扑人, 不是追人换色
   boomfruit: { id: "boomfruit", name: "爆果果", spd: 104, hp: 22, dmg: 7, r: 15, xp: 9, coinRate: 0.12, coinNum: 1, skin: "bear", tint: "#d4542a", ai: "explode", aiTag: "爆" },   // 【v1.95】独立果叶剪影, 近身前摇自爆
   sporecap: { id: "sporecap", name: "孢孢菇", spd: 76, hp: 28, dmg: 10, r: 15, xp: 10, coinRate: 0.1, coinNum: 1, skin: "hedgehog", tint: "#5a9a3a", ai: "split", aiTag: "裂", splitN: 2 },   // 【v1.95】独立菇盖剪影, 死亡裂成两只更快的子体
   chargerhino: { id: "chargerhino", name: "冲锋犀", spd: 124, hp: 260, dmg: 24, r: 22, xp: 70, coinRate: 1, coinNum: 5, cat: "elite", skin: "boar", tint: "#5a3220", ai: "charge", aiTag: "冲" },   // 【v1.95】独立独角剪影, 预警走廊+直线冲撞, 不是数值词缀
   shieldbug: { id: "shieldbug", name: "盾甲虫", spd: 88, hp: 240, dmg: 16, r: 20, xp: 58, coinRate: 1, coinNum: 4, cat: "elite", skin: "badger", tint: "#2a8a8a", ai: "aura", aiTag: "盾" },   // 【v1.95】独立盾甲剪影, 光环给近身普通怪减伤, 必须拆源
-  leaptoad: { id: "leaptoad", name: "跳跳蟾", spd: 112, hp: 18, dmg: 9, r: 13, xp: 8, coinRate: 0.1, coinNum: 1, skin: "rabbit", tint: "#6db84a", ai: "leap", aiTag: "跳" },   // 【v1.95】独立蟾剪影, 落点圈+滞空砸地, 不是追人换色
+  leaptoad: { id: "leaptoad", name: "跳跳蟾", spd: 112, hp: 18, dmg: 9, r: 13, xp: 8, coinRate: 0.1, coinNum: 1, skin: "rabbit", tint: "#7ec85a", ai: "leap", aiTag: "跳" },   // 【v1.182】绿蟾命名色; 碰撞/数值同前
   burrowmole: { id: "burrowmole", name: "钻钻鼹", spd: 102, hp: 20, dmg: 8, r: 12, xp: 9, coinRate: 0.1, coinNum: 1, skin: "mouse", tint: "#8a5a32", ai: "burrow", aiTag: "钻" },   // 【v1.95】独立鼹剪影, 扬尘钻地换位+破土圈, 不是隐身无敌
   honeypot: { id: "honeypot", name: "蜜罐猬", spd: 80, hp: 210, dmg: 14, r: 18, xp: 64, coinRate: 1, coinNum: 5, cat: "elite", skin: "hedgehog", tint: "#e07090", ai: "mend", aiTag: "奶" },   // 【v1.95】独立蜜罐剪影, 粉圈给近身普通怪回血, 必须先拆
   rollshell: { id: "rollshell", name: "滚滚石甲", spd: 92, hp: 236, dmg: 20, r: 21, xp: 66, coinRate: 1, coinNum: 5, cat: "elite", skin: "badger", tint: "#8a9060", ai: "roll", aiTag: "滚" }   // 【v1.95】独立石甲剪影, 蓄力滚撞, 侧移即安全
@@ -15211,9 +15212,11 @@ function actorRimOf(id, def) {
 function paintEnemySilhouette(c2, cx, cy, r, color, id) {
   var ink = "#1c1810";
   var i, ang;
+  var early = (id === "rabbit" || id === "mouse" || id === "fox" || id === "leaptoad");
   c2.lineJoin = "round";
   c2.lineCap = "round";
-  if (id !== "player" && id !== "rabbit" && id !== "bear") {
+  // 【v1.182】早波命名色杂兵不把近黑脚影烤进贴图(运行时已有接触影), 避免奶油/灰/橙/绿被吞成黑团
+  if (!early && id !== "player" && id !== "bear" && id !== "shell" && id !== "hero_shell" && id !== "hero_grizz") {
     c2.fillStyle = "rgba(16,20,14,0.28)";
     c2.beginPath();
     if (typeof c2.ellipse === "function") c2.ellipse(cx, cy + r * 0.78, r * 0.78, r * 0.26, 0, 0, CONFIG.TWO_PI);
@@ -15221,8 +15224,9 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
     c2.fill();
   }
   c2.fillStyle = color;
-  c2.strokeStyle = ink;
+  c2.strokeStyle = early ? "#2a3224" : ink;
   c2.lineWidth = Math.max(1.8, r * 0.16);
+  if (early) ink = "#2a3224";
   function fs() { c2.fill(); c2.stroke(); }
   function eyes(ex, ey, es) {
     c2.fillStyle = "#ffffff";
@@ -15323,10 +15327,10 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
     // 【v1.177】外墨再厚一档, 夜章叠怪时轮廓仍分开; 填色不改
     // 【v1.180】外墨再抬到 ≈2–3px 显示档(烘焙 r*0.32), 手机上兔/狐/蟾轮廓分开
     // 【v1.181】外墨再抬半档 ≈2.5–3.5px 显示, 星巅海军底上兔/狐/蟾一眼可指名
-    // 【v1.182】命名色填体 + 外墨仍 ≈2.5–3.5px, 永不近黑体填
+    // 【v1.182】命名色填体优先: 外墨收回 ≈2.5–3.5px 软墨, 绝不再用粗黑描边吞掉奶油/灰/橙/绿
     c2.fillStyle = color;
     c2.strokeStyle = ink;
-    c2.lineWidth = Math.max(5.8, r * 0.34);
+    c2.lineWidth = Math.max(2.8, r * 0.11);
   }
   function trashUlStroke() {
     // 【v1.180】左上受光细描一笔, 夜底剪影不糊成一团
@@ -16460,10 +16464,10 @@ function isEarlyTrashId(id) {
 function earlyTrashBodyColor(id) {
   var b = id ? String(id).replace(/_hit$/, "").replace(/_dead$/, "") : "";
   var c = CONFIG.colors || {};
-  if (b === "rabbit") return c.enemyRabbit || "#efe6d0";
-  if (b === "mouse") return c.enemyMouse || "#b8b0a6";
-  if (b === "fox") return c.enemyFox || c.enemyfox || "#e07a2a";
-  if (b === "leaptoad") return c.enemyLeaptoad || c.enemyleaptoad || "#6db84a";
+  if (b === "rabbit") return c.enemyRabbit || "#f5ead4";
+  if (b === "mouse") return c.enemyMouse || "#c8c0b4";
+  if (b === "fox") return c.enemyFox || c.enemyfox || "#f08a38";
+  if (b === "leaptoad") return c.enemyLeaptoad || c.enemyleaptoad || "#7ec85a";
   return "#cc6666";
 }
 function makeEnemySprite(r, color, id) {
@@ -16529,7 +16533,8 @@ function makeEnemySprite(r, color, id) {
   } else if (idBase === "rabbit" || idBase === "fox" || idBase === "leaptoad" || idBase === "mouse") {
     // 【v1.180】早波杂兵外墨再厚半档, 手机剪影可读
     // 【v1.181】外墨再抬半档, 配合 drawScale, 星巅海军底一眼可指名
-    bakeOuterInk(cv, Math.max(8, Math.round(scale * 3.8)));
+    // 【v1.182】外扩墨缘收一档, 让命名色填体占主面积(显示约 2.5–3.5px)
+    bakeOuterInk(cv, Math.max(4, Math.round(scale * 2.2)));
   } else {
     bakeOuterInk(cv, Math.max(6, Math.round(scale * 3.0)));
   }
@@ -23987,8 +23992,8 @@ function paintMesaButte(c2, x, y, bw, bh) {
   c2.closePath();
   c2.fill();
   face = c2.createLinearGradient(x, y + bh * 0.22, x + bw * 0.4, y + bh);
-  face.addColorStop(0, "#4a5e52");
-  face.addColorStop(1, "#2a3834");
+  face.addColorStop(0, "#6a8a72");
+  face.addColorStop(1, "#3a5248");
   c2.fillStyle = face;
   c2.beginPath();
   c2.moveTo(x + bw * 0.10, y + bh * 0.28);
@@ -23999,8 +24004,8 @@ function paintMesaButte(c2, x, y, bw, bh) {
   c2.closePath();
   c2.fill();
   mid = c2.createLinearGradient(x, y + bh * 0.18, x + bw * 0.5, y + bh * 0.55);
-  mid.addColorStop(0, "#6a7e68");
-  mid.addColorStop(1, "#3a4a42");
+  mid.addColorStop(0, "#8aaa82");
+  mid.addColorStop(1, "#4a6454");
   c2.fillStyle = mid;
   c2.beginPath();
   c2.moveTo(x + bw * 0.16, y + bh * 0.30);
