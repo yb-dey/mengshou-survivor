@@ -604,7 +604,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.174",                   // 【v1.174】配方图鉴「选它当口」: DATA_CODEX_FORK 20 条分支补 pick(此前只有 3–4 字 feel, 玩家无分支决策依据) + forkCodexOf 透传 + fork 卡渲染第二行; 另修 codexContentBottom() 漏算成档/进化两段(pre-existing, 少算 416px); 纯文案+布局, 不动数值
+  version: "1.175",                   // 【v1.175】备案系统读面: 装备「获取」条 / 图鉴跟宠·敌人·配方·道具获取句 / 仓库「解锁条件→花费→下局开局带」条 / 暂停与结算武器入局句; 大厅落地台左上光+墨外轮廓, 侧槽符形苔纸井。不改掉率/价格/锻造/进化/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -7343,6 +7343,10 @@ function resultActionLayout() {
     home: { x: x, y: homeY, w: bw, h: bh },
     hookY: doubleY - 22
   };
+}
+function weaponEnterPathLine() {
+  // 【v1.175】武器怎么进这一局。只说明已有入口, 不改权重/配方/开局携带表。
+  return "开局携带 / 升级三选一 / 仓库打造入仓 / 进化合成";
 }
 function weaponOriginLine(w, idx) {
   var sd, from, req, h;
@@ -26365,27 +26369,48 @@ function drawHomeBase(ctx) {
   ctx.restore();
   drawHallAmbi(ctx);
   ctx.lineWidth = 1;
-  // 【v1.162】大厅舞台一块落地台: 墨缘椭圆盘+柔影, 下半不再空+碎, 不重做 1.139 纸面
-  ctx.fillStyle = "rgba(16,20,14,0.22)";
+  // 【v1.175】落地台: 光从左上(与单位亮面同一侧)。接触影偏右下; 台面左上苔亮、右下苔暗;
+  //   外轮廓 2.6px 墨线, 下缘再压一条 2px 暗苔弧, 左上只留 1.5px 受光边 — 不是白身份环。
+  ctx.fillStyle = "rgba(16,20,14,0.30)";
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 338, 168, 28, 0, 0, CONFIG.TWO_PI);
-  else ctx.arc(360, 338, 88, 0, CONFIG.TWO_PI);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(372, 348, 172, 18, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(372, 348, 86, 0, CONFIG.TWO_PI);
   ctx.fill();
-  ctx.fillStyle = plat;
+  var stageG = ctx.createRadialGradient(292, 278, 10, 392, 336, 220);
+  stageG.addColorStop(0, "#f3f6e4");
+  stageG.addColorStop(0.45, plat);
+  stageG.addColorStop(1, "#9aab7c");
+  ctx.fillStyle = stageG;
   ctx.beginPath();
   if (typeof ctx.ellipse === "function") ctx.ellipse(360, 312, 196, 78, 0, 0, CONFIG.TWO_PI);
   else ctx.arc(360, 312, 120, 0, CONFIG.TWO_PI);
   ctx.fill();
-  ctx.fillStyle = plat2;
+  var stageIn = ctx.createRadialGradient(308, 286, 6, 368, 314, 160);
+  stageIn.addColorStop(0, "rgba(244,248,228,0.78)");
+  stageIn.addColorStop(0.62, plat2);
+  stageIn.addColorStop(1, "rgba(168,184,136,0.05)");
+  ctx.fillStyle = stageIn;
   ctx.beginPath();
-  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 308, 168, 62, 0, 0, CONFIG.TWO_PI);
-  else ctx.arc(360, 308, 100, 0, CONFIG.TWO_PI);
+  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 306, 164, 58, 0, 0, CONFIG.TWO_PI);
+  else ctx.arc(360, 306, 96, 0, CONFIG.TWO_PI);
   ctx.fill();
+  ctx.strokeStyle = "#3a4a28";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  if (typeof ctx.ellipse === "function") ctx.ellipse(360, 314, 190, 72, 0, 0.25, Math.PI - 0.15);
+  else ctx.arc(360, 314, 112, 0.25, Math.PI - 0.15);
+  ctx.stroke();
   ctx.strokeStyle = "#1c1810";
-  ctx.lineWidth = 3.2;
+  ctx.lineWidth = 2.6;
   ctx.beginPath();
   if (typeof ctx.ellipse === "function") ctx.ellipse(360, 312, 196, 78, 0, 0, CONFIG.TWO_PI);
   else ctx.arc(360, 312, 120, 0, CONFIG.TWO_PI);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(244,248,228,0.88)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (typeof ctx.ellipse === "function") ctx.ellipse(352, 304, 158, 54, 0, Math.PI * 1.08, Math.PI * 1.68);
+  else ctx.arc(352, 304, 92, Math.PI * 1.08, Math.PI * 1.68);
   ctx.stroke();
   ctx.lineWidth = 1;
   ctx.fillStyle = "#5a3a10";
@@ -26457,9 +26482,9 @@ function drawHomeBase(ctx) {
   ctx.fillStyle = "#E8D5A0";
   ctx.fillText(hudFitText(ctx, loreHallChip(), 168), 112, 150);
   if (SPRITES.player || heroSprite()) {
-    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.fillStyle = "rgba(16,20,14,0.28)";
     ctx.beginPath();
-    ctx.ellipse(357, 348, 92, 12, 0, 0, CONFIG.TWO_PI);
+    ctx.ellipse(368, 352, 86, 10, 0, 0, CONFIG.TWO_PI);
     ctx.fill();
     // 【v1.146】大厅舞台再放大到约 312px 高, 头脸孔隙在 390 宽上能读; 仍走 heroSprite 同一烘焙
     var hallSpr = heroSprite();
@@ -26750,8 +26775,8 @@ function makeButton(id, x, y, w, h, label, onTap) {
         ctx.textBaseline = "middle";
         ctx.fillText(this.label, r.x + r.w / 2, r.y + r.h - (this.sub ? 36 : 28));
         if (this.sub) {
-          ctx.font = "bold 13px " + FONT_STACK;
-          ctx.fillStyle = "#5a6a40";
+          ctx.font = "bold 14px " + FONT_STACK;
+          ctx.fillStyle = "#3a4a28";
           ctx.fillText(this.sub, r.x + r.w / 2, r.y + r.h - 16);
         }
         endWidgetPress(ctx, pressed);
@@ -27013,7 +27038,7 @@ function bindPauseBuildChips() {
   GAME.pauseLayout.push({ kind: "title", y: y, text: "本局构筑" });
   y += 22;
   lanes = [
-    { id: "weapon", title: "武器", rows: view.weapons, empty: "还没带武器" },
+    { id: "weapon", title: (view.weapons && view.weapons.length) ? ("武器 · " + weaponEnterPathLine()) : "武器", rows: view.weapons, empty: weaponEnterPathLine() },
     { id: "combat", title: view.combatTitle || "已有战斗物", rows: view.combat, empty: "还没捡鸡腿/炸弹/磁铁" },
     { id: "passive", title: "被动", rows: view.passives, empty: "还没点被动" },
     { id: "evo", title: view.evoTitle || "进化", rows: view.evos, empty: "配方在图鉴, 可略过" },
@@ -27124,7 +27149,7 @@ function bindResultBuildChips() {
   GAME.resultLayout.push({ kind: "title", y: y, text: "本局构筑" });
   y += 20;
   lanes = [
-    { id: "weapon", title: "武器", rows: view.weapons, empty: "还没带武器" },
+    { id: "weapon", title: (view.weapons && view.weapons.length) ? ("武器 · " + weaponEnterPathLine()) : "武器", rows: view.weapons, empty: weaponEnterPathLine() },
     { id: "combat", title: pauseCombatSectionTitle(view.combat), rows: view.combat, empty: "还没捡鸡腿/炸弹/磁铁" },
     { id: "passive", title: "被动", rows: view.passives, empty: "还没点被动" },
     { id: "evo", title: pauseEvoSectionTitle(view.evos), rows: view.evos, empty: "配方在图鉴, 可略过" },
@@ -27213,8 +27238,8 @@ function drawPausePanel(ctx, m) {
       ctx.fillText(sec.text, px + 18, sec.y + 8);
     } else if (sec.kind === "section") {
       ctx.fillStyle = (sec.id === "pair" || sec.id === "evo") ? "#8a5a10" : c.cardTitle;
-      ctx.font = "bold 13px " + FONT_STACK;
-      ctx.fillText(sec.title, px + 18, sec.y + 10);
+      ctx.font = "bold " + (sec.id === "weapon" ? 14 : 13) + "px " + FONT_STACK;
+      ctx.fillText(hudFitText(ctx, sec.title, m.panelW - 48), px + 18, sec.y + 10);
       if (sec.empty) {
         ctx.fillStyle = "#6a7a50";
         ctx.font = "bold 12px " + FONT_STACK;
@@ -29720,9 +29745,9 @@ function drawResultPanel(ctx, m) {
       ctx.fillText(rSec.text, rPx + 18, rSec.y + 8);
     } else if (rSec.kind === "section") {
       ctx.fillStyle = (rSec.id === "pair" || rSec.id === "evo") ? "#8a5a10" : c.cardTitle;
-      ctx.font = "bold 13px " + FONT_STACK;
+      ctx.font = "bold " + (rSec.id === "weapon" ? 14 : 13) + "px " + FONT_STACK;
       ctx.textAlign = "left";
-      ctx.fillText(rSec.title, rPx + 18, rSec.y + 10);
+      ctx.fillText(hudFitText(ctx, rSec.title, m.panelW - 48), rPx + 18, rSec.y + 10);
       if (rSec.empty) {
         ctx.fillStyle = "#6a7a50";
         ctx.font = "bold 12px " + FONT_STACK;
@@ -29887,9 +29912,7 @@ function drawUpgradePanel(ctx, m) {
     ctx.font = "bold 14px " + FONT_STACK;
     ctx.fillText(uiUpgradeMsg, CONFIG.viewW / 2, py + 154);
   } else {
-    ctx.fillStyle = c.cardDesc;
-    ctx.font = "bold 13px " + FONT_STACK;
-    ctx.fillText("绿格可升 · 金格差钱 · 点下去立刻跳战力/属性", CONFIG.viewW / 2, py + 154);
+    drawMossReadChip(ctx, CONFIG.viewW / 2, py + 160, "强化系统 · 绿格可升 · 金格差钱 · 点下去立刻涨属性", 620);
   }
   ctx.textAlign = "left";
   for (i = 0; i < UPGRADE_DEFS.length; i++) {
@@ -30454,6 +30477,59 @@ function drawVaultStatusChip(ctx, x, y, chip) {
   ctx.fillText(chip.text, x + w / 2, y + h / 2);
   ctx.textAlign = "left";
 }
+function drawMossReadChip(ctx, cx, cy, text, maxW) {
+  // 【v1.175】苔纸读条: 14px 墨字, 细墨框。给装备/图鉴/仓库/强化当系统说明, 不改热区。
+  var label = text || "";
+  ctx.save();
+  ctx.font = "bold 14px " + FONT_STACK;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  if (maxW) label = hudFitText(ctx, label, Math.max(48, maxW - 28));
+  var tw = ctx.measureText(label).width;
+  var w = Math.min(maxW || 640, Math.ceil(tw) + 28);
+  var h = 24;
+  var x = cx - w / 2;
+  var y = cy - h / 2;
+  ctx.fillStyle = "rgba(16,20,14,0.10)";
+  fillRoundRect(ctx, x + 1, y + 2, w, h, 8);
+  ctx.fillStyle = "rgba(226,236,198,0.97)";
+  fillRoundRect(ctx, x, y, w, h, 8);
+  ctx.strokeStyle = "rgba(42,58,24,0.62)";
+  ctx.lineWidth = 1.5;
+  strokeRoundRect(ctx, x, y, w, h, 8);
+  ctx.lineWidth = 1;
+  ctx.fillStyle = "#2e3c1c";
+  ctx.fillText(label, cx, cy);
+  ctx.restore();
+}
+function gearObtainPathLine(name) {
+  return "获取 · " + (name ? (name + " · ") : "") + "局内掉落袋 / 章清礼 / 锻纹升品 / 三合一合成";
+}
+function vaultPathStrip(tab, deal, rec) {
+  var spend, gain, price;
+  if (tab === "talent") {
+    if (deal && deal.maxed) return "已满级 → 花费已停 → 下局开局带当前浅天赋";
+    spend = (deal && deal.spendLine) ? deal.spendLine : "花费金币";
+    return "可升级 → " + spend + " → 下局开局带浅天赋";
+  }
+  if (rec && rec.condText) {
+    price = (rec.price | 0) + "金";
+    if (deal && deal.maxed) spend = "已入仓";
+    else if (deal && deal.locked) spend = price;
+    else if (deal && deal.useMark && deal.ok) spend = "1锻纹";
+    else if (deal && deal.spendLine && deal.spendLine !== "未解锁") spend = deal.spendLine;
+    else spend = price;
+    gain = (deal && deal.gainLine) ? deal.gainLine : (rec.gainText || "下局开局带");
+    return rec.condText + " → " + spend + " → " + gain;
+  }
+  return "解锁条件 → 花费 → 下局开局带";
+}
+function codexObtainHead(tab) {
+  if (tab === "pet") return "跟宠 · 进度解锁 · 金币兑换后设为协战";
+  if (tab === "enemy") return "敌人 · 击破入册 · 分组看读招与出处";
+  if (tab === "item") return "道具 · 局内掉落 · 走近拾取 · 不涉及付费";
+  return "配方 · 配方合成 · " + weaponEnterPathLine();
+}
 function drawVaultPanel(ctx, m) {
   var c = CONFIG.colors;
   var lay = vaultPanelMetrics();
@@ -30468,21 +30544,17 @@ function drawVaultPanel(ctx, m) {
   ctx.textBaseline = "middle";
   ctx.font = "bold 32px " + FONT_STACK;
   ctx.fillText("仓库兑换", CONFIG.viewW / 2, py + 26);
-  // 【v1.156】标题下划改细墨苔签(对齐关于页字阶), 不再金条
-  ctx.fillStyle = "rgba(42,58,24,0.55)";
-  fillRoundRect(ctx, CONFIG.viewW / 2 - 56, py + 42, 112, 3, 1.5);
-  ctx.font = "bold 15px " + FONT_STACK;
-  ctx.fillStyle = c.cardDesc;
-  ctx.fillText("行卡只看账 · 价格钮两下才扣 · 无抽奖墙", CONFIG.viewW / 2, py + 52);
+  deal = GAME.hallVaultLast || (tab === "talent"
+    ? hallTalentDealView(GAME.hallVaultSel || (DATA_HALL_TALENT[0] && DATA_HALL_TALENT[0].id))
+    : hallUnlockDealView(hallUnlockDef(GAME.hallVaultSel) || DATA_HALL_UNLOCK[0]));
+  // 【v1.175】一条读条把「条件 → 花费 → 下局开局带」收成仓库系统, 价格表本身不动
+  drawMossReadChip(ctx, CONFIG.viewW / 2, py + 56, vaultPathStrip(tab, deal, tab === "talent" ? null : (hallUnlockDef(GAME.hallVaultSel) || DATA_HALL_UNLOCK[0])), 620);
   // 【v1.156】钱包条补细墨缘, 苔纸族统一
   ctx.fillStyle = "rgba(58,90,32,0.16)";
   fillRoundRect(ctx, 80, lay.walletY, 560, lay.walletH, 10);
   ctx.strokeStyle = "rgba(42,58,24,0.35)";
   ctx.lineWidth = 1;
   strokeRoundRect(ctx, 80, lay.walletY, 560, lay.walletH, 10);
-  deal = GAME.hallVaultLast || (tab === "talent"
-    ? hallTalentDealView(GAME.hallVaultSel || (DATA_HALL_TALENT[0] && DATA_HALL_TALENT[0].id))
-    : hallUnlockDealView(hallUnlockDef(GAME.hallVaultSel) || DATA_HALL_UNLOCK[0]));
   ctx.fillStyle = (deal && deal.ok && !deal.spent) ? "#1a5a2a" : "#2a2418";
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText(vaultWalletLine(deal, coins, marks), CONFIG.viewW / 2, lay.walletY + lay.walletH / 2);
@@ -30715,21 +30787,13 @@ function drawBeastPanel(ctx, m) {
   var py = (CONFIG.viewH - m.panelH) / 2;
   var tab = codexTabId();
   var footY = codexPy() + (GAME.codexFootYFit || (CONFIG.codexFootY || 1148));
-  var msg, msgCol, nPet, nEn, nFk, nPair, nEvo, pd, en;
+  var msg, msgCol, pd, en;
   ctx.fillStyle = CONFIG.colors.cardTitle;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = "bold 34px " + FONT_STACK;
   ctx.fillText("萌兽图鉴", CONFIG.viewW / 2, py + 44);
-  ctx.font = "bold 16px " + FONT_STACK;
-  ctx.fillStyle = CONFIG.colors.cardDesc;
-  nPet = hallBeastUnlockedN();
-  nEn = DATA_CODEX_ENEMY.length;
-  nFk = DATA_CODEX_FORK.length;
-  nPair = DATA_CODEX_PAIR.length;
-  nEvo = DATA_COMBAT_EVO.length;
-  ctx.fillText("跟宠 " + nPet + "/" + DATA_BEAST.length + " · 敌人 " + nEn + " · 配方 " + nFk + " 组+" + nPair + " 成档+" + nEvo + " 进化 · 道具 " + FIELD_KIND_ORDER.length + " · 战力 " + displayedHallPower(),
-    CONFIG.viewW / 2, py + 76);
+  drawMossReadChip(ctx, CONFIG.viewW / 2, py + 78, codexObtainHead(tab), 660);
   switch (tab) {
     case "pet":
       break;
@@ -30825,6 +30889,9 @@ function drawCodexItemDetail(ctx, py) {
     ctx.fillStyle = CONFIG.colors.cardDesc;
     ctx.font = "bold 16px " + FONT_STACK;
     ctx.fillText(line[id] || "", x + 134, yy + 88);
+    ctx.fillStyle = "#3a5a20";
+    ctx.font = "bold 14px " + FONT_STACK;
+    ctx.fillText("获取 · 局内掉落 · 走近拾取", x + 134, yy + 112);
   }
 }
 function makeCodexTab(idx, x, y, w, h) {
@@ -30902,11 +30969,9 @@ function makeBeastCell(idx, x, y, w, h) {
       ctx.fillStyle = "#8a5a10";
       ctx.font = "bold 14px " + FONT_STACK;
       ctx.fillText("伤" + d.petDmg + " / " + d.interval + "s · " + petCodexStars(d), r.x + 118, r.y + 72);
-      if (d.knife) {
-        ctx.fillStyle = "#6a5a28";
-        ctx.font = "bold 13px " + FONT_STACK;
-        ctx.fillText(hudFitText(ctx, d.knife, r.w - 250), r.x + 118, r.y + 96);
-      }
+      ctx.fillStyle = "#6a5a28";
+      ctx.font = "bold 13px " + FONT_STACK;
+      ctx.fillText(hudFitText(ctx, "进度解锁 · " + (d.knife || "金币兑换协战"), r.w - 250), r.x + 118, r.y + 96);
       if (!unlocked) {
         if ((saveData.coins | 0) >= d.price) { chip = d.price + "金→" + d.tagline; chipFill = "#3faf5a"; chipInk = "#2a2418"; }
         else { chip = "差" + (d.price - (saveData.coins | 0)) + "金"; /* 【v1.167h】codexPoorAmber：同类清理——价格不足是中性信息态，红=错误；改琥珀静默小签（与价格语言 #8a5a10 同族）。回退：chipFill=#c0392b / chipInk=#fff7e0 */ chipFill = "rgba(138,90,16,0.14)"; chipInk = "#7a5210"; }
@@ -30998,7 +31063,7 @@ function makeCodexEnemyCell(idx, x, y, w, h) {
       ctx.fillText(entry.tell, r.x + 112, r.y + 52);
       ctx.fillStyle = "#8a5a10";
       ctx.font = "bold 14px " + FONT_STACK;
-      ctx.fillText(entry.where + (def ? (" · HP" + def.hp + " 伤" + def.dmg) : ""), r.x + 112, r.y + 80);
+      ctx.fillText(hudFitText(ctx, "击破 · " + entry.where + (def ? (" · HP" + def.hp + " 伤" + def.dmg) : ""), r.w - 230), r.x + 112, r.y + 80);
       drawCodexChip(ctx, r.x + r.w - 100, r.y + 32, 84, 40, grp.name, selected ? grp.tint : "rgba(222,232,198,0.90)", selected ? "#fff7e0" : "#3a4626");
     }
   });
@@ -31042,7 +31107,7 @@ function makeCodexForkCard(idx, x, y, w, h) {
       ctx.fillText(view.weapon, r.x + 40, r.y + 14);
       ctx.fillStyle = flowColorOf(view.tag) || "#8a5a10";
       ctx.font = "bold 11px " + FONT_STACK;
-      ctx.fillText((view.flow || view.tag) + " · 第" + view.chMin + "章入池", r.x + 40, r.y + 30);
+      ctx.fillText(hudFitText(ctx, (view.flow || view.tag) + " · 配方合成 · 第" + view.chMin + "章入池", r.w - 48), r.x + 40, r.y + 30);
       // 【v1.174】每分支 = 「主行 + 选它当口」两行，pitch 30 塞进 96px 卡（不可调高卡，见 CONFIG 注释）。
       //   布局：第0支主行 y+46 / pick y+56；第1支主行 y+76 / pick y+86 → 内容底 86+6=92 ≤ 96 ✓
       for (i = 0; i < 2; i++) {
@@ -31385,8 +31450,9 @@ function makeHallGearFrame(i, x, y, w, h) {
       var frameCol = flash ? "#ffe082" : col;
       ctx.fillStyle = rar ? "rgba(16,20,14,0.48)" : "rgba(40,28,10,0.38)";
       fillRoundRect(ctx, r.x, r.y, r.w, r.h, 10);
-      ctx.strokeStyle = flash ? frameCol : rgbaHex(frameCol, 0.38);
-      ctx.lineWidth = flash ? 2.4 : 1.5;
+      // 【v1.175】外轮廓改墨线(稀有色仍只作顶签), 侧槽不再是半透明泥块
+      ctx.strokeStyle = flash ? frameCol : "rgba(28,24,16,0.78)";
+      ctx.lineWidth = flash ? 2.2 : 1.6;
       strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 10);
       ctx.lineWidth = 1;
       ctx.globalAlpha = flash ? 1 : 0.46;
@@ -31415,8 +31481,22 @@ function makeHallGearFrame(i, x, y, w, h) {
       }
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      var gico = aff.ok ? 36 : 52;
-      drawItemSprite(ctx, d ? gearSpriteKey(d.id) : "", r.x + (r.w - gico) / 2, r.y + (aff.ok ? 24 : 6), gico);
+      var gico = aff.ok ? 34 : 44;
+      var gx = r.x + (r.w - gico) / 2;
+      var gy = r.y + (aff.ok ? 24 : 8);
+      // 【v1.175】符形井: 左上受光苔纸, 右下略暗, 1.6px 墨外轮廓, 剪影才从木地板上分开
+      ctx.fillStyle = "rgba(16,20,14,0.20)";
+      fillRoundRect(ctx, gx + 1, gy + 2, gico, gico, 8);
+      var gg = ctx.createLinearGradient(gx, gy, gx + gico, gy + gico);
+      gg.addColorStop(0, "rgba(244,248,228,0.98)");
+      gg.addColorStop(1, "rgba(198,212,170,0.96)");
+      ctx.fillStyle = gg;
+      fillRoundRect(ctx, gx, gy, gico, gico, 8);
+      ctx.strokeStyle = "#1c1810";
+      ctx.lineWidth = 1.6;
+      strokeRoundRect(ctx, gx, gy, gico, gico, 8);
+      ctx.lineWidth = 1;
+      drawItemSprite(ctx, d ? gearSpriteKey(d.id) : "", gx + 2, gy + 2, gico - 4);
       var pip, px;
       ctx.fillStyle = "#3a3228";
       for (pip = 0; pip < 5; pip++) {
@@ -31424,8 +31504,8 @@ function makeHallGearFrame(i, x, y, w, h) {
         ctx.fillStyle = (it && (it.rarity | 0) >= pip) ? col : "rgba(201,162,75,0.28)";
         ctx.fillRect(px, r.y + r.h - 22, 7, 5);
       }
-      ctx.fillStyle = "rgba(201,192,168,0.62)";
-      ctx.font = "bold 10px " + FONT_STACK;
+      ctx.fillStyle = "#e7efd4";
+      ctx.font = "bold 12px " + FONT_STACK;
       ctx.fillText(sl.name, r.x + r.w / 2, r.y + r.h - 8);
     }
   });
@@ -31604,6 +31684,8 @@ function drawGearPanel(ctx, m) {
   } else {
     ctx.fillText("点背包或部位选中, 升品钮旁看出花什么、涨什么", CONFIG.viewW / 2, py + 112);
   }
+  // 【v1.175】选中装备的获取链。落在六部位与背包之间的空档, 不挪热区, 不改掉率/升品价。
+  drawMossReadChip(ctx, CONFIG.viewW / 2, py + 376, gearObtainPathLine(sel && deal ? deal.name : ""), 640);
   if (GAME.hallForgeLastT > 0 && last && last.spent && last.ok && uiGearMsg.indexOf("升品!") >= 0) {
     drawSpendGainDuo(ctx, 40, py + 928, 640, 52, last);
   } else {
