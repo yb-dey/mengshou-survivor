@@ -38,6 +38,22 @@
   .strat{font-size:12px;line-height:1.5;opacity:.85;border-left:3px solid #ffd87a;padding-left:10px}
   .strat b{color:#ffd87a}
   footer{text-align:center;margin-top:36px;font-size:12px;opacity:.45}
+
+  .sec-title{ font-size:22px; letter-spacing:2px; margin:34px 0 4px; display:flex; align-items:center; gap:8px }
+  .sec-sub{ opacity:.65; font-size:12.5px; margin-bottom:14px }
+  .mini{ display:flex; gap:10px; background:rgba(255,255,255,.05); border:1px solid rgba(159,224,180,.2);
+    border-radius:10px; padding:9px 12px; margin:6px 0; align-items:center }
+  .mini img{ width:42px; height:42px; border-radius:8px; flex:none }
+  .mini .nm{ font-size:14px; font-weight:700 }
+  .mini .ds{ font-size:11.5px; opacity:.75; margin-top:2px }
+  .tagx{ font-size:10.5px; border:1px solid rgba(232,196,99,.45); color:#e8c463; border-radius:6px; padding:1px 6px; margin-left:6px }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px }
+  @media(max-width:720px){ .grid2{ grid-template-columns:1fr } }
+  .mrow{ display:flex; align-items:center; gap:8px; margin:5px 0; font-size:12.5px }
+  .mrow .lb{ width:150px; flex:none; opacity:.85 }
+  .mrow .bar{ flex:1; height:10px; background:rgba(255,255,255,.08); border-radius:5px; overflow:hidden }
+  .mrow .bar i{ display:block; height:100% }
+  .mrow .vv{ width:44px; text-align:right; color:#e8c463; font-weight:700 }
 </style>
 </head>
 <body>
@@ -164,6 +180,24 @@
       <div class="lore">引动星辉的灵鹿，所踏之处伤痕愈合，阴霾退散。</div>
       <div class="strat"><b>对策（阵容）</b>：队伍核心续航位，配合前排承伤可稳住战线。</div>
     </div>
+
+
+  <div class="sec-title">🦌 英雄图鉴</div>
+  <div class="sec-sub">4 位英雄差异化（数据来自 data/heroes.json）——基础 DPS 由生存/机动补偿，无全方位上位替代；徽章为程序化生成（hero_portraits/）。</div>
+<div class="mini"><img src="hero_portraits/portrait_deer.png" alt="灵鹿祭司"><div><div class="nm">灵鹿祭司<span class="tagx">木</span><span class="tagx">初始</span></div><div class="ds">自然祝福 · 均衡辅助</div><div class="ds">HP 100 · 移速 ×1.0 · DPS 44.4 · 技能 治疗、藤缚</div></div></div><div class="mini"><img src="hero_portraits/portrait_eagle.png" alt="雷羽鹰"><div><div class="nm">雷羽鹰<span class="tagx">光</span><span class="tagx">解锁 800🍀</span></div><div class="ds">风暴闪避 · 高速爆发</div><div class="ds">HP 80 · 移速 ×1.25 · DPS 53.3 · 技能 瞬步、链雷</div></div></div><div class="mini"><img src="hero_portraits/portrait_bear.png" alt="霜甲熊"><div><div class="nm">霜甲熊<span class="tagx">水</span><span class="tagx">解锁 1200🍀</span></div><div class="ds">霜甲 · 重装坦克</div><div class="ds">HP 150 · 移速 ×0.85 · DPS 31.4 · 技能 霜冻、地震</div></div></div><div class="mini"><img src="hero_portraits/portrait_mage.png" alt="焰心术士"><div><div class="nm">焰心术士<span class="tagx">火</span><span class="tagx">解锁 1500🍀</span></div><div class="ds">余烬 · 法术炮台</div><div class="ds">HP 90 · 移速 ×1.0 · DPS 43.6 · 技能 火球、召唤</div></div></div>
+
+  <div class="sec-title">🍒 拾取物图鉴</div>
+  <div class="sec-sub">8 种局内拾取物（data/pickups.json）——敌人 6% 概率掉落、精英/Boss 必掉宝箱；货币产出计入 economy.json 既有口径。</div>
+<div class="mini"><img src="pickups/pickup_heal.png" alt="治愈果实"><div><div class="nm">治愈果实<span class="tagx">常见</span></div><div class="ds">healPct +20</div><div class="ds">回复 20% 最大生命。高压波次的保命稻草，掉落权重最高的拾取物。…</div></div></div><div class="mini"><img src="pickups/pickup_coin.png" alt="金币袋"><div><div class="nm">金币袋<span class="tagx">常见</span></div><div class="ds">coins +15</div><div class="ds">+15 森灵币（计入 economy.json kill 击杀掉落口…</div></div></div><div class="mini"><img src="pickups/pickup_exp.png" alt="经验晶露"><div><div class="nm">经验晶露<span class="tagx">常见</span></div><div class="ds">exp +50</div><div class="ds">+50 经验（约等于 1–2 次升级所需）。中期升级节奏的加速器。…</div></div></div><div class="mini"><img src="pickups/pickup_magnet.png" alt="磁石"><div><div class="nm">磁石<span class="tagx">稀有</span></div><div class="ds">magnetSec +5</div><div class="ds">5 秒内吸附全屏经验晶石与拾取物。清场后的「收割时刻」，与经验流构筑…</div></div></div><div class="mini"><img src="pickups/pickup_bomb.png" alt="震地菇"><div><div class="nm">震地菇<span class="tagx">稀有</span></div><div class="ds">screenDamage +50</div><div class="ds">对全屏敌人造成 50 点伤害（配套 fx_explosion + 屏…</div></div></div><div class="mini"><img src="pickups/pickup_shield.png" alt="灵盾花"><div><div class="nm">灵盾花<span class="tagx">稀有</span></div><div class="ds">shieldCharges +3 · shieldSec +10</div><div class="ds">10 秒内获得可抵挡 3 次伤害的护盾（配套 icons/st_sh…</div></div></div><div class="mini"><img src="pickups/pickup_reroll.png" alt="幸运骰"><div><div class="nm">幸运骰<span class="tagx">稀有</span></div><div class="ds">reroll +1</div><div class="ds">升级三选一时可重抽 1 次（存入局内库存，与 §2.10 升级系统联…</div></div></div><div class="mini"><img src="pickups/pickup_chest.png" alt="宝箱"><div><div class="nm">宝箱<span class="tagx">稀有</span></div><div class="ds">按开箱权重表结算</div><div class="ds">精英/Boss 必掉，开启按 chestOpen 权重表结算（金币/…</div></div></div>
+
+  <div class="sec-title">🏅 成就与里程碑概览</div>
+  <div class="sec-sub">成就 19 个 × 5 组 + 无尽存活里程碑（data/achievements.json + data/endless.json）；奖励以称号/图鉴/头像框等非货币荣誉为主，与本图鉴联动。</div>
+<div class="grid2"><div><div class="mrow"><span class="lb">战斗</span><span class="bar"><i style="width:100%;background:#3fa66a"></i></span><span class="vv">4</span></div><div class="mrow"><span class="lb">探索</span><span class="bar"><i style="width:100%;background:#3fa66a"></i></span><span class="vv">4</span></div><div class="mrow"><span class="lb">构筑</span><span class="bar"><i style="width:100%;background:#3fa66a"></i></span><span class="vv">4</span></div><div class="mrow"><span class="lb">反应</span><span class="bar"><i style="width:100%;background:#3fa66a"></i></span><span class="vv">4</span></div><div class="mrow"><span class="lb">养成</span><span class="bar"><i style="width:75%;background:#3fa66a"></i></span><span class="vv">3</span></div></div><div><div class="mrow"><span class="lb">存活 5 分钟 · 称号「守林人」</span><span class="bar"><i style="width:25%;background:#e8c463"></i></span><span class="vv">🏅</span></div><div class="mrow"><span class="lb">存活 10 分钟 · 称号「无尽行者」</span><span class="bar"><i style="width:50%;background:#e8c463"></i></span><span class="vv">🏅</span></div><div class="mrow"><span class="lb">存活 20 分钟 · 头像框「永恒纹章」</span><span class="bar"><i style="width:100%;background:#e8c463"></i></span><span class="vv">🏅</span></div></div></div>
+
+  <div class="sec-title">♾️ 模式速查</div>
+  <div class="sec-sub">两种游玩模式（data/wave_design.json + data/endless.json）。</div>
+  <div class="mini"><div><div class="nm">🗺️ 战役模式<span class="tagx">10 关</span></div><div class="ds">单元素教学 → 双元素混编 → 五元素精英 → 古木 Boss（HP 200 三阶段），过关计分与首通双倍结算。</div></div></div>
+  <div class="mini"><div><div class="nm">♾️ 无尽模式<span class="tagx">每波 20s</span></div><div class="ds">难度二次曲线缩放（预算/生命/伤害），敌种池四阶段轮换，精英每 5 波、Boss 每 10 波；币产出递减防刷取，存活里程碑给非货币荣誉。</div></div></div>
   </div>
 
   <footer>萌兽消消岛 · 森灵内容包 · 图鉴与特效均为独立命名空间，不改动主游戏文件</footer>
