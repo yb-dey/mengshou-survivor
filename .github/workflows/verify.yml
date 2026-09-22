@@ -105,6 +105,10 @@ jobs:
         run: |
           node ci/theme-contrast.mjs --selftest
           node ci/theme-contrast.mjs
+      - name: 节点音 duck 覆盖可听段（GATE）
+        run: |
+          python3 ci/duck-cover.py --selftest
+          python3 ci/duck-cover.py
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
