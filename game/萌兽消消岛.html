@@ -25,7 +25,8 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.184 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.185 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.185 美术】早波杂兵填体 alpha≥0.92(solidifyEarlyTrashAlpha)+PLAYING vignette 改边框不压中场, 奶油/灰/橙/绿再可指名; 星巅远脊 quiet wind-grain(paintStarRidge); 「咆哮」skill 圆盘外墨收静+苔橄榄填; 珠拾取薄 UL 受光抬一档(无鸡腿橙晕); 仓库兑换 strip 短获取 crumb; SFX_FIRE 软 notch。命中墨星/击杀 puff 尺寸保持 1.184。1.175–1.184 大厅草簇/选章获取条/苔碗/脚环/怎么玩/粉彩杂兵/咆哮/HP 同步保留。数值/掉落/进化/10 分钟轴不动。
 // 【v1.184 美术】大厅奶油地板草簇加密+台下软土路纹(备案 HALL); 命中四尖墨星抬到手机可读(~12px/0.22s); 击杀软墨点多留 ~0.05s; 鸡腿/珠世界辉光收薄减橙晕; PLAYING 静边 vignette 托英雄; 选章入袋→现在→下一步获取条+卡外墨抬; SFX_CHEST 软 notch。1.175–1.183 睡莲垫/苔碗/脚环/怎么玩/粉彩杂兵/咆哮/HP 同步保留。数值/掉落/进化/10 分钟轴不动。
 // 【v1.183 美术】大厅落地台改睡莲垫缘(~3px 外墨)+叶脉受光+软影苔粒(备案 HALL); 星巅台地 props 改橄榄苔碗/木桩软填(不再 UI 绿桶); 脚环/焦点辉光再静(软墨环优先于金橙晕); 幽灵摇杆闲时更淡; 磁吸助线再细; 「怎么玩」分区墨与获取式步骤对比抬; 杂兵命中加微型四尖墨星(纯表现); SFX_START 软一档 notch。1.175–1.182 获取条/粉彩杂兵/咆哮/HP 同步保留。数值/掉落/进化/10 分钟轴不动。
 // 【v1.182 美术】早波杂兵改命名色 procedural(奶油兔/灰鼠/橙狐/绿蟾)强制跳过近黑 AI 贴图+软外墨; 星巅中洗再亮~8%+台地苔木填; 主角脚环更细更淡; 强化页焦点入袋→现在→下一步获取条; 击杀软墨点 2–4 粒短命; SFX_KILL 再软一档。1.175–1.181 获取条/接触影/开战环/装备路径/咆哮/HP 同步保留。数值/掉落/进化/10 分钟轴不动。
@@ -614,7 +615,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.184",                   // 【v1.184】大厅地板草簇+路纹; 命中墨星可读; 击杀 puff 稍久; 拾取辉光收; PLAYING 静 vignette; 选章获取条+外墨; SFX_CHEST 软。1.175–1.183 保留。不改掉率/价格/锻造/进化/10 分钟轴
+  version: "1.185",                   // 【v1.185】早波杂兵实心粉彩≥0.92; 星巅风纹脊; skill 盘静墨; 珠 UL 受光; 仓库获取 crumb; SFX_FIRE 软。命中星/puff 保持 1.184。不改掉率/价格/锻造/进化/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -1538,11 +1539,11 @@ var CONFIG = {
     joyHat: "rgba(60,80,40,0.32)",      // 【v1.183】摇杆帽再静一档, 靠墨缘读形
     pauseText: "#3a5a20",
     fpsText: "#9ab88a",
-    enemyRabbit: "#f5ead4",           // 【v1.182】奶油兔: 再亮一档, 夜巅一眼可读
+    enemyRabbit: "#faf3e4",           // 【v1.185】奶油兔: 实心可读, 夜巅不洗成幽灵
     enemyBear: "#8a5a3a",
-    enemyMouse: "#c8c0b4",            // 【v1.182】灰鼠: 再亮一档, 与兔/狐/蟾分色
-    enemyFox: "#f08a38",            // 【v1.182】橙狐: 命名填色略抬
-    enemyfox: "#f08a38",
+    enemyMouse: "#ddd4c6",            // 【v1.185】灰鼠: 实心中调, 与兔/狐/蟾分色且不透明糊
+    enemyFox: "#f4a04e",            // 【v1.185】橙狐: 命名填色实心一档, 非半透明橙渍
+    enemyfox: "#f4a04e",
     enemyRaven: "#4a4a68",          // 【v1.13】夜啼鸦(复用鼠剪影)
     enemyraven: "#4a4a68",
     enemyorbitcrab: "#c45a38",      // 【v1.14】环甲蟹(绕圈扑人)
@@ -1556,7 +1557,7 @@ var CONFIG = {
     enemyshieldbug: "#2a8a8a",      // 【v1.15】盾甲虫(光环减伤)
     enemyShieldbug: "#2a8a8a",
     enemyleaptoad: "#7ec85a",       // 【v1.182】绿蟾: 命名填色略抬
-    enemyLeaptoad: "#7ec85a",
+    enemyLeaptoad: "#8ed86a",         // 【v1.185】绿蟾: 实心苔绿, 夜底可指名
     enemyburrowmole: "#8a5a32",    // 【v1.29】钻钻鼹(破土)
     enemyBurrowmole: "#8a5a32",
     enemyhoneypot: "#e07090",       // 【v1.39】蜜罐猬(奶源)
@@ -12051,8 +12052,9 @@ var Audio = {
     var len, out;
     if (id === "SFX_FIRE") { len = 0.07; out = this._alloc(len, sr);
       // 【v1.159】开火族泛音柔化: 起音 2→3ms、噪声层 0.22→0.15 且收短, petshot/mobshot 高速档不再嗡嗡; 音高轮廓/时长不动
-      this._tone(out, sr, { wave: "triangle", f0: 920, f1: 620, t0: 0, dur: 0.065, a: 0.003, d: 0.04, s: 0, r: 0.015, gain: 1 });
-      this._noise(out, sr, { t0: 0, dur: 0.024, a: 0.001, r: 0.018, gain: 0.15, seed: 11 });
+      // 【v1.185】软 notch: 起音再缓半档、噪声略收, 开火仍短脆可爱
+      this._tone(out, sr, { wave: "triangle", f0: 920, f1: 620, t0: 0, dur: 0.065, a: 0.004, d: 0.04, s: 0, r: 0.015, gain: 0.96 });
+      this._noise(out, sr, { t0: 0, dur: 0.022, a: 0.0015, r: 0.016, gain: 0.12, seed: 11 });
     } else if (id === "SFX_HIT") { len = 0.1; out = this._alloc(len, sr);
       // 【v1.152】命中更干净的短 tick: 噪声层压淡, 主体略收短
       // 【v1.180】起音瞬态再收一档, 比 UI tick 更软; 音高/时长性格不动
@@ -15438,10 +15440,11 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
     // 【v1.152】杂兵吃英雄 v1.148 同款弱光照: 左上暖光→右下冷影, source-atop 只染已画像素, 平涂变体积
     // 【v1.162】体积光再抬半档, 贴冒险者英雄不再像未上色占位
     // 【v1.182】右下冷影再收, 命名色奶油/灰/橙/绿不被压成近黑
+    // 【v1.185】冷影再静: 不做 vignette 式半透压暗, 填体保持实心可读
     var g = c2.createRadialGradient(cx - r * 0.36, cy - r * 0.46, r * 0.10, cx + r * 0.08, cy + r * 0.12, r * 1.9);
-    g.addColorStop(0, "rgba(255,246,214,0.40)");
+    g.addColorStop(0, "rgba(255,246,214,0.36)");
     g.addColorStop(0.45, "rgba(255,255,255,0)");
-    g.addColorStop(1, "rgba(24,28,36,0.18)");
+    g.addColorStop(1, "rgba(24,28,36,0.08)");
     c2.globalCompositeOperation = "source-atop";
     c2.fillStyle = g;
     c2.fillRect(cx - r * 2.4, cy - r * 2.4, r * 4.8, r * 4.8);
@@ -16538,6 +16541,24 @@ function bakeOuterInk(cv, px) {
   c.drawImage(src, 0, 0);
   return cv;
 }
+// 【v1.185】早波杂兵填体强制实心: 可见像素 alpha≥0.92(235), 杜绝半透明幽灵剪影
+function solidifyEarlyTrashAlpha(cv) {
+  var w, h, c2, data, i, a, minA;
+  if (!cv || !(cv.width > 0)) return cv;
+  minA = 235;   // ≥0.92
+  try {
+    c2 = cv.getContext("2d");
+    w = cv.width;
+    h = cv.height;
+    data = c2.getImageData(0, 0, w, h);
+    for (i = 3; i < data.data.length; i += 4) {
+      a = data.data[i];
+      if (a > 12 && a < minA) data.data[i] = minA;
+    }
+    c2.putImageData(data, 0, 0);
+  } catch (e) { /* 跨域/stub 忽略 */ }
+  return cv;
+}
 // 【v1.182】早波命名色杂兵: 强制 procedural 奶油/灰/橙/绿填体, 跳过近黑 AI 贴图
 function isEarlyTrashId(id) {
   var b = id ? String(id).replace(/_hit$/, "").replace(/_dead$/, "") : "";
@@ -16617,6 +16638,8 @@ function makeEnemySprite(r, color, id) {
     // 【v1.181】外墨再抬半档, 配合 drawScale, 星巅海军底一眼可指名
     // 【v1.182】外扩墨缘收一档, 让命名色填体占主面积(显示约 2.5–3.5px)
     bakeOuterInk(cv, Math.max(4, Math.round(scale * 2.2)));
+    // 【v1.185】外墨后再实心化: 防半透明幽灵体, 命名色奶油/灰/橙/绿 alpha≥0.92
+    solidifyEarlyTrashAlpha(cv);
   } else {
     bakeOuterInk(cv, Math.max(6, Math.round(scale * 3.0)));
   }
@@ -24180,6 +24203,35 @@ function paintStarRidge(c2, w, y0, amp) {
   c2.moveTo(0, y0 + amp * 0.40);
   c2.quadraticCurveTo(w * 0.35, y0 + amp * 0.22, w * 0.62, y0 + amp * 0.30);
   c2.stroke();
+  // 【v1.185】quiet wind-grain: 2–4 道软弧墨纹, alpha≈0.16–0.20, 星巅远脊身份, 无霓虹
+  c2.save();
+  c2.lineCap = "round";
+  c2.lineJoin = "round";
+  c2.strokeStyle = "rgba(210, 222, 246, 0.20)";
+  c2.lineWidth = Math.max(1.2, amp * 0.018);
+  c2.beginPath();
+  c2.moveTo(w * 0.08, y0 + amp * 0.52);
+  c2.quadraticCurveTo(w * 0.28, y0 + amp * 0.34, w * 0.46, y0 + amp * 0.48);
+  c2.stroke();
+  c2.strokeStyle = "rgba(198, 214, 240, 0.18)";
+  c2.lineWidth = Math.max(1.1, amp * 0.016);
+  c2.beginPath();
+  c2.moveTo(w * 0.22, y0 + amp * 0.58);
+  c2.quadraticCurveTo(w * 0.48, y0 + amp * 0.40, w * 0.72, y0 + amp * 0.54);
+  c2.stroke();
+  c2.strokeStyle = "rgba(220, 230, 250, 0.16)";
+  c2.lineWidth = Math.max(1.0, amp * 0.014);
+  c2.beginPath();
+  c2.moveTo(w * 0.40, y0 + amp * 0.36);
+  c2.quadraticCurveTo(w * 0.58, y0 + amp * 0.24, w * 0.88, y0 + amp * 0.42);
+  c2.stroke();
+  c2.strokeStyle = "rgba(186, 204, 236, 0.17)";
+  c2.lineWidth = Math.max(1.1, amp * 0.015);
+  c2.beginPath();
+  c2.moveTo(w * 0.55, y0 + amp * 0.62);
+  c2.quadraticCurveTo(w * 0.72, y0 + amp * 0.48, w * 0.96, y0 + amp * 0.58);
+  c2.stroke();
+  c2.restore();
   c2.lineWidth = 1;
 }
 function paintChapterGround(c2, w, h, mt) {
@@ -24723,19 +24775,20 @@ function drawChapterFarLayer(ctx, camX, camY) {
 }
 function drawPlayVignette(ctx) {
   // 【v1.184】PLAYING 静边 vignette: 托英雄焦点, 舒适不暗滤; 潮汐安静时略抬
-  var a = fxTideQuiet() ? 0.14 : 0.075;
+  // 【v1.185】只压四边, 不让全屏 vignette 乘暗中场粉彩杂兵(幽灵剪影根因)
+  var a = fxTideQuiet() ? 0.10 : 0.055;
   var edge = SPRITES.vignette;
   if (edge && edge.width > 0) {
-    ctx.globalAlpha = a * 0.55;
+    ctx.globalAlpha = a * 0.28;
     ctx.drawImage(edge, 0, 0, CONFIG.viewW, CONFIG.viewH);
     ctx.globalAlpha = 1;
   }
   ctx.fillStyle = "rgba(16,20,14," + a + ")";
-  ctx.fillRect(0, 0, CONFIG.viewW, 22);
-  ctx.fillRect(0, CONFIG.viewH - 40, CONFIG.viewW, 40);
-  ctx.fillStyle = "rgba(16,20,14," + (a * 0.48) + ")";
-  ctx.fillRect(0, 0, 12, CONFIG.viewH);
-  ctx.fillRect(CONFIG.viewW - 12, 0, 12, CONFIG.viewH);
+  ctx.fillRect(0, 0, CONFIG.viewW, 18);
+  ctx.fillRect(0, CONFIG.viewH - 34, CONFIG.viewW, 34);
+  ctx.fillStyle = "rgba(16,20,14," + (a * 0.42) + ")";
+  ctx.fillRect(0, 0, 10, CONFIG.viewH);
+  ctx.fillRect(CONFIG.viewW - 10, 0, 10, CONFIG.viewH);
 }
 function drawChapterMapStrip(ctx, ch, x, y, w, h) {
   var mt = mapThemeOf(ch);
@@ -24937,6 +24990,50 @@ function drawEarlyTrashContactShadow(ctx, e, uScale) {
   ctx.globalAlpha = 0.42;
   fillDropShadow(ctx, e.x + rx * 0.04, e.y + (e.r || 12) * 0.55, rx, ry);
   ctx.globalAlpha = 1;
+}
+
+// 【v1.185】vignette 之后再画早波杂兵实心层: 排除边框暗角对粉彩体的乘暗, alpha 固定 1
+function drawEarlyTrashSolidPass(ctx, dpr, wtx, wty, camX, camY) {
+  var i, e, spr, edraw, uScale, cm, vx0, vy0, vx1, vy1, tid;
+  var bob, sq, sx, sy, half, faceLeft, t, moving, extra;
+  cm = CONFIG.cullMargin + (GAME.shakeT > 0 ? GAME.shakeAmp : 0);
+  vx0 = camX - cm; vy0 = camY - cm;
+  vx1 = camX + CONFIG.viewW + cm; vy1 = camY + CONFIG.viewH + cm;
+  ctx.setTransform(dpr, 0, 0, dpr, dpr * wtx, dpr * wty);
+  ctx.globalAlpha = 1;
+  for (i = 0; i < enemyTotal; i++) {
+    e = enemyPool[i];
+    if (!e || !e.active) continue;
+    if (!isEarlyTrashId(e.type)) continue;
+    if (e.x < vx0 || e.x > vx1 || e.y < vy0 || e.y > vy1) continue;
+    edraw = DATA_ENEMY[e.type];
+    if (edraw && edraw.ai === "burrow" && e.aiPhase === 2) continue;
+    if (edraw && edraw.ai === "leap" && e.aiPhase === 2) continue;
+    if (edraw && edraw.ai === "roll" && e.aiPhase === 2) continue;
+    if (e.staggerT > 0) continue;
+    if (e.windupT > 0 || e.aiPhase === 1) continue;
+    spr = SPRITES[e.type];
+    if (!spr && edraw && edraw.skin) spr = SPRITES[edraw.skin];
+    if (!spr) continue;
+    tid = String(e.type || "").replace(/_hit$/, "");
+    uScale = unitDrawScale(e);
+    // 只重画立绘本体(不叠脚影), 与主循环 bob/squash 同式对齐
+    t = GAME.time + e.x * 0.01;
+    moving = true;
+    extra = uScale || 1;
+    faceLeft = player.x < e.x;
+    bob = Math.sin(t * (moving ? 11 : 4.2)) * (moving ? 2.6 : 1.3);
+    sq = 1 + Math.sin(t * (moving ? 11 : 3.2)) * (moving ? 0.07 : 0.03);
+    sx = extra * (faceLeft ? -1 : 1) * (1 + (1 - sq) * 0.45);
+    sy = extra * sq;
+    half = spr.half || 16;
+    ctx.globalAlpha = 1;
+    ctx.setTransform(sx * dpr, 0, 0, dpr * sy, dpr * (e.x + wtx), dpr * (e.y + wty + bob));
+    ctx.drawImage(spr, -half, -half, half * 2, half * 2);
+    ctx.setTransform(dpr, 0, 0, dpr, dpr * wtx, dpr * wty);
+  }
+  ctx.globalAlpha = 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 // 【v1.179】局内主角绘制入口: 命名便于验收。无敌改半透明闪(不再隔帧整只不画),
@@ -25323,10 +25420,16 @@ function renderGame() {
     ctx.beginPath();
     ctx.arc(g.x, gy, gh + 0.7, 0, CONFIG.TWO_PI);
     ctx.stroke();
-    ctx.strokeStyle = "rgba(255,247,224,0.35)";
-    ctx.lineWidth = 1.2;
+    // 【v1.185】珠薄 UL 受光抬一档(1px), 更清但不走鸡腿橙晕
+    ctx.strokeStyle = "rgba(255,247,224,0.58)";
+    ctx.lineWidth = 1.0;
     ctx.beginPath();
     ctx.arc(g.x - gh * 0.22, gy - gh * 0.28, gh * 0.42, Math.PI * 1.1, Math.PI * 1.85);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(28,32,40,0.55)";
+    ctx.lineWidth = 1.15;
+    ctx.beginPath();
+    ctx.arc(g.x + gh * 0.18, gy + gh * 0.22, gh * 0.38, Math.PI * 0.15, Math.PI * 0.85);
     ctx.stroke();
     // 【v1.180】世界「珠」字更小更淡, 不抢杂兵剪影; 获取条仍走 obtainFx
     if (!g.magnet && !_fxQuiet && (g.hopT < 1.15 || GemPool.count < 36)) {
@@ -25607,6 +25710,8 @@ function renderGame() {
         !(edraw && edraw.ai === "roll" && e.aiPhase === 2)) {
       drawEarlyTrashContactShadow(ctx, e, uScale);
     }
+    // 【v1.185】早波杂兵绘制前强制实心 alpha(≥0.92 口径), 禁残留半透明
+    if (isEarlyTrashId(e.type)) ctx.globalAlpha = 1;
     // 【R6-R2】受击停顿视觉压缩(hit-stagger squash): 纵向×(1-squash)、横向微胀, 纯表现层。
     //   仅在停顿期(staggerT>0)进入 transform 分支; 常态仍走无变换 drawImage 快路径(零回归)。
     // 【v1.82】uScale 只放大贴图, 不改 e.r 碰撞。
@@ -25971,7 +26076,11 @@ function renderGame() {
   //   HUD/UIStack, 整个局内 HUD 被平移出屏(cam≠0 时); HOME 恰 cam=0 掩盖了缺陷。无头 stub 忽略
   //   变换致套件全绿, 实机像素验证(Edge headless 截图)才捕获。
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  if (inPlay && !hallLike) drawPlayVignette(ctx);
+  if (inPlay && !hallLike) {
+    drawPlayVignette(ctx);
+    // 【v1.185】边框 vignette 之后重画早波粉彩杂兵, 保证实心可指名(不被暗角洗成幽灵)
+    drawEarlyTrashSolidPass(ctx, dpr, wtx, wty, camX, camY);
+  }
   }   // 【v1.21】hallLike: 不画世界层, 大厅半透明地砖不再透出试炼环/弹幕
   // 虚拟摇杆已迁移 JoystickView 组件([12] UIStack)
   // HUD: FPS + 弹幕丢弃计数小字(每秒刷新一次字符串)
@@ -27376,7 +27485,10 @@ function drawHomeBase(ctx) {
   if (uiHomeVault) {
     var craftN = hallCraftableN();
     uiHomeVault.label = "仓库兑换";
-    uiHomeVault.sub = craftN ? ("可打造 " + craftN) : "进度解锁 · 浅天赋";
+    // 【v1.185】短获取 crumb: 入袋→兑换→下局, 不抢正片 CTA
+    uiHomeVault.sub = craftN
+      ? ("可打造 " + craftN + " · 入袋→兑换")
+      : "进度解锁 · 入袋→兑换→下局带";
     uiHomeVault.accentStroke = craftN ? "#d4a024" : "#7cb86a";
   }
   if (uiHomeChapter) {
@@ -27534,19 +27646,20 @@ function makeButton(id, x, y, w, h, label, onTap) {
       if (skin === "skill") {
         // 【v1.154】咆哮/炸弹主动技改圆形软盘: 柔影 + 苔面 + 左上柔光片 + 2.5px 墨缘, 字形居中, 无金边;
         //   按下仍走 beginWidgetPress 轻微下沉(纯视觉); 圆形热区 hitHudSkill/尺寸/冷却与库存数字不动。
+        // 【v1.185】外墨更静(~2px 软墨)+苔橄榄填, 无金闪; CD 数字/热区不动
         var skCx = r.x + r.w / 2, skCy = r.y + r.h / 2, skR = Math.min(r.w, r.h) / 2 - 2;
         var skDim = this.dim > 0;
-        ctx.fillStyle = "rgba(12,16,12,0.32)";
+        ctx.fillStyle = "rgba(12,16,12,0.22)";
         ctx.beginPath(); ctx.arc(skCx, skCy + 3, skR, 0, CONFIG.TWO_PI); ctx.fill();
-        ctx.fillStyle = skDim ? "#2e362c" : "#43543a";
+        ctx.fillStyle = skDim ? "#343c30" : "#4a5a3e";
         ctx.beginPath(); ctx.arc(skCx, skCy, skR, 0, CONFIG.TWO_PI); ctx.fill();
-        ctx.fillStyle = skDim ? "rgba(255,247,224,0.05)" : "rgba(255,247,224,0.10)";
+        ctx.fillStyle = skDim ? "rgba(255,247,224,0.04)" : "rgba(236,244,214,0.08)";
         ctx.beginPath();
         if (typeof ctx.ellipse === "function") ctx.ellipse(skCx - skR * 0.28, skCy - skR * 0.32, skR * 0.46, skR * 0.30, -0.5, 0, CONFIG.TWO_PI);
         else ctx.arc(skCx - skR * 0.28, skCy - skR * 0.32, skR * 0.36, 0, CONFIG.TWO_PI);
         ctx.fill();
-        ctx.strokeStyle = skDim ? "rgba(28,24,16,0.62)" : "#262014";
-        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = skDim ? "rgba(28,32,24,0.42)" : "rgba(32,36,28,0.52)";
+        ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(skCx, skCy, skR, 0, CONFIG.TWO_PI); ctx.stroke();
         ctx.lineWidth = 1;
         ctx.fillStyle = skDim ? "#c9c0a8" : "#fff7e0";
