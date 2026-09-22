@@ -122,7 +122,7 @@ export function audit(srcRaw) {
 }
 
 function selftest() {
-  const HTML = process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
+  const HTML = process.env.GAME_HTML || process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
   const base = fs.readFileSync(HTML, 'utf8');
   const cases = [
     ['真实文件零违规', base, 0],
@@ -174,7 +174,7 @@ function selftest() {
 const isMain = process.argv[1] && process.argv[1].replace(/\\/g, '/').endsWith('hall-cond-time.mjs');
 if (isMain) {
   if (process.argv.includes('--selftest')) process.exit(selftest() ? 0 : 1);
-  const HTML = process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
+  const HTML = process.env.GAME_HTML || process.argv.filter((a) => !a.startsWith('--'))[2] || 'game/萌兽消消岛.html';
   const r = audit(fs.readFileSync(HTML, 'utf8'));
   console.log(`ci/hall-cond-time.mjs — GATE — ${HTML}`);
   console.log(`DATA_HALL_UNLOCK ${r.stats.nUnlock} · DATA_ACHIEVE ${r.stats.nAchieve} · DATA_HALL_TALENT ${r.stats.nTalent} · 专名断言 ${r.stats.nameAssert}（下界 ${MIN_NAME_ASSERT}）`);
