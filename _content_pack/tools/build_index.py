@@ -60,6 +60,7 @@ SKILL_CN = {
 }
 DATA_CN = {
     'element_matrix': '五元素克制矩阵', 'skill_cooldowns': '技能冷却数值',
+    'wave_design': '关卡波次设计', 'boss_phases': 'BOSS 多阶段脚本',
 }
 
 def chips(keys, cn):
@@ -131,6 +132,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="element_chart.html" target="_blank">
       <div class="ico">⚖️</div><div class="t">元素克制 / 技能数值</div>
       <div class="d">五元素 5 环克制环 + 倍率矩阵 + 8 技能冷却/法力条，设计参考。</div></a>
+    <a class="ncard" href="wave_chart.html" target="_blank">
+      <div class="ico">🗺️</div><div class="t">关卡波次 / BOSS 阶段</div>
+      <div class="d">10 关难度曲线（单→双→五元素）+ 森林古木三阶段 Boss 状态机，设计参考。</div></a>
     <a class="ncard" href="audio_demo.html" target="_blank">
       <div class="ico">🎵</div><div class="t">音频试听</div>
       <div class="d">{len(audio)} 条音频（{len(bgm)} BGM 可循环 + {len(sfx)} SFX），单击即听。</div></a>

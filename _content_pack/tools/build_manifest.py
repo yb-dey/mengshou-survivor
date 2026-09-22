@@ -77,6 +77,7 @@ SKILL_CN = {
 }
 DATA_CN = {
     'element_matrix': '五元素克制矩阵', 'skill_cooldowns': '技能冷却数值',
+    'wave_design': '关卡波次设计', 'boss_phases': 'BOSS 多阶段脚本',
 }
 
 sprite_list = []

@@ -60,7 +60,7 @@
 | `audio/cp_sfx_debuff.wav`| 减益 / 诅咒 | 下行阴郁小调 + 低频闷响（配套 fx_debuff） | 0.70s |
 
 - **合成方式**：`tools/synth_audio.py`（纯 Python 标准库，零依赖、零生成额度、不卡机），确定性种子可复现；复用 `midi_freq / env_adsr / tone / write_wav` 四个基础件，新增 `sawtooth` 波形与 `sweep` 扫频原语。
-- **试听页**：`audio_demo.html` 引用相对路径 `audio/*.wav`，双击即听，同样规避死资产；现已改为数据驱动网格，覆盖全部 25 条（6 BGM + 19 SFX）。
+- **试听页**：`audio_demo.html` 引用相对路径 `audio/*.wav`，双击即听，同样规避死资产；现已改为数据驱动网格，覆盖全部 35 条（6 BGM + 29 SFX）。
 - **校验**：35/35 峰值均 = 85%（未削波），RMS 13.4%–30.0%（非空、非静音）；6 首 BGM（35.6s / 30.0s / 31.3s / 33.1s / 31.0s / 23.2s）无缝循环，29 个 SFX 0.06s–1.38s 覆盖战斗全事件、五元素命中与音画配套特效，另含 5 条五元素主题动机 4.00s–5.71s（元素身份听觉签名，无缝短循环）。
 
 ## 2.2 VFX 特效精灵（本轮新增 · 程序化真透底）
@@ -160,6 +160,20 @@
 - **设计要点**：元素配色复用 §2.4 的徽章色（火/水/土/光/木），克制环与元素身份 UI、元素命中 VFX/SFX 三件套在视觉与规则层完全对齐；倍率矩阵可直接被 §4 接入主游戏时读取为伤害公式参数。
 - **校验**：两份 JSON 均为合法 JSON（`json.load` 通过）；`element_chart.html` 由脚本校验（含 `<svg>` 节点、5×5 克制矩阵 6 行、8 技能冷却条）。
 
+## 2.6 关卡波次与 BOSS 多阶段（设计规格 · 本轮新增）
+
+> 与 §2.5 的「战斗规则数值」配套的**关卡流程规格**（非游戏代码，仅作平衡参考与后续 playground 机制深化的数据底座）。定义 10 关难度曲线（单元素教学 → 双元素混编 → 五元素精英 → BOSS）与森林古木（木属性，基础 HP 200）的三阶段 Boss 状态机，供 §4 接入主游戏时直接读取为波次生成参数与 Boss AI 状态机。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `data/wave_design.json` | 10 关 × 多波次敌种组合 + 元素分布 | 每关 `elementFocus / waves[{index,spawns:[{key,count}],note}] / reward`；难度曲线由单元素 → 双元素混编 → 五元素精英 → BOSS |
+| `data/boss_phases.json` | 森林古木三阶段脚本 | `baseHp:200` + 3 阶段（阈值 66% / 33%），每阶段 `abilities[{name,element,cooldown,cn}] / summon[{key,count}] / notes`，冷却随阶段压缩 |
+| `wave_chart.html` | 关卡地图 + 难度曲线 + BOSS 三阶段可视化 | 由两份 JSON 数据驱动生成的可视化参考页（内联 SVG/HTML，零图片生成） |
+
+- **生成器**：`tools/build_wave_chart.py`（读 `data/wave_design.json` + `data/boss_phases.json`，复用 `data/element_matrix.json` 五元素配色，纯标准库渲染，零依赖、不卡机）。
+- **设计要点**：敌种 6 种（芽芽兔/火苗狐/水滴蛙/星羽鸟/石甲龟/森林古木）与主文件潜在敌种表一一对应（`element / role / hp`）；关卡元素分布与 §2.5 五元素克制链对齐（教学关单元素、后期关逼迫切元素）；Boss 三阶段机制（藤蔓召唤 → 范围践踏 → 缠绕+木刺 → 古木狂暴）随血量压缩冷却、混召多属性增援，形成「输出与生存终局考验」。
+- **校验**：两份 JSON 均为合法 JSON（`json.load` 通过）；`wave_chart.html` 由脚本生成（含 10 关卡片、难度曲线柱状、BOSS HP 三段分段条、3 阶段能力卡 + 冷却压缩对比）。
+
 ## 3. 目录结构
 
 ```
@@ -175,6 +189,7 @@ _content_pack/
 ├── icons_demo.html         # 状态图标试看页（PNG base64 内联，12 个，按类别分组）
 ├── skill_icons_demo.html  # 技能 / 元素图标试看页（PNG base64 内联，13 个，按 元素徽章/技能图标 分组）
 ├── element_chart.html      # 元素克制环 + 倍率矩阵 + 技能冷却条（数据驱动，内联 SVG）
+├── wave_chart.html         # 关卡波次 + BOSS 三阶段可视化（数据驱动，内联 SVG/HTML）
 ├── sprites/               # 原始生成图（RGB，未抠）
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
@@ -214,7 +229,9 @@ _content_pack/
 │   └── ab_*.png（8 个技能按钮）
 ├── data/                  # 设计数值规格（JSON，非图片/音频）
 │   ├── element_matrix.json    # 五元素克制环 / 倍率 / 配色 / 克制理由
-│   └── skill_cooldowns.json   # 8 技能 冷却/法力/元素/类型
+│   ├── skill_cooldowns.json   # 8 技能 冷却/法力/元素/类型
+│   ├── wave_design.json       # 10 关 × 多波次敌种组合 + 元素分布
+│   └── boss_phases.json       # 森林古木三阶段 Boss 脚本（baseHp 200，3 阶段）
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -228,6 +245,7 @@ _content_pack/
     ├── gen_skill_icons.py # 技能 / 元素图标生成（纯标准库，hexplate + panel 双底盘）
     ├── build_skill_icons_demo.py # 构建技能 / 元素图标内联展示页
     ├── build_element_chart.py # 由 data/*.json 生成元素克制环 + 倍率矩阵 + 冷却条参考页
+    ├── build_wave_chart.py   # 由 data/wave_design.json + data/boss_phases.json 生成关卡/Boss 参考页
 ```
 
 ## 4. 接入游戏路径（待主文件释放后）
@@ -257,18 +275,18 @@ _content_pack/
 ## 6. 验证记录
 
 - 贴图：8/8 生成成功（6 萌兽 + Boss 森林古木 + Hero 灵鹿祭司）；8/8 透底为 RGBA；小兵/宠物 512²、Boss/Hero 1024²；展示页内联校验通过（8 张 `data:image/webp`）。
-- 音频：30/30 合成成功并校验——峰值均 85%（未削波），RMS 13.4%–30.0%（非空非静音）；试听页 `audio_demo.html` 数据驱动网格覆盖全部 30 条（6 BGM + 24 SFX），引用相对路径可双击播放。
+- 音频：35/35 合成成功并校验——峰值均 85%（未削波），RMS 13.4%–30.0%（非空非静音）；试听页 `audio_demo.html` 数据驱动网格覆盖全部 35 条（6 BGM + 29 SFX），引用相对路径可双击播放。
 - VFX：24/24 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（24 张 `data:image/png`）。
 - 状态图标：12/12 程序化生成成功并校验——均为 `colorType=6` RGBA（64×64），体积 1.46KB–2.52KB（实心徽章 + 白色符号，内容饱满非空白）；按 控制 / 持续伤害 / 负面 / 增益 四组分类，与 24 个 VFX 爆发特效共同构成「状态机制」视觉闭环；试看页 `icons_demo.html` 内联校验通过（12 张 `data:image/png`）。
 - 技能 / 元素图标：13/13 程序化生成成功并校验——均为 `colorType=6` RGBA（64×64），体积 1.6KB–4.6KB；逐张目检通过（叶片轴与中脉同向、星芒可见、面板元素色可辨、六边符印与圆盘/方面板三底盘不混淆）；试看页 `skill_icons_demo.html` 内联校验通过（13 张 `data:image/png`）。
-- 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、24 VFX（尺寸 / 体积）、12 状态图标（尺寸 / 体积）、13 技能/元素图标（尺寸 / 体积 / 分组）、2 设计数值 JSON（字节数）、30 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
-- 设计数值：`data/element_matrix.json` 与 `data/skill_cooldowns.json` 均为合法 JSON（`json.load` 通过）；`element_chart.html` 由 `tools/build_element_chart.py` 数据驱动生成，校验含 `<svg>` 节点、5×5 倍率矩阵（6 行）、8 技能冷却条；五元素 5 环克制链对称（火→木→土→水→光→火），与 §2.4 元素徽章「强克」文案一致。
+- 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、24 VFX（尺寸 / 体积）、12 状态图标（尺寸 / 体积）、13 技能/元素图标（尺寸 / 体积 / 分组）、4 设计数值 JSON（字节数）、35 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
+- 设计数值：`data/element_matrix.json`、`data/skill_cooldowns.json`、`data/wave_design.json`、`data/boss_phases.json` 均为合法 JSON（`json.load` 通过）；`element_chart.html` 由 `tools/build_element_chart.py` 数据驱动生成，校验含 `<svg>` 节点、5×5 倍率矩阵（6 行）、8 技能冷却条；`wave_chart.html` 由 `tools/build_wave_chart.py` 数据驱动生成，校验含 10 关卡片、难度曲线柱状、BOSS HP 三段分段条、3 阶段能力卡 + 冷却压缩对比；五元素 5 环克制链对称（火→木→土→水→光→火），与 §2.4 元素徽章「强克」文案一致；关卡/Boss 规格与 §2.5 克制链、敌种表对齐（教学关单元素 → 后期逼迫切元素；Boss 三阶段随血量压缩冷却）。
 - 演练场机制深化：`playground.html` 已接入五元素系统——每个敌种带 `element` 属性并显示元素徽章，玩家选攻击元素后伤害按 `element_matrix.json` 倍率结算（强克 ×1.6 / 被克 ×0.6 / 同元素 ×0.85 / 中性 ×1.0），并启用该元素代表技能的冷却（`skill_cooldowns.json` 数据）；命中飘字显示克制倍率。脚本经 `node --check` 语法校验通过（内联数据，file:// 双击可用，无需 fetch）。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张精灵）+ 音乐（6 首 BGM + 24 SFX）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（2 份 JSON + 可视化参考）**七支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张精灵）+ 音乐（6 首 BGM + 29 SFX）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（4 份 JSON + 2 可视化参考页）**七支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -289,5 +307,7 @@ _content_pack/
 17. ~~**演练场机制深化（playground 接入元素系统）**~~ ✅ `playground.html` 已升级为「机制演示」：6 敌种带 `element` 属性 + 元素徽章；玩家选攻击元素 → 伤害按 `element_matrix.json` 倍率结算（强克 ×1.6 / 被克 ×0.6 / 同元素 ×0.85 / 中性 ×1.0）并显示克制飘字；启用该元素代表技能冷却（`skill_cooldowns.json` 数据，按钮带实时倒计时遮罩）；`node --check` 语法校验通过，内联数据保证 file:// 双击可用。内容包从「资产可用性演示」进化为「元素克制规则可玩预览」。
 
 18. ~~**五元素主题动机（元素身份听觉签名 · 音乐侧闭合）**~~ ✅ 已交付 5 条五元素主题动机（`cp_sfx_elem_fire/water/earth/light/wood`，4.00s–5.71s，纯标准库合成，无缝短循环）：火=明亮上行五声 sparkle、水=柔 sine 涟漪滑音+气泡、土=厚重低频脉冲、光=闪亮铃音琶音+shimmer、木=有机叩击 rustle。它们与 R18 的「元素命中 SFX（cp_sfx_hit_*）」定位不同——命中 SFX 是战斗瞬时反馈，主题动机是**元素身份的长期听觉签名**；二者共同构成「五元素听觉系统」的层次。`synth_audio.py` 加 `_loop_crossfade` 辅助 + 5 合成函数、`audio_demo.html` 加 5 试听卡（共 35 条）、`playground.html` 在选攻击元素时播对应动机作提示、`README/manifest/index` 同步；audio 30→35（6 BGM + 29 SFX），为 §4 接入主游戏时按元素分发 BGM/提示音提供素材底座。
+
+19. ~~**关卡波次与 BOSS 多阶段（设计规格 · 关卡/Boss 数据底座）**~~ ✅ 已交付 2 份设计数值 JSON（`data/wave_design.json` 10 关 × 多波次敌种组合 + 元素分布，难度曲线 单元素教学→双元素混编→五元素精英→BOSS；`data/boss_phases.json` 森林古木三阶段脚本，baseHp 200，阈值 66%/33%，冷却随阶段压缩 + 混召多属性增援）+ 数据驱动可视化参考页 `wave_chart.html`（关卡地图卡片 + 难度曲线柱状 + BOSS HP 三段分段条 + 3 阶段能力卡 + 冷却压缩对比）；`tools/build_wave_chart.py` 读两份 JSON 并复用 `data/element_matrix.json` 五元素配色纯标准库渲染，零依赖、不卡机；与 §2.5 克制链、敌种表对齐，为 §4 接入主游戏时的波次生成与 Boss AI 状态机提供数据底座。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

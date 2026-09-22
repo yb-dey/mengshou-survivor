@@ -1,0 +1,84 @@
+{
+  "version": "1.0",
+  "title": "关卡波次设计",
+  "note": "与 data/element_matrix.json（五元素克制）、data/skill_cooldowns.json（技能节奏）配套的可玩关卡规格。定义 10 关 × 多波次敌种组合与元素分布，难度曲线由单元素教学 → 双元素混编 → 五元素精英 → BOSS。供 §4 接入主游戏时直接读取为波次生成参数。",
+  "enemies": {
+    "sprout_bunny":  { "cn": "芽芽兔",   "element": "wood",  "role": "小兵·分裂",     "hp": 30  },
+    "flame_fox":     { "cn": "火苗狐",   "element": "fire",  "role": "快速·灼烧",     "hp": 36  },
+    "water_frog":    { "cn": "水滴蛙",   "element": "water", "role": "远程·水弹",     "hp": 50  },
+    "star_bird":     { "cn": "星羽鸟",   "element": "light", "role": "飞行·俯冲",     "hp": 44  },
+    "stone_turtle":  { "cn": "石甲龟",   "element": "earth", "role": "坦克·减伤",     "hp": 90  },
+    "forest_ancient":{ "cn": "森林古木", "element": "wood",  "role": "BOSS·召唤",    "hp": 200 }
+  },
+  "levels": [
+    {
+      "id": 1, "name": "林间初醒", "theme": "教学·木", "elementFocus": ["wood"],
+      "waves": [ { "index": 1, "spawns": [ { "key": "sprout_bunny", "count": 8 } ], "note": "纯木小兵，引导玩家熟悉基础攻击与分裂机制。" } ],
+      "reward": "宝石 ×20"
+    },
+    {
+      "id": 2, "name": "火狐出没", "theme": "火", "elementFocus": ["fire"],
+      "waves": [ { "index": 1, "spawns": [ { "key": "flame_fox", "count": 6 } ], "note": "高机动火属性，接触附加灼烧，提示玩家注意走位。" } ],
+      "reward": "宝石 ×24"
+    },
+    {
+      "id": 3, "name": "蛙鸣浅滩", "theme": "水", "elementFocus": ["water"],
+      "waves": [ { "index": 1, "spawns": [ { "key": "water_frog", "count": 6 } ], "note": "远程水弹，需优先清理或绕后。" } ],
+      "reward": "宝石 ×24"
+    },
+    {
+      "id": 4, "name": "羽翼窥伺", "theme": "光", "elementFocus": ["light"],
+      "waves": [
+        { "index": 1, "spawns": [ { "key": "star_bird", "count": 4 } ], "note": "空中俯冲，第一波试探。" },
+        { "index": 2, "spawns": [ { "key": "star_bird", "count": 4 } ], "note": "第二波成批俯冲，考验集火。" }
+      ],
+      "reward": "宝石 ×28"
+    },
+    {
+      "id": 5, "name": "磐甲压境", "theme": "土", "elementFocus": ["earth"],
+      "waves": [
+        { "index": 1, "spawns": [ { "key": "stone_turtle", "count": 3 } ], "note": "高减伤坦克，引导玩家利用克制（木破土）。" },
+        { "index": 2, "spawns": [ { "key": "stone_turtle", "count": 3 } ], "note": "双波叠加，强调元素克制收益。" }
+      ],
+      "reward": "宝石 ×30"
+    },
+    {
+      "id": 6, "name": "光火交织", "theme": "光+火", "elementFocus": ["light", "fire"],
+      "waves": [ { "index": 1, "spawns": [ { "key": "star_bird", "count": 4 }, { "key": "flame_fox", "count": 4 } ], "note": "首次双元素混编，玩家需切换攻击元素应对不同弱点。" } ],
+      "reward": "宝石 ×34"
+    },
+    {
+      "id": 7, "name": "草木共生", "theme": "木+水", "elementFocus": ["wood", "water"],
+      "waves": [
+        { "index": 1, "spawns": [ { "key": "sprout_bunny", "count": 5 }, { "key": "water_frog", "count": 4 } ], "note": "木水协同：分裂 + 远程压制。" },
+        { "index": 2, "spawns": [ { "key": "sprout_bunny", "count": 4 } ], "note": "残波补充，拖延节奏。" }
+      ],
+      "reward": "宝石 ×36"
+    },
+    {
+      "id": 8, "name": "土光封锁", "theme": "土+光", "elementFocus": ["earth", "light"],
+      "waves": [
+        { "index": 1, "spawns": [ { "key": "stone_turtle", "count": 3 }, { "key": "star_bird", "count": 4 } ], "note": "坦克前排 + 空中骚扰。" },
+        { "index": 2, "spawns": [ { "key": "stone_turtle", "count": 2 }, { "key": "star_bird", "count": 3 } ], "note": "持续封锁，考验克制切换效率。" }
+      ],
+      "reward": "宝石 ×40"
+    },
+    {
+      "id": 9, "name": "五灵齐鸣", "theme": "全元素·精英", "elementFocus": ["fire", "water", "earth", "light", "wood"],
+      "waves": [
+        { "index": 1, "spawns": [ { "key": "sprout_bunny", "count": 3 }, { "key": "flame_fox", "count": 3 } ], "note": "木火开场，逼迫快速切元素。" },
+        { "index": 2, "spawns": [ { "key": "water_frog", "count": 3 }, { "key": "star_bird", "count": 3 } ], "note": "水中空中段，远程压力大。" },
+        { "index": 3, "spawns": [ { "key": "stone_turtle", "count": 2 }, { "key": "sprout_bunny", "count": 2 } ], "note": "土木收尾，坦克拖节奏。" }
+      ],
+      "reward": "宝石 ×50 · 精英宝箱"
+    },
+    {
+      "id": 10, "name": "古木苏生", "theme": "BOSS", "elementFocus": ["wood"],
+      "waves": [
+        { "index": 1, "spawns": [ { "key": "forest_ancient", "count": 1 }, { "key": "sprout_bunny", "count": 4 } ], "note": "BOSS 登场 + 木小兵掩护，阶段脚本见 boss_phases.json。" },
+        { "index": 2, "spawns": [ { "key": "sprout_bunny", "count": 3 }, { "key": "flame_fox", "count": 2 } ], "note": "BOSS 二阶段召唤增援。" }
+      ],
+      "reward": "通关宝箱 · 内容包纪念章"
+    }
+  ]
+}

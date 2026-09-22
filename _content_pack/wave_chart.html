@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 关卡波次与 BOSS 多阶段</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; }
+  *{ box-sizing:border-box;margin:0;padding:0 }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:40px 18px; display:flex; flex-direction:column; align-items:center; }
+  h1{ font-size:30px; letter-spacing:2px; margin-bottom:6px }
+  .sub{ opacity:.8; margin-bottom:26px; font-size:14px; text-align:center; max-width:720px; line-height:1.6 }
+  .wrap{ width:100%; max-width:1000px; display:flex; flex-direction:column; gap:22px }
+  .card{ background:rgba(15,47,31,.55); border:1px solid rgba(159,224,180,.25); border-radius:16px; padding:22px 24px }
+  .card h2{ font-size:18px; margin-bottom:8px; display:flex; align-items:center; gap:8px }
+  .card h2 small{ opacity:.6; font-weight:400; font-size:13px }
+  .legend{ display:flex; gap:14px; flex-wrap:wrap; margin-top:14px; font-size:12px; opacity:.85 }
+  .legend span{ display:inline-flex; align-items:center; gap:6px }
+  .legend i{ width:14px;height:14px;border-radius:4px;display:inline-block }
+  /* level cards */
+  .lvgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; margin-top:14px }
+  .lv{ background:rgba(255,255,255,.05); border:1px solid rgba(159,224,180,.22); border-radius:12px; padding:12px 14px }
+  .lv.boss{ border-color:var(--gold); box-shadow:0 0 0 1px rgba(232,196,99,.3) inset }
+  .lvh{ display:flex; align-items:center; gap:6px; font-size:15px; margin-bottom:8px }
+  .lvh b{ color:var(--gold) }
+  .lvh .theme{ margin-left:auto; font-size:12px; opacity:.7 }
+  .lvh .boss{ background:var(--gold); color:#22331f; font-size:11px; font-weight:700; padding:1px 7px; border-radius:6px }
+  .stack{ display:flex; height:16px; border-radius:8px; overflow:hidden; background:rgba(255,255,255,.08) }
+  .stack span{ height:100% }
+  .meta{ display:flex; justify-content:space-between; font-size:12px; margin-top:8px; opacity:.85 }
+  .meta .rw{ color:var(--gold) }
+  .spawns{ font-size:11px; opacity:.65; margin-top:6px; line-height:1.5 }
+  /* difficulty curve */
+  .curve{ display:flex; align-items:flex-end; gap:10px; height:210px; margin-top:16px; padding-bottom:26px; position:relative }
+  .cb{ display:flex; flex-direction:column; align-items:center; flex:1; height:100%; justify-content:flex-end; position:relative }
+  .cbar{ width:26px; border-radius:6px 6px 0 0; transition:height .3s }
+  .clbl{ position:absolute; bottom:-22px; font-size:11px; opacity:.7 }
+  .cval{ font-size:11px; opacity:.85; margin-bottom:3px }
+  /* boss */
+  .hpbar{ display:flex; height:30px; border-radius:8px; overflow:hidden; margin:8px 0 6px; font-size:12px; font-weight:700; color:#10241a }
+  .hps{ display:flex; align-items:center; justify-content:center }
+  .phgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-top:8px }
+  .pc{ background:rgba(255,255,255,.05); border:1px solid rgba(159,224,180,.22); border-radius:12px; padding:14px }
+  .ph-h{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px }
+  .ph-h b{ font-size:16px; color:var(--gold) }
+  .ph-h .thr{ font-size:12px; opacity:.8 }
+  .abs{ display:flex; flex-wrap:wrap; gap:8px }
+  .ab{ background:rgba(0,0,0,.22); border:1px solid; border-radius:9px; padding:6px 9px; min-width:96px }
+  .ab .abn{ font-weight:700; font-size:13px }
+  .ab .abc{ float:right; font-size:12px; opacity:.85; margin-left:8px }
+  .ab em{ display:block; font-style:normal; font-size:11px; opacity:.7; margin-top:2px }
+  .sm{ font-size:12px; margin-top:10px; opacity:.85 }
+  .note{ font-size:12px; opacity:.72; margin-top:8px; line-height:1.55 }
+  .avg{ font-size:11px; opacity:.6; margin-top:8px; text-align:right }
+  .comp{ display:flex; align-items:flex-end; gap:18px; height:130px; margin-top:14px; padding-bottom:24px }
+  .cmp{ display:flex; flex-direction:column; align-items:center; flex:1; height:100%; justify-content:flex-end; position:relative }
+  .cmpb{ width:34px; border-radius:6px 6px 0 0 }
+  .cmpl{ position:absolute; bottom:-20px; font-size:11px; opacity:.7 }
+  .cmpv{ font-size:11px; opacity:.85; margin-bottom:3px }
+  footer{ margin-top:26px; font-size:12px; opacity:.5; text-align:center; line-height:1.7; max-width:760px }
+</style>
+</head>
+<body>
+  <h1>🗺️ 关卡波次与 BOSS 多阶段</h1>
+  <div class="sub">10 关难度曲线（单元素教学 → 双元素混编 → 五元素精英 → BOSS）+ 森林古木三阶段 Boss 状态机。数据来自 <code>data/wave_design.json</code> 与 <code>data/boss_phases.json</code>，本页由 <code>tools/build_wave_chart.py</code> 扫描生成。配色与 <code>data/element_matrix.json</code> 五元素一致。</div>
+  <div class="wrap">
+    <div class="card">
+      <h2>🗺️ 关卡地图 <small>每关敌种按元素聚合（堆叠条）</small></h2>
+      <div class="lvgrid"><div class="lv"><div class="lvh"><b>L1</b> 林间初醒 <span class="theme">教学·木</span></div><div class="stack"><span style="width:100.00%;background:#66d859" title="木 ×8"></span></div><div class="meta"><span>1 波 · 8 敌</span><span class="rw">宝石 ×20</span></div><div class="spawns">芽芽兔×8</div></div><div class="lv"><div class="lvh"><b>L2</b> 火狐出没 <span class="theme">火</span></div><div class="stack"><span style="width:100.00%;background:#ff7226" title="火 ×6"></span></div><div class="meta"><span>1 波 · 6 敌</span><span class="rw">宝石 ×24</span></div><div class="spawns">火苗狐×6</div></div><div class="lv"><div class="lvh"><b>L3</b> 蛙鸣浅滩 <span class="theme">水</span></div><div class="stack"><span style="width:100.00%;background:#59bfff" title="水 ×6"></span></div><div class="meta"><span>1 波 · 6 敌</span><span class="rw">宝石 ×24</span></div><div class="spawns">水滴蛙×6</div></div><div class="lv"><div class="lvh"><b>L4</b> 羽翼窥伺 <span class="theme">光</span></div><div class="stack"><span style="width:100.00%;background:#ffd83f" title="光 ×8"></span></div><div class="meta"><span>2 波 · 8 敌</span><span class="rw">宝石 ×28</span></div><div class="spawns">星羽鸟×4 · 星羽鸟×4</div></div><div class="lv"><div class="lvh"><b>L5</b> 磐甲压境 <span class="theme">土</span></div><div class="stack"><span style="width:100.00%;background:#8c6b3f" title="土 ×6"></span></div><div class="meta"><span>2 波 · 6 敌</span><span class="rw">宝石 ×30</span></div><div class="spawns">石甲龟×3 · 石甲龟×3</div></div><div class="lv"><div class="lvh"><b>L6</b> 光火交织 <span class="theme">光+火</span></div><div class="stack"><span style="width:100.00%;background:#ff7226" title="火 ×4"></span><span style="width:100.00%;background:#ffd83f" title="光 ×4"></span></div><div class="meta"><span>1 波 · 8 敌</span><span class="rw">宝石 ×34</span></div><div class="spawns">星羽鸟×4 · 火苗狐×4</div></div><div class="lv"><div class="lvh"><b>L7</b> 草木共生 <span class="theme">木+水</span></div><div class="stack"><span style="width:44.44%;background:#59bfff" title="水 ×4"></span><span style="width:100.00%;background:#66d859" title="木 ×9"></span></div><div class="meta"><span>2 波 · 13 敌</span><span class="rw">宝石 ×36</span></div><div class="spawns">芽芽兔×5 · 水滴蛙×4 · 芽芽兔×4</div></div><div class="lv"><div class="lvh"><b>L8</b> 土光封锁 <span class="theme">土+光</span></div><div class="stack"><span style="width:71.43%;background:#8c6b3f" title="土 ×5"></span><span style="width:100.00%;background:#ffd83f" title="光 ×7"></span></div><div class="meta"><span>2 波 · 12 敌</span><span class="rw">宝石 ×40</span></div><div class="spawns">石甲龟×3 · 星羽鸟×4 · 石甲龟×2 · 星羽鸟×3</div></div><div class="lv"><div class="lvh"><b>L9</b> 五灵齐鸣 <span class="theme">全元素·精英</span></div><div class="stack"><span style="width:60.00%;background:#ff7226" title="火 ×3"></span><span style="width:60.00%;background:#59bfff" title="水 ×3"></span><span style="width:40.00%;background:#8c6b3f" title="土 ×2"></span><span style="width:60.00%;background:#ffd83f" title="光 ×3"></span><span style="width:100.00%;background:#66d859" title="木 ×5"></span></div><div class="meta"><span>3 波 · 16 敌</span><span class="rw">宝石 ×50 · 精英宝箱</span></div><div class="spawns">芽芽兔×3 · 火苗狐×3 · 水滴蛙×3 · 星羽鸟×3 · 石甲龟×2 · 芽芽兔×2</div></div><div class="lv boss"><div class="lvh"><b>L10</b> 古木苏生 <span class="boss">BOSS</span><span class="theme">BOSS</span></div><div class="stack"><span style="width:25.00%;background:#ff7226" title="火 ×2"></span><span style="width:100.00%;background:#66d859" title="木 ×8"></span></div><div class="meta"><span>2 波 · 10 敌</span><span class="rw">通关宝箱 · 内容包纪念章</span></div><div class="spawns">森林古木×1 · 芽芽兔×4 · 芽芽兔×3 · 火苗狐×2</div></div></div>
+      <div class="legend"><span><i style="background:#ff7226"></i>火</span><span><i style="background:#59bfff"></i>水</span><span><i style="background:#8c6b3f"></i>土</span><span><i style="background:#ffd83f"></i>光</span><span><i style="background:#66d859"></i>木</span></div>
+    </div>
+    <div class="card">
+      <h2>📈 难度曲线 <small>每关总敌数（红=BOSS 关）</small></h2>
+      <div class="curve"><div class="cb"><div class="cbar" style="height:85.0px;background:#3fa66a"></div><div class="clbl">1</div><div class="cval">8</div></div><div class="cb"><div class="cbar" style="height:63.8px;background:#3fa66a"></div><div class="clbl">2</div><div class="cval">6</div></div><div class="cb"><div class="cbar" style="height:63.8px;background:#3fa66a"></div><div class="clbl">3</div><div class="cval">6</div></div><div class="cb"><div class="cbar" style="height:85.0px;background:#3fa66a"></div><div class="clbl">4</div><div class="cval">8</div></div><div class="cb"><div class="cbar" style="height:63.8px;background:#3fa66a"></div><div class="clbl">5</div><div class="cval">6</div></div><div class="cb"><div class="cbar" style="height:85.0px;background:#3fa66a"></div><div class="clbl">6</div><div class="cval">8</div></div><div class="cb"><div class="cbar" style="height:138.1px;background:#3fa66a"></div><div class="clbl">7</div><div class="cval">13</div></div><div class="cb"><div class="cbar" style="height:127.5px;background:#3fa66a"></div><div class="clbl">8</div><div class="cval">12</div></div><div class="cb"><div class="cbar" style="height:170.0px;background:#3fa66a"></div><div class="clbl">9</div><div class="cval">16</div></div><div class="cb"><div class="cbar" style="height:106.2px;background:#e5484d"></div><div class="clbl">10</div><div class="cval">10</div></div></div>
+    </div>
+    <div class="card">
+      <h2>🌳 BOSS · 森林古木 <small>木 属性 · 基础 HP 200</small></h2>
+      <div class="hpbar"><div class="hps" style="width:34.00%;background:#3fa66a" title="阶段1 100%–66%">34%</div><div class="hps" style="width:33.00%;background:#e8c463" title="阶段2 66%–33%">33%</div><div class="hps" style="width:33.00%;background:#e5484d" title="阶段3 33%–0%">33%</div></div>
+      <div class="phgrid"><div class="pc" style="border-top:4px solid #3fa66a"><div class="ph-h"><b>阶段 1</b><span class="thr">100% – 66%</span></div><div class="abs"><div class="ab" style="border-color:#66d859"><span class="abn" style="color:#66d859">藤蔓召唤</span><span class="abc">8s</span><em>召唤木小兵掩护 · 木</em></div><div class="ab" style="border-color:#8c6b3f"><span class="abn" style="color:#8c6b3f">范围践踏</span><span class="abc">6s</span><em>地面 AoE 震荡 · 土</em></div></div><div class="sm">召唤：芽芽兔×3</div><div class="note">开局阶段：周期性召唤芽芽兔掩护，并释放范围践踏逼走位。玩家应优先清理小兵再集火 BOSS。</div><div class="avg">平均冷却 7.00s</div></div><div class="pc" style="border-top:4px solid #e8c463"><div class="ph-h"><b>阶段 2</b><span class="thr">66% – 33%</span></div><div class="abs"><div class="ab" style="border-color:#66d859"><span class="abn" style="color:#66d859">藤蔓缠绕</span><span class="abc">7s</span><em>定身玩家 · 木</em></div><div class="ab" style="border-color:#8c6b3f"><span class="abn" style="color:#8c6b3f">范围践踏</span><span class="abc">5s</span><em>高频 AoE · 土</em></div><div class="ab" style="border-color:#66d859"><span class="abn" style="color:#66d859">木刺喷射</span><span class="abc">4s</span><em>定向弹幕 · 木</em></div></div><div class="sm">召唤：芽芽兔×2 · 火苗狐×2</div><div class="note">狂暴前奏：锁定技（缠绕）加入，AoE 频率提高，开始混召火属性增援，迫使玩家频繁切换攻击元素。</div><div class="avg">平均冷却 5.33s</div></div><div class="pc" style="border-top:4px solid #e5484d"><div class="ph-h"><b>阶段 3</b><span class="thr">33% – 0%</span></div><div class="abs"><div class="ab" style="border-color:#66d859"><span class="abn" style="color:#66d859">古木狂暴</span><span class="abc">3s</span><em>全屏震击 · 木</em></div><div class="ab" style="border-color:#8c6b3f"><span class="abn" style="color:#8c6b3f">范围践踏</span><span class="abc">4s</span><em>高频 AoE · 土</em></div><div class="ab" style="border-color:#66d859"><span class="abn" style="color:#66d859">木刺喷射</span><span class="abc">3s</span><em>密集弹幕 · 木</em></div></div><div class="sm">召唤：芽芽兔×3 · 火苗狐×2 · 星羽鸟×2</div><div class="note">最终狂暴：技能冷却大幅压缩，全屏震击 + 密集弹幕 + 三属性混召，是输出与生存的终局考验。</div><div class="avg">平均冷却 3.33s</div></div></div>
+      <h2 style="margin-top:18px">🔥 冷却压缩 <small>每阶段平均冷却（越低越凶）</small></h2>
+      <div class="comp"><div class="cmp"><div class="cmpb" style="height:90.0px;background:#3fa66a"></div><div class="cmpl">阶段1</div><div class="cmpv">7.00s</div></div><div class="cmp"><div class="cmpb" style="height:68.6px;background:#e8c463"></div><div class="cmpl">阶段2</div><div class="cmpv">5.33s</div></div><div class="cmp"><div class="cmpb" style="height:42.9px;background:#e5484d"></div><div class="cmpl">阶段3</div><div class="cmpv">3.33s</div></div></div>
+    </div>
+  </div>
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>设计数值规格（非游戏代码），用于平衡参考与后续 playground 机制深化（按波次实跑 / 按阶段跑 Boss）。</footer>
+</body>
+</html>

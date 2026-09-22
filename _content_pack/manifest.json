@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-23 02:28:21",
+  "generated_at": "2026-09-23 02:41:35",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
     "vfx": 24,
     "icons": 12,
     "skill_icons": 13,
-    "design_data": 2,
+    "design_data": 4,
     "audio": 35,
     "bgm": 6,
     "sfx": 29
@@ -441,6 +441,11 @@
   ],
   "design_data": [
     {
+      "key": "boss_phases",
+      "cn": "BOSS 多阶段脚本",
+      "bytes": 2256
+    },
+    {
       "key": "element_matrix",
       "cn": "五元素克制矩阵",
       "bytes": 1110
@@ -449,6 +454,11 @@
       "key": "skill_cooldowns",
       "cn": "技能冷却数值",
       "bytes": 1908
+    },
+    {
+      "key": "wave_design",
+      "cn": "关卡波次设计",
+      "bytes": 5242
     }
   ],
   "audio": [

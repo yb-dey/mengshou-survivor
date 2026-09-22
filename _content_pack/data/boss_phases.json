@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "title": "BOSS 多阶段脚本",
+  "note": "与 data/wave_design.json 第 10 关（古木苏生）配套的 BOSS 行为规格。BOSS 森林古木（木属性）分三阶段，随血量阈值切换机制：召唤藤蔓、范围践踏、狂暴。供 §4 接入主游戏时读取为 Boss AI 状态机。",
+  "boss": "forest_ancient",
+  "bossCn": "森林古木",
+  "element": "wood",
+  "baseHp": 200,
+  "phases": [
+    {
+      "phase": 1,
+      "hpThreshold": "100% – 66%",
+      "hpLow": 66,
+      "abilities": [
+        { "name": "藤蔓召唤", "element": "wood", "cooldown": 8, "cn": "召唤木小兵掩护" },
+        { "name": "范围践踏", "element": "earth", "cooldown": 6, "cn": "地面 AoE 震荡" }
+      ],
+      "summon": [ { "key": "sprout_bunny", "count": 3 } ],
+      "notes": "开局阶段：周期性召唤芽芽兔掩护，并释放范围践踏逼走位。玩家应优先清理小兵再集火 BOSS。"
+    },
+    {
+      "phase": 2,
+      "hpThreshold": "66% – 33%",
+      "hpLow": 33,
+      "abilities": [
+        { "name": "藤蔓缠绕", "element": "wood", "cooldown": 7, "cn": "定身玩家" },
+        { "name": "范围践踏", "element": "earth", "cooldown": 5, "cn": "高频 AoE" },
+        { "name": "木刺喷射", "element": "wood", "cooldown": 4, "cn": "定向弹幕" }
+      ],
+      "summon": [ { "key": "sprout_bunny", "count": 2 }, { "key": "flame_fox", "count": 2 } ],
+      "notes": "狂暴前奏：锁定技（缠绕）加入，AoE 频率提高，开始混召火属性增援，迫使玩家频繁切换攻击元素。"
+    },
+    {
+      "phase": 3,
+      "hpThreshold": "33% – 0%",
+      "hpLow": 0,
+      "abilities": [
+        { "name": "古木狂暴", "element": "wood", "cooldown": 3, "cn": "全屏震击" },
+        { "name": "范围践踏", "element": "earth", "cooldown": 4, "cn": "高频 AoE" },
+        { "name": "木刺喷射", "element": "wood", "cooldown": 3, "cn": "密集弹幕" }
+      ],
+      "summon": [ { "key": "sprout_bunny", "count": 3 }, { "key": "flame_fox", "count": 2 }, { "key": "star_bird", "count": 2 } ],
+      "notes": "最终狂暴：技能冷却大幅压缩，全屏震击 + 密集弹幕 + 三属性混召，是输出与生存的终局考验。"
+    }
+  ]
+}
