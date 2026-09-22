@@ -10364,7 +10364,8 @@ function beastDef(id) {
 var DATA_CODEX_TAB = [
   { id: "pet", name: "跟宠", sub: "开火 · 星阶" },
   { id: "enemy", name: "敌人", sub: "读招 · 出处" },
-  { id: "fork", name: "配方", sub: "分叉 · 成档 · 进化" }
+  { id: "fork", name: "配方", sub: "分叉 · 成档 · 进化" },
+  { id: "item", name: "道具", sub: "回血 · 清屏 · 吸取" }
 ];
 var DATA_CODEX_GROUP = [
   { id: "trash", name: "杂兵", tint: "#6faf4f" },
@@ -10527,6 +10528,7 @@ function codexTabId() {
     case "pet": return "pet";
     case "enemy": return "enemy";
     case "fork": return "fork";
+    case "item": return "item";
     default: return "pet";
   }
 }
@@ -10536,6 +10538,7 @@ function setCodexTab(id) {
     case "pet": next = "pet"; break;
     case "enemy": next = "enemy"; break;
     case "fork": next = "fork"; break;
+    case "item": next = "item"; break;
     default: next = "pet"; break;
   }
   GAME.codexTab = next;
@@ -28684,8 +28687,10 @@ function registerUi() {
   // 敌人分组行, 配方 10 组分叉卡+成档卡+战斗物进化条; 返回钮仍在面板底, 不盖内容。
   uiBeastModal = makeModal("beastmodal", 660, 1280, drawBeastPanel);
   var bPy = (CONFIG.viewH - 1280) / 2;
-  var tabW = CONFIG.codexTabW || 204, tabH = CONFIG.codexTabH || 56, tabGap = CONFIG.codexTabGap || 10;
-  var tabX0 = (CONFIG.viewW - (3 * tabW + 2 * tabGap)) / 2;
+  var nTabs = DATA_CODEX_TAB.length;
+  var tabGap = CONFIG.codexTabGap || 10, tabH = CONFIG.codexTabH || 56;
+  var tabW = Math.floor((630 - (nTabs - 1) * tabGap) / nTabs);   // 630=可用宽(面板660-两侧留白); 3页签→203(≈原204)
+  var tabX0 = (CONFIG.viewW - (nTabs * tabW + (nTabs - 1) * tabGap)) / 2;
   var tabY = bPy + (CONFIG.codexTabY || 96);
   uiCodexTabs = [];
   for (var cti = 0; cti < DATA_CODEX_TAB.length; cti++) {
@@ -30655,6 +30660,8 @@ function codexContentBottom() {
   var tab = codexTabId();
   var bodyY = CONFIG.codexBodyY || 168;
   if (tab === "pet") return bodyY + DATA_BEAST.length * ((CONFIG.codexPetRowH || 118) + (CONFIG.codexPetGap || 6));
+  // 【2026-09-22】「道具」页: 3 张三卡竖排(rh132+gap26)，与 drawCodexItemDetail 同口径
+  if (tab === "item") return bodyY + FIELD_KIND_ORDER.length * 158 - 26;
   if (tab === "fork") {
     // 【v1.174】⚠ 修正：此前只数分叉卡（5 行），**完全漏掉同 tab 下方的成档(7) + 进化(9) 两段** ——
     //   而 codexForkRows 的构建（见 uiCodexForks/uiCodexPairs/uiCodexEvos）三段是**串行接排**的：
@@ -30678,6 +30685,9 @@ function codexContentBottom() {
   var lst = enemiesInCodexGroup(GAME.codexEnemyGroup || "trash");
   return bodyY + gH + 10 + lst.length * (eH + eG);
 }
+// 【2026-09-22】面板内相对 y → 屏幕绝对 y。codex*Fit/ContentBottom 系列给的是"面板内偏移"，
+//   面板矮时 py>0，直接当绝对坐标用会把页脚/返回按钮画到内容上（pet/敌人页 py=0 所以一直没暴露）。
+function codexPy() { return (CONFIG.viewH - (GAME.codexFitH || CONFIG.viewH)) / 2; }
 function syncCodexFit() {
   var cb = codexContentBottom();
   GAME.codexMsgY = cb + 40;
@@ -30696,7 +30706,7 @@ function syncCodexFit() {
   if (uiBeastClose) {
     var bh = uiBeastClose.rect.h || 64;
     var maxY = CONFIG.viewH - bh - 8;
-    uiBeastClose.rect.y = Math.min(GAME.codexCloseY, maxY);
+    uiBeastClose.rect.y = Math.min(codexPy() + GAME.codexCloseY, maxY);
   }
 }
 function drawBeastPanel(ctx, m) {
@@ -30704,7 +30714,7 @@ function drawBeastPanel(ctx, m) {
   if (GAME.codexFitH) m.panelH = GAME.codexFitH;      // 【v1.167】底板跟随内容底
   var py = (CONFIG.viewH - m.panelH) / 2;
   var tab = codexTabId();
-  var footY = GAME.codexFootYFit || (py + (CONFIG.codexFootY || 1148));
+  var footY = codexPy() + (GAME.codexFootYFit || (CONFIG.codexFootY || 1148));
   var msg, msgCol, nPet, nEn, nFk, nPair, nEvo, pd, en;
   ctx.fillStyle = CONFIG.colors.cardTitle;
   ctx.textAlign = "center";
@@ -30718,7 +30728,7 @@ function drawBeastPanel(ctx, m) {
   nFk = DATA_CODEX_FORK.length;
   nPair = DATA_CODEX_PAIR.length;
   nEvo = DATA_COMBAT_EVO.length;
-  ctx.fillText("跟宠 " + nPet + "/" + DATA_BEAST.length + " · 敌人 " + nEn + " · 配方 " + nFk + " 组+" + nPair + " 成档+" + nEvo + " 进化 · 战力 " + displayedHallPower(),
+  ctx.fillText("跟宠 " + nPet + "/" + DATA_BEAST.length + " · 敌人 " + nEn + " · 配方 " + nFk + " 组+" + nPair + " 成档+" + nEvo + " 进化 · 道具 " + FIELD_KIND_ORDER.length + " · 战力 " + displayedHallPower(),
     CONFIG.viewW / 2, py + 76);
   switch (tab) {
     case "pet":
@@ -30727,6 +30737,9 @@ function drawBeastPanel(ctx, m) {
       drawCodexEnemyDetail(ctx, py);
       break;
     case "fork":
+      break;
+    case "item":
+      drawCodexItemDetail(ctx, py);
       break;
     default:
       break;
@@ -30750,6 +30763,9 @@ function drawBeastPanel(ctx, m) {
       ? "点分组再点条目 · 碎刀子见上方 · 读招字 + 出处一眼能对上"
       : "点分组再点条目 · 读招字 + 出处一眼能对上";
     msgCol = CONFIG.colors.cardDesc;
+  } else if (tab === "item") {
+    msg = "战斗中由敌人掉落 · 走近自动拾取 · 全部游戏内产出, 不涉及付费";
+    msgCol = CONFIG.colors.cardDesc;
   } else {
     msg = "点卡看分叉差 · 成档是光环羁绊 · 进化是这件变强, 提示可略过";
     msgCol = CONFIG.colors.cardDesc;
@@ -30772,12 +30788,43 @@ function drawCodexEnemyDetail(ctx, py) {
   ctx.fillStyle = grp.tint;
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText((def ? def.name : entry.id) + " · " + entry.tell + " · " + entry.hint,
-    CONFIG.viewW / 2, GAME.codexMsgY || (py + 1004));
+    CONFIG.viewW / 2, codexPy() + (GAME.codexMsgY || 1004));
   if (entry.knife) {
     // 【v1.155】碎刀子浅金改深墨金, 苔纸上才读得清
     ctx.fillStyle = "#8a5a10";
     ctx.font = "bold 15px " + FONT_STACK;
-    ctx.fillText(entry.knife, CONFIG.viewW / 2, GAME.codexKnifeY || (py + 1028));
+    ctx.fillText(entry.knife, CONFIG.viewW / 2, codexPy() + (GAME.codexKnifeY || 1028));
+  }
+}
+// 【2026-09-22】图鉴「道具」页: 展示战斗内三种道具(鸡腿/炸弹/磁铁)——纯展示, 不改局内数值/掉落。
+function drawCodexItemDetail(ctx, py) {
+  if (codexTabId() !== "item") return;
+  var x = 56, w = CONFIG.viewW - 112, rh = 132, y0 = py + (CONFIG.codexBodyY || 168), gap = 26, i, id, def, yy;
+  var role = { drumstick: "回血", bomb: "清屏", magnet: "吸取" };
+  var line = {
+    drumstick: "战斗中由敌人掉落，走近自动拾取，立即回复生命值。",
+    bomb: "战斗中掉落并收入炸弹栏，点击或按 B 引爆，清除周围小怪。",
+    magnet: "战斗中掉落，走近自动拾取，吸取全场经验珠。"
+  };
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  for (i = 0; i < FIELD_KIND_ORDER.length; i++) {
+    id = FIELD_KIND_ORDER[i]; def = DATA_FIELD[id];
+    yy = y0 + i * (rh + gap);
+    drawCodexFrame(ctx, x, yy, w, rh, false, null);
+    ctx.fillStyle = def.color;
+    fillRoundRect(ctx, x + 20, yy + 20, 92, 92, 16);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 44px " + FONT_STACK;
+    ctx.textAlign = "center";
+    ctx.fillText(def.label, x + 66, yy + 68);
+    ctx.textAlign = "left";
+    ctx.fillStyle = CONFIG.colors.cardTitle;
+    ctx.font = "bold 28px " + FONT_STACK;
+    ctx.fillText(def.name + " · " + (role[id] || ""), x + 134, yy + 46);
+    ctx.fillStyle = CONFIG.colors.cardDesc;
+    ctx.font = "bold 16px " + FONT_STACK;
+    ctx.fillText(line[id] || "", x + 134, yy + 88);
   }
 }
 function makeCodexTab(idx, x, y, w, h) {
@@ -30796,7 +30843,9 @@ function makeCodexTab(idx, x, y, w, h) {
       var d = DATA_CODEX_TAB[this.idx];
       var r = this.rect;
       var on = codexTabId() === d.id;
-      var count = d.id === "pet" ? DATA_BEAST.length : (d.id === "enemy" ? DATA_CODEX_ENEMY.length : DATA_CODEX_FORK.length);
+      var count = d.id === "pet" ? DATA_BEAST.length
+        : (d.id === "enemy" ? DATA_CODEX_ENEMY.length
+        : (d.id === "item" ? FIELD_KIND_ORDER.length : DATA_CODEX_FORK.length));
       // 【v1.155】图鉴页签去重金: 深盘金边改苔纸+柔影+细墨框, 选中亮一档+墨框加粗+左侧墨绿签
       ctx.fillStyle = "rgba(16,20,14,0.12)";
       fillRoundRect(ctx, r.x + 1, r.y + 3, r.w, r.h, 12);
