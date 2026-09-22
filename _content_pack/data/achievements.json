@@ -1,0 +1,187 @@
+{
+  "system": "森灵成就与任务系统",
+  "version": 1,
+  "description": "《萌兽消消岛》跨局留存系统规格（纯设计数据，非游戏代码）。成就（一次性里程碑，永久达成）+ 每日任务（可重复刷新的小目标）把「打关卡」变成「有目标地打」，并为 data/economy.json 的两个产出水龙头提供判定来源：首次通关加成（first_clear）由首通类成就触发结算，每日任务即 daily 的 20 币/日载体。成就本体奖励为非货币（称号/图鉴条目），不新增任何货币水龙头，不突破经济表四 faucet 总量。指标全部取自既有系统：波次击杀(wave_design)、反应触发(reactions)、构筑拿卡(upgrades)、永久强化(meta_upgrades)、货币积累(economy)。",
+  "references": [
+    "Vampire Survivors 成就：击杀数 / 存活时长 / 解锁条件的里程碑式成就，达成即永久解锁图鉴与角色（vampire-survivors.fandom.com）",
+    "Hades 契约与图鉴：用「永久收集品」把每一局的表现转化为长期进度感，成就与奖励挂钩但主线成长不依赖刷成就（hades.fandom.com）",
+    "每日任务通用范式：3 个小目标 / 天、小额保底产出，把「打开游戏」变成「先看今天做什么」（手游留存惯例）"
+  ],
+  "rewards": {
+    "policy": "成就本体不发森灵币（不突破 economy.json 四 faucet 总量）；首通类成就触发 economy.faucets[first_clear] 结算，每日任务发放 economy.faucets[daily] 的 20 币/日；其余奖励均为非货币。",
+    "nonCurrency": ["title 称号", "codex 图鉴条目", "frame 头像框"]
+  },
+  "groups": {
+    "battle": "战斗",
+    "explore": "探索",
+    "build": "构筑",
+    "reaction": "反应",
+    "meta": "养成"
+  },
+  "metricTypes": {
+    "killCount": "累计击杀萌兽数（波次/战役）",
+    "counterKill": "使用克制元素击杀数（element_matrix 克制链）",
+    "bossDefeat": "击败森林古木次数（boss_phases）",
+    "firstClearAny": "首次通关任意关卡（触发 economy.first_clear 结算）",
+    "levelClear": "通关到第 N 关（wave_design levels.id）",
+    "firstClearAll": "首次通关全部 10 关",
+    "upgradeTakes": "累计拾取升级卡张数（upgrades.json）",
+    "stackMax": "单张升级卡叠至满层次数（upgrades.maxStacks）",
+    "epicTaken": "累计拾取史诗级升级卡张数",
+    "legendaryTaken": "累计拾取传说级升级卡张数",
+    "reactionCount": "累计触发元素反应次数（reactions.json）",
+    "reactionKinds": "触发过不同反应的种类数（10 种里集齐）",
+    "statusKinds": "施加过不同状态的种类数（7 种里集齐）",
+    "metaLevels": "永久强化总级数（meta_upgrades.json）",
+    "heroUnlocked": "解锁英雄数量（unlock_*）",
+    "coinsEarned": "累计获得森灵币（economy.json）",
+    "metaBuy": "当日购买永久强化次数（meta_upgrades.json）"
+  },
+  "achievements": {
+    "ach_kill_100": {
+      "cn": "初露锋芒", "group": "battle",
+      "metric": { "type": "killCount", "target": 100 },
+      "icon": "vfx/fx_hit_spark.png", "reward": { "type": "title", "value": "猎手" },
+      "desc": "累计击杀 100 只萌兽。奖励称号「猎手」。"
+    },
+    "ach_kill_1000": {
+      "cn": "百战老兵", "group": "battle",
+      "metric": { "type": "killCount", "target": 1000 },
+      "icon": "vfx/fx_explosion.png", "reward": { "type": "title", "value": "百战老兵" },
+      "desc": "累计击杀 1,000 只萌兽。奖励称号「百战老兵」。"
+    },
+    "ach_counter_50": {
+      "cn": "以克制刚", "group": "battle",
+      "metric": { "type": "counterKill", "target": 50 },
+      "icon": "icons/st_mark.png", "reward": { "type": "codex", "value": "克制链详解页" },
+      "desc": "使用克制元素击败 50 只萌兽。奖励图鉴「克制链详解页」。"
+    },
+    "ach_boss_1": {
+      "cn": "古木伐倒", "group": "battle",
+      "metric": { "type": "bossDefeat", "target": 1 },
+      "icon": "vfx/fx_leaf_burst.png", "reward": { "type": "frame", "value": "古木纹章" },
+      "desc": "击败森林古木 1 次。奖励头像框「古木纹章」。"
+    },
+    "ach_first_clear": {
+      "cn": "森灵初胜", "group": "explore",
+      "metric": { "type": "firstClearAny", "target": 1 },
+      "icon": "vfx/fx_star.png", "reward": { "type": "coins_first_clear", "value": "按关卡结算双倍（economy.first_clear 口径）" },
+      "desc": "首次通关任意关卡。触发首通双倍结算（economy.json first_clear 水龙头）。"
+    },
+    "ach_clear_5": {
+      "cn": "深入林地", "group": "explore",
+      "metric": { "type": "levelClear", "target": 5 },
+      "icon": "vfx/fx_portal.png", "reward": { "type": "title", "value": "林地行者" },
+      "desc": "通关到第 5 关。奖励称号「林地行者」。"
+    },
+    "ach_clear_10": {
+      "cn": "贯穿全境", "group": "explore",
+      "metric": { "type": "levelClear", "target": 10 },
+      "icon": "vfx/fx_shockwave.png", "reward": { "type": "frame", "value": "全境纹章" },
+      "desc": "通关到第 10 关（含 Boss）。奖励头像框「全境纹章」。"
+    },
+    "ach_clear_all_first": {
+      "cn": "十境全踏破", "group": "explore",
+      "metric": { "type": "firstClearAll", "target": 10 },
+      "icon": "icons/st_haste.png", "reward": { "type": "codex", "value": "全关卡战术页" },
+      "desc": "全部 10 关均完成首次通关（吃满首通加成）。奖励图鉴「全关卡战术页」。"
+    },
+    "ach_take_30": {
+      "cn": "博览群卡", "group": "build",
+      "metric": { "type": "upgradeTakes", "target": 30 },
+      "icon": "vfx/fx_levelup.png", "reward": { "type": "title", "value": "收藏家" },
+      "desc": "累计拾取 30 张升级卡。奖励称号「收藏家」。"
+    },
+    "ach_stack_max": {
+      "cn": "一门精进", "group": "build",
+      "metric": { "type": "stackMax", "target": 1 },
+      "icon": "icons/st_atk_up.png", "reward": { "type": "codex", "value": "叠层机制页" },
+      "desc": "任意一张升级卡叠至满层。奖励图鉴「叠层机制页」。"
+    },
+    "ach_epic_5": {
+      "cn": "史诗猎手", "group": "build",
+      "metric": { "type": "epicTaken", "target": 5 },
+      "icon": "vfx/fx_buff.png", "reward": { "type": "title", "value": "紫卡大师" },
+      "desc": "累计拾取 5 张史诗级升级卡。奖励称号「紫卡大师」。"
+    },
+    "ach_legend_1": {
+      "cn": "传说降临", "group": "build",
+      "metric": { "type": "legendaryTaken", "target": 1 },
+      "icon": "vfx/fx_star.png", "reward": { "type": "frame", "value": "金辉纹章" },
+      "desc": "首次拾取传说级升级卡。奖励头像框「金辉纹章」。"
+    },
+    "ach_reaction_50": {
+      "cn": "元素讲师", "group": "reaction",
+      "metric": { "type": "reactionCount", "target": 50 },
+      "icon": "icons/st_burn.png", "reward": { "type": "title", "value": "元素讲师" },
+      "desc": "累计触发 50 次元素反应。奖励称号「元素讲师」。"
+    },
+    "ach_reaction_5kinds": {
+      "cn": "五味调和", "group": "reaction",
+      "metric": { "type": "reactionKinds", "target": 5 },
+      "icon": "icons/st_poison.png", "reward": { "type": "codex", "value": "反应矩阵页" },
+      "desc": "触发过 5 种不同反应。奖励图鉴「反应矩阵页」。"
+    },
+    "ach_reaction_10kinds": {
+      "cn": "万象皆通", "group": "reaction",
+      "metric": { "type": "reactionKinds", "target": 10 },
+      "icon": "vfx/fx_debuff.png", "reward": { "type": "frame", "value": "反应纹章" },
+      "desc": "集齐全部 10 种反应。奖励头像框「反应纹章」。"
+    },
+    "ach_status_5": {
+      "cn": "状态大师", "group": "reaction",
+      "metric": { "type": "statusKinds", "target": 5 },
+      "icon": "icons/st_freeze.png", "reward": { "type": "codex", "value": "状态图鉴页" },
+      "desc": "施加过 5 种不同状态（7 种里集齐）。奖励图鉴「状态图鉴页」。"
+    },
+    "ach_meta_30": {
+      "cn": "养成有方", "group": "meta",
+      "metric": { "type": "metaLevels", "target": 30 },
+      "icon": "vfx/fx_coin_burst.png", "reward": { "type": "title", "value": "庄园主" },
+      "desc": "永久强化累计升 30 级。奖励称号「庄园主」。"
+    },
+    "ach_hero_1": {
+      "cn": "新友入队", "group": "meta",
+      "metric": { "type": "heroUnlocked", "target": 1 },
+      "icon": "sprites/star_bird.png", "reward": { "type": "codex", "value": "英雄志·雷羽鹰" },
+      "desc": "解锁任意 1 位新英雄。奖励图鉴「英雄志」。"
+    },
+    "ach_coins_10000": {
+      "cn": "小有积蓄", "group": "meta",
+      "metric": { "type": "coinsEarned", "target": 10000 },
+      "icon": "vfx/fx_coin_burst.png", "reward": { "type": "title", "value": "森灵银行家" },
+      "desc": "累计获得 10,000 森灵币。奖励称号「森灵银行家」。"
+    }
+  },
+  "daily": {
+    "pickPerDay": 3,
+    "rewardCoins": 20,
+    "note": "每日从池中抽 3 个，完成各得 20 森灵币（对应 economy.json faucets.daily 的 20 币/日口径，全流程约 1,259 币）。任务每日 0 点刷新，当日未完成不累计。",
+    "pool": {
+      "d_kill": {
+        "cn": "今日清剿", "metric": { "type": "killCount", "target": 200 },
+        "icon": "vfx/fx_hit_spark.png", "desc": "今日击杀 200 只萌兽"
+      },
+      "d_clear": {
+        "cn": "今日巡林", "metric": { "type": "levelClear", "target": 2 },
+        "icon": "vfx/fx_star.png", "desc": "今日通关 2 个关卡（任意关卡累计）"
+      },
+      "d_reaction": {
+        "cn": "今日共鸣", "metric": { "type": "reactionCount", "target": 10 },
+        "icon": "icons/st_burn.png", "desc": "今日触发 10 次元素反应"
+      },
+      "d_take": {
+        "cn": "今日拾遗", "metric": { "type": "upgradeTakes", "target": 6 },
+        "icon": "vfx/fx_levelup.png", "desc": "今日拾取 6 张升级卡"
+      },
+      "d_meta": {
+        "cn": "今日营建", "metric": { "type": "metaBuy", "target": 2 },
+        "icon": "vfx/fx_coin_burst.png", "desc": "今日购买 2 次永久强化"
+      },
+      "d_earn": {
+        "cn": "今日进账", "metric": { "type": "coinsEarned", "target": 150 },
+        "icon": "vfx/fx_coin_burst.png", "desc": "今日获得 150 森灵币"
+      }
+    }
+  }
+}

@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-23 04:04:24",
+  "generated_at": "2026-09-23 04:20:14",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
     "vfx": 24,
     "icons": 12,
     "skill_icons": 13,
-    "design_data": 8,
+    "design_data": 9,
     "audio": 35,
     "bgm": 6,
     "sfx": 29
@@ -440,6 +440,11 @@
     }
   ],
   "design_data": [
+    {
+      "key": "achievements",
+      "cn": "成就与任务系统",
+      "bytes": 10465
+    },
     {
       "key": "boss_phases",
       "cn": "BOSS 多阶段脚本",

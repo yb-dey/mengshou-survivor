@@ -63,6 +63,7 @@ DATA_CN = {
     'wave_design': '关卡波次设计', 'boss_phases': 'BOSS 多阶段脚本',
     'reactions': '元素反应系统', 'upgrades': '局内成长系统',
     'meta_upgrades': '局外成长系统', 'economy': '经济系统',
+    'achievements': '成就与任务系统',
 }
 
 def chips(keys, cn):
@@ -152,6 +153,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="meta_chart.html" target="_blank">
       <div class="ico">🌱</div><div class="t">局外成长系统</div>
       <div class="d">跨局永久强化 + 森灵币经济闭环：18 项永久强化 × 5 类（几何成本），产出-消耗水槽（积压率 0.22 健康），含可玩实验室 meta_lab.html。</div></a>
+    <a class="ncard" href="achievement_chart.html" target="_blank">
+      <div class="ico">🏅</div><div class="t">成就与任务系统</div>
+      <div class="d">19 个一次性成就 × 5 组 + 每日任务池（抽 3/天），指标取自全部既有系统；首通/每日任务即 economy 两水龙头的判定来源，含可玩实验室 achievement_lab.html。</div></a>
     <a class="ncard" href="audio_demo.html" target="_blank">
       <div class="ico">🎵</div><div class="t">音频试听</div>
       <div class="d">{len(audio)} 条音频（{len(bgm)} BGM 可循环 + {len(sfx)} SFX），单击即听。</div></a>

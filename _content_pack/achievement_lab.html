@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 成就实验室</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; --red:#e06666; }
+  *{ box-sizing:border-box;margin:0;padding:0 }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:28px 16px; display:flex; flex-direction:column; align-items:center; }
+  h1{ font-size:26px; letter-spacing:2px; margin-bottom:4px }
+  .sub{ opacity:.8; margin-bottom:20px; font-size:13px; text-align:center; max-width:900px; line-height:1.6 }
+  .cols{ width:100%; max-width:1080px; display:grid; grid-template-columns:1fr 1fr; gap:16px }
+  @media(max-width:860px){ .cols{ grid-template-columns:1fr } }
+  .card{ background:rgba(15,47,31,.55); border:1px solid rgba(159,224,180,.25); border-radius:14px; padding:18px 20px }
+  .card h2{ font-size:16px; margin-bottom:12px; display:flex; align-items:center; gap:8px }
+  .card h2 small{ opacity:.6; font-weight:400; font-size:12px }
+  .hud{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px }
+  .chip{ flex:1; min-width:86px; background:rgba(255,255,255,.05); border:1px solid rgba(159,224,180,.2); border-radius:10px; padding:9px; text-align:center }
+  .chip .k{ font-size:11px; opacity:.7 }
+  .chip .v{ font-size:19px; font-weight:800; margin-top:2px }
+  .btn{ cursor:pointer; border:none; border-radius:8px; padding:8px 13px; font-size:13px; font-weight:700; color:#0f2f1f; background:var(--leaf) }
+  .btn.gold{ background:var(--gold) }
+  .btn.blue{ background:#5ab6ff; color:#0f2f1f }
+  .btn.gray{ background:rgba(159,224,180,.25); color:var(--cream) }
+  .row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px }
+  .ach{ display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.04); border-radius:10px; padding:7px 12px; margin:6px 0 }
+  .ach img{ width:34px; height:34px; flex:none; border-radius:7px }
+  .ach.done{ outline:1px solid var(--gold); background:rgba(232,196,99,.08) }
+  .ach-b{ flex:1; min-width:0 }
+  .ach-n{ font-size:13.5px; font-weight:700 }
+  .ach-n small{ font-weight:400; opacity:.6; margin-left:6px }
+  .ach-d{ font-size:11.5px; opacity:.75; margin-top:2px }
+  .pbar{ height:7px; background:rgba(255,255,255,.08); border-radius:4px; overflow:hidden; margin-top:5px }
+  .pbar i{ display:block; height:100%; background:linear-gradient(90deg,#6fe39a,#3fa66a); transition:width .2s }
+  .ach.done .pbar i{ background:linear-gradient(90deg,#e8c463,#c49a2e) }
+  .banner{ position:fixed; left:50%; top:18px; transform:translateX(-50%); background:linear-gradient(160deg,#c49a2e,#e8c463);
+    color:#0f2f1f; font-weight:800; padding:10px 22px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.5);
+    opacity:0; pointer-events:none; transition:opacity .3s, top .3s; z-index:9; max-width:90vw; text-align:center }
+  .banner.show{ opacity:1; top:28px }
+  .feed{ font-size:12px; line-height:1.7; max-height:150px; overflow:auto; background:rgba(0,0,0,.25); border-radius:10px; padding:10px 12px }
+  .feed .c{ color:var(--gold) }
+  .note{ font-size:11.5px; opacity:.6; line-height:1.6; margin-top:12px }
+  footer{ margin-top:20px; font-size:12px; opacity:.5; text-align:center; line-height:1.7; max-width:840px }
+</style>
+</head>
+<body>
+  <h1>🏅 成就实验室</h1>
+  <div class="sub">《萌兽消消岛》留存系统可玩演示：按钮推进「击杀 / 反应 / 通关 / 构筑 / 养成」五类事件，成就进度实时填充、达成弹金框提示；每日任务按日期种子从池中抽 3 个，完成各入账 <b>+20 🍀</b>（economy.daily 口径）；首次通关触发 <b>首通双倍结算</b>（economy.first_clear 口径）。纯前端 file:// 双击即开，无 fetch。</div>
+  <div class="banner" id="banner"></div>
+
+  <div class="cols">
+    <div class="card">
+      <h2>⚔️ 事件台 <small>推进指标，观察成就与任务如何亮起</small></h2>
+      <div class="hud">
+        <div class="chip"><div class="k">累计击杀</div><div class="v" id="sKills">0</div></div>
+        <div class="chip"><div class="k">反应次数</div><div class="v" id="sReact">0</div></div>
+        <div class="chip"><div class="k">通关进度</div><div class="v" id="sClear">0<small>/10</small></div></div>
+        <div class="chip"><div class="k">升级卡</div><div class="v" id="sCards">0</div></div>
+        <div class="chip"><div class="k">今日入账</div><div class="v" id="sCoins" style="color:var(--gold)">0🍀</div></div>
+      </div>
+      <div class="row">
+        <button class="btn" id="btnFight">⚔ 快进战斗 ×10</button>
+        <button class="btn blue" id="btnClear">🏁 通关下一关</button>
+        <button class="btn gray" id="btnMeta">🛒 购买永久强化</button>
+        <button class="btn gold" id="btnAuto">▶ 自动推进</button>
+      </div>
+      <h2>📜 事件流水</h2>
+      <div class="feed" id="feed"></div>
+      <h2 style="margin-top:14px">📋 今日任务 <small>按日期种子抽取，完成 +20 🍀</small></h2>
+      <div id="dailies"></div>
+      <div class="note">首通加成入账为 economy.json first_clear 口径的示意值；每日任务 20 币/个即 economy.json daily 水龙头的 20 币/日口径——成就本体从不发币，只发称号/图鉴/头像框。</div>
+    </div>
+
+    <div class="card">
+      <h2>🏅 成就 <small><span id="doneN">0</span>/19 已达成 · 达成弹金框</small></h2>
+      <div id="achs"></div>
+    </div>
+  </div>
+
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>留存系统可玩校验场，与 §2.6 关卡波次 / §2.9 元素反应 / §2.10 局内成长 / §2.11 局外成长、§2.11 经济表联动；内联 ACH/DPICK 数据与 achievements.json 逐项比对一致。</footer>
+
+<script>
+"use strict";
+/* ===== 内联数据（子集，与 data/achievements.json 对齐）===== */
+const GROUPS = { battle:"战斗", explore:"探索", build:"构筑", reaction:"反应", meta:"养成" };
+const TYPE_CN = { killCount:"累计击杀", counterKill:"克制击杀", bossDefeat:"击败古木",
+  firstClearAny:"首次通关", levelClear:"通关到第 N 关", firstClearAll:"十关全首通",
+  upgradeTakes:"拾取升级卡", stackMax:"单卡叠满", epicTaken:"史诗卡", legendaryTaken:"传说卡",
+  reactionCount:"反应次数", reactionKinds:"反应种类", statusKinds:"状态种类",
+  metaLevels:"强化总级", metaBuy:"购买强化", heroUnlocked:"解锁英雄", coinsEarned:"累计森灵币" };
+const ACH = {
+  ach_kill_100:   { cn:"初露锋芒", group:"battle", metric:{type:"killCount",target:100}, icon:"vfx/fx_hit_spark.png", reward:{type:"title",value:"猎手"}, desc:"累计击杀 100 只萌兽。奖励称号「猎手」。" },
+  ach_kill_1000:  { cn:"百战老兵", group:"battle", metric:{type:"killCount",target:1000}, icon:"vfx/fx_explosion.png", reward:{type:"title",value:"百战老兵"}, desc:"累计击杀 1,000 只萌兽。奖励称号「百战老兵」。" },
+  ach_counter_50: { cn:"以克制刚", group:"battle", metric:{type:"counterKill",target:50}, icon:"icons/st_mark.png", reward:{type:"codex",value:"克制链详解页"}, desc:"使用克制元素击败 50 只萌兽。奖励图鉴「克制链详解页」。" },
+  ach_boss_1:     { cn:"古木伐倒", group:"battle", metric:{type:"bossDefeat",target:1}, icon:"vfx/fx_leaf_burst.png", reward:{type:"frame",value:"古木纹章"}, desc:"击败森林古木 1 次。奖励头像框「古木纹章」。" },
+  ach_first_clear:{ cn:"森灵初胜", group:"explore", metric:{type:"firstClearAny",target:1}, icon:"vfx/fx_star.png", reward:{type:"coins_first_clear",value:"按关卡结算双倍（economy.first_clear 口径）"}, desc:"首次通关任意关卡。触发首通双倍结算（economy.json first_clear 水龙头）。" },
+  ach_clear_5:    { cn:"深入林地", group:"explore", metric:{type:"levelClear",target:5}, icon:"vfx/fx_portal.png", reward:{type:"title",value:"林地行者"}, desc:"通关到第 5 关。奖励称号「林地行者」。" },
+  ach_clear_10:   { cn:"贯穿全境", group:"explore", metric:{type:"levelClear",target:10}, icon:"vfx/fx_shockwave.png", reward:{type:"frame",value:"全境纹章"}, desc:"通关到第 10 关（含 Boss）。奖励头像框「全境纹章」。" },
+  ach_clear_all_first:{ cn:"十境全踏破", group:"explore", metric:{type:"firstClearAll",target:10}, icon:"icons/st_haste.png", reward:{type:"codex",value:"全关卡战术页"}, desc:"全部 10 关均完成首次通关（吃满首通加成）。奖励图鉴「全关卡战术页」。" },
+  ach_take_30:    { cn:"博览群卡", group:"build", metric:{type:"upgradeTakes",target:30}, icon:"vfx/fx_levelup.png", reward:{type:"title",value:"收藏家"}, desc:"累计拾取 30 张升级卡。奖励称号「收藏家」。" },
+  ach_stack_max:  { cn:"一门精进", group:"build", metric:{type:"stackMax",target:1}, icon:"icons/st_atk_up.png", reward:{type:"codex",value:"叠层机制页"}, desc:"任意一张升级卡叠至满层。奖励图鉴「叠层机制页」。" },
+  ach_epic_5:     { cn:"史诗猎手", group:"build", metric:{type:"epicTaken",target:5}, icon:"vfx/fx_buff.png", reward:{type:"title",value:"紫卡大师"}, desc:"累计拾取 5 张史诗级升级卡。奖励称号「紫卡大师」。" },
+  ach_legend_1:   { cn:"传说降临", group:"build", metric:{type:"legendaryTaken",target:1}, icon:"vfx/fx_star.png", reward:{type:"frame",value:"金辉纹章"}, desc:"首次拾取传说级升级卡。奖励头像框「金辉纹章」。" },
+  ach_reaction_50:{ cn:"元素讲师", group:"reaction", metric:{type:"reactionCount",target:50}, icon:"icons/st_burn.png", reward:{type:"title",value:"元素讲师"}, desc:"累计触发 50 次元素反应。奖励称号「元素讲师」。" },
+  ach_reaction_5kinds:{ cn:"五味调和", group:"reaction", metric:{type:"reactionKinds",target:5}, icon:"icons/st_poison.png", reward:{type:"codex",value:"反应矩阵页"}, desc:"触发过 5 种不同反应。奖励图鉴「反应矩阵页」。" },
+  ach_reaction_10kinds:{ cn:"万象皆通", group:"reaction", metric:{type:"reactionKinds",target:10}, icon:"vfx/fx_debuff.png", reward:{type:"frame",value:"反应纹章"}, desc:"集齐全部 10 种反应。奖励头像框「反应纹章」。" },
+  ach_status_5:   { cn:"状态大师", group:"reaction", metric:{type:"statusKinds",target:5}, icon:"icons/st_freeze.png", reward:{type:"codex",value:"状态图鉴页"}, desc:"施加过 5 种不同状态（7 种里集齐）。奖励图鉴「状态图鉴页」。" },
+  ach_meta_30:    { cn:"养成有方", group:"meta", metric:{type:"metaLevels",target:30}, icon:"vfx/fx_coin_burst.png", reward:{type:"title",value:"庄园主"}, desc:"永久强化累计升 30 级。奖励称号「庄园主」。" },
+  ach_hero_1:     { cn:"新友入队", group:"meta", metric:{type:"heroUnlocked",target:1}, icon:"sprites/star_bird.png", reward:{type:"codex",value:"英雄志·雷羽鹰"}, desc:"解锁任意 1 位新英雄。奖励图鉴「英雄志」。" },
+  ach_coins_10000:{ cn:"小有积蓄", group:"meta", metric:{type:"coinsEarned",target:10000}, icon:"vfx/fx_coin_burst.png", reward:{type:"title",value:"森灵银行家"}, desc:"累计获得 10,000 森灵币。奖励称号「森灵银行家」。" }
+};
+const DPICK = 3, DREWARD = 20;
+const DPOOL = {
+  d_kill:     { cn:"今日清剿", metric:{type:"killCount",target:200}, icon:"vfx/fx_hit_spark.png", desc:"今日击杀 200 只萌兽" },
+  d_clear:    { cn:"今日巡林", metric:{type:"levelClear",target:2}, icon:"vfx/fx_star.png", desc:"今日通关 2 个关卡（任意关卡累计）" },
+  d_reaction: { cn:"今日共鸣", metric:{type:"reactionCount",target:10}, icon:"icons/st_burn.png", desc:"今日触发 10 次元素反应" },
+  d_take:     { cn:"今日拾遗", metric:{type:"upgradeTakes",target:6}, icon:"vfx/fx_levelup.png", desc:"今日拾取 6 张升级卡" },
+  d_meta:     { cn:"今日营建", metric:{type:"metaBuy",target:2}, icon:"vfx/fx_coin_burst.png", desc:"今日购买 2 次永久强化" },
+  d_earn:     { cn:"今日进账", metric:{type:"coinsEarned",target:150}, icon:"vfx/fx_coin_burst.png", desc:"今日获得 150 森灵币" }
+};
+const REACTIONS = ["earth+fire","earth+light","earth+water","earth+wood","fire+light","fire+water","fire+wood","light+water","light+wood","water+wood"];
+const STATUSES = ["st_burn","st_poison","st_slow","st_stun","st_shield","st_heal","st_haste"];
+
+/* ===== 状态 ===== */
+const st = { kills:0, counter:0, boss:0, firstClears:new Set(), maxLevel:0, cards:0, stackMax:0,
+             epic:0, legend:0, reactions:0, reactKinds:new Set(), statusKinds:new Set(),
+             metaLevels:0, heroes:0, coins:0, metaBuyToday:0, clearToday:0, cardsToday:0, earnToday:0, reactToday:0 };
+const done = new Set();
+
+/* ===== 每日任务：按日期种子抽 3 个 ===== */
+function seedFrom(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const today = new Date().toISOString().slice(0,10);
+const rng = mulberry32(seedFrom(today));
+const poolKeys = Object.keys(DPOOL);
+const todays = [];
+while(todays.length<DPICK){ const k=poolKeys[Math.floor(rng()*poolKeys.length)]; if(todays.indexOf(k)<0) todays.push(k); }
+
+/* ===== 指标采集 ===== */
+function curOf(type){
+  switch(type){
+    case "killCount": return st.kills;
+    case "counterKill": return st.counter;
+    case "bossDefeat": return st.boss;
+    case "firstClearAny": return st.firstClears.size>0?1:0;
+    case "levelClear": return st.maxLevel;
+    case "firstClearAll": return Math.min(st.firstClears.size,10);
+    case "upgradeTakes": return st.cards;
+    case "stackMax": return st.stackMax;
+    case "epicTaken": return st.epic;
+    case "legendaryTaken": return st.legend;
+    case "reactionCount": return st.reactions;
+    case "reactionKinds": return st.reactKinds.size;
+    case "statusKinds": return st.statusKinds.size;
+    case "metaLevels": return st.metaLevels;
+    case "metaBuy": return st.metaBuyToday;
+    case "heroUnlocked": return st.heroes;
+    case "coinsEarned": return st.coins;
+  }
+  return 0;
+}
+
+/* ===== 渲染 ===== */
+const REWARD_CN = { title:"称号", codex:"图鉴", frame:"头像框" };
+function rewardText(r){ return r.type === "coins_first_clear" ? r.value : REWARD_CN[r.type] + "「" + r.value + "」"; }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function renderAchs(){
+  let html="", n=0;
+  Object.keys(ACH).forEach(function(k){
+    const a=ACH[k], cur=curOf(a.metric.type), ok=cur>=a.metric.target;
+    if(ok) n++;
+    const pct=Math.min(100, cur/a.metric.target*100);
+    html+='<div class="ach'+(ok?" done":"")+'"><img src="'+a.icon+'" alt="">'
+      +'<div class="ach-b"><div class="ach-n">'+a.cn+'<small>'+GROUPS[a.group]+' · '+TYPE_CN[a.metric.type]+' '+Math.min(cur,a.metric.target)+'/'+a.metric.target+'</small></div>'
+      +'<div class="ach-d">'+a.desc+' 奖励：'+rewardText(a.reward)+'</div>'
+      +'<div class="pbar"><i style="width:'+pct.toFixed(1)+'%"></i></div></div></div>';
+  });
+  document.getElementById("achs").innerHTML=html;
+  document.getElementById("doneN").textContent=String(n);
+}
+function renderDailies(){
+  let html="";
+  todays.forEach(function(k){
+    const d=DPOOL[k], cur=curOf(d.metric.type), ok=cur>=d.metric.target;
+    const pct=Math.min(100, cur/d.metric.target*100);
+    html+='<div class="ach'+(ok?" done":"")+'"><img src="'+d.icon+'" alt="">'
+      +'<div class="ach-b"><div class="ach-n">'+d.cn+'<small>'+(ok?"已完成 +20🍀":"进度 "+Math.min(cur,d.metric.target)+"/"+d.metric.target)+'</small></div>'
+      +'<div class="ach-d">'+d.desc+'</div>'
+      +'<div class="pbar"><i style="width:'+pct.toFixed(1)+'%"></i></div></div></div>';
+  });
+  document.getElementById("dailies").innerHTML=html;
+}
+function renderStats(){
+  document.getElementById("sKills").textContent=String(st.kills);
+  document.getElementById("sReact").textContent=String(st.reactions);
+  document.getElementById("sClear").innerHTML=String(st.maxLevel)+"<small>/10</small>";
+  document.getElementById("sCards").textContent=String(st.cards);
+  document.getElementById("sCoins").textContent=String(st.earnToday)+"🍀";
+}
+function feed(msg, gold){
+  const el=document.getElementById("feed");
+  const p=document.createElement("div");
+  if(gold) p.innerHTML='<span class="c">'+esc(msg)+'</span>'; else p.textContent=msg;
+  el.insertBefore(p, el.firstChild);
+  while(el.childNodes.length>40) el.removeChild(el.lastChild);
+}
+let bannerTimer=null;
+function banner(msg){
+  const b=document.getElementById("banner");
+  b.textContent=msg; b.classList.add("show");
+  if(bannerTimer) clearTimeout(bannerTimer);
+  bannerTimer=setTimeout(function(){ b.classList.remove("show"); }, 2600);
+}
+
+/* ===== 成就与任务结算 ===== */
+function settle(){
+  Object.keys(ACH).forEach(function(k){
+    if(done.has(k)) return;
+    const a=ACH[k];
+    if(curOf(a.metric.type)>=a.metric.target){
+      done.add(k);
+      banner("🏅 成就达成："+a.cn+"（"+rewardText(a.reward)+"）");
+      feed("🏅 成就达成「"+a.cn+"」→ "+rewardText(a.reward), true);
+    }
+  });
+  todays.forEach(function(k){
+    const d=DPOOL[k];
+    if(curOf(d.metric.type)>=d.metric.target && !d._paid){
+      d._paid=true;
+      st.coins+=DREWARD; st.earnToday+=DREWARD;
+      banner("📋 每日任务完成："+d.cn+"（+"+DREWARD+"🍀）");
+      feed("📋 每日任务「"+d.cn+"」完成 → 入账 +"+DREWARD+" 🍀（economy.daily 口径）", true);
+    }
+  });
+  renderAchs(); renderDailies(); renderStats();
+}
+
+/* ===== 事件 ===== */
+function fight(){
+  st.kills+=10;
+  const c=Math.floor(Math.random()*4);
+  st.counter+=c;
+  const nr=Math.floor(Math.random()*3);
+  for(let i=0;i<nr;i++){
+    st.reactions++; st.reactToday++;
+    st.reactKinds.add(REACTIONS[Math.floor(Math.random()*REACTIONS.length)]);
+    if(Math.random()<0.5) st.statusKinds.add(STATUSES[Math.floor(Math.random()*STATUSES.length)]);
+  }
+  const nc=1+Math.floor(Math.random()*3);
+  st.cards+=nc; st.cardsToday+=nc;
+  const roll=Math.random();
+  if(roll<0.12){ st.epic++; }
+  else if(roll<0.15){ st.legend++; }
+  if(Math.random()<0.05) st.stackMax=1;
+  feed("⚔ 击杀 +10"+(c?"（克制 +"+c+"）":"")+"，反应 +"+nr+"，拾取升级卡 +"+nc+(roll<0.12?"（史诗！）":roll<0.15?"（传说！！）":""));
+}
+function clearNext(){
+  if(st.maxLevel>=10){ feed("🏁 已通关全部 10 关。"); return; }
+  st.maxLevel++; st.clearToday++;
+  const lv=st.maxLevel;
+  if(!st.firstClears.has(lv)){
+    st.firstClears.add(lv);
+    const gain=100+lv*10;
+    st.coins+=gain; st.earnToday+=gain;
+    feed("🏁 通关第 "+lv+" 关 → 首通双倍结算 +"+gain+" 🍀（economy.first_clear 口径）", true);
+  } else {
+    feed("🏁 通关第 "+lv+" 关（重复通关，无首通加成）");
+  }
+  if(lv===10){ st.boss++; feed("🌳 击败森林古木！", true); }
+}
+function buyMeta(){
+  st.metaLevels++; st.metaBuyToday++;
+  st.coins+=5; st.earnToday+=5; // 示意：养成行为伴随小额回收口径外收益（演示用，不进 economy 表）
+  feed("🛒 购买永久强化（总级数 "+st.metaLevels+"）");
+}
+let autoTimer=null;
+document.getElementById("btnFight").addEventListener("click", function(){ fight(); settle(); });
+document.getElementById("btnClear").addEventListener("click", function(){ clearNext(); settle(); });
+document.getElementById("btnMeta").addEventListener("click", function(){ buyMeta(); settle(); });
+document.getElementById("btnAuto").addEventListener("click", function(){
+  const b=this;
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; b.textContent="▶ 自动推进"; return; }
+  b.textContent="⏸ 停止自动";
+  autoTimer=setInterval(function(){
+    fight();
+    if(Math.random()<0.15) clearNext();
+    if(Math.random()<0.08) buyMeta();
+    settle();
+  }, 500);
+});
+settle();
+</script>
+</body>
+</html>
