@@ -434,6 +434,74 @@ def synth_warning(path):
         add(s, 0.16, midi_freq(70), 0.24, 'square', a=0.002, d=0.02, s=0.6, r=0.04)
     write_wav(path, buf); return total
 
+# ---------------- 3 个「状态机制」音效（round-15 · 与 VFX 配套） ----------------
+def synth_freeze(path):
+    """冻结 / 碎冰命中（配套 fx_freeze_shatter）：高频玻璃质碎裂叮 + 冷色下扫 + 霜噪微闪。"""
+    total = 0.34
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.002, d=0.05, s=0.4, r=0.10):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    def sweep(start, dur, m0, m1, amp, wave, a=0.002, d=0.05, s=0.4, r=0.08):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR; prog = i / cnt
+            freq = midi_freq(m0 + (m1 - m0) * prog)
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    for k, m in enumerate([88, 91, 95, 99]):  # 玻璃质碎裂叮（高频三角）
+        add(k * 0.03, 0.10, midi_freq(m), 0.18, 'triangle', a=0.001, d=0.04, s=0.3, r=0.06)
+    sweep(0.06, 0.16, 84, 60, 0.22, 'sawtooth', a=0.002, d=0.08, s=0.3, r=0.05)  # 冷色下扫
+    r = _noise_rng(); nb = int(0.20 * SR)
+    for i in range(nb):  # 霜噪微闪
+        if i < N:
+            p = i / nb
+            buf[i] += (r.random() * 2 - 1) * 0.14 * (1 - p) ** 1.5 * (0.6 + 0.4 * math.sin(2 * math.pi * 40 * p))
+    write_wav(path, buf); return total
+
+def synth_buff(path):
+    """增益 / 强化生效（配套 fx_buff）：明亮上行大三和弦 + 金光泛音，比治疗更「赋能」。"""
+    notes = [72, 76, 79, 84]  # C E G C 上行
+    step = 0.06; tail = 0.30; total = len(notes) * step + tail
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.003, d=0.05, s=0.6, r=0.20):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    for k, m in enumerate(notes):
+        add(k * step, 0.20, midi_freq(m), 0.22, 'triangle', a=0.003, d=0.04, s=0.6, r=0.12)
+        add(k * step, 0.14, midi_freq(m + 12), 0.07, 'sine', a=0.002, d=0.03, s=0.3, r=0.10)
+    for c in [72, 76, 79, 84]:  # 收尾赋能和弦
+        add(len(notes) * step, tail, midi_freq(c), 0.12, 'sine', a=0.02, d=0.12, s=0.7, r=0.25)
+    write_wav(path, buf); return total
+
+def synth_debuff(path):
+    """减益 / 诅咒生效（配套 fx_debuff）：下行阴郁小调 + 低频闷响。"""
+    notes = [67, 63, 60, 56]  # G E C G 下行（比失败更暗）
+    step = 0.10; tail = 0.30; total = len(notes) * step + tail
+    N = int(total * SR); buf = [0.0] * N
+    def add(start, dur, freq, amp, wave, a=0.004, d=0.06, s=0.5, r=0.18):
+        i0 = int(start * SR); cnt = int(dur * SR)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx >= N: break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+    for k, m in enumerate(notes):
+        add(k * step, 0.24, midi_freq(m), 0.20, 'sawtooth', a=0.004, d=0.06, s=0.5, r=0.14)
+        add(k * step, 0.16, midi_freq(m - 12), 0.07, 'sine', a=0.003, d=0.05, s=0.4, r=0.12)
+    add(0, 0.20, midi_freq(40), 0.30, 'sine', a=0.002, d=0.10, s=0.2, r=0.10)  # 低频闷响
+    add(len(notes) * step, tail, midi_freq(47), 0.10, 'sine', a=0.04, d=0.15, s=0.6, r=0.25)
+    write_wav(path, buf); return total
+
 # ---------------- 战斗 BGM（本轮新增 · 探索/秘境的对立项） ----------------
 def synth_bgm_battle(path, bars=16, bpm=128, fade=0.08):
     """战斗主题 BGM：更快的节奏（128 BPM）、驱动贝斯、 energetic 琶音 lead、
@@ -603,6 +671,9 @@ if __name__ == '__main__':
         ('cp_sfx_portal.wav', synth_portal),
         ('cp_sfx_coin.wav', synth_coin),
         ('cp_sfx_warning.wav', synth_warning),
+        ('cp_sfx_freeze.wav', synth_freeze),
+        ('cp_sfx_buff.wav', synth_buff),
+        ('cp_sfx_debuff.wav', synth_debuff),
     ]
     for name, fn in jobs:
         d = fn(f'{out_dir}/{name}')

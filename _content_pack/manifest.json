@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-23 00:57:40",
+  "generated_at": "2026-09-23 01:09:20",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
     "vfx": 21,
-    "audio": 19,
+    "audio": 22,
     "bgm": 3,
-    "sfx": 16
+    "sfx": 19
   },
   "sprites": [
     {
@@ -255,6 +255,16 @@
       "duration": 35.56
     },
     {
+      "key": "cp_sfx_buff",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 47672,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.54
+    },
+    {
       "key": "cp_sfx_coin",
       "cn": "",
       "kind": "sfx",
@@ -275,6 +285,16 @@
       "duration": 0.22
     },
     {
+      "key": "cp_sfx_debuff",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 61782,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.7
+    },
+    {
       "key": "cp_sfx_evolve",
       "cn": "",
       "kind": "sfx",
@@ -293,6 +313,16 @@
       "bits": 16,
       "channels": 1,
       "duration": 0.4
+    },
+    {
+      "key": "cp_sfx_freeze",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 30032,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.34
     },
     {
       "key": "cp_sfx_heal",

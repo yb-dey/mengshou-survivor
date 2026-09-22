@@ -37,7 +37,9 @@ VFX_CN = {
 BGM_CN = {
     'cp_bgm_forest': '森林主题', 'cp_bgm_battle': '战斗主题', 'cp_bgm_boss': 'BOSS 主题',
 }
-SFX_CN = {}
+SFX_CN = {
+    'cp_sfx_freeze': '冻结碎冰', 'cp_sfx_buff': '增益强化', 'cp_sfx_debuff': '减益诅咒',
+}
 
 def chips(keys, cn):
     return ''.join('<span class="chip">%s<em>%s</em></span>' % (k, cn.get(k, '')) for k in keys)

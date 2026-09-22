@@ -52,10 +52,13 @@
 | `audio/cp_sfx_portal.wav` | 召唤门 / 传送 | 失谐正弦琶音 + 缓慢调制漩涡感（配套 fx_portal） | 0.70s |
 | `audio/cp_sfx_coin.wav`   | 金币 / 得分 | 经典双音叮 B5→E6（配套 fx_coin_burst） | 0.18s |
 | `audio/cp_sfx_warning.wav`| 预警 / 警示 | 紧张双音警报（小二度叠置），急促（配套 fx_telegraph） | 0.44s |
+| `audio/cp_sfx_freeze.wav`| 冻结 / 碎冰 | 玻璃质碎裂叮 + 冷色下扫 + 霜噪微闪（配套 fx_freeze_shatter） | 0.34s |
+| `audio/cp_sfx_buff.wav`  | 增益 / 强化 | 上行大三和弦 + 金光泛音（配套 fx_buff） | 0.54s |
+| `audio/cp_sfx_debuff.wav`| 减益 / 诅咒 | 下行阴郁小调 + 低频闷响（配套 fx_debuff） | 0.70s |
 
 - **合成方式**：`tools/synth_audio.py`（纯 Python 标准库，零依赖、零生成额度、不卡机），确定性种子可复现；复用 `midi_freq / env_adsr / tone / write_wav` 四个基础件，新增 `sawtooth` 波形与 `sweep` 扫频原语。
-- **试听页**：`audio_demo.html` 引用相对路径 `audio/*.wav`，双击即听，同样规避死资产；现已改为数据驱动网格，覆盖全部 19 条（3 BGM + 16 SFX）。
-- **校验**：19/19 峰值均 = 85%（未削波），RMS 13.4%–30.0%（非空、非静音）；3 首 BGM（35.6s / 30.0s / 31.3s）无缝循环，16 个 SFX 0.06s–1.38s 覆盖战斗全事件与音画配套特效。
+- **试听页**：`audio_demo.html` 引用相对路径 `audio/*.wav`，双击即听，同样规避死资产；现已改为数据驱动网格，覆盖全部 22 条（3 BGM + 19 SFX）。
+- **校验**：22/22 峰值均 = 85%（未削波），RMS 13.4%–30.0%（非空、非静音）；3 首 BGM（35.6s / 30.0s / 31.3s）无缝循环，19 个 SFX 0.06s–1.38s 覆盖战斗全事件与音画配套特效。
 
 ## 2.2 VFX 特效精灵（本轮新增 · 程序化真透底）
 
@@ -105,7 +108,7 @@ _content_pack/
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
 │   └── <key>.png / <key>.webp
-├── audio/                 # 本包专属音频原型（独立命名空间，零接线，19 条）
+├── audio/                 # 本包专属音频原型（独立命名空间，零接线，22 条）
 │   ├── cp_bgm_forest.wav  # 森林主题 BGM（无缝循环）
 │   ├── cp_bgm_battle.wav  # 战斗主题 BGM（128 BPM，无缝循环）
 │   ├── cp_bgm_boss.wav    # BOSS 主题 BGM（92 BPM，无缝循环）
@@ -119,7 +122,10 @@ _content_pack/
 │   ├── cp_sfx_evolve.wav  # 进化
 │   ├── cp_sfx_win.wav     # 胜利
 │   ├── cp_sfx_lose.wav    # 失败
-│   └── cp_sfx_ui.wav      # UI 点击
+│   ├── cp_sfx_ui.wav      # UI 点击
+│   ├── cp_sfx_freeze.wav  # 冻结 / 碎冰（配套 fx_freeze_shatter）
+│   ├── cp_sfx_buff.wav    # 增益 / 强化（配套 fx_buff）
+│   └── cp_sfx_debuff.wav  # 减益 / 诅咒（配套 fx_debuff）
 ├── vfx/                   # 程序化特效精灵（RGBA 真透底）
 │   └── fx_*.png（21 个）
 └── tools/
@@ -159,24 +165,25 @@ _content_pack/
 ## 6. 验证记录
 
 - 贴图：8/8 生成成功（6 萌兽 + Boss 森林古木 + Hero 灵鹿祭司）；8/8 透底为 RGBA；小兵/宠物 512²、Boss/Hero 1024²；展示页内联校验通过（8 张 `data:image/webp`）。
-- 音频：19/19 合成成功并校验——峰值均 85%（未削波），RMS 13.4%–30.0%（非空非静音）；试听页 `audio_demo.html` 数据驱动网格覆盖全部 19 条（3 BGM + 16 SFX），引用相对路径可双击播放。
+- 音频：22/22 合成成功并校验——峰值均 85%（未削波），RMS 13.4%–30.0%（非空非静音）；试听页 `audio_demo.html` 数据驱动网格覆盖全部 22 条（3 BGM + 19 SFX），引用相对路径可双击播放。
 - VFX：21/21 程序化生成成功并校验——均为 `colorType=6` RGBA，非空白像素占比 8%–64%（锐利型稀疏、辉光型饱满），透明区正确保留；展示页内联校验通过（21 张 `data:image/png`）。
 - 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、21 VFX（尺寸 / 体积）、19 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张精灵）+ 音乐（3 首 BGM + 16 SFX）+ 特效（21 个 VFX）+ 图鉴（codex）**四支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张精灵）+ 音乐（3 首 BGM + 19 SFX）+ 特效（21 个 VFX）+ 图鉴（codex）**四支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
-3. ~~**游戏事件音效库（16 个 SFX）**~~ ✅ 已交付 `cp_sfx_summon / heal / hit / kill / levelup / pickup / hurt / evolve / win / lose / ui.wav` + 音画配套 5 条（`explosion / dash / portal / coin / warning`，与 fx_explosion·fx_dash_trail·fx_portal·fx_coin_burst·fx_telegraph 成套）；试听页 `audio_demo.html` 升级为数据驱动网格（19 条）。
+3. ~~**游戏事件音效库（19 个 SFX）**~~ ✅ 已交付 `cp_sfx_summon / heal / hit / kill / levelup / pickup / hurt / evolve / win / lose / ui.wav` + 音画配套 5 条（`explosion / dash / portal / coin / warning`，与 fx_explosion·fx_dash_trail·fx_portal·fx_coin_burst·fx_telegraph 成套）+ 状态机制 3 条（`freeze / buff / debuff`，与 fx_freeze_shatter·fx_buff·fx_debuff 成套）；试听页 `audio_demo.html` 升级为数据驱动网格（22 条）。
 4. ~~**VFX 精灵包**~~ ✅ 已交付 21 个程序化 RGBA 特效（10 基础：命中火花/火球/护盾泡/治疗光环/斩击弧/星爆/霜晶/升级星环/拾取闪光/毒云；+5 战斗向：大爆裂/雷击/治疗爆发/冲刺残影/预警圈；+3 通用向：冲击波环/召唤门/金币迸发；+3 机制向：冰碎/增益光环/减益光环）+ `vfx_demo.html` 试看页（21 张）。
 5. ~~**角色图鉴 Codex**~~ ✅ 已交付 `codex.html`（8 角色背景/属性/对策 + 元素克制环）。
 6. **更多敌种/英雄（待云端出图恢复）**：原计划经云端 Miora 文生图扩种（雷羽鹰/霜甲熊/焰心术士等以补齐元素），但本环境 `miora_text_to_image` 暂不可用；将在云端图像生成恢复后继续，沿用同一 chibi 语言 + 抠图流程。
 7. **音频接线桥接（待主文件释放）**：当 `game/萌兽消消岛.html` 可编辑时，将 `cp_*` 三条原型音轨以「独立 key」登记进 `sfxFiles/DATA_SFX`（不影响现有 29 音源集），实现零冲突接入。
-8. ~~**内容包总览入口页**~~ ✅ 已交付 `index.html`（扫描真实目录生成，导航 showcase/vfx_demo/audio_demo/codex 四页 + 资产清单 8 精灵/18 VFX/19 音频，零依赖、不卡机）。
+8. ~~**内容包总览入口页**~~ ✅ 已交付 `index.html`（扫描真实目录生成，导航 showcase/vfx_demo/audio_demo/codex 四页 + 资产清单 8 精灵/21 VFX/22 音频，零依赖、不卡机）。
 9. ~~**机器可读资产清单 manifest.json**~~ ✅ 已交付 `manifest.json`（tools/build_manifest.py 扫描生成，含贴图尺寸 / 双格式体积、VFX 尺寸、音频格式与时长，零依赖），为 §4 接入步骤提供脚本化索引。
 10. ~~**实战演练场 playground.html**~~ ✅ 已交付 `playground.html`（纯前端，用真实资产搭的迷你战斗场景：点击萌兽触发 fx_hit_spark/fx_slash/fx_star + cp_sfx_hit/kill、击杀播 fx_explosion/fx_coin_burst + cp_sfx_kill/coin/win、可开 cp_bgm_forest 循环；验证内容包「美术+音乐+特效」三支柱可用性，规避死资产）。
+11. ~~**状态机制音画闭环**~~ ✅ 已交付 `cp_sfx_freeze / buff / debuff.wav`（3 条），与 Round-14 的 `fx_freeze_shatter / fx_buff / fx_debuff` 三特效成套；`synth_audio.py` 加 3 合成函数、`audio_demo.html` 加 3 试听卡（共 22 条）、README/manifest 同步；VFX↔SFX 全机制配对补齐。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。
