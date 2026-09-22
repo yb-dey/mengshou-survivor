@@ -55,6 +55,9 @@ const DEFS = {
   //   BPM 118→126 更推进, 用于后三章与前三章拉开"世界在变冷"的色差。
   //   ⚠ 接线待办(需动 HTML, 避开 GROK): DATA_CHAPTER 4/5/6 的 bgmId 改 ridge + CONFIG.audio.bgmTrim 补一条
   //   + 门禁 bgm-lane-loudness.py 的 TRACK_TRIM 同步补 bgm_ridge。
+  // 【2026-09-22】bloom: 中间章(花花谷/果果林)战斗曲 —— 与 ridge 同批的"六章分曲"计划。
+  //   走向: 1章 march(G大调/118 明亮) → 2-3章 bloom(C大调/122 温暖) → 4-6章 ridge(A小调/126 冷峻)
+  bloom: { bpm: 122, beats: 32 },
   ridge: { bpm: 126, beats: 32 },
   horde: { bpm: 147, beats: 32 },
   abyss: { bpm: 84,  beats: 16 },
@@ -124,6 +127,32 @@ function renderTrack(tid) {
       if ((k & 1) === 0) tone(out, { wave: "sine", f0: 73.42, t0: k * beat, dur: beat * 0.22, a: 0.004, d: 0.08, s: 0, r: 0.08, gain: 0.11 });
       if (phrase >= 1 && (k & 1)) tone(out, { wave: "triangle", f0: hook * 0.5, t0: k * beat, dur: beat * 1.35, a: 0.02, d: 0.22, s: 0.08, r: 0.4, gain: 0.045 });
       if (phrase >= 2 && (k % 4) === 0) tone(out, { wave: "sine", f0: 196.0, t0: k * beat, dur: beat * 1.6, a: 0.02, d: 0.2, s: 0.08, r: 0.4, gain: 0.032 });
+    }
+
+  } else if (tid === "bloom") {
+    // 【2026-09-22】C 大调五声四句(中间章: 花花谷/果果林): 与 march/ridge 同骨架,
+    //   音区比 march 高一个纯四度(更暖更满), 速度 118→122 居中, 作"暖色中间档"。
+    const bPad = [261.63, 329.63, 392.0];
+    for (i = 0; i < bPad.length; i++) tone(out, { wave: "triangle", f0: bPad[i], t0: 0, dur: loopSec, a: 0.08, d: 0.4, s: 0.28, r: 0.5, gain: 0.074 });
+    tone(out, { wave: "sine", f0: 130.81, t0: 0, dur: loopSec, a: 0.04, d: 0.3, s: 0.55, r: 0.4, gain: 0.158 });
+    tone(out, { wave: "sine", f0: 196.0, t0: 0, dur: loopSec, a: 0.06, d: 0.4, s: 0.32, r: 0.5, gain: 0.045 });
+    tone(out, { wave: "sine", f0: 392.0, t0: 0, dur: loopSec, a: 0.08, d: 0.45, s: 0.22, r: 0.5, gain: 0.031 });
+    tone(out, { wave: "triangle", f0: 523.25, t0: 0, dur: loopSec, a: 0.10, d: 0.5, s: 0.16, r: 0.55, gain: 0.019 });
+    const bHookA = [523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 392.0];
+    const bHookB = [587.33, 523.25, 392.0, 329.63, 392.0, 523.25, 587.33, 659.25];
+    const bHookC = [659.25, 783.99, 880.0, 783.99, 659.25, 587.33, 523.25, 392.0];
+    const bHookD = [392.0, 523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25];
+    const bShape = [0.88, 0.94, 1.0, 1.04, 1.0, 0.96, 0.92, 0.72];
+    for (k = 0; k < def.beats; k++) {
+      const phrase = (k / 8) | 0;
+      const hook = phrase === 0 ? bHookA[k % 8] : (phrase === 1 ? bHookB[k % 8] : (phrase === 2 ? bHookC[k % 8] : bHookD[k % 8]));
+      const gHook = phrase === 0 ? 0.25 : (phrase === 1 ? 0.32 : (phrase === 2 ? 0.30 : 0.40));
+      const bCad = (k & 7) === 7;
+      tone(out, { wave: "triangle", f0: hook, t0: k * beat, dur: bCad ? beat * 0.62 : beat * 0.92, a: 0.016, d: 0.2, s: 0.1, r: 0.32, gain: gHook * bShape[k & 7] });
+      if (!bCad) tone(out, { wave: "sine", f0: hook * 2, t0: k * beat, dur: beat * 0.45, a: 0.008, d: 0.12, s: 0, r: 0.18, gain: phrase < 2 ? 0.041 : 0.067 });
+      if ((k & 1) === 0) tone(out, { wave: "sine", f0: 98.0, t0: k * beat, dur: beat * 0.22, a: 0.004, d: 0.08, s: 0, r: 0.08, gain: 0.108 });
+      if (phrase >= 1 && (k & 1)) tone(out, { wave: "triangle", f0: hook * 0.5, t0: k * beat, dur: beat * 1.35, a: 0.02, d: 0.22, s: 0.08, r: 0.4, gain: 0.044 });
+      if (phrase >= 2 && (k % 4) === 0) tone(out, { wave: "sine", f0: 261.63, t0: k * beat, dur: beat * 1.6, a: 0.02, d: 0.2, s: 0.08, r: 0.4, gain: 0.031 });
     }
 
   } else if (tid === "ridge") {
