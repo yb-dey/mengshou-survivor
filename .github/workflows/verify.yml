@@ -117,6 +117,19 @@ jobs:
         run: |
           python3 ci/save-field-loop.py --selftest
           python3 ci/save-field-loop.py
+      # 加菜局过场「淡刀子」闭环：第 21 个"无人守"的维度。
+      # 【v1.195】病根=**同一渲染位在两条分支上，一条填文案一条留空** ——
+      #   普通章进局过场 cine.knife = chapterKnifeLine(ch)（有那句"淡刀子"），
+      #   加菜局恒 ""（渲染块整段不执行）→ 玩家打加菜局只剩干巴巴的规则名。
+      #   ⚠ 既有门禁全测不到：字段都有值、渲染点正常、布局也不越界 ——
+      #     缺的是"某条分支上没人写这句文案"。修法是给 3 条规则各写一条 knife +
+      #     接线改读 rule.knife（面板高度/平移由既有 knifeH/knifeShift 自动处理）。
+      #   门禁含"作用域失控"防线：解析器曾把全项目 {id:...} 表都收进来（3 条误解成 37 条）。
+      #   **硬门禁**。
+      - name: 加菜局过场淡刀子闭环（GATE）
+        run: |
+          node ci/daily-knife.mjs --selftest
+          node ci/daily-knife.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
