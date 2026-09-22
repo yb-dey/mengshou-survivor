@@ -3,7 +3,7 @@
 <head data-page-node-id="VcnaKBuFL9PcTBiQ0Cd1Q7">
 <meta charset="UTF-8" data-page-node-id="9e3SovBDdZ7MHJGSaBfbc3">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" data-page-node-id="R7q4on4OLaEVr6Bqxc88mN">
-<title>萌兽幸存者</title>
+<title>萌兽不好惹</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='28' fill='%233faf5a'/%3E%3Ccircle cx='16' cy='16' r='9' fill='%233faf5a'/%3E%3Ccircle cx='48' cy='16' r='9' fill='%233faf5a'/%3E%3Ccircle cx='32' cy='36' r='18' fill='%23ffe9b0'/%3E%3Ccircle cx='24' cy='32' r='3.2' fill='%232a2418'/%3E%3Ccircle cx='40' cy='32' r='3.2' fill='%232a2418'/%3E%3Cpath d='M24 42 Q32 48 40 42' fill='none' stroke='%23c0392b' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
@@ -17,8 +17,10 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽幸存者》v1.148 单文件版 · 竖屏 9:16 幸存者弹幕割草
-// 历史别名「萌兽消消岛」, 仅内部备注, 不再作玩家可见主标题。
+// 《萌兽不好惹》v1.148 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【2026-09-22 定名】玩家可见主标题从「萌兽幸存者」改为「萌兽不好惹」
+//   （原"XX幸存者"与一堆同类型撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子）。
+//   历史别名「萌兽消消岛」（文件名沿用此名，仅内部标识；平台/软著只认登记名）。
 // 锚点结构共 16 个, 只允许在指定锚点区块内修改代码。
 // 【v1.162 美术】英雄仍锁 1.151–1.161 冒险者案(立绘/路径/缩放/HERO_SKIN_PACK/applySkinImage 不动, 不改 player/rabbit/bear 剪影案),
 //   本轮只把杂兵/星巅/大厅舞台补到英雄旁边站得住: 早中波杂兵外轮廓加厚墨+体积光+眼高光(鼠/狐/蟾/猬/獾/菇/爆果/鸦/蟹/鼹+default),
@@ -595,7 +597,9 @@ var CONFIG = {
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
   version: "1.174",                   // 【v1.174】配方图鉴「选它当口」: DATA_CODEX_FORK 20 条分支补 pick(此前只有 3–4 字 feel, 玩家无分支决策依据) + forkCodexOf 透传 + fork 卡渲染第二行; 另修 codexContentBottom() 漏算成档/进化两段(pre-existing, 少算 416px); 纯文案+布局, 不动数值
-  gameName: "萌兽幸存者",              // 玩家可见主标题; 历史别名「萌兽消消岛」
+  gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
+                                       //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
+                                       //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
 
   // 新手引导(步骤14b, 文案包): 4 步事件触发/消失条件, guideFlags 入档防重放
   guideMoveDist: 200,               // 引导1 消失: 累计移动位移 px [来源: 文案包]
@@ -18140,10 +18144,10 @@ function featureDeskLine() {
   return "正片约10分钟 · 锚点3/6/10 · 潮汐6分后加密 · 炸弹全目标 · 复活不设上限";
 }
 function polishDeskLine() {
-  return "萌兽幸存者·简笔画风可读";
+  return "萌兽不好惹·简笔画风可读";
 }
 function featureSideLine() {
-  return "萌兽幸存者 · 简笔画风·分层原创音·潮汐降载";
+  return "萌兽不好惹 · 简笔画风·分层原创音·潮汐降载";
 }
 function extraDishSideLine() {
   return "后置加菜 · 不冲正片10分钟主桌";
