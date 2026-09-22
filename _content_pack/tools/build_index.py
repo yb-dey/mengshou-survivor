@@ -65,7 +65,7 @@ DATA_CN = {
     'reactions': '元素反应系统', 'upgrades': '局内成长系统',
     'meta_upgrades': '局外成长系统', 'economy': '经济系统',
     'achievements': '成就与任务系统', 'pickups': '局内拾取物系统',
-    'endless': '无尽模式',
+    'endless': '无尽模式', 'ambience': '环境氛围音层',
 }
 PICKUP_CN = {
     'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',
@@ -161,6 +161,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="meta_chart.html" target="_blank">
       <div class="ico">🌱</div><div class="t">局外成长系统</div>
       <div class="d">跨局永久强化 + 森灵币经济闭环：18 项永久强化 × 5 类（几何成本），产出-消耗水槽（积压率 0.22 健康），含可玩实验室 meta_lab.html。</div></a>
+    <a class="ncard" href="ambience_chart.html" target="_blank">
+      <div class="ico">🎧</div><div class="t">环境氛围音层</div>
+      <div class="d">BGM×环境音双通道分层音频：4 条 24s 无缝循环氛围音（森林日间/夜间/浅滩/洞窟）+ 场景映射优先级 + 增益配比。</div></a>
     <a class="ncard" href="endless_chart.html" target="_blank">
       <div class="ico">♾️</div><div class="t">无尽模式</div>
       <div class="d">通关 10 关后的长线挑战：难度二次曲线缩放 + 敌种池四阶段轮换 + 精英/Boss 周期 + 币产出递减防刷取，含可玩实验室 endless_lab.html。</div></a>

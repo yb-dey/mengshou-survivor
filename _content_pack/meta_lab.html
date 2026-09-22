@@ -277,11 +277,17 @@ function tick(){
 
 document.getElementById("btnStart").addEventListener("click", startRun);
 document.getElementById("btnEnd").addEventListener("click", endRun);
-var bgmAudio = null;
+var bgmAudio = null, ambAudio = null;
 document.getElementById("btnBgm").addEventListener("click", function(){
-  if(!bgmAudio){ bgmAudio = new Audio("audio/cp_bgm_lobby.wav"); bgmAudio.loop = true; }
-  if(bgmAudio.paused){ bgmAudio.play(); this.textContent = "🎵 大厅 BGM：开"; }
-  else { bgmAudio.pause(); this.textContent = "🎵 大厅 BGM：关"; }
+  if(!bgmAudio){ bgmAudio = new Audio("audio/cp_bgm_lobby.wav"); bgmAudio.loop = true; bgmAudio.volume = 0.8; }
+  if(!ambAudio){ ambAudio = new Audio("audio/cp_amb_forest.wav"); ambAudio.loop = true; ambAudio.volume = 0.5; }
+  if(bgmAudio.paused){
+    bgmAudio.play(); ambAudio.play();
+    this.textContent = "🎵 大厅声景：开（BGM+环境音）";
+  } else {
+    bgmAudio.pause(); ambAudio.pause();
+    this.textContent = "🎵 大厅声景：关";
+  }
 });
 renderShop(); renderPerm(); renderRun();
 setInterval(tick, 250);

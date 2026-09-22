@@ -1263,6 +1263,133 @@ def synth_coin_big(path):
     write_wav(path, buf); return total
 
 
+# ---------------- 环境氛围音层（Round-33 · 与 BGM 双通道叠加的 Ambience，无缝循环） ----------------
+AMB_SR = SR
+AMB_DUR = 24.0
+
+
+def _amb_base(dur=AMB_DUR, seed=1, wind_gain=0.05, wind_tone=0.015, lfo=0.05):
+    """风底：双级低通白噪声 + 慢 LFO 起伏（无缝循环：LFO 取整数周期）"""
+    N = int(dur * SR)
+    buf = [0.0] * N
+    rng = random.Random(seed)
+    y1 = y2 = 0.0
+    cycles = max(1, round(lfo * dur))          # LFO 整周期 → 循环无缝
+    for i in range(N):
+        t = i / SR
+        x = rng.uniform(-1, 1)
+        y1 += wind_tone * (x - y1)
+        y2 += wind_tone * 0.6 * (y1 - y2)
+        lfo_v = 0.65 + 0.35 * math.sin(2 * math.pi * lfo * t * (dur * lfo / cycles) / (dur * lfo / cycles) * cycles / (lfo * dur) * lfo) if lfo else 1.0
+        buf[i] = y2 * wind_gain * (0.7 + 0.3 * math.sin(2 * math.pi * cycles * t / dur))
+    return buf, N
+
+
+def _chirp(buf, start, dur, f0, f1, amp, seed=None):
+    """鸟鸣/气泡：频率线性扫描 + hann 窗"""
+    i0 = int(start * SR); cnt = int(dur * SR)
+    for i in range(cnt):
+        idx = i0 + i
+        if idx >= len(buf): break
+        t = i / cnt
+        f = f0 + (f1 - f0) * t
+        w = math.sin(math.pi * t) ** 2
+        buf[idx] += amp * w * math.sin(2 * math.pi * f * i / SR)
+
+
+def _decay_ping(buf, start, dur, f0, f1, amp, k=6.0):
+    """水滴：频率下滑 + 指数衰减"""
+    i0 = int(start * SR); cnt = int(dur * SR)
+    for i in range(cnt):
+        idx = i0 + i
+        if idx >= len(buf): break
+        t = i / SR
+        f = f0 + (f1 - f0) * (i / cnt)
+        buf[idx] += amp * math.exp(-k * i / cnt) * math.sin(2 * math.pi * f * t)
+
+
+def _loop_amb(buf, fade=0.5):
+    """环境音无缝循环交叉淡化"""
+    _loop_crossfade(buf, fade)
+
+
+def synth_amb_forest(path):
+    """森林·日间：柔风底 + 随机鸟鸣（上扫/下扫 2–5kHz）+ 叶沙簇。明亮生机。"""
+    buf, N = _amb_base(seed=3301, wind_gain=0.055, wind_tone=0.012, lfo=0.05)
+    rng = random.Random(3302)
+    t = 0.6
+    while t < AMB_DUR - 1.2:                                   # 鸟鸣：1.1–2.8s 随机间隔
+        f0 = rng.uniform(2000, 3200); f1 = f0 + rng.uniform(400, 1800) * rng.choice([1, -1])
+        _chirp(buf, t, rng.uniform(0.06, 0.14), f0, f1, rng.uniform(0.05, 0.10))
+        if rng.random() < 0.35:                                # 双音鸟
+            _chirp(buf, t + 0.16, 0.09, f1, f0, 0.06)
+        t += rng.uniform(1.1, 2.8)
+    t = 0.3
+    while t < AMB_DUR - 0.6:                                   # 叶沙：短高频噪声簇
+        i0 = int(t * SR); cnt = int(0.09 * SR)
+        rr = random.Random(int(t * 1000))
+        a = rng.uniform(0.012, 0.022)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx < N:
+                buf[idx] += a * rr.uniform(-1, 1) * math.sin(math.pi * i / cnt)
+        t += rng.uniform(1.6, 3.4)
+    _loop_amb(buf)
+    write_wav(path, buf); return AMB_DUR
+
+
+def synth_amb_night(path):
+    """森林·夜间：低沉风 + 虫鸣脉冲串（4.5kHz 调幅）+ 偶发低鸣。神秘警觉。"""
+    buf, N = _amb_base(seed=3303, wind_gain=0.045, wind_tone=0.008, lfo=0.04)
+    rng = random.Random(3304)
+    t = 0.8
+    while t < AMB_DUR - 1.0:                                   # 虫鸣：0.25s 调幅脉冲串
+        i0 = int(t * SR); cnt = int(0.25 * SR)
+        f = rng.uniform(4200, 4800)
+        a = rng.uniform(0.020, 0.034)
+        for i in range(cnt):
+            idx = i0 + i
+            if idx < N:
+                gate = 1.0 if (i / SR * 38) % 1 < 0.5 else 0.0   # 38Hz 通断调幅
+                buf[idx] += a * gate * math.sin(2 * math.pi * f * i / SR) * math.sin(math.pi * i / cnt)
+        t += rng.uniform(1.3, 2.6)
+    _chirp(buf, AMB_DUR * 0.42, 0.5, 520, 380, 0.045)          # 偶发低鸣（夜鸟）
+    _loop_amb(buf)
+    write_wav(path, buf); return AMB_DUR
+
+
+def synth_amb_river(path):
+    """蛙鸣浅滩溪流：宽带水声（高通白噪+低通层）+ 随机气泡上滑 chirp。清凉流动。"""
+    buf, N = _amb_base(seed=3305, wind_gain=0.075, wind_tone=0.22, lfo=0.07)   # 高 wind_tone=更「嘶」的水声
+    rng = random.Random(3306)
+    t = 0.4
+    while t < AMB_DUR - 0.8:                                   # 气泡：短促上滑
+        _chirp(buf, t, rng.uniform(0.04, 0.09), rng.uniform(500, 900), rng.uniform(1400, 2600), rng.uniform(0.02, 0.045))
+        t += rng.uniform(0.5, 1.6)
+    _chirp(buf, AMB_DUR * 0.5, 0.18, 700, 500, 0.03)           # 一声闷蛙
+    _chirp(buf, AMB_DUR * 0.5 + 0.3, 0.15, 680, 480, 0.024)
+    _loop_amb(buf)
+    write_wav(path, buf); return AMB_DUR
+
+
+def synth_amb_cave(path):
+    """古木洞窟：极低 drone（55Hz 正弦 + 次声起伏）+ 稀疏水滴 ping。幽深压迫。"""
+    buf, N = _amb_base(seed=3307, wind_gain=0.020, wind_tone=0.005, lfo=0.03)
+    rng = random.Random(3308)
+    for i in range(N):                                         # 55Hz drone + 慢起伏
+        t = i / SR
+        buf[i] += 0.030 * math.sin(2 * math.pi * 55 * t) * (0.8 + 0.2 * math.sin(2 * math.pi * 0.05 * t))
+        buf[i] += 0.014 * math.sin(2 * math.pi * 82.5 * t)
+    t = 1.0
+    while t < AMB_DUR - 1.5:                                   # 水滴：下滑 ping + 简易回响
+        f0 = rng.uniform(900, 1500)
+        _decay_ping(buf, t, 0.16, f0, f0 * 0.5, rng.uniform(0.05, 0.09))
+        _decay_ping(buf, t + 0.19, 0.12, f0, f0 * 0.5, rng.uniform(0.015, 0.03), k=8.0)  # 回声
+        t += rng.uniform(2.2, 4.5)
+    _loop_amb(buf, fade=0.8)
+    write_wav(path, buf); return AMB_DUR
+
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/audio'
     import os
@@ -1308,6 +1435,10 @@ if __name__ == '__main__':
         ('cp_sfx_daily.wav', synth_daily),
         ('cp_sfx_first_clear.wav', synth_first_clear),
         ('cp_sfx_coin_big.wav', synth_coin_big),
+        ('cp_amb_forest.wav', synth_amb_forest),
+        ('cp_amb_night.wav', synth_amb_night),
+        ('cp_amb_river.wav', synth_amb_river),
+        ('cp_amb_cave.wav', synth_amb_cave),
     ]
     for name, fn in jobs:
         d = fn(f'{out_dir}/{name}')

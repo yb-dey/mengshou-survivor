@@ -1,0 +1,29 @@
+{
+  "system": "森灵环境氛围音层",
+  "version": 1,
+  "description": "《萌兽消消岛》环境氛围音（Ambience）规格（纯设计数据，非游戏代码）。与 BGM 构成**双通道分层音频**：BGM 负责旋律情绪，Ambience 负责空间沉浸（鸟鸣/风声/水滴/虫鸣），两通道独立增益叠加——这是现代游戏音频的标准分层做法。4 条环境音均为 24s 纯标准库合成无缝循环（风底=双级低通噪声+整周期 LFO，鸟鸣=随机 chirp 扫频，虫鸣=调幅脉冲串，水滴=下滑 ping+回响），零外部素材。环境音只随场景/昼夜切换，不随战斗强度变化（战斗强度由 BGM 层的 bgm_battle/boss 系列承担）——两层各司其职不互相污染。",
+  "references": [
+    "分层音频（Layered/Adaptive Audio）惯例：Ambience 通道与 Music 通道分离，各自循环互不干扰，按场景切换 amb、按强度切 music（游戏音频设计通行做法）",
+    "Vampire Survivors 的场景氛围：地图切换伴随环境层变化（森林鸟鸣/图书馆翻页/雪原风声），沉浸感来自「背景一直在响的自然声」"
+  ],
+  "layers": {
+    "bgmGain": 0.8,
+    "ambGain": 0.5,
+    "note": "BGM 旋律层增益 0.8、环境层增益 0.5——环境音是「背景的自然声」，永远不与旋律抢频段与注意力。"
+  },
+  "tracks": {
+    "cp_amb_forest": { "cn": "森林·日间", "mood": "明亮生机", "elements": ["wood", "light"], "sound": "鸟鸣 chirp + 柔风 + 叶沙" },
+    "cp_amb_night":  { "cn": "森林·夜间", "mood": "神秘警觉", "elements": [], "sound": "虫鸣脉冲 + 低沉风 + 偶发低鸣" },
+    "cp_amb_river":  { "cn": "蛙鸣浅滩", "mood": "清凉流动", "elements": ["water"], "sound": "宽带水声 + 气泡上滑 + 闷蛙" },
+    "cp_amb_cave":   { "cn": "古木洞窟", "mood": "幽深压迫", "elements": ["earth"], "sound": "55Hz drone + 稀疏水滴回响" }
+  },
+  "sceneMapping": [
+    { "priority": 1, "when": "关卡元素聚焦含 water（蛙鸣浅滩等水系关）", "amb": "cp_amb_river" },
+    { "priority": 2, "when": "关卡元素聚焦含 earth，或 Boss 战前厅", "amb": "cp_amb_cave" },
+    { "priority": 3, "when": "无尽模式 w15+（五元素狂潮，昼夜氛围转暗）", "amb": "cp_amb_night" },
+    { "priority": 4, "when": "默认（大厅 / 普通森林关 / 木·光聚焦）", "amb": "cp_amb_forest" }
+  ],
+  "sceneMappingNote": "按 priority 从高到低取第一条命中的环境音；同优先级场景不叠加（同一时刻只有一条 amb 激活，切换时 1s 交叉淡化）。",
+  "dayNightRule": "战役模式始终用日间氛围（森林·日间/浅滩/洞窟按元素聚焦）；无尽模式 w15+ 切夜间氛围传达「越打越深」的压迫感；大厅恒为森林·日间。",
+  "assetNote": "4 条环境音由 tools/synth_audio.py 纯标准库合成（_amb_base 风底 + _chirp 扫频 + _decay_ping 水滴三个新原语），24s 无缝循环，零外部素材；与 §2.1 音频原型同命名空间（cp_amb_* 前缀），待主文件音频接线后以独立 key 登记双通道。"
+}

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23 05:18:34",
+  "generated_at": "2026-09-23 05:27:34",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
@@ -7,8 +7,8 @@
     "icons": 12,
     "skill_icons": 13,
     "pickups": 8,
-    "design_data": 11,
-    "audio": 40,
+    "design_data": 12,
+    "audio": 44,
     "bgm": 7,
     "sfx": 33
   },
@@ -505,6 +505,11 @@
       "bytes": 10465
     },
     {
+      "key": "ambience",
+      "cn": "环境氛围音层",
+      "bytes": 3152
+    },
+    {
       "key": "boss_phases",
       "cn": "BOSS 多阶段脚本",
       "bytes": 2256
@@ -556,6 +561,46 @@
     }
   ],
   "audio": [
+    {
+      "key": "cp_amb_cave",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 2116844,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 24.0
+    },
+    {
+      "key": "cp_amb_forest",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 2116844,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 24.0
+    },
+    {
+      "key": "cp_amb_night",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 2116844,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 24.0
+    },
+    {
+      "key": "cp_amb_river",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 2116844,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 24.0
+    },
     {
       "key": "cp_bgm_battle",
       "cn": "战斗主题",

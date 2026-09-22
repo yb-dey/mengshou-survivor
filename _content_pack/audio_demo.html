@@ -128,6 +128,14 @@ const TRACKS = [
    desc:'C4→G4→C5 号角三连（锯齿波 + 方波双层铜管质感）+ 尾音 C 大调大和弦与高铃 shimmer，庄重明亮，仅关卡首次通关时播放（economy.first_clear 双倍结算）。', dur:'1.38s'},
   {key:'cp_sfx_coin_big', ico:'💰', title:'大额金币入账', loop:false,
    desc:'固定种子 9 枚金属 ping 密集迸发（B5–E7 随机音高 + 泛音亮片）+ 低频哗啦衬底 + 末枚定音高铃，「丰收」感，结算大额奖励时播放（区别于单枚 coin 双音）。', dur:'1.10s'},
+  {key:'cp_amb_forest', ico:'🌲', title:'环境音·森林日间', loop:true,
+   desc:'Ambience 氛围层：柔风底（双级低通噪声+整周期 LFO）+ 随机鸟鸣 chirp（2–5kHz 扫频，1.1–2.8s 间隔）+ 叶沙簇，明亮生机，与 BGM 双通道叠加（增益 0.5 不抢旋律），大厅/普通森林关/木·光聚焦默认。', dur:'24.0s · 循环'},
+  {key:'cp_amb_night', ico:'🌙', title:'环境音·森林夜间', loop:true,
+   desc:'Ambience 氛围层：低沉风 + 虫鸣脉冲串（4.2–4.8kHz · 38Hz 通断调幅）+ 偶发低鸣，神秘警觉，无尽模式 w15+ 五元素狂潮时切换（昼夜氛围转暗）。', dur:'24.0s · 循环'},
+  {key:'cp_amb_river', ico:'🏞️', title:'环境音·蛙鸣浅滩', loop:true,
+   desc:'Ambience 氛围层：宽带水声（高通白噪+低通层）+ 随机气泡上滑 chirp + 两声闷蛙，清凉流动，water 元素聚焦关卡（蛙鸣浅滩等）默认。', dur:'24.0s · 循环'},
+  {key:'cp_amb_cave', ico:'🕯️', title:'环境音·古木洞窟', loop:true,
+   desc:'Ambience 氛围层：55Hz drone + 82.5Hz 泛音慢起伏 + 稀疏水滴 ping 与回声，幽深压迫，earth 聚焦关卡或 Boss 战前厅默认。', dur:'24.0s · 循环'},
 ];
 
 const grid = document.getElementById('grid');
