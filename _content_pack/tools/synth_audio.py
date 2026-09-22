@@ -1390,6 +1390,115 @@ def synth_amb_cave(path):
     write_wav(path, buf); return AMB_DUR
 
 
+
+# ---------------- 战斗分层自适应音乐（Round-40 · 同和声同 BPM 同长度的三层轨，叠播=完整曲） ----------------
+_LAYER_BPM = 116
+_LAYER_BARS = 16
+_LAYER_PROG = [(60, [60, 64, 67]), (57, [57, 60, 64]), (53, [53, 57, 60]), (55, [55, 59, 62])]  # C Am F G
+_LAYER_PENTA = [72, 74, 76, 79, 81, 84, 86]
+
+
+def _layer_grid():
+    """三层共享的时间网格（同 key 同 BPM 同长度 = 叠播对齐的充要条件）"""
+    beat = 60.0 / _LAYER_BPM
+    bar_dur = beat * 4
+    total = _LAYER_BARS * bar_dur
+    return beat, bar_dur, total, int(total * SR), _LAYER_PROG
+
+
+def _layer_add(buf, N, start, dur, freq, amp, wave, a=0.005, d=0.06, s=0.7, r=0.2):
+    i0 = int(start * SR)
+    cnt = int(dur * SR)
+    for i in range(cnt):
+        idx = i0 + i
+        if idx >= N:
+            break
+        t = i / SR
+        buf[idx] += amp * env_adsr(t, dur, a, d, s, r) * tone(t, freq, wave)
+
+
+def _layer_noise(buf, N, start, dur, amp, tone_hz=0.0, gate=True):
+    i0 = int(start * SR)
+    cnt = int(dur * SR)
+    rr = random.Random(int(start * 9973) + int(tone_hz))
+    for i in range(cnt):
+        idx = i0 + i
+        if idx >= N:
+            break
+        envv = math.sin(math.pi * i / cnt)
+        v = rr.uniform(-1, 1)
+        if tone_hz > 0:
+            v = 0.5 * v + 0.5 * math.sin(2 * math.pi * tone_hz * i / SR)
+        buf[idx] += amp * envv * v
+
+
+def synth_layer_drums(path):
+    """L1 节奏层：四踩底鼓 + 八分 hi-hat + 2/4 拍军鼓。纯打击，常开层。"""
+    beat, bar_dur, total, N, prog = _layer_grid()
+    buf = [0.0] * N
+    for bar in range(_LAYER_BARS):
+        for bt in range(4):
+            t0 = bar * bar_dur + bt * beat
+            # kick：150→45Hz 下扫
+            i0 = int(t0 * SR)
+            cnt = int(0.13 * SR)
+            for i in range(cnt):
+                idx = i0 + i
+                if idx >= N:
+                    break
+                tt = i / SR
+                f = 150 * math.exp(-14 * i / cnt) + 45
+                buf[idx] += 0.55 * math.exp(-9 * i / cnt) * math.sin(2 * math.pi * f * tt)
+            # hat 八分
+            for hb in range(2):
+                _layer_noise(buf, N, t0 + hb * beat / 2, 0.03, 0.05)
+            # snare 2/4 拍
+            if bt in (1, 3):
+                _layer_noise(buf, N, t0, 0.11, 0.16, tone_hz=190)
+    _loop_crossfade(buf, 0.08)
+    write_wav(path, buf)
+    return total
+
+
+def synth_layer_bass(path):
+    """L2 低音层：根音八分脉冲贝斯（−24 半音），跟随和弦进行。敌数≥8 淡入。"""
+    beat, bar_dur, total, N, prog = _layer_grid()
+    buf = [0.0] * N
+    for bar in range(_LAYER_BARS):
+        root = prog[(bar // 4) % 4][0] - 24
+        for eb in range(8):
+            t0 = bar * bar_dur + eb * beat / 2
+            amp = 0.30 if eb % 2 == 0 else 0.20
+            _layer_add(buf, N, t0, beat * 0.42, midi_freq(root), amp, 'triangle', a=0.004, d=0.04, s=0.6, r=0.08)
+    _loop_crossfade(buf, 0.08)
+    write_wav(path, buf)
+    return total
+
+
+def synth_layer_lead(path):
+    """L3 旋律层：五声 lead 随机游走（固定 seed 三层间自洽）+ 和弦长音 pad。敌≥15/Boss 淡入。"""
+    beat, bar_dur, total, N, prog = _layer_grid()
+    buf = [0.0] * N
+    rng = random.Random(20260940)
+    deg = 2
+    for bar in range(_LAYER_BARS):
+        root, chord = prog[(bar // 4) % 4]
+        s0 = bar * bar_dur
+        # pad：和弦三音长音（慢 attack）
+        for cn in chord:
+            _layer_add(buf, N, s0, bar_dur * 0.98, midi_freq(cn), 0.055, 'sine', a=0.35, d=0.1, s=0.8, r=0.5)
+        # lead：四分音符为主，50% 留白
+        for qt in range(4):
+            if rng.random() < 0.5:
+                continue
+            t0 = s0 + qt * beat
+            deg = max(0, min(len(_LAYER_PENTA) - 1, deg + rng.choice([0, 1, -1, 2, -2])))
+            _layer_add(buf, N, t0, beat * 0.9, midi_freq(_LAYER_PENTA[deg] + 12), 0.14, 'triangle', a=0.02, d=0.07, s=0.6, r=0.2)
+    _loop_crossfade(buf, 0.08)
+    write_wav(path, buf)
+    return total
+
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/audio'
     import os
@@ -1439,6 +1548,9 @@ if __name__ == '__main__':
         ('cp_amb_night.wav', synth_amb_night),
         ('cp_amb_river.wav', synth_amb_river),
         ('cp_amb_cave.wav', synth_amb_cave),
+        ('cp_layer_tide_drums.wav', synth_layer_drums),
+        ('cp_layer_tide_bass.wav', synth_layer_bass),
+        ('cp_layer_tide_lead.wav', synth_layer_lead),
     ]
     for name, fn in jobs:
         d = fn(f'{out_dir}/{name}')

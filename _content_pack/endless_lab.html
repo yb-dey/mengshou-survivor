@@ -91,7 +91,8 @@
       </div>
       <div style="font-size:11px;opacity:.7">生命 <span id="hpTxt">100/100</span></div>
       <div class="bar hp"><i id="hpBar" style="width:100%"></i></div>
-      <button class="btn" id="btnStart" style="width:100%;margin:4px 0 10px">▶ 开始挑战</button>
+      <button class="btn" id="btnStart" style="width:100%;margin:4px 0 6px">▶ 开始挑战</button>
+      <button class="btn gray" id="btnLayers" style="width:100%;margin-bottom:10px">🎵 自适应分层：关</button>
       <div class="feed" id="feed"></div>
       <div class="note">英雄：开战前可切换（4 位，参数与被动真实生效——灵鹿 60s 自回 5%、雷羽鹰 45s 自动闪避、霜甲熊减伤 15%、焰心命中附灼烧）。阶段：w1–4 单元素巡林 → w5–9 双元素 → w10–14 三元素+精英 → w15+ 五元素狂潮。精英每 5 波（HP×6 必掉宝箱）、Boss 每 10 波。玩家固定火元素：打木 ×1.6 / 被木克打 ×0.6。里程碑 4/8/15 分钟给非货币称号（15 分钟=真挑战）。</div>
     </div>
@@ -360,6 +361,8 @@ setInterval(function(){
     if(dodgeT >= pv.dodgeCdSec){ dodgeReady=true; feed("⚡ 风暴闪避就绪"); }
   }
 
+  mixLayers();
+
   // 里程碑
   for(const m of MILESTONES){
     if(st.time>=m.atSec && !st.milestones.has(m.atSec)){
@@ -427,6 +430,30 @@ function renderHeroSel(){
       curHero=b.getAttribute("data-h"); renderHeroSel();
       feed("🦌 已选择 "+HEROES[curHero].cn+"（"+HEROES[curHero].passive.cn+"）");
     });
+  });
+}
+/* ===== 自适应分层音乐（data/music_layers.json：L1 常开 / L2 敌≥8 / L3 敌≥15 或 Boss，滞回 6/8）===== */
+var layers = null, layersOn = false;
+document.getElementById("btnLayers").addEventListener("click", function(){
+  if(!layers){
+    layers = ["cp_layer_tide_drums.wav","cp_layer_tide_bass.wav","cp_layer_tide_lead.wav"].map(function(f){
+      var a = new Audio("audio/"+f); a.loop = true; a.volume = 0; return a;
+    });
+    layers[0].volume = 0.8;
+  }
+  layersOn = !layersOn;
+  this.textContent = layersOn ? "🎵 自适应分层：开（听 L2/L3 随敌数进出）" : "🎵 自适应分层：关";
+  layers.forEach(function(a){ if(layersOn) a.play(); else a.pause(); });
+});
+function mixLayers(){
+  if(!layersOn || !layers) return;
+  var n = enemies.length + spawnQueue;
+  var bossIn = enemies.some(function(e){ return e.boss || e.elite; });
+  var t2 = (n >= 8 || bossIn) ? 0.7 : (n < 6 ? 0.0 : layers[1].volume);
+  var t3 = (n >= 15 || bossIn) ? 0.8 : (n < 12 ? 0.0 : layers[2].volume);
+  [1,2].forEach(function(i){
+    var v = layers[i].volume, t = (i===1? t2 : t3);
+    layers[i].volume = Math.abs(v-t) < 0.05 ? t : v + (t-v)*0.08;
   });
 }
 document.getElementById("btnStart").addEventListener("click", startRun);

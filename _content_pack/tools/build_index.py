@@ -68,6 +68,7 @@ DATA_CN = {
     'achievements': '成就与任务系统', 'pickups': '局内拾取物系统',
     'endless': '无尽模式', 'ambience': '环境氛围音层',
     'heroes': '英雄图鉴', 'skills': '技能完整规格',
+    'music_layers': '战斗分层自适应音乐',
 }
 PICKUP_CN = {
     'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',
@@ -164,6 +165,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="meta_chart.html" target="_blank">
       <div class="ico">🌱</div><div class="t">局外成长系统</div>
       <div class="d">跨局永久强化 + 森灵币经济闭环：18 项永久强化 × 5 类（几何成本），产出-消耗水槽（积压率 0.22 健康），含可玩实验室 meta_lab.html。</div></a>
+    <a class="ncard" href="music_layers.html" target="_blank">
+      <div class="ico">🎚️</div><div class="t">战斗分层音乐</div>
+      <div class="d">Adaptive Music：三层轨（节奏/低音/旋律）同和声同长叠播=完整曲，按场上敌数实时调层（L1 常开/L2 敌≥8/L3 敌≥15），endless_lab 真机混音演示。</div></a>
     <a class="ncard" href="skills_chart.html" target="_blank">
       <div class="ico">⚡</div><div class="t">技能完整规格</div>
       <div class="d">8 技能完整数值：伤害系数/目标/范围/机制 + 三级成长（Lv3=1.5×）+ 元素反应联动（全部引用 reactions 实际反应名）。</div></a>

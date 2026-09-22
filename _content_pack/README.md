@@ -317,6 +317,18 @@
 
 - **生成器**：`tools/build_skills_chart.py`（读 `data/skills.json` + skill_cooldowns 冷却法力 + reactions 反应名，纯标准库渲染）。
 - **校验**：`data/skills.json` 合法 JSON；Key 集合与 skill_cooldowns 完全一致、cn/element/type 逐项一致；元素 ∈ 五元素；reactionNote 反应名全部存在于 reactions.json（校验器首轮抓 2 杜撰+3 方向错，已修正）；英雄绑定（heroes.json 每英雄 2 技能）全部落在 8 键内；图标 8/8 存在；`skills_chart.html` 0 占位符、18 名称全在（8 技能+10 反应）、8 图标引用存在。
+## 2.18 战斗分层自适应音乐（三层轨 + 真机混音演示 · 本轮新增）
+
+> Adaptive Music 垂直分层：**3 条同和声（C-Am-F-G）同 BPM（116）同长度（33.10s）**的三层轨——L1 节奏（四踩底鼓+hihat+军鼓，常开）/ L2 低音（根音八分脉冲贝斯，敌≥8 淡入/≤6 淡出滞回）/ L3 旋律（五声 lead+和弦 pad，敌≥15 或 Boss 淡入）。三轨同时起播即完整曲（同长是叠播对齐的充要条件，实测时长差 <0.001s），按**场上敌数**实时调层——压力越大音乐越满，**编曲变满而非换曲**。属于 §2.15 Music 通道内部的自适应子层（战斗场景替代整曲 BGM，避免两种旋律叠吵）。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `data/music_layers.json` | 分层规格 | base（BPM/小节/时长/和声/循环）+ 3 层（乐器构成/增益/触发类型与阈值/淡入时长）+ 滞回混音规则 + 体系位置说明 |
+| `audio/cp_layer_tide_*.wav` | 3 条分层轨 | drums/bass/lead 各 33.10s 无缝循环，synth_audio.py 共享时间网格（`_layer_grid`/`_layer_add`/`_layer_noise` 三原语）纯标准库合成，零外部素材 |
+| `music_layers.html` | 分层规格可视化 | 基础参数表 + 三层卡 + 触发条件 + 体系位置（数据驱动，零图片生成） |
+
+- **消费点**：`endless_lab.html`「🎵 自适应分层」开关——三轨同播，tick 内按场上实时敌数（含生成队列/Boss 精英在场判定）驱动 L2/L3 音量渐变（滞回 6/8 防抖），**真机自适应混音演示**；`audio_demo.html` 加 3 试听卡（47 条全覆盖）。
+- **校验**：三轨实测时长 33.1034s 完全一致（差 <0.001s）、峰值均 85%、RMS 8.2–22.4%；`data/music_layers.json` 合法且三文件存在、时长与 base 一致；两页面 `node --check` 通过；`music_layers.html` 0 占位符。
 ## 3. 目录结构
 
 ```
@@ -349,13 +361,14 @@ _content_pack/
 ├── hero_chart.html         # 英雄图鉴：4 英雄属性条形对比 + 被动 + 技能绑定 + DPS 天平（数据驱动）
 ├── balance_report.html     # 数值平衡验证报告：无尽存活/构筑 DPS/经济闭环 三套蒙特卡洛验证（数据驱动）
 ├── skills_chart.html       # 技能完整规格：8 技能数值卡 + 三级成长 + 反应联动（数据驱动）
+├── music_layers.html       # 战斗分层自适应音乐：三层轨规格 + 触发条件 + 混音规则（数据驱动）
 ├── boss_arena.html         # BOSS 竞技场（boss_phases.json 三阶段可玩校验场，纯前端 file:// 双击即开）
 ├── campaign.html          # 战役模式（wave_design.json 10 关 × 多波次可玩校验场，逐波刷怪，纯前端 file:// 双击即开）
 ├── sprites/               # 原始生成图（RGB，未抠）
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
 │   └── <key>.png / <key>.webp
-├── audio/                 # 本包专属音频原型（独立命名空间，零接线，44 条）
+├── audio/                 # 本包专属音频原型（独立命名空间，零接线，47 条）
 │   ├── cp_bgm_forest.wav  # 森林主题 BGM（无缝循环）
 │   ├── cp_bgm_battle.wav  # 战斗主题 BGM（128 BPM，无缝循环）
 │   ├── cp_bgm_boss.wav    # BOSS 主题 BGM（92 BPM，无缝循环）
@@ -389,7 +402,10 @@ _content_pack/
 │   ├── cp_amb_forest.wav     # 环境音·森林日间（鸟鸣+柔风+叶沙，24s 无缝循环）
 │   ├── cp_amb_night.wav      # 环境音·森林夜间（虫鸣+低鸣，24s 无缝循环）
 │   ├── cp_amb_river.wav      # 环境音·蛙鸣浅滩（水声+气泡，24s 无缝循环）
-│   └── cp_amb_cave.wav       # 环境音·古木洞窟（drone+水滴回响，24s 无缝循环）
+│   ├── cp_amb_cave.wav       # 环境音·古木洞窟（drone+水滴回响，24s 无缝循环）
+│   ├── cp_layer_tide_drums.wav # 分层 L1 节奏层（116BPM 鼓组，33.1s 无缝循环）
+│   ├── cp_layer_tide_bass.wav  # 分层 L2 低音层（根音八分贝斯，33.1s 无缝循环）
+│   └── cp_layer_tide_lead.wav  # 分层 L3 旋律层（五声 lead+pad，33.1s 无缝循环）
 ├── vfx/                   # 程序化特效精灵（RGBA 真透底）
 │   └── fx_*.png（24 个）
 ├── icons/                 # 状态图标（RGBA 真透底，常驻 HUD 指示）
@@ -415,7 +431,8 @@ _content_pack/
 │   ├── endless.json           # 无尽模式：四条难度公式 + 精英/Boss 周期 + 四阶段敌种池 + 里程碑
 │   ├── ambience.json          # 环境氛围音层：4 氛围音 + 双通道增益 + 场景映射优先级
 │   ├── heroes.json            # 英雄图鉴：4 英雄差异化数值 + 被动 + 技能绑定 + 元素口径修正
-│   └── skills.json            # 技能完整规格：8 技能系数/目标/范围/成长 + 反应联动
+│   ├── skills.json            # 技能完整规格：8 技能系数/目标/范围/成长 + 反应联动
+│   └── music_layers.json      # 战斗分层自适应音乐：3 层轨 + 触发阈值 + 滞回混音规则
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -439,7 +456,8 @@ _content_pack/
     ├── build_endless_chart.py # 由 data/endless.json 生成 难度曲线 + 阶段池 + 里程碑参考页
     ├── build_ambience_chart.py # 由 data/ambience.json 生成 双通道 + 场景映射参考页
     ├── build_hero_chart.py   # 由 data/heroes.json 生成 英雄对比参考页
-    └── build_skills_chart.py # 由 data/skills.json 生成 技能规格参考页
+    ├── build_skills_chart.py # 由 data/skills.json 生成 技能规格参考页
+    └── build_music_layers.py # 由 data/music_layers.json 生成 分层音乐参考页
     ├── gen_hero_portraits.py # 英雄徽章生成（纯标准库，复用 gen_vfx.Canvas）
     ├── sim_balance.py        # 数值平衡蒙特卡洛模拟器（seed 固定可复现，0.9s）
     ├── sim_result.json       # 模拟结果（endless/builds/economy 三组）
@@ -491,11 +509,12 @@ _content_pack/
 - 无尽模式：`data/endless.json` 为合法 JSON（四条难度公式 + 精英每 5 波 HP×6 / Boss 每 10 波 + 四阶段敌种池 6 敌种全部存在于 wave_design、阶段区间连续覆盖、里程碑 4/8/15 分钟有序（R38 下调：模拟发现原 5 分钟门槛达成率 0%））；`endless_chart.html` 由 `tools/build_endless_chart.py` 数据驱动生成，校验 0 占位符、含 `<svg>` 难度曲线、5 精灵引用均存在；`endless_lab.html` 为可玩实验室，内联 `<script>` 经 `node --check` 通过（file:// 双击可用，无 fetch），内联 `RULES` 17 参数 / `PHASES` 4 阶段 / `ENEMIES` 6 敌种与 `endless.json`+`wave_design.json` 逐项比对一致（含四公式字符串防漂移检查）；经济边界——币产出 `max(2, 10-floor(w/3))` 递减（w30 起每波 2 币）、里程碑零货币，economy.json 四 faucet 总口径与积压率 0.22 不受无尽模式影响。
 - 环境氛围音层：`data/ambience.json` 为合法 JSON（4 条 cp_amb_* 均存在、24.0s、峰值 85% 无削波、RMS 7.4–15.1% 刻意低于战斗 SFX 的「背景自然声」响度定位；元素关联引用全部存在于 element_matrix；场景映射 P1–P4 有序且 amb key 全部有效）；`ambience_chart.html` 由 `tools/build_ambience_chart.py` 数据驱动生成，0 占位符；双通道增益（BGM 0.8 / AMB 0.5）与战斗/氛围分工写入规格——战斗强度归 BGM 层、场景昼夜归 Ambience 层，互不污染；`meta_lab.html` 声景开关真实驱动双通道叠加（消费点接线），两页面 `node --check` 通过。
 - 英雄图鉴：`data/heroes.json` 为合法 JSON（4 英雄：灵鹿祭司/雷羽鹰/霜甲熊/焰心术士；元素引用 ∈ 五元素、技能绑定 8 key 全部存在于 skill_cooldowns、精灵 4/4 存在、unlockLink 与 meta_upgrades 解锁项一一对应）；DPS 天平复算一致（灵鹿 44.4 / 雷羽鹰 53.3 / 霜甲熊 31.4 / 焰心 43.6+灼烧有效≈54.5）；**元素口径统一修正**——meta_upgrades.json 两处「雷元素/冰元素」描述改为「光元素·雷羽映射/水元素·霜甲映射」（与五元素体系/克制链/反应系统兼容）；`hero_chart.html` 由 `tools/build_hero_chart.py` 数据驱动生成，0 占位符、4 立绘引用存在；`endless_lab.html` 英雄选择器内联 `HEROES` 与 JSON 逐项比对一致（base/passive 全参数无漂移）、`node --check` 通过。；4 枚程序化徽章（hero_portraits/）均 128×128 RGBA 非空行 96%，portrait 字段已入 DATA_SYNC 校验（lab 内联/JSON/文件三方一致），`endless_lab` 选择器与 `hero_chart` 头像已切换为徽章（sprites 仅作战斗占位）
+- 战斗分层自适应音乐：`data/music_layers.json` 为合法 JSON（3 层轨 cp_layer_tide_* 均存在、**实测时长 33.1034s 三轨完全一致**——叠播对齐充要条件、峰值均 85% 无削波、RMS 8.2–22.4%）；触发阈值与滞回规则（淡入 8/淡出 6）写入规格；`music_layers.html` 由 `tools/build_music_layers.py` 数据驱动生成，0 占位符；`endless_lab.html`「自适应分层」开关按场上实时敌数驱动 L2/L3 音量渐变（滞回混音），`audio_demo.html` 3 试听卡覆盖；两页面 `node --check` 通过；体系定位明确——Music 通道内部自适应子层，战斗场景替代整曲 BGM 避免旋律叠吵。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵 + 4 枚英雄徽章）+ 音乐（7 BGM + 33 SFX + 4 环境音）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（14 份 JSON）+ 可视化参考页与可玩校验场（12 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵 + 4 枚英雄徽章）+ 音乐（7 BGM + 33 SFX + 4 环境音 + 3 战斗分层）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（15 份 JSON）+ 可视化参考页与可玩校验场（13 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -537,4 +556,5 @@ _content_pack/
 29. ~~**图鉴扩容（统一内容入口）**~~ ✅ `codex.html` 由 8 角色单页扩容为全内容统一图鉴：🦌 英雄图鉴（4 徽章+元素+被动+解锁价+DPS+技能）、🍒 拾取物图鉴（8 种+稀有度+效果）、🏅 成就与里程碑概览（19 成就 × 5 组计数条 + 无尽 3 里程碑含奖励文案）、♾️ 模式速查（战役/无尽摘要）；`tools/extend_codex.py` 读 heroes/pickups/achievements/endless 四份 JSON 数据驱动注入（幂等可重跑，重复执行自动跳过）；注入后 20,018 B，14 个关键名称全在、12 图引用零缺失、三个里程碑奖励文案（守林人/无尽行者/永恒纹章）落位；成就系统承诺的「图鉴条目」奖励自此有了真实落点；`index.html` 图鉴卡描述同步、`README` §3/§7 同步。
 30. ~~**数值平衡验证（蒙特卡洛三套模拟 + 报告页）**~~ ✅ 已交付 `tools/sim_balance.py`（纯标准库、seed 固定可复现、0.9s 跑完）+ `tools/sim_result.json` + `balance_report.html`。三套验证：**A 无尽存活**（4 英雄 × 400 局半解析逐秒模型：成长轴 8.5%/分钟、走位规避 80%、综合清场 ×3.2、追击到达 35%）——中位存活 w11–12，**发现失衡：5 分钟里程碑达成率 0%（门槛过硬）**，报告给出两个调整方案（里程碑改 4/8/15 分钟 或 dmgMul 斜率 0.005→0.004）待设计决策；**B 构筑 DPS**（1000 局贪心抽卡至 Lv.20）：基线 20 → 中位 59.1（2.95×），P25–P75 = 53–68.5，高选取率卡与流派深挖意图一致；**C 经济复验**：meta_upgrades 几何成本重算与 economy.json 跨表精确一致，积压率 0.22 重验 HEALTHY。校验：报告 0 占位符、模拟器语法与结果 JSON 合法；模型假设与局限六条写入报告（相对比较口径，非绝对预言）；`index.html` 加 📊 导航卡、`README` §3/§7 同步。验证轮价值兑现：发现→建议→决策→落地→复核（seed 固定）。**R38 落地方案①**：里程碑 5/10/20 分钟→4/8/15 分钟（atSec 240/480/900），endless.json/endless_lab/codex/endless_chart 四处同步；双档复核（新增 sim_result_opt.json 乐观档：走位 86%/成长 10%/追击 30%）——保守档 4 分钟达成率 1–6%、乐观档 100%，首个里程碑对中位玩家「够一够可及」；报告页升级为双档区间展示。
 31. ~~**技能完整规格（8 技能数值 + 反应联动 + 规格页）**~~ ✅ 已交付 `data/skills.json`（8 技能：火球 1.4×单体+灼烧标记 / 治疗 3.0×回复+驱散 / 霜冻 0.6××6 减速 3s / 链雷 0.9×弹射 3 目标递减 15% / 藤缚 0.5×DoT 定身 2s / 地震 2.2××8 眩晕 0.5s / 瞬步 0.2s 无敌帧 / 召唤 0.6×/s 光灵 15s；每技能 reactionNote 联动 reactions.json 实际反应名；成长公式每级 +25%、Lv3=1.5×）+ `skills_chart.html`（8 技能卡：冷却/法力跨表引用 + 数值 chips + 机制 + 反应联动 chips + 点评）。跨表校验：Key/cn/element/type 与 skill_cooldowns 逐项一致、反应名 10/10 全在 reactions.json、英雄绑定 8 技能全落 8 键、图标 8/8；**首轮校验器抓 2 处杜撰反应名（圣裁）与 3 处元素方向错（熔岩是土+火）已全部修正**；`index.html` 加 ⚡ 导航卡、`README` §2.17/§3/§7/引言同步。战斗数据底座补全（冷却表→完整规格），为 §4 接入主游戏时的技能系统提供数据底座。
+32. ~~**战斗分层自适应音乐（三层轨 + 真机混音演示）**~~ ✅ 已交付 `data/music_layers.json`（L1 节奏常开 / L2 低音敌≥8 淡入≤6 淡出滞回 / L3 旋律敌≥15 或 Boss 淡入；增益 1.0/0.8/0.8；fadeSec 1.5）+ **3 条 33.10s 分层轨**（`cp_layer_tide_drums/bass/lead`，同和声 C-Am-F-G 同 BPM 116 同长——实测时长差 <0.001s 叠播对齐，synth_audio.py 新增 `_layer_grid/_layer_add/_layer_noise` 三原语共享时间网格纯标准库合成）+ `music_layers.html`（基础参数 + 三层卡 + 滞回混音规则）。消费点：`endless_lab.html`「🎵 自适应分层」开关——三轨同播，tick 内按场上实时敌数（含生成队列/Boss 精英判定）驱动 L2/L3 音量渐变，**真机自适应混音演示**；`audio_demo.html` 加 3 卡（47 条全覆盖）；校验含三轨时长一致性断言（叠播对齐充要条件）；音频 44→47（7 BGM + 33 SFX + 4 AMB + 3 LAYER）；`index.html` 加 🎚️ 导航卡、`README` §2.18/§3/§6/§7 同步。音频体系第四维补齐——事件 SFX / 情绪 BGM / 空间 AMB / **强度分层 LAYER**，「战斗强度自适应」从整曲切换进化为层内混音，为 §4 接入主游戏时的自适应音频提供规格底座。
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

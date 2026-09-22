@@ -1,0 +1,18 @@
+{
+  "system": "战斗分层自适应音乐",
+  "version": 1,
+  "description": "《萌兽消消岛》Adaptive Music 分层规格（纯设计数据，非游戏代码）。3 条**同和声（C-Am-F-G）同 BPM（116）同长度（33.10s）**的三层轨：L1 节奏（四踩底鼓+八分 hihat+2/4 军鼓）/ L2 低音（根音八分脉冲贝斯）/ L3 旋律（五声 lead 随机游走+和弦 pad）——三轨同时从同一时刻播放即完整曲（同长是叠播对齐的充要条件，实测时长差 <0.001s）。按**场上敌数**实时调层：L1 常开、L2 敌≥8 淡入、L3 敌≥15 或 Boss 淡入——压力越大音乐越满，这就是自适应音乐的核心体验。属于 Music 通道内部的自适应子层（§2.15 双通道体系之上的第三维），战斗强度表达从「整曲切换」进化为「层内混音」。",
+  "references": [
+    "Vertical layering（垂直分层）自适应音乐惯例：所有层同 key/BPM/长度，按游戏强度参数（敌数/连击/血量）实时调各层增益，无缝无跳变（游戏自适应音频通行做法）",
+    "Vampire Survivors 音乐随波次加密的听感目标一致：压力感知来自「编曲变满」而非「换曲」"
+  ],
+  "base": { "bpm": 116, "bars": 16, "durationSec": 33.1, "key": "C 大调 I–vi–IV–V（C Am F G）", "loop": true },
+  "layers": [
+    { "id": "L1", "file": "cp_layer_tide_drums.wav", "cn": "节奏层", "instruments": "四踩底鼓 + 八分 hi-hat + 2/4 拍军鼓", "gain": 1.0, "trigger": { "type": "always", "note": "常开——节奏是战斗基础脉动" } },
+    { "id": "L2", "file": "cp_layer_tide_bass.wav", "cn": "低音层", "instruments": "根音八分脉冲贝斯（−24 半音，跟随和弦）", "gain": 0.8, "trigger": { "type": "enemyCount", "threshold": 8, "fadeSec": 1.5, "note": "场上敌 ≥8 淡入，<6 淡出（滞回防抖动）" } },
+    { "id": "L3", "file": "cp_layer_tide_lead.wav", "cn": "旋律层", "instruments": "五声 lead 随机游走 + 和弦长音 pad", "gain": 0.8, "trigger": { "type": "enemyCount", "threshold": 15, "fadeSec": 1.5, "note": "场上敌 ≥15 或精英/Boss 在场淡入" } }
+  ],
+  "mixRule": "三轨同一时刻起播、循环同步；层增益线性过渡（fadeSec 内 volume 渐变）；全体受 Music 通道增益（0.8）约束。滞回区间（淡入 8 / 淡出 6）防止敌数在阈值附近反复横跳。",
+  "relation": "与 §2.15 双通道体系的关系：Ambience（空间）+ BGM 完整曲（整曲切换的情绪曲线）+ 本分层组（战斗强度自适应子层）三者可共存——分层组用于战斗场景时替代整曲 BGM，避免两种旋律叠吵。",
+  "consumerNote": "消费点：endless_lab.html「🎵 自适应分层」开关——三轨同播，按场上实时敌数驱动 L2/L3 音量（滞回混音），真·自适应音乐演示；audio_demo.html 3 试听卡。合成：synth_audio.py 新增 _layer_grid/_layer_add/_layer_noise 三原语（共享时间网格=对齐充要条件），纯标准库零外部素材。"
+}

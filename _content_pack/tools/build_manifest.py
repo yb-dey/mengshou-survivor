@@ -85,6 +85,7 @@ DATA_CN = {
     'achievements': '成就与任务系统', 'pickups': '局内拾取物系统',
     'endless': '无尽模式', 'ambience': '环境氛围音层',
     'heroes': '英雄图鉴', 'skills': '技能完整规格',
+    'music_layers': '战斗分层自适应音乐',
 }
 PICKUP_CN = {
     'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',
