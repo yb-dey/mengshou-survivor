@@ -1,0 +1,78 @@
+{
+  "system": "森灵技能完整规格",
+  "version": 1,
+  "description": "《萌兽消消岛》8 技能的完整数值规格（纯设计数据，非游戏代码）。补全 skill_cooldowns.json 只含冷却/法力/元素/类型的缺口：每技能定义伤害系数（×英雄攻击力）、目标数、范围、机制描述、三级成长（每级系数 +25%）与元素反应联动（该元素可触发的反应及效果）。与 §2.5 克制链、§2.9 反应系统、§2.10 升级卡（冷却缩减/法力相关卡）、§2.16 英雄（每英雄绑定 2 技能）四方对齐。技能 Key/冷却/法力/元素与 skill_cooldowns.json 完全一致（跨表校验），本表只增不改。",
+  "references": [
+    "Vampire Survivors 武器升级：每件武器 8 级，每级数值/机制小幅提升，满级质变（vampire-survivors.fandom.com）",
+    "技能三元组惯例：伤害系数 × 成长曲线 × 反应联动——技能强度=面板×联动收益，联动越宽上限越高"
+  ],
+  "growthFormula": "coef(level) = baseCoef * (1 + 0.25*(level-1))",
+  "growthNote": "每级 +25% 系数，3 级封顶（Lv3 = 1.5× 基础）；升级消耗与英雄等级挂钩（§2.10 局内成长）。",
+  "skills": {
+    "ab_fireball": {
+      "cn": "火球术", "element": "fire", "type": "attack",
+      "baseCoef": 1.4, "targets": 1, "radius": 0,
+      "mechanism": "发射火球命中单体，命中附加 1.5 秒灼烧标记（每秒 0.3×攻击），为元素反应提供附著。",
+      "reactionNote": "火系可触发：燃烧(火+木·灼烧 DoT) / 蒸发(火+水·2.0 倍增幅) / 熔岩(土+火·范围溅射)",
+      "icon": "skill_icons/ab_fireball.png",
+      "desc": "最朴素的单体输出，胜在冷却短、耗蓝低，灼烧标记让火系成为反应起手器。"
+    },
+    "ab_heal": {
+      "cn": "治疗", "element": "light", "type": "support",
+      "baseCoef": 3.0, "targets": 1, "radius": 120,
+      "mechanism": "回复自身 3.0×攻击力生命（以治疗量计，非伤害系数），并驱散一个减益状态。",
+      "reactionNote": "光系可触发：光合(光+木·持续回复+急速) / 折射(光+水·反弹伤害)",
+      "icon": "skill_icons/ab_heal.png",
+      "desc": "生存型核心技能，冷却 6 秒偏长，配合冷却缩减卡可显著提升续航。"
+    },
+    "ab_frost": {
+      "cn": "霜冻", "element": "water", "type": "control",
+      "baseCoef": 0.6, "targets": 6, "radius": 110,
+      "mechanism": "范围冰环：对半径内最多 6 只敌人造成 0.6×攻击伤害并减速 40%（持续 3 秒）。",
+      "reactionNote": "水系可触发：蒸发(水+火·受击方引爆) / 泥泞(土+水·减速加深) / 折射(水+光·反弹)",
+      "icon": "skill_icons/ab_frost.png",
+      "desc": "低伤高频控场，减速窗口是走位与补刀的黄金 3 秒，DoT 流的聚怪搭档。"
+    },
+    "ab_chain": {
+      "cn": "链雷", "element": "light", "type": "attack",
+      "baseCoef": 0.9, "targets": 3, "radius": 90,
+      "mechanism": "闪电链弹射最多 3 个目标（每跳伤害递减 15%），命中有 25% 概率附加 0.5 秒麻痹。",
+      "reactionNote": "光系可触发：光合(光+木) / 折射(光+水) / 爆燃(光+火·灼烧增强)",
+      "icon": "skill_icons/ab_chain.png",
+      "desc": "多目标效率之王，弹射机制在敌群密集时收益翻倍，克制轻甲海。"
+    },
+    "ab_vine": {
+      "cn": "藤缚", "element": "wood", "type": "control",
+      "baseCoef": 0.5, "targets": 2, "radius": 100,
+      "mechanism": "藤蔓定身最多 2 只敌人 2 秒，期间每秒 0.5×攻击的木系 DoT。",
+      "reactionNote": "木系可触发：燃烧(木+火·被点燃) / 腐朽(水+木·中毒蔓延) / 光合(木+光) / 缠绕(土+木·定身加深)",
+      "icon": "skill_icons/ab_vine.png",
+      "desc": "定身即输出：2 秒控住高威胁目标，DoT 与「剧毒蔓延」升级卡叠乘。"
+    },
+    "ab_quake": {
+      "cn": "地震", "element": "earth", "type": "attack",
+      "baseCoef": 2.2, "targets": 8, "radius": 140,
+      "mechanism": "重锤地面大范围震荡：对半径内最多 8 只敌人造成 2.2×攻击伤害并眩晕 0.5 秒。",
+      "reactionNote": "土系可触发：熔岩(土+火) / 泥泞(土+水) / 结晶(土+光·护盾)",
+      "icon": "skill_icons/ab_quake.png",
+      "desc": "冷却 8 秒/耗蓝 35 的大招位，单次爆发全技能最高，清屏保命两用。"
+    },
+    "ab_dash": {
+      "cn": "瞬步", "element": "none", "type": "movement",
+      "baseCoef": 0, "targets": 0, "radius": 0,
+      "mechanism": "向移动方向瞬移，瞬移后 0.2 秒无敌；穿越敌人不受阻拦。",
+      "reactionNote": "无元素：不参与反应，纯位移/保命。雷羽鹰的招牌起手（配合风暴闪避双重容错）。",
+      "icon": "skill_icons/ab_dash.png",
+      "desc": "零伤害高价值：0.2 秒无敌帧是全游戏最便宜的保命手段，走位上限的延伸。"
+    },
+    "ab_summon": {
+      "cn": "召唤", "element": "light", "type": "summon",
+      "baseCoef": 0.6, "targets": 1, "radius": 0,
+      "mechanism": "召唤 1 只光灵（持续 15 秒）：每秒 0.6×攻击的自动攻击，吸引周围敌人仇恨。",
+      "reactionNote": "光系可触发：光合(光+木) / 折射(光+水) / 爆燃(光+火·灼烧增强)",
+      "icon": "skill_icons/ab_summon.png",
+      "desc": "常驻额外输出+仇恨坦克二合一，冷却 12 秒内最多维持 1 只（「兽群」卡可叠加）。"
+    }
+  },
+  "heroesBindingNote": "英雄-技能绑定见 data/heroes.json（每英雄 2 技能）：灵鹿=治疗+藤缚 / 雷羽鹰=瞬步+链雷 / 霜甲熊=霜冻+地震 / 焰心术士=火球+召唤。"
+}

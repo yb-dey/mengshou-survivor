@@ -306,6 +306,17 @@
 - **生成器**：`tools/build_hero_chart.py`（读 `data/heroes.json` + skill_cooldowns 技能名 + element_matrix 配色，纯标准库渲染）。
 - **消费点**：`endless_lab.html` 挂英雄选择器（开战前 4 选 1，参数与被动在无尽循环中真实生效——自回血计时/自动闪避判定/减伤系数/灼烧附加），英雄图鉴从「参考页」升级为「可玩对比」。
 - **校验**：`data/heroes.json` 合法 JSON；元素引用 ∈ element_matrix 五元素、技能绑定 8 key 全部存在于 skill_cooldowns、精灵图 4/4 存在、unlockLink 与 meta_upgrades 解锁项一一对应；DPS 天平复算与 balanceNote 一致（44.4/53.3/31.4/43.6+灼烧）；meta_upgrades 两处「雷/冰元素」口径修正落盘；`hero_chart.html` 0 占位符、4 立绘引用存在；endless_lab 内联 `HEROES` 与 JSON 逐项比对 **DATA_SYNC_OK**（base 4 参数 + passive 全参数无漂移）、`node --check` 通过。；4 枚徽章均 128×128 `colorType=6` RGBA 非空行 96%（`gen_hero_portraits.py` 程序化生成，零外部素材）
+## 2.17 技能完整规格（8 技能数值 + 反应联动 · 本轮新增）
+
+> 补全 skill_cooldowns.json 只含冷却/法力/元素/类型的缺口：每技能定义**伤害系数（×英雄攻击力）/ 目标数 / 范围 / 机制 / 三级成长（每级 +25%，Lv3 = 1.5×）**与**元素反应联动**——联动全部引用 reactions.json 实际反应名（跨表校验：燃烧/蒸发/熔岩/爆燃/泥泞/腐朽/结晶/光合/折射/缠绕 十反应全覆盖）。Key/冷却/法力/元素/类型与 skill_cooldowns.json 逐项一致（本表只增不改）。首轮校验器抓到 2 处杜撰反应名（「圣裁」不存在）与 3 处元素方向写反（熔岩是土+火非火+土），已全部修正——**反应方向（谁触发谁）是反应系统的核心语义，写联动必须对着 reactions.json 写**。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `data/skills.json` | 技能完整规格 | 8 技能（火球 1.4× 单体+灼烧标记 / 治疗 3.0× 回复+驱散 / 霜冻 0.6× 群体减速 3s / 链雷 0.9× 弹射 3 目标 / 藤缚 0.5×DoT 定身 2s / 地震 2.2× 大范围+眩晕 / 瞬步 0.2s 无敌帧 / 召唤 0.6×/s 光灵 15s），每项含 `baseCoef / targets / radius / mechanism / reactionNote / icon` + 成长公式 |
+| `skills_chart.html` | 技能规格可视化 | 8 技能卡（图标 + 冷却/法力引用 + 数值 chips + 机制 + 反应联动 chips + 点评）+ 成长/绑定口径（数据驱动，零图片生成） |
+
+- **生成器**：`tools/build_skills_chart.py`（读 `data/skills.json` + skill_cooldowns 冷却法力 + reactions 反应名，纯标准库渲染）。
+- **校验**：`data/skills.json` 合法 JSON；Key 集合与 skill_cooldowns 完全一致、cn/element/type 逐项一致；元素 ∈ 五元素；reactionNote 反应名全部存在于 reactions.json（校验器首轮抓 2 杜撰+3 方向错，已修正）；英雄绑定（heroes.json 每英雄 2 技能）全部落在 8 键内；图标 8/8 存在；`skills_chart.html` 0 占位符、18 名称全在（8 技能+10 反应）、8 图标引用存在。
 ## 3. 目录结构
 
 ```
@@ -337,6 +348,7 @@ _content_pack/
 ├── ambience_chart.html     # 环境氛围音层：双通道分层说明 + 4 氛围音卡 + 场景映射优先级（数据驱动）
 ├── hero_chart.html         # 英雄图鉴：4 英雄属性条形对比 + 被动 + 技能绑定 + DPS 天平（数据驱动）
 ├── balance_report.html     # 数值平衡验证报告：无尽存活/构筑 DPS/经济闭环 三套蒙特卡洛验证（数据驱动）
+├── skills_chart.html       # 技能完整规格：8 技能数值卡 + 三级成长 + 反应联动（数据驱动）
 ├── boss_arena.html         # BOSS 竞技场（boss_phases.json 三阶段可玩校验场，纯前端 file:// 双击即开）
 ├── campaign.html          # 战役模式（wave_design.json 10 关 × 多波次可玩校验场，逐波刷怪，纯前端 file:// 双击即开）
 ├── sprites/               # 原始生成图（RGB，未抠）
@@ -402,7 +414,8 @@ _content_pack/
 │   ├── pickups.json           # 局内拾取物系统：8 种拾取物 + 击杀掉落表 + 宝箱开箱表
 │   ├── endless.json           # 无尽模式：四条难度公式 + 精英/Boss 周期 + 四阶段敌种池 + 里程碑
 │   ├── ambience.json          # 环境氛围音层：4 氛围音 + 双通道增益 + 场景映射优先级
-│   └── heroes.json            # 英雄图鉴：4 英雄差异化数值 + 被动 + 技能绑定 + 元素口径修正
+│   ├── heroes.json            # 英雄图鉴：4 英雄差异化数值 + 被动 + 技能绑定 + 元素口径修正
+│   └── skills.json            # 技能完整规格：8 技能系数/目标/范围/成长 + 反应联动
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -426,6 +439,7 @@ _content_pack/
     ├── build_endless_chart.py # 由 data/endless.json 生成 难度曲线 + 阶段池 + 里程碑参考页
     ├── build_ambience_chart.py # 由 data/ambience.json 生成 双通道 + 场景映射参考页
     ├── build_hero_chart.py   # 由 data/heroes.json 生成 英雄对比参考页
+    └── build_skills_chart.py # 由 data/skills.json 生成 技能规格参考页
     ├── gen_hero_portraits.py # 英雄徽章生成（纯标准库，复用 gen_vfx.Canvas）
     ├── sim_balance.py        # 数值平衡蒙特卡洛模拟器（seed 固定可复现，0.9s）
     ├── sim_result.json       # 模拟结果（endless/builds/economy 三组）
@@ -481,7 +495,7 @@ _content_pack/
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵 + 4 枚英雄徽章）+ 音乐（7 BGM + 33 SFX + 4 环境音）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（13 份 JSON）+ 可视化参考页与可玩校验场（11 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵 + 4 枚英雄徽章）+ 音乐（7 BGM + 33 SFX + 4 环境音）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（14 份 JSON）+ 可视化参考页与可玩校验场（12 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -522,4 +536,5 @@ _content_pack/
 28. ~~**英雄图鉴（差异化规格 + 对比可视化 + 实验室英雄选择器）**~~ ✅ 已交付 `data/heroes.json`（4 英雄差异化：灵鹿祭司初始均衡 + 60s 自回 5%；雷羽鹰 800 币解锁·光元素·玻璃炮 53.3 DPS + 45s 自动闪避；霜甲熊 1200 币·水元素·坦克 150HP+15% 常驻减伤但 DPS 31.4；焰心术士 1500 币·火元素·炮台灼烧 DoT 有效 DPS≈55 上限；各绑定 2 技能，基础 DPS 31–53 由生存/机动补偿，无全方位上位替代）+ `hero_chart.html`（属性条形对比 + 被动 + 技能绑定 + 天平说明）+ `endless_lab.html` 英雄选择器（开战前 4 选 1，被动真实生效：自回血计时/自动闪避判定/减伤系数/灼烧附加）。**元素口径统一修正**：雷→light、冰→water（meta_upgrades 两处描述同步修正，与五元素克制链/反应系统兼容）。校验：技能绑定/元素引用/精灵/解锁链接跨表全过、DPS 天平复算一致、`node --check` + DATA_SYNC_OK（base/passive 全参数）；本轮追加 **4 枚程序化英雄徽章**（`tools/gen_hero_portraits.py`：128×128 RGBA 圆形徽章底盘+元素色双环+Q 版主体，非空行 96%、零外部素材）——`heroes.json` 加 portrait 字段、`endless_lab` 选择器与 `hero_chart` 头像切换为徽章（借用精灵仅作战斗占位）、`manifest.json` 加 hero_portraits 类目（=4）、`index.html` 加「英雄徽章」统计卡、`README` §2.16/§3/§6/§7 同步。使「解锁英雄」从一句话定位升级为有真实数值差异与可玩验证的内容，为 §4 接入主游戏时的英雄系统提供数据底座。
 29. ~~**图鉴扩容（统一内容入口）**~~ ✅ `codex.html` 由 8 角色单页扩容为全内容统一图鉴：🦌 英雄图鉴（4 徽章+元素+被动+解锁价+DPS+技能）、🍒 拾取物图鉴（8 种+稀有度+效果）、🏅 成就与里程碑概览（19 成就 × 5 组计数条 + 无尽 3 里程碑含奖励文案）、♾️ 模式速查（战役/无尽摘要）；`tools/extend_codex.py` 读 heroes/pickups/achievements/endless 四份 JSON 数据驱动注入（幂等可重跑，重复执行自动跳过）；注入后 20,018 B，14 个关键名称全在、12 图引用零缺失、三个里程碑奖励文案（守林人/无尽行者/永恒纹章）落位；成就系统承诺的「图鉴条目」奖励自此有了真实落点；`index.html` 图鉴卡描述同步、`README` §3/§7 同步。
 30. ~~**数值平衡验证（蒙特卡洛三套模拟 + 报告页）**~~ ✅ 已交付 `tools/sim_balance.py`（纯标准库、seed 固定可复现、0.9s 跑完）+ `tools/sim_result.json` + `balance_report.html`。三套验证：**A 无尽存活**（4 英雄 × 400 局半解析逐秒模型：成长轴 8.5%/分钟、走位规避 80%、综合清场 ×3.2、追击到达 35%）——中位存活 w11–12，**发现失衡：5 分钟里程碑达成率 0%（门槛过硬）**，报告给出两个调整方案（里程碑改 4/8/15 分钟 或 dmgMul 斜率 0.005→0.004）待设计决策；**B 构筑 DPS**（1000 局贪心抽卡至 Lv.20）：基线 20 → 中位 59.1（2.95×），P25–P75 = 53–68.5，高选取率卡与流派深挖意图一致；**C 经济复验**：meta_upgrades 几何成本重算与 economy.json 跨表精确一致，积压率 0.22 重验 HEALTHY。校验：报告 0 占位符、模拟器语法与结果 JSON 合法；模型假设与局限六条写入报告（相对比较口径，非绝对预言）；`index.html` 加 📊 导航卡、`README` §3/§7 同步。验证轮价值兑现：发现→建议→决策→落地→复核（seed 固定）。**R38 落地方案①**：里程碑 5/10/20 分钟→4/8/15 分钟（atSec 240/480/900），endless.json/endless_lab/codex/endless_chart 四处同步；双档复核（新增 sim_result_opt.json 乐观档：走位 86%/成长 10%/追击 30%）——保守档 4 分钟达成率 1–6%、乐观档 100%，首个里程碑对中位玩家「够一够可及」；报告页升级为双档区间展示。
+31. ~~**技能完整规格（8 技能数值 + 反应联动 + 规格页）**~~ ✅ 已交付 `data/skills.json`（8 技能：火球 1.4×单体+灼烧标记 / 治疗 3.0×回复+驱散 / 霜冻 0.6××6 减速 3s / 链雷 0.9×弹射 3 目标递减 15% / 藤缚 0.5×DoT 定身 2s / 地震 2.2××8 眩晕 0.5s / 瞬步 0.2s 无敌帧 / 召唤 0.6×/s 光灵 15s；每技能 reactionNote 联动 reactions.json 实际反应名；成长公式每级 +25%、Lv3=1.5×）+ `skills_chart.html`（8 技能卡：冷却/法力跨表引用 + 数值 chips + 机制 + 反应联动 chips + 点评）。跨表校验：Key/cn/element/type 与 skill_cooldowns 逐项一致、反应名 10/10 全在 reactions.json、英雄绑定 8 技能全落 8 键、图标 8/8；**首轮校验器抓 2 处杜撰反应名（圣裁）与 3 处元素方向错（熔岩是土+火）已全部修正**；`index.html` 加 ⚡ 导航卡、`README` §2.17/§3/§7/引言同步。战斗数据底座补全（冷却表→完整规格），为 §4 接入主游戏时的技能系统提供数据底座。
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。
