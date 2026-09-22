@@ -4,48 +4,48 @@
  "endless": {
   "spirit_deer": {
    "cn": "灵鹿祭司",
-   "medianWave": 12,
-   "p25": 12,
-   "p75": 12,
-   "meanTimeSec": 222.5,
+   "medianWave": 14,
+   "p25": 13,
+   "p75": 14,
+   "meanTimeSec": 258.0,
    "milestoneRate": {
-    "240": 0.033,
+    "240": 1.0,
     "480": 0.0,
     "900": 0.0
    }
   },
   "hero_eagle": {
    "cn": "雷羽鹰",
-   "medianWave": 12,
-   "p25": 12,
-   "p75": 12,
-   "meanTimeSec": 225.1,
+   "medianWave": 14,
+   "p25": 13,
+   "p75": 14,
+   "meanTimeSec": 258.3,
    "milestoneRate": {
-    "240": 0.06,
+    "240": 1.0,
     "480": 0.0,
     "900": 0.0
    }
   },
   "hero_bear": {
    "cn": "霜甲熊",
-   "medianWave": 12,
-   "p25": 12,
-   "p75": 12,
-   "meanTimeSec": 226.8,
+   "medianWave": 14,
+   "p25": 13,
+   "p75": 14,
+   "meanTimeSec": 260.2,
    "milestoneRate": {
-    "240": 0.045,
+    "240": 1.0,
     "480": 0.0,
     "900": 0.0
    }
   },
   "hero_mage": {
    "cn": "焰心术士",
-   "medianWave": 12,
-   "p25": 11,
-   "p75": 12,
-   "meanTimeSec": 218.6,
+   "medianWave": 13,
+   "p25": 13,
+   "p75": 14,
+   "meanTimeSec": 252.1,
    "milestoneRate": {
-    "240": 0.013,
+    "240": 1.0,
     "480": 0.0,
     "900": 0.0
    }

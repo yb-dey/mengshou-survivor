@@ -60,7 +60,8 @@ def sim_endless(rng, hero_key, h):
     hp = hp_max
     elem = h['element']
     atk_dps_base = b['atk'] / b['atkIntervalSec']
-    GROWTH_PER_MIN = 0.085   # 升级成长轴：前期经验曲线平缓，升级更快（构筑实测 Lv20≈3× 基线）
+    OPT = os.environ.get('SIM_MODE') == 'optimistic'
+    GROWTH_PER_MIN = 0.10 if OPT else 0.085   # 升级成长轴（构筑实测 Lv20≈3× 基线；乐观档前期更快）
     # 敌种平均克制系数（波内均匀混池）
     def avg_mul(w):
         pool = phase_pool(w)
@@ -90,7 +91,7 @@ def sim_endless(rng, hero_key, h):
         t_total += 1.0
         atk_dps = atk_dps_base * (1 + GROWTH_PER_MIN * t_total / 60.0)   # 升级成长
         # 追击在场近似：budget 中仅 35% 追上玩家（其余散布全屏），随本波击杀递减
-        CHASE = 0.35
+        CHASE = 0.30 if OPT else 0.35
         amul = avg_mul(wave)
         avg_ehp = 45.0 * hp_mul(wave)          # 敌种基础 HP 30~90，取中值近似 45
         kill_rate = atk_dps * amul * 3.2 / max(avg_ehp, 1.0)   # ×3.2 综合 AOE/召唤/DoT 清场系数
@@ -106,7 +107,7 @@ def sim_endless(rng, hero_key, h):
         if wave % EJ['cycles']['bossEveryWaves'] == 0 and t_in_wave <= 4:
             alive += 1.0
         # 受伤：走位+防御构筑综合规避模型（survival_skill 校准至熟练玩家中位存活 ≈10 分钟）
-        SURVIVAL_SKILL = 0.80
+        SURVIVAL_SKILL = 0.86 if OPT else 0.80
         attackers = min(2.0, alive * 0.15)
         dmg = attackers * 6.0 * dmg_mul(wave) * (1 - SURVIVAL_SKILL) * luck * rng.uniform(0.7, 1.3)
         # 被动：霜甲减伤
@@ -276,7 +277,8 @@ if __name__ == '__main__':
         'economy': run_economy(),
     }
     dt = time.time() - t0
-    out = os.path.join(ROOT, 'tools', 'sim_result.json')
+    name = 'sim_result_opt.json' if os.environ.get('SIM_MODE') == 'optimistic' else 'sim_result.json'
+    out = os.path.join(ROOT, 'tools', name)
     json.dump(res, open(out, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print('sim_result.json written:', os.path.getsize(out), 'bytes; %.1fs' % dt)
     for hk, v in res['endless'].items():

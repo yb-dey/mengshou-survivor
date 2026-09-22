@@ -93,7 +93,7 @@
       <div class="bar hp"><i id="hpBar" style="width:100%"></i></div>
       <button class="btn" id="btnStart" style="width:100%;margin:4px 0 10px">▶ 开始挑战</button>
       <div class="feed" id="feed"></div>
-      <div class="note">英雄：开战前可切换（4 位，参数与被动真实生效——灵鹿 60s 自回 5%、雷羽鹰 45s 自动闪避、霜甲熊减伤 15%、焰心命中附灼烧）。阶段：w1–4 单元素巡林 → w5–9 双元素 → w10–14 三元素+精英 → w15+ 五元素狂潮。精英每 5 波（HP×6 必掉宝箱）、Boss 每 10 波。玩家固定火元素：打木 ×1.6 / 被木克打 ×0.6。里程碑 5/10/20 分钟给非货币称号（20 分钟=真挑战）。</div>
+      <div class="note">英雄：开战前可切换（4 位，参数与被动真实生效——灵鹿 60s 自回 5%、雷羽鹰 45s 自动闪避、霜甲熊减伤 15%、焰心命中附灼烧）。阶段：w1–4 单元素巡林 → w5–9 双元素 → w10–14 三元素+精英 → w15+ 五元素狂潮。精英每 5 波（HP×6 必掉宝箱）、Boss 每 10 波。玩家固定火元素：打木 ×1.6 / 被木克打 ×0.6。里程碑 4/8/15 分钟给非货币称号（15 分钟=真挑战）。</div>
     </div>
   </div>
 
@@ -126,7 +126,7 @@ const ENEMIES = {
 };
 const STRONG = { fire:"wood", wood:"earth", earth:"water", water:"light", light:"fire" };  // 强克关系
 const ELEM_CN = { fire:"火", water:"水", earth:"土", light:"光", wood:"木" };
-const MILESTONES = [ { atSec:300, reward:"称号「守林人」" }, { atSec:600, reward:"称号「无尽行者」" }, { atSec:1200, reward:"头像框「永恒纹章」" } ];
+const MILESTONES = [ { atSec:240, reward:"称号「守林人」" }, { atSec:480, reward:"称号「无尽行者」" }, { atSec:900, reward:"头像框「永恒纹章」" } ];
 
 /* ===== 英雄（内联子集，与 data/heroes.json 对齐）===== */
 const HEROES = {

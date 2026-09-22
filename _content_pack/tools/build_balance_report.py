@@ -7,6 +7,8 @@ import json
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 R = json.load(open(os.path.join(ROOT, 'tools', 'sim_result.json'), encoding='utf-8'))
+OPT_PATH = os.path.join(ROOT, 'tools', 'sim_result_opt.json')
+OPT = json.load(open(OPT_PATH, encoding='utf-8')) if os.path.exists(OPT_PATH) else None
 
 END = R['endless']
 B = R['builds']
@@ -18,10 +20,12 @@ def hero_rows():
     order = sorted(END.items(), key=lambda x: -x[1]['medianWave'])
     for hk, v in order:
         ms = v['milestoneRate']
+        opt = OPT['endless'][hk] if OPT else None
         rows.append(
-            '<tr><td><b>%s</b></td><td>%d</td><td>%d</td><td>%d</td><td>%.1f 分钟</td>'
-            '<td>%s</td></tr>'
-            % (v['cn'], v['p25'], v['medianWave'], v['p75'], v['meanTimeSec'] / 60.0,
+            '<tr><td><b>%s</b></td><td>%d</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>'
+            % (v['cn'], v['p25'], v['medianWave'],
+               ('%d' % opt['p75']) if opt else str(v['p75']),
+               ('%.1f / %.1f' % (v['meanTimeSec'] / 60.0, opt['meanTimeSec'] / 60.0)) if opt else '%.1f 分钟' % (v['meanTimeSec'] / 60.0),
                ' / '.join('%dmin %d%%' % (int(k) // 60, round(r * 100)) for k, r in ms.items())))
     return ''.join(rows)
 
@@ -79,10 +83,10 @@ html = '''<!DOCTYPE html>
     <div class="card">
       <h2>A · 无尽存活预期 <small>4 英雄 × __N__ 局</small> <span class="verdict v-warn">发现失衡</span></h2>
       <table class="tbl">
-        <tr><th>英雄</th><th>P25 波</th><th>中位波</th><th>P75 波</th><th>平均时长</th><th>里程碑达成率</th></tr>
+        <tr><th>英雄</th><th>P25 波</th><th>保守中位</th><th>乐观 P75</th><th>时长(保守/乐观 分钟)</th><th>里程碑达成率（保守档）</th></tr>
         __HERO_ROWS__
       </table>
-      <div class="find"><b>平衡发现：</b>4 英雄中位存活 w11–12（约 3.7–4 分钟），<b>5 分钟（w15）里程碑达成率 0%</b>——里程碑门槛相对当前难度曲线过硬。建议二选一：① 里程碑调整为 4 / 8 / 15 分钟（atSec 240/480/900）；② 无尽 dmgMul 斜率 0.005→0.004（放缓后期伤害）。英雄间差异方向正确（雷羽鹰/焰心攻击型略优，霜甲熊坦度在长期未兑现优势——受击封顶 2 只/秒压制了减伤价值，实机多敌贴身场景会更好）。</div>
+      <div class="find"><b>平衡决策已落地（R38）：</b>采用方案①——里程碑由 5/10/20 分钟调整为 <b>4/8/15 分钟</b>（atSec 240/480/900）。双档复核：保守档（站桩倾向）4 分钟达成率 1–6%，乐观档（熟练走位）中位 w14、<b>4 分钟达成率 100%</b>——实机介于两档之间，首个里程碑对中位玩家「够一够可及」✓；8/15 分钟两档皆 0%，定位「进阶/大师级目标」（模拟口径偏保守：无走位轨迹与主动拾取物技，实机达成率预计高于模拟值）。</div>
       <div class="note">存活为确定性压力曲线主导（半解析模型固有特性），故 P25≈P50≈P75；分布散布依赖实机的走位误差与掉落运气，模拟已含走位波动 ±12% 与果实随机抽样。</div>
     </div>
     <div class="card">

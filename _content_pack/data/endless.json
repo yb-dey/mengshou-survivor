@@ -20,19 +20,78 @@
     "eliteHpMul": 6,
     "eliteNote": "精英为当波敌种的强化版（HP×6、体型放大），必掉宝箱（pickups.chest）。",
     "bossEveryWaves": 10,
-    "bossBase": { "key": "forest_ancient", "hp": 200 },
+    "bossBase": {
+      "key": "forest_ancient",
+      "hp": 200
+    },
     "bossNote": "Boss=森林古木强化版（HP×hpMul(w)），击败掉落双宝箱。"
   },
   "phases": [
-    { "id": 1, "from": 1, "to": 4, "name": "单元素巡林", "pool": ["sprout_bunny", "water_frog"] },
-    { "id": 2, "from": 5, "to": 9, "name": "双元素混编", "pool": ["sprout_bunny", "water_frog", "flame_fox", "star_bird"] },
-    { "id": 3, "from": 10, "to": 14, "name": "三元素+精英", "pool": ["sprout_bunny", "water_frog", "flame_fox", "star_bird", "stone_turtle"] },
-    { "id": 4, "from": 15, "to": null, "name": "五元素狂潮", "pool": ["sprout_bunny", "water_frog", "flame_fox", "star_bird", "stone_turtle"] }
+    {
+      "id": 1,
+      "from": 1,
+      "to": 4,
+      "name": "单元素巡林",
+      "pool": [
+        "sprout_bunny",
+        "water_frog"
+      ]
+    },
+    {
+      "id": 2,
+      "from": 5,
+      "to": 9,
+      "name": "双元素混编",
+      "pool": [
+        "sprout_bunny",
+        "water_frog",
+        "flame_fox",
+        "star_bird"
+      ]
+    },
+    {
+      "id": 3,
+      "from": 10,
+      "to": 14,
+      "name": "三元素+精英",
+      "pool": [
+        "sprout_bunny",
+        "water_frog",
+        "flame_fox",
+        "star_bird",
+        "stone_turtle"
+      ]
+    },
+    {
+      "id": 4,
+      "from": 15,
+      "to": null,
+      "name": "五元素狂潮",
+      "pool": [
+        "sprout_bunny",
+        "water_frog",
+        "flame_fox",
+        "star_bird",
+        "stone_turtle"
+      ]
+    }
   ],
   "milestones": [
-    { "atSec": 300, "cn": "守林人", "reward": "称号「守林人」" },
-    { "atSec": 600, "cn": "无尽行者", "reward": "称号「无尽行者」" },
-    { "atSec": 1200, "cn": "永恒纹章", "reward": "头像框「永恒纹章」" }
+    {
+      "atSec": 240,
+      "cn": "守林人",
+      "reward": "称号「守林人」"
+    },
+    {
+      "atSec": 480,
+      "cn": "无尽行者",
+      "reward": "称号「无尽行者」"
+    },
+    {
+      "atSec": 900,
+      "cn": "永恒纹章",
+      "reward": "头像框「永恒纹章」"
+    }
   ],
   "milestonesNote": "里程碑奖励与成就系统同口径：只发称号/头像框等非货币荣誉，不发森灵币。",
   "economyNote": "无尽每波币产出按 coinsFormula 递减（第 30 波起每波仅 2 币），且金币袋/宝箱掉落照常计入 economy.json kill/clear 既有口径——无尽定位「挑战自己的存活纪录」，不是无限刷币入口；全流程经济总量与积压率 0.22 仍由战役循环主导，不受无尽模式破坏。"
