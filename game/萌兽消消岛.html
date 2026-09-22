@@ -21791,7 +21791,7 @@ function openLevelUp() {
 // 【纪律级】金币唯一入账点=confirmResult 的 saveData.coins += runSummary.coins;
 //   其余任何代码路径禁对 saveData.coins 做加写入账(专项测试盯防: 生产代码中 += 仅此一处);
 //   消费类只允许 -= (buyUpgrade/buyBeast/enhanceGearUid/craftHallUnlock/buyHallTalent)。翻倍: 每局 1 次只翻金币, 走 Hooks.requestCoinDouble->AdService。
-var runSummary = { win: false, coins: 0, doubled: false, stages: 1, survivedSec: 0, kills: 0,
+var runSummary = { win: false, coins: 0, doubled: false, stages: 1, survivedSec: 0, kills: 0, prevEndless: null,   // 【v1.193】无尽历史最佳快照(enterResult 时刻定格, 用于结算对比)
   chIdx: 0, chId: "", chName: "", firstClearBonus: 0, firstClearPaid: 0, achPend: 0, prevBest: null, note: "",
   endless: false, endlessTime: 0, endlessKills: 0, gearDrop: "", gearDropId: "", gearDropRar: 0, gearInRun: 0, clearGiftTitle: "",
   heroName: "", heroWeapon: "", petName: "", petLv: 1, roomClears: 0, roomBestTier: -1, roomLog: [], forgeMark: false,
@@ -21854,6 +21854,12 @@ function computeRunSummary(win) {
   // 【R26】无尽败局快照: 存活=入口时刻起算, 击杀=入口起计
   runSummary.endless = GAME.endlessMode && !win;
   runSummary.endlessTime = runSummary.endless ? Math.max(0, Math.floor(GAME.runTime - GAME.endlessStartT)) : 0;
+  /* 【v1.193】无尽历史最佳快照: 必须在下方"取历史更优"写入之前读, 否则本局成绩会顶掉自己 */
+  if (runSummary.endless) {
+    var _pe = saveData.chapterBest[runSummary.chId];
+    runSummary.prevEndless = (_pe && (_pe.endlessTime > 0 || _pe.endlessKills > 0))
+      ? { time: _pe.endlessTime | 0, kills: _pe.endlessKills | 0 } : null;
+  }
   runSummary.endlessKills = runSummary.endless ? Math.max(0, player.killCount - GAME.endlessStartKills) : 0;
   runSummary.note = GAME.dailyMode && dailyRuleNow()
     ? ("加菜 · " + dailyRuleNow().name + (win ? " 完成" : " 未完成"))
@@ -29509,6 +29515,28 @@ function drawResultPanel(ctx, m) {
     var pbm = (runSummary.prevBest.bestSec / 60) | 0, pbs = runSummary.prevBest.bestSec % 60;
     ctx.fillText("此章最佳 胜" + runSummary.prevBest.wins + " · 击杀 " + runSummary.prevBest.bestKills
       + " · 最快 " + pbm + ":" + (pbs < 10 ? "0" : "") + pbs, cx, py + 132);
+  } else if (!runSummary.win && runSummary.note) {
+    ctx.fillStyle = "#c0392b";
+    ctx.fillText(runSummary.note, cx, py + 132);
+  }
+  // 【v1.193】无尽结算第二行: 本局成绩 vs 历史最佳(原缺陷: endlessTime/Kills 写盘+clamp 携带但零渲染点,
+  //   玩家"最长无尽存活/最高击杀"永久不可见; 且 prevBest 只在 wins>0 时赋值, 无尽局恒 null → 无从显示)
+  if (runSummary.endless) {
+    var _ee = runSummary.prevEndless;
+    var _tSec = (runSummary.endlessTime | 0);
+    var _tm = (_tSec / 60) | 0, _ts = _tSec % 60;
+    var _line = "本局 " + (_tm + ":" + (_ts < 10 ? "0" : "") + _ts)
+      + " · " + (runSummary.endlessKills | 0) + "杀";
+    if (_ee) {
+      var _em = ((_ee.time | 0) / 60) | 0, _es = (_ee.time | 0) % 60;
+      _line += "   最佳 " + (_em + ":" + (_es < 10 ? "0" : "") + _es)
+        + " · " + (_ee.kills | 0) + "杀";
+      if ((runSummary.endlessTime | 0) > (_ee.time | 0)) _line += "  ★新纪录";
+    } else {
+      _line += "   首度无尽";
+    }
+    ctx.fillStyle = _ee && (runSummary.endlessTime | 0) > (_ee.time | 0) ? "#7a6220" : c.cardDesc;
+    ctx.fillText(_line, cx, py + 132);
   } else if (!runSummary.win && runSummary.note) {
     ctx.fillStyle = "#c0392b";
     ctx.fillText(runSummary.note, cx, py + 132);
