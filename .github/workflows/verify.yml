@@ -233,6 +233,18 @@ jobs:
         run: |
           node ci/assign-key-integrity.mjs --selftest
           node ci/assign-key-integrity.mjs
+      # 第 29 维度（v1.204）：挑战房难度跨表一致性 —— DATA_ROOM_TIER × DATA_FIELD × DATA_GEAR_RARITY。
+      #   与 v1.201 gear-cross 同族（跨表）；本条守的是"**难度递进承诺**"这类玩家直觉不变量 ——
+      #   代码不会崩，但玩家会遇到 "III 禁猎比 II 猎场还容易" / "引用不存在的场物"。
+      #   判据：A 解析完整性（>=3 档）· B 难度轴（rarMin/eliteN/hpMul/fightSec）随档单调不减
+      #     · C field 引用合法（空串 或 ∈ DATA_FIELD）· D rarMin 在稀有度档内 · E gems 非空且全正。
+      #   ⚠ 作用域纪律：**不纳入 trashAdd**（它是杂兵增量、不是难度轴，实测 0>2>1 非单调是设计波动）
+      #     —— 第十七类"把不该比的量硬比 = 判据太宽 → 假红"。selftest 用例 9 专测这条不误报。
+      #   **硬门禁**（发现难度轴回落 / 非法引用 / 越界 / 空奖励即 exit 1）。
+      - name: 挑战房难度跨表一致性审计（GATE）
+        run: |
+          node ci/room-tier-cross.mjs --selftest
+          node ci/room-tier-cross.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
