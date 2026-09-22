@@ -2267,11 +2267,16 @@ var DATA_GEAR_SLOT = [
   { id: "shoes", name: "鞋子" }
 ];
 var DATA_GEAR_RARITY = [
-  { name: "普通", color: "#8a8a8a" },
-  { name: "精良", color: "#3faf5a" },
-  { name: "优秀", color: "#3a7bd5" },
-  { name: "杰出", color: "#8a5ac2" },
-  { name: "史诗", color: "#e07a2a" }
+  // 【v1.192】color 是**图形色**（描边框/色条/光环）；textDark/textLight 是**文字色**。
+  //   本表原色是为"图形"调的高饱和色, 直接当文字用会在浅底/深底上不可读:
+  //     结算软卡底 #d6e5bb(亮) → 5/5 档 FAIL(2.11~3.66); 房间牌 #282b29(暗) → 3/5 FAIL。
+  //   与 v1.167 的 cardGold/cardTagNew 同范式: 图形保留鲜艳色, 文字另给安全色。
+  //   门槛: 两底均 >= 4.5:1(WCAG AA 正文), 实测 4.73~8.55。
+  { name: "普通", color: "#8a8a8a", textDark: "#606060", textLight: "#c8c8c8" },
+  { name: "精良", color: "#3faf5a", textDark: "#166b28", textLight: "#7ddc92" },
+  { name: "优秀", color: "#3a7bd5", textDark: "#245c9e", textLight: "#8ab6f2" },
+  { name: "杰出", color: "#8a5ac2", textDark: "#653a99", textLight: "#c2a3ea" },
+  { name: "史诗", color: "#e07a2a", textDark: "#96450c", textLight: "#f0a86a" }
 ];
 var DATA_GEAR = [
   { id: "pinebow", slot: "weapon", name: "松果弩", stat: "dmgPct", per: [0.04, 0.07, 0.11, 0.16, 0.24], chMin: 1 },
@@ -3127,6 +3132,7 @@ function chapterRewardView(ch, mode) {
     giftStat: def ? gearStatLine(def, rarMin) : "",
     giftRarName: rarD.name,
     giftRarColor: rarD.color,
+$1giftRarColorText: rarD.textDark,
     giftWear: "",
     giftKind: gift ? "preview" : "none",
     win: false,
@@ -3162,6 +3168,7 @@ function chapterRewardView(ch, mode) {
     view.giftWear = runSummary.gearGiftAuto ? "立刻穿上" : "入包";
     view.giftRarName = rarD.name;
     view.giftRarColor = rarD.color;
+$1view.giftRarColorText = rarD.textDark;
   } else if (!gift) {
     view.giftKind = "none";
   } else {
@@ -3375,6 +3382,7 @@ function roomRewardView(tierIdx, mode, extra) {
     bagRar: rarFloor,
     bagRarName: rarD.name,
     bagRarColor: rarD.color,
+$1bagRarColorText: rarD.textLight,
     bagBoostName: boostD.name,
     bagMiss: extra.bagMiss || "",
     gemKind: gemKind,
@@ -3399,6 +3407,7 @@ function roomRewardView(tierIdx, mode, extra) {
     rarD = DATA_GEAR_RARITY[view.bagRar] || rarD;
     view.bagRarName = rarD.name;
     view.bagRarColor = rarD.color;
+$1view.bagRarColorText = rarD.textLight;
     gems = roomGemStats(tier, view.speed);
     view.gemN = gems.n;
     view.gemXp = gems.xp;
@@ -24631,7 +24640,7 @@ function renderGame() {
     ctx.fillStyle = "#fff7e0";
     ctx.font = "bold 15px " + FONT_STACK;
     ctx.fillText("走进开战 " + Math.ceil(rpLeft) + "s", rp.x, rp.y + 28);
-    ctx.fillStyle = rpView.bagRarColor || "#ffe082";
+    ctx.fillStyle = rpView.bagRarColorText || rpView.bagRarColor || "#ffe082";  // 【v1.192】暗底用 textLight
     ctx.font = "bold 12px " + FONT_STACK;
     ctx.fillText(roomBagLine(rpView) + " · " + roomGemLine(rpView), rp.x, rp.y + 44);
     ctx.globalAlpha = 1;
@@ -29529,7 +29538,7 @@ function drawResultPanel(ctx, m) {
   ctx.fillText("局内装备 " + (runSummary.gearInRun | 0) + " 件已入账", cx, cardY + 64);
   ctx.font = "bold 15px " + FONT_STACK;
   if (runSummary.gearDrop) {
-    ctx.fillStyle = view.giftRarColor || "#c9a24b";
+    ctx.fillStyle = view.giftRarColorText || view.giftRarColor || "#c9a24b";  // 【v1.192】亮底用 textDark
     ctx.fillText("通关礼在上方三格 · " + (view.giftWear || "入账") + (view.giftStat ? (" · " + view.giftStat) : ""), cx, cardY + 96);
   } else {
     ctx.fillStyle = c.cardDesc;
