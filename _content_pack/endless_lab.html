@@ -96,6 +96,7 @@
       <button class="btn" id="btnStart" style="width:100%;margin:4px 0 6px">▶ 开始挑战</button>
       <button class="btn gray" id="btnLayers" style="width:100%;margin-bottom:10px">🎵 自适应分层：关</button>
       <div class="feed" id="feed"></div>
+      <div class="hud" id="weeklyHud" style="margin-bottom:6px"></div>
       <div class="note">英雄：开战前可切换（4 位，参数与被动真实生效——灵鹿 60s 自回 5%、雷羽鹰 45s 自动闪避、霜甲熊减伤 15%、焰心命中附灼烧）。阶段：w1–4 单元素巡林 → w5–9 双元素 → w10–14 三元素+精英 → w15+ 五元素狂潮。精英每 5 波（HP×6 必掉宝箱）、Boss 每 10 波。玩家固定火元素：打木 ×1.6 / 被木克打 ×0.6。里程碑 4/8/15 分钟给非货币称号（15 分钟=真挑战）。</div>
     </div>
   </div>
@@ -150,6 +151,34 @@ let curHero = "spirit_deer";
 let healT = 0, dodgeT = 0, dodgeReady = false;
 function hero(){ return HEROES[curHero]; }
 
+/* ===== 挑战修饰符（内联子集，与 data/challenge_mods.json 对齐）===== */
+const MODS = {
+  mod_fire_master: { cn:"元素大师·火", side:"player", effects:{fireDmgPct:30}, icon:"skill_icons/ab_fireball.png" },
+  mod_swift:       { cn:"迅捷之风", side:"player", effects:{moveSpdPct:20}, icon:"skill_icons/ab_dash.png" },
+  mod_greed:       { cn:"聚宝周", side:"player", effects:{coinGainPct:100}, icon:"vfx/fx_coin_burst.png" },
+  mod_spring:      { cn:"泉涌之愈", side:"player", effects:{healBoostPct:50}, icon:"vfx/fx_heal_burst.png" },
+  mod_horde:       { cn:"敌潮汹涌", side:"enemy", effects:{spawnRatePct:30}, icon:"vfx/fx_telegraph.png" },
+  mod_swift_enemy: { cn:"迅敌来袭", side:"enemy", effects:{enemySpdPct:15}, icon:"icons/st_haste.png" },
+  mod_ironwall:    { cn:"铁壁敌阵", side:"enemy", effects:{enemyHpPct:25}, icon:"icons/st_shield.png" },
+  mod_berserk:     { cn:"狂暴化", side:"enemy", effects:{enemyDmgPct:20}, icon:"icons/st_burn.png" }
+};
+let weeklyP = null, weeklyE = null, modsActive = false;
+function isoWeek(d){
+  var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  var dayNum = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - dayNum);
+  var yearStart = new Date(Date.UTC(t.getUTCFullYear(),0,1));
+  return Math.ceil((((t - yearStart) / 86400000) + 1) / 7);
+}
+(function pickWeekly(){
+  var wk = isoWeek(new Date()) + new Date().getFullYear() * 100;
+  var r = mulberry32(seedFrom("W" + wk));
+  var ps = Object.keys(MODS).filter(function(k){ return MODS[k].side === "player"; });
+  var es = Object.keys(MODS).filter(function(k){ return MODS[k].side === "enemy"; });
+  weeklyP = ps[Math.floor(r() * ps.length)];
+  weeklyE = es[Math.floor(r() * es.length)];
+})();
+
 /* ===== 公式（与 endless.json 公式字段一致）===== */
 function budget(w){ return Math.round(RULES.budgetBase + RULES.budgetLin*(w-1) + RULES.budgetQuad*(w-1)*(w-1)); }
 function hpMul(w){ return 1 + RULES.hpLin*(w-1) + RULES.hpQuad*(w-1)*(w-1); }
@@ -184,7 +213,8 @@ function spawnEnemy(key, opts){
   const e = ENEMIES[key];
   const mul = hpMul(st.wave);
   const isElite = opts && opts.elite;
-  const hp = Math.round(e.hp * mul * (isElite ? RULES.eliteHpMul : 1));
+  let hpMod = 1; if (modsActive && MODS[weeklyE].effects.enemyHpPct) hpMod += MODS[weeklyE].effects.enemyHpPct / 100;
+  const hp = Math.round(e.hp * mul * (isElite ? RULES.eliteHpMul : 1) * hpMod);
   const el = document.createElement("div");
   el.className="enemy";
   const size = e.size * (isElite?1.7:(key===RULES.bossKey?1:1));
@@ -206,7 +236,7 @@ function spawnEnemy(key, opts){
 function waveStart(){
   const p = phaseOf(st.wave);
   feed("🌊 第 "+st.wave+" 波（阶段"+p.id+" "+p.name+"）· 预算 "+budget(st.wave), true);
-  st.coins += coinsPerWave(st.wave);
+  st.coins += coinsPerWave(st.wave) * ((modsActive && MODS[weeklyP].effects.coinGainPct) ? (1 + MODS[weeklyP].effects.coinGainPct / 100) : 1);
   spawnQueue = budget(st.wave);
   if(st.wave % RULES.eliteEveryWaves === 0){
     const key = p.pool[Math.floor(Math.random()*p.pool.length)];
@@ -273,7 +303,8 @@ setInterval(function(){
   // 分批生成（每 tick 最多 2 只）
   if(spawnQueue>0 && enemies.length<RULES.maxOnScreen){
     const p=phaseOf(st.wave);
-    const n=Math.min(2, spawnQueue, RULES.maxOnScreen-enemies.length);
+    var spawnBoost = (modsActive && MODS[weeklyE].effects.spawnRatePct) ? (1 + MODS[weeklyE].effects.spawnRatePct / 100) : 1;
+    const n = Math.min(2 * spawnBoost, spawnQueue, RULES.maxOnScreen - enemies.length);
     for(let i=0;i<n;i++){ spawnEnemy(p.pool[Math.floor(Math.random()*p.pool.length)], {}); spawnQueue--; }
   }
 
@@ -295,6 +326,7 @@ setInterval(function(){
           return;
         }
         let dmg=Math.max(2, Math.round(6*dmgMul(st.wave)));
+        if (modsActive && MODS[weeklyE].effects.enemyDmgPct) dmg = Math.round(dmg * (1 + MODS[weeklyE].effects.enemyDmgPct / 100));
         if(hero().passive.dmgReducePct) dmg=Math.max(1, Math.round(dmg*(1-hero().passive.dmgReducePct/100)));
         st.hp-=dmg; st.invUntil=now+800;
         floatText(st.px,st.py,"-"+dmg,"#f8a8a8");
@@ -388,6 +420,18 @@ function renderHud(){
   document.getElementById("sEnemy").textContent=String(enemies.length);
   document.getElementById("hpTxt").textContent=Math.max(0,Math.round(st.hp))+"/"+st.hpMax;
   document.getElementById("hpBar").style.width=Math.max(0,st.hp/st.hpMax*100)+"%";
+  var wh = document.getElementById("weeklyHud");
+  if (wh && wh.dataset.init !== "1") {
+    wh.dataset.init = "1";
+    var lbl = MODS[weeklyP].cn + " + " + MODS[weeklyE].cn + (modsActive ? "（生效中）" : "（点击启用）");
+    wh.innerHTML = '<button class="hbtn' + (modsActive ? " sel" : "") + '" id="btnMods" style="flex:2">🎲 本周挑战：' + lbl + '</button>';
+    document.getElementById("btnMods").addEventListener("click", function () {
+      if (st.running) return;
+      modsActive = !modsActive;
+      wh.dataset.init = "0"; renderHud();
+      feed("🎲 本周挑战 " + (modsActive ? "启用" : "关闭") + "：" + MODS[weeklyP].cn + " + " + MODS[weeklyE].cn, true);
+    });
+  }
 }
 scene.addEventListener("pointermove", function(ev){
   const r=scene.getBoundingClientRect();

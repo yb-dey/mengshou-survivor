@@ -88,6 +88,7 @@ DATA_CN = {
     'heroes': '英雄图鉴', 'skills': '技能完整规格',
     'music_layers': '战斗分层自适应音乐',
     'decors': '场景装饰件',
+    'challenge_mods': '挑战修饰符系统',
 }
 PICKUP_CN = {
     'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',

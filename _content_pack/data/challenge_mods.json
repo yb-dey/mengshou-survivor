@@ -1,0 +1,65 @@
+{
+  "system": "挑战修饰符系统",
+  "version": 1,
+  "description": "《萌兽消消岛》全局挑战修饰符规格（纯设计数据，非游戏代码）。8 个修饰符按「玩家增益 × 敌人增强」成对设计：4 个玩家侧（元素大师/迅捷/聚宝/泉涌）+ 4 个敌人侧（敌潮/迅敌/铁壁/狂暴）。每周按 ISO 周数种子自动选中 1 玩家 + 1 敌人修饰符（同周一致、跨周轮换，可复现），为无尽模式提供「本周玩点」——是每周挑战的内容基础（成就/经济体系不变，只改变局内参数）。与 R37 平衡模拟同口径：修饰符改变的是变量起点，不改变难度曲线本身。",
+  "references": [
+    "Vampire Survivors/命运2 等的每周轮换挑战：固定周期 + 全局修饰符 + 专属奖励，制造「本周值得再开一局」的回访钩子",
+    "修饰符成对设计惯例：玩家增益与敌人增强同时出现，避免纯爽局或纯受苦"
+  ],
+  "rotation": {
+    "rule": "按 ISO 周数（ISO week number）做种子，加权随机抽 1 个玩家侧 + 1 个敌人侧修饰符；同一年同一周结果恒定（可复现）",
+    "pickPerWeek": "1 玩家侧 + 1 敌人侧",
+    "note": "种子算法与 R31 每日任务同源（seedFrom + mulberry32），实现见 endless_lab.html 修饰符选择器。"
+  },
+  "mods": {
+    "mod_fire_master": {
+      "cn": "元素大师·火", "side": "player", "tag": "元素",
+      "effects": { "fireDmgPct": 30 },
+      "icon": "skill_icons/ab_fireball.png", "sfx": "cp_sfx_elem_fire.wav",
+      "desc": "本周火元素伤害 +30%。火系英雄（焰心术士）的主场周。"
+    },
+    "mod_swift": {
+      "cn": "迅捷之风", "side": "player", "tag": "机动",
+      "effects": { "moveSpdPct": 20 },
+      "icon": "skill_icons/ab_dash.png", "sfx": "cp_sfx_dash.wav",
+      "desc": "本周移动速度 +20%。走位流与雷羽鹰的狂欢。"
+    },
+    "mod_greed": {
+      "cn": "聚宝周", "side": "player", "tag": "经济",
+      "effects": { "coinGainPct": 100 },
+      "icon": "vfx/fx_coin_burst.png", "sfx": "cp_sfx_coin.wav",
+      "desc": "本周森灵币产出 ×2（计入 economy.json kill/clear 口径的临时倍率，不改 faucet 总量设计——周挑战是阶段性放大，全流程期望仍由 base 倍率主导）。"
+    },
+    "mod_spring": {
+      "cn": "泉涌之愈", "side": "player", "tag": "生存",
+      "effects": { "healBoostPct": 50 },
+      "icon": "vfx/fx_heal_burst.png", "sfx": "cp_sfx_heal.wav",
+      "desc": "本周所有治疗效果 +50%（治愈果实/治疗技能/英雄自回）。生存流派友好周。"
+    },
+    "mod_horde": {
+      "cn": "敌潮汹涌", "side": "enemy", "tag": "数量",
+      "effects": { "spawnRatePct": 30 },
+      "icon": "vfx/fx_telegraph.png", "sfx": "cp_sfx_warning.wav",
+      "desc": "本周敌人生成速率 +30%。清场效率不足会被瞬间淹没。"
+    },
+    "mod_swift_enemy": {
+      "cn": "迅敌来袭", "side": "enemy", "tag": "速度",
+      "effects": { "enemySpdPct": 15 },
+      "icon": "icons/st_haste.png", "sfx": "cp_sfx_warning.wav",
+      "desc": "本周敌人移动速度 +15%。走位容错显著下降，风筝流压力测试。"
+    },
+    "mod_ironwall": {
+      "cn": "铁壁敌阵", "side": "enemy", "tag": "生命",
+      "effects": { "enemyHpPct": 25 },
+      "icon": "icons/st_shield.png", "sfx": "cp_sfx_debuff.wav",
+      "desc": "本周敌人生命 +25%。输出不足的构筑会被拖入持久战。"
+    },
+    "mod_berserk": {
+      "cn": "狂暴化", "side": "enemy", "tag": "伤害",
+      "effects": { "enemyDmgPct": 20 },
+      "icon": "icons/st_burn.png", "sfx": "cp_sfx_debuff.wav",
+      "desc": "本周敌人伤害 +20%。每一次碰撞都更疼，走位即生死。"
+    }
+  },
+  "balanceNote": "玩家侧增益 20–100%、敌人侧 15–30%：敌人侧数值刻意保守（全局生效），玩家侧弹性更大（可选玩点）。成对同周出现时总难度≈基线±10%，与 R37 校准的存活预期兼容。"
+}

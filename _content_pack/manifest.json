@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23 06:44:41",
+  "generated_at": "2026-09-23 06:54:36",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
@@ -9,7 +9,7 @@
     "pickups": 8,
     "hero_portraits": 4,
     "decors": 8,
-    "design_data": 15,
+    "design_data": 16,
     "audio": 47,
     "bgm": 7,
     "sfx": 33
@@ -591,6 +591,11 @@
       "key": "boss_phases",
       "cn": "BOSS 多阶段脚本",
       "bytes": 2256
+    },
+    {
+      "key": "challenge_mods",
+      "cn": "挑战修饰符系统",
+      "bytes": 4099
     },
     {
       "key": "economy",
