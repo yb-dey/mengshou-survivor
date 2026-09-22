@@ -174,6 +174,18 @@
 - **设计要点**：敌种 6 种（芽芽兔/火苗狐/水滴蛙/星羽鸟/石甲龟/森林古木）与主文件潜在敌种表一一对应（`element / role / hp`）；关卡元素分布与 §2.5 五元素克制链对齐（教学关单元素、后期关逼迫切元素）；Boss 三阶段机制（藤蔓召唤 → 范围践踏 → 缠绕+木刺 → 古木狂暴）随血量压缩冷却、混召多属性增援，形成「输出与生存终局考验」。
 - **校验**：两份 JSON 均为合法 JSON（`json.load` 通过）；`wave_chart.html` 由脚本生成（含 10 关卡片、难度曲线柱状、BOSS HP 三段分段条、3 阶段能力卡 + 冷却压缩对比）。
 
+## 2.7 BOSS 竞技场（Boss 阶段脚本 · 可玩校验场）
+
+> 把 §2.6 的 `data/boss_phases.json` **真正跑起来**的迷你 Boss 战（非游戏代码，纯前端，`file://` 双击即开），用于验证三阶段脚本在「可玩」形态下是否成立：阶段阈值、能力冷却、召唤增援、冷却压缩是否如规格所述联动。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `boss_arena.html` | 森林古木三阶段 Boss 战 | 点击 Boss / 召唤物输出（元素克制倍率结算），Boss 按 `boss_phases.json` 的冷却自动触发能力、按阈值切阶段、按 `summon` 混召增援；英雄有独立血条，Boss 倒下=胜利、英雄阵亡=失败 |
+
+- **机制对齐**：Boss 阶段切换按 `hpLow`（66% / 33%）触发；每阶段 `abilities` 按各自 `cooldown` 在 250ms tick 循环里自动释放（藤蔓召唤→范围践踏→藤蔓缠绕+木刺喷射→古木狂暴），后期阶段冷却数值更小（压缩）；`summon` 在阶段登场与每 8s 周期混召（芽芽兔/火苗狐/星羽鸟，受 6 只上限约束）；玩家选「攻击元素」后伤害按 §2.5 `element_matrix.json` 倍率结算（火 强克 木 Boss ×1.6）。
+- **资产复用**：英雄用 `spirit_deer`、Boss 用 `forest_ancient`、召唤物用 `sprout_bunny/flame_fox/star_bird`（均 `sprites_alpha/`）；能力触发播 `fx_telegraph` 预警圈 + 对应元素 `cp_sfx_hit_*`；通关/失败播 `cp_sfx_win/lose`。
+- **校验**：内联 `<script>` 经 `node --check` 语法校验通过（无 fetch，file:// 双击可用）；与 §2.6 规格在阶段阈值 / 能力冷却 / 召唤增援三处逐一对应。
+
 ## 3. 目录结构
 
 ```
@@ -190,6 +202,7 @@ _content_pack/
 ├── skill_icons_demo.html  # 技能 / 元素图标试看页（PNG base64 内联，13 个，按 元素徽章/技能图标 分组）
 ├── element_chart.html      # 元素克制环 + 倍率矩阵 + 技能冷却条（数据驱动，内联 SVG）
 ├── wave_chart.html         # 关卡波次 + BOSS 三阶段可视化（数据驱动，内联 SVG/HTML）
+├── boss_arena.html         # BOSS 竞技场（boss_phases.json 三阶段可玩校验场，纯前端 file:// 双击即开）
 ├── sprites/               # 原始生成图（RGB，未抠）
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
@@ -281,6 +294,7 @@ _content_pack/
 - 技能 / 元素图标：13/13 程序化生成成功并校验——均为 `colorType=6` RGBA（64×64），体积 1.6KB–4.6KB；逐张目检通过（叶片轴与中脉同向、星芒可见、面板元素色可辨、六边符印与圆盘/方面板三底盘不混淆）；试看页 `skill_icons_demo.html` 内联校验通过（13 张 `data:image/png`）。
 - 清单：`manifest.json` 由 `tools/build_manifest.py` 扫描真实目录生成（零依赖），含 8 精灵（尺寸 / PNG+WebP 体积）、24 VFX（尺寸 / 体积）、12 状态图标（尺寸 / 体积）、13 技能/元素图标（尺寸 / 体积 / 分组）、4 设计数值 JSON（字节数）、35 音频（格式 / 采样率 / 时长）；为 §4 接入主游戏的「脚本化索引」提供机器可读依据。
 - 设计数值：`data/element_matrix.json`、`data/skill_cooldowns.json`、`data/wave_design.json`、`data/boss_phases.json` 均为合法 JSON（`json.load` 通过）；`element_chart.html` 由 `tools/build_element_chart.py` 数据驱动生成，校验含 `<svg>` 节点、5×5 倍率矩阵（6 行）、8 技能冷却条；`wave_chart.html` 由 `tools/build_wave_chart.py` 数据驱动生成，校验含 10 关卡片、难度曲线柱状、BOSS HP 三段分段条、3 阶段能力卡 + 冷却压缩对比；五元素 5 环克制链对称（火→木→土→水→光→火），与 §2.4 元素徽章「强克」文案一致；关卡/Boss 规格与 §2.5 克制链、敌种表对齐（教学关单元素 → 后期逼迫切元素；Boss 三阶段随血量压缩冷却）。
+- 可玩校验：`boss_arena.html` 为 `data/boss_phases.json` 三阶段脚本的可玩校验场，内联 `<script>` 经 `node --check` 语法校验通过（file:// 双击可用，无 fetch）；阶段阈值（66% / 33%）、能力冷却（随阶段压缩）、召唤增援（阶段登场 + 每 8s 周期混召，6 只上限）与规格逐一对应；英雄/BOSS 血条独立，元素克制倍率（火 强克 木 Boss ×1.6）接入 §2.5 矩阵，复用 `sprites_alpha`/`vfx`/`audio` 真实资产。
 - 演练场机制深化：`playground.html` 已接入五元素系统——每个敌种带 `element` 属性并显示元素徽章，玩家选攻击元素后伤害按 `element_matrix.json` 倍率结算（强克 ×1.6 / 被克 ×0.6 / 同元素 ×0.85 / 中性 ×1.0），并启用该元素代表技能的冷却（`skill_cooldowns.json` 数据）；命中飘字显示克制倍率。脚本经 `node --check` 语法校验通过（内联数据，file:// 双击可用，无需 fetch）。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
@@ -309,5 +323,7 @@ _content_pack/
 18. ~~**五元素主题动机（元素身份听觉签名 · 音乐侧闭合）**~~ ✅ 已交付 5 条五元素主题动机（`cp_sfx_elem_fire/water/earth/light/wood`，4.00s–5.71s，纯标准库合成，无缝短循环）：火=明亮上行五声 sparkle、水=柔 sine 涟漪滑音+气泡、土=厚重低频脉冲、光=闪亮铃音琶音+shimmer、木=有机叩击 rustle。它们与 R18 的「元素命中 SFX（cp_sfx_hit_*）」定位不同——命中 SFX 是战斗瞬时反馈，主题动机是**元素身份的长期听觉签名**；二者共同构成「五元素听觉系统」的层次。`synth_audio.py` 加 `_loop_crossfade` 辅助 + 5 合成函数、`audio_demo.html` 加 5 试听卡（共 35 条）、`playground.html` 在选攻击元素时播对应动机作提示、`README/manifest/index` 同步；audio 30→35（6 BGM + 29 SFX），为 §4 接入主游戏时按元素分发 BGM/提示音提供素材底座。
 
 19. ~~**关卡波次与 BOSS 多阶段（设计规格 · 关卡/Boss 数据底座）**~~ ✅ 已交付 2 份设计数值 JSON（`data/wave_design.json` 10 关 × 多波次敌种组合 + 元素分布，难度曲线 单元素教学→双元素混编→五元素精英→BOSS；`data/boss_phases.json` 森林古木三阶段脚本，baseHp 200，阈值 66%/33%，冷却随阶段压缩 + 混召多属性增援）+ 数据驱动可视化参考页 `wave_chart.html`（关卡地图卡片 + 难度曲线柱状 + BOSS HP 三段分段条 + 3 阶段能力卡 + 冷却压缩对比）；`tools/build_wave_chart.py` 读两份 JSON 并复用 `data/element_matrix.json` 五元素配色纯标准库渲染，零依赖、不卡机；与 §2.5 克制链、敌种表对齐，为 §4 接入主游戏时的波次生成与 Boss AI 状态机提供数据底座。
+
+20. ~~**BOSS 竞技场（Boss 阶段脚本 · 可玩校验场）**~~ ✅ 已交付 `boss_arena.html`（纯前端，`file://` 双击即开，无 fetch）：把 §2.6 的 `data/boss_phases.json` 三阶段真跑起来的迷你 Boss 战——Boss 按 `hpLow`（66%/33%）切阶段、每阶段 `abilities` 按各自 `cooldown` 在 250ms tick 自动释放（藤蔓召唤→范围践踏→藤蔓缠绕+木刺喷射→古木狂暴，后期冷却压缩）、`summon` 在阶段登场与每 8s 周期混召（6 只上限）；玩家选攻击元素后伤害按 §2.5 `element_matrix.json` 倍率结算（火 强克 木 Boss ×1.6）。资产复用 `sprites_alpha`（灵鹿祭司/森林古木/芽芽兔/火苗狐/星羽鸟）+ `vfx/fx_telegraph` 预警圈 + `cp_sfx_hit_*`/`cp_sfx_win/lose`；内联 `<script>` 经 `node --check` 语法校验通过；`index.html` 加 🌳 导航卡、`README` §2.7/§3/§6/§7 同步。设计规格→可视化→可玩校验 闭环，为 §4 接入主游戏时的 Boss AI 提供端到端验证样本。
 
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

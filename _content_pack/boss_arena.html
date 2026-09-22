@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · BOSS 竞技场（森林古木）</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; --ink:#0f2f1f;
+         --p1:#3fa66a; --p2:#e8c463; --p3:#e5484d; }
+  *{ box-sizing:border-box;margin:0;padding:0; }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:24px 16px; display:flex; flex-direction:column; align-items:center; }
+  h1{ font-size:26px; letter-spacing:2px; margin-bottom:6px; text-shadow:0 2px 10px rgba(0,0,0,.45) }
+  .hint{ opacity:.78; font-size:13px; max-width:820px; text-align:center; line-height:1.6; margin-bottom:14px }
+  .bar{ display:flex; gap:12px; align-items:center; margin-bottom:14px; flex-wrap:wrap; justify-content:center }
+  .btn{ background:linear-gradient(160deg,#1f5c3a,#143e28); border:1px solid rgba(232,196,99,.4);
+    color:var(--cream); padding:9px 16px; border-radius:10px; cursor:pointer; font-size:14px; transition:transform .15s }
+  .btn:hover{ transform:translateY(-2px) }
+  .btn.on{ background:linear-gradient(160deg,#e8c463,#caa23f); color:var(--ink) }
+  .elems{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center }
+  .elem{ position:relative; width:44px; height:44px; border-radius:12px; border:2px solid rgba(255,255,255,.25);
+    background:rgba(15,47,31,.6); color:var(--cream); cursor:pointer; font-size:19px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; transition:transform .12s }
+  .elem:hover{ transform:translateY(-2px) }
+  .elem .cd{ position:absolute; inset:0; background:rgba(0,0,0,.62); border-radius:10px; color:#fff;
+    font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; pointer-events:none }
+  .elem.on{ box-shadow:0 0 0 3px var(--gold) inset; }
+  .elem.cd-active{ opacity:.5; cursor:not-allowed }
+
+  #bossbar{ width:100%; max-width:820px; background:rgba(15,47,31,.5); border:1px solid rgba(159,224,180,.25);
+    border-radius:14px; padding:14px 16px; margin-bottom:14px }
+  .bosshead{ display:flex; align-items:center; gap:10px; margin-bottom:8px }
+  .bosshead b{ font-size:17px; color:var(--gold) }
+  .bosshead .ph{ margin-left:auto; font-size:13px; opacity:.9; padding:3px 12px; border-radius:20px; background:rgba(63,166,106,.25) }
+  .hpwrap{ width:100%; height:22px; background:rgba(0,0,0,.4); border-radius:11px; overflow:hidden; position:relative }
+  .hp{ height:100%; width:100%; background:linear-gradient(90deg,var(--p1),var(--p3)); transition:width .25s }
+  .mark{ position:absolute; top:0; bottom:0; width:2px; background:rgba(255,255,255,.55) }
+  .note{ font-size:12px; opacity:.72; margin-top:8px; line-height:1.5; min-height:18px }
+
+  #arena{ width:100%; max-width:820px; display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap }
+  .hero{ flex:0 0 150px; display:flex; flex-direction:column; align-items:center; gap:8px;
+    background:rgba(15,47,31,.5); border:1px solid rgba(159,224,180,.25); border-radius:14px; padding:12px }
+  .hero .ring{ width:120px; height:120px; border-radius:50%; background:radial-gradient(circle at 50% 40%, rgba(232,196,99,.25), rgba(63,166,106,.1));
+    display:flex; align-items:center; justify-content:center; border:2px solid rgba(232,196,99,.5) }
+  .hero img{ width:108px; height:108px; animation:bob 1.8s ease-in-out infinite }
+  .hero .nm{ font-weight:700; color:var(--gold) }
+  .hero .hphp{ width:100%; height:12px; background:rgba(0,0,0,.4); border-radius:6px; overflow:hidden; margin-top:4px }
+  .hero .hphp i{ display:block; height:100%; width:100%; background:linear-gradient(90deg,#6fe3c0,#3fa6a6); transition:width .25s }
+  .bossbox{ flex:1 1 300px; display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:rgba(15,47,31,.5); border:1px solid rgba(232,99,99,.3); border-radius:14px; padding:12px; cursor:crosshair }
+  .bossbox .bimg{ width:160px; height:160px; animation:bob 2.4s ease-in-out infinite }
+  .bossbox .bnm{ font-weight:700; color:var(--gold) }
+  .bossbox .phs{ font-size:12px; opacity:.8 }
+  .bossbox.hit{ animation:shake .2s }
+  .minions{ flex:1 1 200px; display:flex; flex-direction:column; gap:10px }
+  .minions h3{ font-size:14px; opacity:.85; margin-bottom:2px }
+  .mgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:10px }
+  .minion{ position:relative; background:rgba(15,47,31,.6); border:1px solid rgba(159,224,180,.22);
+    border-radius:12px; padding:6px; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; transition:transform .12s }
+  .minion:hover{ transform:translateY(-2px) }
+  .minion.dead{ opacity:0; transform:scale(.6); pointer-events:none; transition:opacity .4s, transform .4s }
+  .minion img{ width:64px; height:64px; animation:bob 2.1s ease-in-out infinite }
+  .minion .mnm{ font-size:12px; font-weight:600 }
+  .minion .mhp{ width:100%; height:6px; background:rgba(0,0,0,.35); border-radius:3px; overflow:hidden }
+  .minion .mhp i{ display:block; height:100%; background:linear-gradient(90deg,#6fe39a,#3fa66a); transition:width .2s }
+  .vfx{ position:absolute; left:50%; top:40%; width:90px; height:90px; margin:-45px 0 0 -45px; pointer-events:none; animation:pop .5s ease-out forwards; z-index:5 }
+  .dmg{ position:absolute; left:50%; top:18%; transform:translateX(-50%); color:#fff; font-weight:800; font-size:17px; text-shadow:0 1px 3px #000; pointer-events:none; animation:rise .7s ease-out forwards; z-index:6 }
+  .dmg.crit{ color:var(--gold); font-size:23px }
+  .floatmove{ position:fixed; left:50%; top:24%; transform:translateX(-50%); background:rgba(15,47,31,.9); border:1px solid var(--gold); color:var(--gold); padding:6px 16px; border-radius:10px; font-size:14px; font-weight:700; z-index:80; animation:rise .9s ease-out forwards }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-7px) } }
+  @keyframes pop{ 0%{ transform:scale(.4); opacity:0 } 25%{ transform:scale(1.15); opacity:1 } 100%{ transform:scale(.9); opacity:0 } }
+  @keyframes rise{ 0%{ opacity:0; transform:translate(-50%,6px) } 20%{ opacity:1 } 100%{ opacity:0; transform:translate(-50%,-26px) } }
+  @keyframes shake{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+  footer{ margin-top:22px; font-size:12px; opacity:.5; text-align:center; line-height:1.7; max-width:800px }
+</style>
+</head>
+<body>
+  <h1>🌳 森灵萌兽 · BOSS 竞技场</h1>
+  <div class="hint">把 <b>data/boss_phases.json</b>（森林古木三阶段）<b>真正跑起来</b>的迷你 Boss 战：上方血条按 66% / 33% 阈值切阶段，每个阶段的能力按其冷却自动触发（藤蔓召唤 → 范围践踏 → 缠绕+木刺 → 古木狂暴，冷却随阶段压缩、混召多属性增援）。先选下方「攻击元素」（火 强克 木 Boss ×1.6），再点 Boss 或召唤物输出；撑到 Boss 倒下即胜利。本页纯前端，双击即开，资产走相对路径。</div>
+  <div class="bar">
+    <button class="btn" id="start">⚔️ 开始战斗</button>
+    <button class="btn" id="bgm">🎵 森林 BGM</button>
+    <div class="elems" id="elems"></div>
+  </div>
+
+  <div id="bossbar">
+    <div class="bosshead"><b id="bossName">森林古木</b><span class="ph" id="phaseLbl">阶段 1</span></div>
+    <div class="hpwrap"><div class="hp" id="bossHp"></div>
+      <div class="mark" style="left:66%"></div><div class="mark" style="left:33%"></div></div>
+    <div class="note" id="phaseNote"></div>
+  </div>
+
+  <div id="arena">
+    <div class="hero">
+      <div class="ring"><img src="sprites_alpha/spirit_deer.png" alt="灵鹿祭司"></div>
+      <div class="nm">灵鹿祭司</div>
+      <div class="tag" style="font-size:11px;opacity:.7">你的英雄</div>
+      <div class="hphp"><i id="heroHp"></i></div>
+    </div>
+    <div class="bossbox" id="bossbox">
+      <img class="bimg" src="sprites_alpha/forest_ancient.png" alt="森林古木">
+      <div class="bnm">森林古木 👑</div>
+      <div class="phs">木属性 · 基础 HP 200</div>
+    </div>
+    <div class="minions">
+      <h3>召唤物 <small id="minCount" style="opacity:.6"></small></h3>
+      <div class="mgrid" id="mgrid"></div>
+    </div>
+  </div>
+
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>
+  本页为 Boss 阶段脚本（data/boss_phases.json）的<b>可玩校验场</b>：阶段阈值 / 能力冷却 / 召唤增援 / 冷却压缩均与规格一致；伤害按 data/element_matrix.json 五元素倍率结算。不修改也不依赖主游戏文件，与 GROK 路线零冲突。</footer>
+
+<script>
+  // ===== 五元素系统（与 data/element_matrix.json 一致；file:// 下内联，不 fetch）=====
+  const ELEMENTS = {
+    fire:{cn:'火',color:'#ff7a3c'}, water:{cn:'水',color:'#5ab6ff'},
+    earth:{cn:'土',color:'#8c6a40'}, light:{cn:'光',color:'#ffd740'}, wood:{cn:'木',color:'#66d957'},
+  };
+  const CYCLE = { fire:'wood', wood:'earth', earth:'water', water:'light', light:'fire' };
+  const MUL = { strong:1.6, weak:0.6, same:0.85, neutral:1.0 };
+  const CD  = { fire:1.2, water:3.0, earth:8.0, light:4.0, wood:5.0 };
+  function rel(a,d){
+    if(a===d) return {k:'same',v:MUL.same};
+    if(CYCLE[a]===d) return {k:'strong',v:MUL.strong};
+    if(CYCLE[d]===a) return {k:'weak',v:MUL.weak};
+    return {k:'neutral',v:MUL.neutral};
+  }
+  // ===== Boss 阶段脚本（内联自 data/boss_phases.json）=====
+  const BOSS = {
+    cn:'森林古木', element:'wood', baseHp:200,
+    phases:[
+      { phase:1, hpLow:66,
+        abilities:[ {name:'藤蔓召唤',element:'wood',cooldown:8,cn:'召唤木小兵掩护'},
+                    {name:'范围践踏',element:'earth',cooldown:6,cn:'地面 AoE 震荡'} ],
+        summon:[{key:'sprout_bunny',count:3}],
+        notes:'开局阶段：周期性召唤芽芽兔掩护，并释放范围践踏逼走位。优先清理小兵再集火 Boss。' },
+      { phase:2, hpLow:33,
+        abilities:[ {name:'藤蔓缠绕',element:'wood',cooldown:7,cn:'定身玩家'},
+                    {name:'范围践踏',element:'earth',cooldown:5,cn:'高频 AoE'},
+                    {name:'木刺喷射',element:'wood',cooldown:4,cn:'定向弹幕'} ],
+        summon:[{key:'sprout_bunny',count:2},{key:'flame_fox',count:2}],
+        notes:'狂暴前奏：锁定技（缠绕）加入，AoE 频率提高，开始混召火属性增援，迫使频繁切换攻击元素。' },
+      { phase:3, hpLow:0,
+        abilities:[ {name:'古木狂暴',element:'wood',cooldown:3,cn:'全屏震击'},
+                    {name:'范围践踏',element:'earth',cooldown:4,cn:'高频 AoE'},
+                    {name:'木刺喷射',element:'wood',cooldown:3,cn:'密集弹幕'} ],
+        summon:[{key:'sprout_bunny',count:3},{key:'flame_fox',count:2},{key:'star_bird',count:2}],
+        notes:'最终狂暴：技能冷却大幅压缩，全屏震击 + 密集弹幕 + 三属性混召，是输出与生存的终局考验。' },
+    ]
+  };
+  // ===== 召唤物花名册（element 取自五元素系统）=====
+  const MINI = {
+    sprout_bunny:{cn:'芽芽兔',element:'wood',hp:30},
+    flame_fox:{cn:'火苗狐',element:'fire',hp:36},
+    star_bird:{cn:'星羽鸟',element:'light',hp:44},
+  };
+  const HIT_VFX = ['fx_hit_spark.png','fx_slash.png','fx_star.png'];
+  const KILL_VFX = ['fx_explosion.png','fx_coin_burst.png'];
+
+  let curElem='fire', bossHp=200, heroHp=100, phaseIdx=0, running=false, loop=null;
+  const cdUntil={}, elemBtns={};
+  const bossHpEl=document.getElementById('bossHp');
+  const heroHpEl=document.getElementById('heroHp');
+  const phaseLbl=document.getElementById('phaseLbl');
+  const phaseNote=document.getElementById('phaseNote');
+  const bossbox=document.getElementById('bossbox');
+  const mgrid=document.getElementById('mgrid');
+  const minCount=document.getElementById('minCount');
+
+  function audio(src){ const a=new Audio(src); a.volume=0.55; return a; }
+  function playSfx(k){ audio('audio/'+k).play().catch(()=>{}); }
+  function spawnVfx(parent,file){
+    const img=document.createElement('img'); img.className='vfx'; img.src='vfx/'+file;
+    img.onanimationend=()=>img.remove(); parent.appendChild(img);
+  }
+  function floatDmg(parent,txt,crit){
+    const d=document.createElement('div'); d.className='dmg'+(crit?' crit':''); d.textContent=txt;
+    d.onanimationend=()=>d.remove(); parent.appendChild(d);
+  }
+  function floatMove(txt){
+    const d=document.createElement('div'); d.className='floatmove'; d.textContent=txt;
+    d.onanimationend=()=>d.remove(); document.body.appendChild(d);
+  }
+  function banner(txt){
+    const b=document.createElement('div');
+    b.style.cssText='position:fixed;left:50%;top:34%;transform:translateX(-50%);background:rgba(15,47,31,.94);border:2px solid var(--gold);color:var(--gold);padding:16px 30px;border-radius:14px;font-size:24px;font-weight:800;z-index:99';
+    b.textContent=txt; document.body.appendChild(b);
+    setTimeout(()=>b.remove(),2400);
+  }
+
+  // 元素选择栏
+  function buildElems(){
+    const wrap=document.getElementById('elems'); wrap.innerHTML='';
+    Object.keys(ELEMENTS).forEach(k=>{
+      const b=document.createElement('div');
+      b.className='elem'+(k===curElem?' on':''); b.style.borderColor=ELEMENTS[k].color;
+      b.innerHTML=ELEMENTS[k].cn+'<span class="cd"></span>'; b.title=ELEMENTS[k].cn+'元素 · 攻击冷却 '+CD[k]+'s';
+      b.addEventListener('click',()=>{ curElem=k; document.querySelectorAll('.elem').forEach(x=>x.classList.remove('on')); b.classList.add('on'); });
+      elemBtns[k]=b; wrap.appendChild(b);
+    });
+  }
+  function refreshElem(a){
+    const b=elemBtns[a]; if(!b) return;
+    const remain=(cdUntil[a]||0)-performance.now();
+    if(remain>0){ b.classList.add('cd-active'); b.querySelector('.cd').textContent=(remain/1000).toFixed(1);
+      b._raf=requestAnimationFrame(()=>refreshElem(a)); }
+    else { b.classList.remove('cd-active'); const c=b.querySelector('.cd'); if(c) c.textContent='';
+      if(b._raf) cancelAnimationFrame(b._raf); }
+  }
+  function flashCD(a){ const b=elemBtns[a]; if(!b) return;
+    b.animate([{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'translateX(0)'}],{duration:160}); }
+
+  // 玩家攻击 Boss / 召唤物（带元素倍率 + 冷却）
+  function playerAttack(target, hitEl, parentEl, isBoss){
+    const now=performance.now();
+    if(cdUntil[curElem] && now<cdUntil[curElem]){ flashCD(curElem); return; }
+    const r=rel(curElem, target.element);
+    const crit=Math.random()<0.22;
+    let dmg=(crit?1.8:1)*(10+Math.floor(Math.random()*10))|0;
+    dmg=Math.max(1,Math.round(dmg*r.v));
+    target.hp-=dmg;
+    spawnVfx(parentEl, HIT_VFX[Math.floor(Math.random()*HIT_VFX.length)]);
+    const tag = r.k==='strong' ? ' ×'+r.v.toFixed(2)+' 克!' : (r.k==='weak'?' ×'+r.v.toFixed(2):(r.k==='same'?' ×'+r.v.toFixed(2):''));
+    floatDmg(parentEl, '-'+dmg+tag, crit||r.k==='strong');
+    playSfx('cp_sfx_hit_'+target.element+'.wav');
+    cdUntil[curElem]=now+CD[curElem]*1000; refreshElem(curElem);
+    const pct=Math.max(0, target.hp/target.max)*100; hitEl.style.width=pct+'%';
+    if(isBoss){
+      if(pct<40) hitEl.style.background='linear-gradient(90deg,#f0a04b,#e06a2c)';
+      checkPhase();
+      if(target.hp<=0) win();
+    } else {
+      if(target.hp<=0){ target.card.classList.add('dead'); KILL_VFX.forEach(f=>spawnVfx(parentEl,f)); playSfx('cp_sfx_kill.wav'); removeMinion(target); }
+    }
+  }
+
+  // 召唤物
+  let minions=[];
+  function spawnMinion(key){
+    if(minions.length>=6) return;
+    const m=Object.assign({}, MINI[key]); m.max=m.hp; m.nextAt=performance.now()+2500+Math.random()*1500;
+    const card=document.createElement('div'); card.className='minion';
+    card.innerHTML='<img src="sprites_alpha/'+key+'.png" alt="'+m.cn+'">'+
+      '<div class="mnm">'+m.cn+'</div><div class="mhp"><i style="width:100%"></i></div>';
+    card.addEventListener('click',()=>{ if(m.dead) return; m.card=card; playerAttack(m, card.querySelector('.mhp i'), card, false); });
+    mgrid.appendChild(card); m.card=card; minions.push(m); minCount.textContent='×'+minions.length;
+    playSfx('cp_sfx_summon.wav');
+  }
+  function spawnSummon(list){
+    if(!list) return; list.forEach(s=>{ for(let i=0;i<s.count;i++) spawnMinion(s.key); });
+  }
+  function removeMinion(m){ minions=minions.filter(x=>x!==m); minCount.textContent='×'+minions.length; }
+
+  // 阶段切换
+  function checkPhase(){
+    while(phaseIdx<BOSS.phases.length-1 && bossHp<=BOSS.phases[phaseIdx].hpLow){
+      enterPhase(phaseIdx+1);
+    }
+  }
+  function enterPhase(i){
+    phaseIdx=i; const ph=BOSS.phases[i];
+    phaseLbl.textContent='阶段 '+ph.phase;
+    phaseNote.textContent='阶段 '+ph.phase+'：'+ph.notes;
+    const col = i===0?'var(--p1)':(i===1?'var(--p2)':'var(--p3)');
+    phaseLbl.style.background = i===0?'rgba(63,166,106,.25)':(i===1?'rgba(232,196,99,.25)':'rgba(229,72,77,.25)');
+    bossbox.style.borderColor = i===0?'rgba(159,224,180,.3)':(i===1?'rgba(232,196,99,.5)':'rgba(229,72,77,.6)');
+    bossbox.style.boxShadow = '0 0 0 1px '+col+' inset';
+    banner('🌳 进入 '+ph.phase+' 阶段！');
+    spawnSummon(ph.summon);           // 阶段登场增援
+    lastSummon=performance.now();
+  }
+
+  // Boss 自动 AI 循环
+  let lastSummon=0, abilityLast={};
+  function tick(){
+    if(!running) return;
+    const now=performance.now(); const ph=BOSS.phases[phaseIdx];
+    // 能力触发（按冷却）
+    ph.abilities.forEach(a=>{
+      const key=a.name;
+      if(now-(abilityLast[key]||0) >= a.cooldown*1000){
+        abilityLast[key]=now;
+        bossAttack(a);
+      }
+    });
+    // 周期混召增援
+    if(now-lastSummon >= 8000){ lastSummon=now; spawnSummon(ph.summon); }
+    // 召唤物攻击英雄
+    minions.forEach(m=>{
+      if(m.dead) return;
+      if(now>=m.nextAt){ m.nextAt=now+2500+Math.random()*1500; hitHero(4+Math.floor(Math.random()*5), m.element); }
+    });
+  }
+  function bossAttack(a){
+    spawnVfx(bossbox, 'fx_telegraph.png');        // 预警圈
+    setTimeout(()=>{ spawnVfx(document.querySelector('.hero'), HIT_VFX[Math.floor(Math.random()*HIT_VFX.length)]); }, 260);
+    floatMove('Boss · '+a.name);
+    playSfx('cp_sfx_hit_'+a.element+'.wav');
+    hitHero(5+Math.floor(Math.random()*6), a.element);
+  }
+  function hitHero(dmg, el){
+    if(!running) return;
+    heroHp=Math.max(0, heroHp-dmg);
+    heroHpEl.style.width=(heroHp/100*100)+'%';
+    if(heroHp<=0) lose();
+  }
+
+  function win(){
+    running=false; if(loop) clearInterval(loop);
+    banner('🏆 击败森林古木！通关'); playSfx('cp_sfx_win.wav');
+    setTimeout(()=>playSfx('cp_sfx_coin.wav'),200);
+  }
+  function lose(){
+    running=false; if(loop) clearInterval(loop);
+    banner('💀 英雄倒下……重试一次'); playSfx('cp_sfx_lose.wav');
+  }
+
+  // 点击 Boss 输出（直接操作全局 bossHp，与阶段阈值/召唤逻辑一致）
+  function attackBoss(){
+    if(!running) return;
+    const now=performance.now();
+    if(cdUntil[curElem] && now<cdUntil[curElem]){ flashCD(curElem); return; }
+    const r=rel(curElem, BOSS.element);
+    const crit=Math.random()<0.22;
+    let dmg=(crit?1.8:1)*(10+Math.floor(Math.random()*10))|0;
+    dmg=Math.max(1,Math.round(dmg*r.v));
+    bossHp-=dmg;
+    spawnVfx(bossbox, HIT_VFX[Math.floor(Math.random()*HIT_VFX.length)]);
+    const tag=r.k==='strong'?' ×'+r.v.toFixed(2)+' 克!':(r.k==='weak'?' ×'+r.v.toFixed(2):(r.k==='same'?' ×'+r.v.toFixed(2):''));
+    floatDmg(bossbox,'-'+dmg+tag, crit||r.k==='strong');
+    playSfx('cp_sfx_hit_'+BOSS.element+'.wav');
+    cdUntil[curElem]=now+CD[curElem]*1000; refreshElem(curElem);
+    const pct=Math.max(0,bossHp/200*100); bossHpEl.style.width=pct+'%';
+    if(pct<40) bossHpEl.style.background='linear-gradient(90deg,#f0a04b,#e06a2c)';
+    checkPhase(); if(bossHp<=0) win();
+  }
+  bossbox.onclick=()=>{ if(!running) return; bossbox.classList.remove('hit'); void bossbox.offsetWidth; bossbox.classList.add('hit'); attackBoss(); };
+
+  function start(){
+    bossHp=200; heroHp=100; phaseIdx=0; minions=[]; abilityLast={}; lastSummon=0;
+    mgrid.innerHTML=''; minCount.textContent='';
+    bossHpEl.style.width='100%'; bossHpEl.style.background='linear-gradient(90deg,var(--p1),var(--p3))';
+    heroHpEl.style.width='100%';
+    phaseLbl.textContent='阶段 1'; phaseLbl.style.background='rgba(63,166,106,.25)';
+    phaseNote.textContent='阶段 1：'+BOSS.phases[0].notes;
+    bossbox.style.borderColor='rgba(159,224,180,.3)'; bossbox.style.boxShadow='0 0 0 1px rgba(159,224,180,.3) inset';
+    spawnSummon(BOSS.phases[0].summon);
+    running=true;
+    if(loop) clearInterval(loop); loop=setInterval(tick,250);
+    banner('🌳 森林古木 苏生！');
+  }
+
+  buildElems();
+  document.getElementById('start').addEventListener('click', start);
+  let bgmOn=false, bgmAudio=null;
+  document.getElementById('bgm').addEventListener('click',(ev)=>{
+    const btn=ev.currentTarget;
+    if(!bgmOn){ bgmAudio=new Audio('audio/cp_bgm_boss.wav'); bgmAudio.loop=true; bgmAudio.volume=0.5; bgmAudio.play().catch(()=>{}); btn.classList.add('on'); btn.textContent='🎵 停止 BGM'; bgmOn=true; }
+    else { bgmAudio.pause(); btn.classList.remove('on'); btn.textContent='🎵 森林 BGM'; bgmOn=false; }
+  });
+</script>
+</body>
+</html>

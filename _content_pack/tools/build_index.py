@@ -135,6 +135,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="wave_chart.html" target="_blank">
       <div class="ico">🗺️</div><div class="t">关卡波次 / BOSS 阶段</div>
       <div class="d">10 关难度曲线（单→双→五元素）+ 森林古木三阶段 Boss 状态机，设计参考。</div></a>
+    <a class="ncard" href="boss_arena.html" target="_blank">
+      <div class="ico">🌳</div><div class="t">BOSS 竞技场</div>
+      <div class="d">把 boss_phases.json 三阶段真跑起来的迷你 Boss 战：阶段阈值 / 能力冷却 / 召唤增援。</div></a>
     <a class="ncard" href="audio_demo.html" target="_blank">
       <div class="ico">🎵</div><div class="t">音频试听</div>
       <div class="d">{len(audio)} 条音频（{len(bgm)} BGM 可循环 + {len(sfx)} SFX），单击即听。</div></a>
