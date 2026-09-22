@@ -329,6 +329,17 @@
 
 - **消费点**：`endless_lab.html`「🎵 自适应分层」开关——三轨同播，tick 内按场上实时敌数（含生成队列/Boss 精英在场判定）驱动 L2/L3 音量渐变（滞回 6/8 防抖），**真机自适应混音演示**；`audio_demo.html` 加 3 试听卡（47 条全覆盖）。
 - **校验**：三轨实测时长 33.1034s 完全一致（差 <0.001s）、峰值均 85%、RMS 8.2–22.4%；`data/music_layers.json` 合法且三文件存在、时长与 base 一致；两页面 `node --check` 通过；`music_layers.html` 0 占位符。
+## 2.19 场景装饰件（8 个程序化布景 · 本轮新增）
+
+> 战场氛围的视觉层：8 个 96×96 RGBA 程序化装饰件（双草丛/灌木/树/石头/两种花/发光蘑菇）——低饱和森林配色、无描边强调的远景感，与 pickups（高饱和小物件）/sprites（角色）/icons（圆牌）/hero_portraits（徽章）区分：**decors = 战场布景**。已接入 `endless_lab.html` 场景装饰层（初始化随机撒 14 个，z-index 在角色/敌人之下，随机缩放 0.6–1.1×），让无尽战场有「森林活着」的感觉。全部纯标准库生成（gen_decors.py：ell 有机椭圆叠加 + blade 弯草叶 + tri 多面石头），零外部素材。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `decors/*.png` | 8 个装饰件 | 96×96 RGBA 真透底（非空行 39–84%，布景稀疏合理）；发光蘑菇与震地菇道具形成「蘑菇生态」视觉呼应 |
+| `tools/gen_decors.py` | 装饰生成器 | ell/blade/tri 三原语组合，JOBS 表 8 函数 |
+
+- **消费点**：`endless_lab.html` 场景装饰层（scatterDecors 初始化随机撒布）。
+- **校验**：8/8 均 96×96 `colorType=6` RGBA；endless_lab 装饰层 `node --check` 通过。
 ## 3. 目录结构
 
 ```
@@ -413,6 +424,8 @@ _content_pack/
 ├── skill_icons/           # 技能 / 元素图标（RGBA 真透底，六边符印 + 圆角方面板双底盘）
 ├── pickups/               # 拾取物精灵（RGBA 真透底，小物件视觉系）
 ├── hero_portraits/        # 英雄徽章头像（RGBA 真透底，圆形徽章+元素色双环）
+├── decors/                # 场景装饰件（RGBA 真透底，低饱和布景系）
+│   └── decor_*.png（8 个：双草丛/灌木/树/石头/两种花/发光蘑菇）
 │   └── portrait_*.png（4 个：灵鹿祭司/雷羽鹰/霜甲熊/焰心术士）
 │   └── pickup_*.png（8 个：治愈果实/金币袋/经验晶露/磁石/震地菇/灵盾花/幸运骰/宝箱）
 │   ├── el_*.png（5 个元素徽章）
@@ -457,7 +470,8 @@ _content_pack/
     ├── build_ambience_chart.py # 由 data/ambience.json 生成 双通道 + 场景映射参考页
     ├── build_hero_chart.py   # 由 data/heroes.json 生成 英雄对比参考页
     ├── build_skills_chart.py # 由 data/skills.json 生成 技能规格参考页
-    └── build_music_layers.py # 由 data/music_layers.json 生成 分层音乐参考页
+    ├── build_music_layers.py # 由 data/music_layers.json 生成 分层音乐参考页
+    └── gen_decors.py         # 场景装饰件生成（纯标准库，ell/blade/tri 原语）
     ├── gen_hero_portraits.py # 英雄徽章生成（纯标准库，复用 gen_vfx.Canvas）
     ├── sim_balance.py        # 数值平衡蒙特卡洛模拟器（seed 固定可复现，0.9s）
     ├── sim_result.json       # 模拟结果（endless/builds/economy 三组）
@@ -514,7 +528,7 @@ _content_pack/
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵 + 4 枚英雄徽章）+ 音乐（7 BGM + 33 SFX + 4 环境音 + 3 战斗分层）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（15 份 JSON）+ 可视化参考页与可玩校验场（13 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵 + 4 枚英雄徽章 + 8 个场景装饰件）+ 音乐（7 BGM + 33 SFX + 4 环境音 + 3 战斗分层）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（15 份 JSON）+ 可视化参考页与可玩校验场（13 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -557,4 +571,5 @@ _content_pack/
 30. ~~**数值平衡验证（蒙特卡洛三套模拟 + 报告页）**~~ ✅ 已交付 `tools/sim_balance.py`（纯标准库、seed 固定可复现、0.9s 跑完）+ `tools/sim_result.json` + `balance_report.html`。三套验证：**A 无尽存活**（4 英雄 × 400 局半解析逐秒模型：成长轴 8.5%/分钟、走位规避 80%、综合清场 ×3.2、追击到达 35%）——中位存活 w11–12，**发现失衡：5 分钟里程碑达成率 0%（门槛过硬）**，报告给出两个调整方案（里程碑改 4/8/15 分钟 或 dmgMul 斜率 0.005→0.004）待设计决策；**B 构筑 DPS**（1000 局贪心抽卡至 Lv.20）：基线 20 → 中位 59.1（2.95×），P25–P75 = 53–68.5，高选取率卡与流派深挖意图一致；**C 经济复验**：meta_upgrades 几何成本重算与 economy.json 跨表精确一致，积压率 0.22 重验 HEALTHY。校验：报告 0 占位符、模拟器语法与结果 JSON 合法；模型假设与局限六条写入报告（相对比较口径，非绝对预言）；`index.html` 加 📊 导航卡、`README` §3/§7 同步。验证轮价值兑现：发现→建议→决策→落地→复核（seed 固定）。**R38 落地方案①**：里程碑 5/10/20 分钟→4/8/15 分钟（atSec 240/480/900），endless.json/endless_lab/codex/endless_chart 四处同步；双档复核（新增 sim_result_opt.json 乐观档：走位 86%/成长 10%/追击 30%）——保守档 4 分钟达成率 1–6%、乐观档 100%，首个里程碑对中位玩家「够一够可及」；报告页升级为双档区间展示。
 31. ~~**技能完整规格（8 技能数值 + 反应联动 + 规格页）**~~ ✅ 已交付 `data/skills.json`（8 技能：火球 1.4×单体+灼烧标记 / 治疗 3.0×回复+驱散 / 霜冻 0.6××6 减速 3s / 链雷 0.9×弹射 3 目标递减 15% / 藤缚 0.5×DoT 定身 2s / 地震 2.2××8 眩晕 0.5s / 瞬步 0.2s 无敌帧 / 召唤 0.6×/s 光灵 15s；每技能 reactionNote 联动 reactions.json 实际反应名；成长公式每级 +25%、Lv3=1.5×）+ `skills_chart.html`（8 技能卡：冷却/法力跨表引用 + 数值 chips + 机制 + 反应联动 chips + 点评）。跨表校验：Key/cn/element/type 与 skill_cooldowns 逐项一致、反应名 10/10 全在 reactions.json、英雄绑定 8 技能全落 8 键、图标 8/8；**首轮校验器抓 2 处杜撰反应名（圣裁）与 3 处元素方向错（熔岩是土+火）已全部修正**；`index.html` 加 ⚡ 导航卡、`README` §2.17/§3/§7/引言同步。战斗数据底座补全（冷却表→完整规格），为 §4 接入主游戏时的技能系统提供数据底座。
 32. ~~**战斗分层自适应音乐（三层轨 + 真机混音演示）**~~ ✅ 已交付 `data/music_layers.json`（L1 节奏常开 / L2 低音敌≥8 淡入≤6 淡出滞回 / L3 旋律敌≥15 或 Boss 淡入；增益 1.0/0.8/0.8；fadeSec 1.5）+ **3 条 33.10s 分层轨**（`cp_layer_tide_drums/bass/lead`，同和声 C-Am-F-G 同 BPM 116 同长——实测时长差 <0.001s 叠播对齐，synth_audio.py 新增 `_layer_grid/_layer_add/_layer_noise` 三原语共享时间网格纯标准库合成）+ `music_layers.html`（基础参数 + 三层卡 + 滞回混音规则）。消费点：`endless_lab.html`「🎵 自适应分层」开关——三轨同播，tick 内按场上实时敌数（含生成队列/Boss 精英判定）驱动 L2/L3 音量渐变，**真机自适应混音演示**；`audio_demo.html` 加 3 卡（47 条全覆盖）；校验含三轨时长一致性断言（叠播对齐充要条件）；音频 44→47（7 BGM + 33 SFX + 4 AMB + 3 LAYER）；`index.html` 加 🎚️ 导航卡、`README` §2.18/§3/§6/§7 同步。音频体系第四维补齐——事件 SFX / 情绪 BGM / 空间 AMB / **强度分层 LAYER**，「战斗强度自适应」从整曲切换进化为层内混音，为 §4 接入主游戏时的自适应音频提供规格底座。
+33. ~~**场景装饰件（8 个程序化布景 + 实验室装饰层）**~~ ✅ 已交付 8 个 96×96 RGBA 装饰件（`tools/gen_decors.py` 纯标准库：双草丛/灌木/树/石头/两种花/发光蘑菇，低饱和远景配色）+ `endless_lab.html` 场景装饰层（初始化随机撒 14 个、z-index 底层、随机缩放）。校验：8/8 colorType=6 非空行 39–84%（布景稀疏合理）；lab `node --check` 通过；`manifest.json` 加 decors 类目（=8）、`index.html` 加「场景装饰件」统计卡、`README` §2.19/§3/§7/引言同步。精灵视觉语言第六系（**decors 布景**），让无尽战场有森林生态感。
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

@@ -18,6 +18,7 @@ icons = uniq_keys(os.path.join(ROOT, 'icons'), ('.png',))
 skill = uniq_keys(os.path.join(ROOT, 'skill_icons'), ('.png',))
 pickups = uniq_keys(os.path.join(ROOT, 'pickups'), ('.png',))
 portraits = uniq_keys(os.path.join(ROOT, 'hero_portraits'), ('.png',))
+decors = uniq_keys(os.path.join(ROOT, 'decors'), ('.png',))
 data = uniq_keys(os.path.join(ROOT, 'data'), ('.json',))
 audio = uniq_keys(os.path.join(ROOT, 'audio'), ('.wav',))
 
@@ -69,6 +70,7 @@ DATA_CN = {
     'endless': '无尽模式', 'ambience': '环境氛围音层',
     'heroes': '英雄图鉴', 'skills': '技能完整规格',
     'music_layers': '战斗分层自适应音乐',
+    'decors': '场景装饰件',
 }
 PICKUP_CN = {
     'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',
@@ -129,6 +131,7 @@ html = f'''<!DOCTYPE html>
     <div class="stat"><b>{len(skill)}</b><span>技能/元素图标</span></div>
     <div class="stat"><b>{len(pickups)}</b><span>拾取物精灵</span></div>
     <div class="stat"><b>{len(portraits)}</b><span>英雄徽章</span></div>
+    <div class="stat"><b>{len(decors)}</b><span>场景装饰件</span></div>
     <div class="stat"><b>{len(audio)}</b><span>音频（{len(bgm)} BGM + {len(sfx)} SFX）</span></div>
   </div>
   <div class="nav">

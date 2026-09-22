@@ -22,6 +22,8 @@
       linear-gradient(160deg, #2a5c3c, #14351f); border:1px solid rgba(159,224,180,.25) }
   .scene.shake{ animation: shk .38s }
   @keyframes shk{ 0%,100%{transform:translate(0,0)} 20%{transform:translate(-6px,3px)} 40%{transform:translate(5px,-4px)} 60%{transform:translate(-4px,2px)} 80%{transform:translate(3px,-2px)} }
+  .decor{ position:absolute; z-index:1; opacity:.92; pointer-events:none;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.25)) }
   .player{ position:absolute; width:32px; height:32px; margin:-16px 0 0 -16px; border-radius:50%; pointer-events:none;
     background:radial-gradient(circle at 35% 30%, #ffe9b0, #f0c05a 55%, #b07820); border:2px solid #fff2cf;
     box-shadow:0 0 14px rgba(255,220,130,.55); z-index:5 }
@@ -456,6 +458,20 @@ function mixLayers(){
     layers[i].volume = Math.abs(v-t) < 0.05 ? t : v + (t-v)*0.08;
   });
 }
+/* ===== 场景装饰层（decors/*.png 程序化布景，随场景一次性撒布）===== */
+var DECORS = ["decor_grass1","decor_grass2","decor_bush","decor_tree","decor_rock","decor_flower1","decor_flower2","decor_shroom"].map(function(d){ return "decors/"+d+".png"; });
+(function scatterDecors(){
+  for(var i=0;i<14;i++){
+    var img=document.createElement("img");
+    img.className="decor";
+    img.src=DECORS[Math.floor(Math.random()*DECORS.length)];
+    img.style.left=(4+Math.random()*92)+"%";
+    img.style.top=(6+Math.random()*88)+"%";
+    var sc=(0.6+Math.random()*0.5).toFixed(2);
+    img.style.width=(52*sc)+"px";
+    scene.appendChild(img);
+  }
+})();
 document.getElementById("btnStart").addEventListener("click", startRun);
 renderHeroSel();
 renderHud();

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23 06:36:03",
+  "generated_at": "2026-09-23 06:44:41",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
@@ -8,6 +8,7 @@
     "skill_icons": 13,
     "pickups": 8,
     "hero_portraits": 4,
+    "decors": 8,
     "design_data": 15,
     "audio": 47,
     "bgm": 7,
@@ -523,6 +524,56 @@
       "w": 128,
       "h": 128,
       "bytes": 2766
+    }
+  ],
+  "decors": [
+    {
+      "key": "decor_bush",
+      "w": 96,
+      "h": 96,
+      "bytes": 442
+    },
+    {
+      "key": "decor_flower1",
+      "w": 96,
+      "h": 96,
+      "bytes": 354
+    },
+    {
+      "key": "decor_flower2",
+      "w": 96,
+      "h": 96,
+      "bytes": 296
+    },
+    {
+      "key": "decor_grass1",
+      "w": 96,
+      "h": 96,
+      "bytes": 320
+    },
+    {
+      "key": "decor_grass2",
+      "w": 96,
+      "h": 96,
+      "bytes": 349
+    },
+    {
+      "key": "decor_rock",
+      "w": 96,
+      "h": 96,
+      "bytes": 421
+    },
+    {
+      "key": "decor_shroom",
+      "w": 96,
+      "h": 96,
+      "bytes": 2168
+    },
+    {
+      "key": "decor_tree",
+      "w": 96,
+      "h": 96,
+      "bytes": 532
     }
   ],
   "design_data": [
