@@ -1389,6 +1389,12 @@ var CONFIG = {
     dedupMs: 60,                   // 同音效去重窗口 ms(先查重后占配额) [建议]
     nodeDuckMul: 0.58,            // 【v1.80】节点音期间 BGM 再压一档, 节点/首领仍压过垫乐
     nodeDuckSec: 0.68,            // 【v1.80】节点鸭避让持续秒(rawDt, 模态钟冻结也能回)
+    nodeDuckCover: true,         // 【v1.191】duck 窗口按"实际可听段"覆盖: max(nodeDuckSec, delay + 音长/rate)
+                                  //   实测 sfx_lose 实响 1.35s 而窗口仅 0.68s → 0.68s 处电平仍 86.7% 峰值,
+                                  //   0.20s 可辨尾音落在 BGM 回满之后(压垫乐意图后半段失效)。
+                                  //   证伪记录: bosswarn/sfx_revive 窗口外能量 0.0%、sfx_win 2.9% → 非缺陷;
+                                  //   revivecard 走 overlay 分支(REVIVE_MODAL) → 与 nodeDuckSec 无关。
+                                  //   关掉它即退回 v1.190 的固定 0.68s 行为, 便于对照。
     overlayDuckMul: 0.72,         // 【v1.83】过场/弹层 BGM 稳压一档, 全程不跟节点音脉冲乱跳
     overlayDuckTc: 0.18,          // 【v1.83】过场/弹层压/回时间常数
     levelupDuckMul: 0.62,         // 【v1.154】升级三选一开窗垫乐再压一档(读卡更静), 关窗经 syncDuck 自动回
@@ -1845,6 +1851,16 @@ var DATA_WAVES_15 = [
   { t: 810, type: "normal", enemyId: "bear",   count: 130, interval: 0.39, hpMul: 1, spdMul: 1, durSec: 0 }
 ];
 
+// 【v1.197】⚠ 历史遗留 / 已废弃（预留，暂未接线）—— **请勿接线**：
+//   本表是 R2 时代的**手写 8 分钟变体**；但 v2.0 的 `buildWavesFor()` 已改为
+//   **以 `DATA_WAVES_15` 为唯一骨架按 winTime 时序压缩生成**，ch4(durMin=8/winTime=480)
+//   走的就是生成器，**不再需要**这份手写表。
+//   实测对照：生成器对 ch4(480s) 产出 **22 行 / 840 只**，与手表 **14 行仅 1 行完全一致（7.1%）**、
+//   总量 **563 只（少 33%）** ⇒ 两者早已分叉；若有人把它接回去，会**把 ch4 的波次打回 R2 时代的旧设计**
+//   （开局少 1 兔波 + 鼠波、P1 熊数量腰斩、缺喷嚏猬），属于**静默的行为回退**。
+//   保留理由：其中 A/B/C 案调参记录（下方逐行注释）是 R2 调参的**过程证据**，有存档价值。
+//   `ci/orphan-wave-table.mjs` 会**持续守住**这一状态：零读取 + 有此标记 = 可接受；
+//   一旦谁把标记删了或把它接了线，门禁立刻报警。
 // 8 分钟变体波次(节奏同构压缩) [假设] [串行队列预算: P1(0-160)≈100s / P2(160-320)扣双 BOSS 战≈101s /
 //   P3(320-480)扣双 BOSS 战≈68s; 阶段越短熊密度越高, 调参记录见数据结构卡]
 var DATA_WAVES_8 = [
@@ -2261,11 +2277,16 @@ var DATA_GEAR_SLOT = [
   { id: "shoes", name: "鞋子" }
 ];
 var DATA_GEAR_RARITY = [
-  { name: "普通", color: "#8a8a8a" },
-  { name: "精良", color: "#3faf5a" },
-  { name: "优秀", color: "#3a7bd5" },
-  { name: "杰出", color: "#8a5ac2" },
-  { name: "史诗", color: "#e07a2a" }
+  // 【v1.192】color 是**图形色**（描边框/色条/光环）；textDark/textLight 是**文字色**。
+  //   本表原色是为"图形"调的高饱和色, 直接当文字用会在浅底/深底上不可读:
+  //     结算软卡底 #d6e5bb(亮) → 5/5 档 FAIL(2.11~3.66); 房间牌 #282b29(暗) → 3/5 FAIL。
+  //   与 v1.167 的 cardGold/cardTagNew 同范式: 图形保留鲜艳色, 文字另给安全色。
+  //   门槛: 两底均 >= 4.5:1(WCAG AA 正文), 实测 4.73~8.55。
+  { name: "普通", color: "#8a8a8a", textDark: "#606060", textLight: "#c8c8c8" },
+  { name: "精良", color: "#3faf5a", textDark: "#166b28", textLight: "#7ddc92" },
+  { name: "优秀", color: "#3a7bd5", textDark: "#245c9e", textLight: "#8ab6f2" },
+  { name: "杰出", color: "#8a5ac2", textDark: "#653a99", textLight: "#c2a3ea" },
+  { name: "史诗", color: "#e07a2a", textDark: "#96450c", textLight: "#f0a86a" }
 ];
 var DATA_GEAR = [
   { id: "pinebow", slot: "weapon", name: "松果弩", stat: "dmgPct", per: [0.04, 0.07, 0.11, 0.16, 0.24], chMin: 1 },
@@ -3121,6 +3142,7 @@ function chapterRewardView(ch, mode) {
     giftStat: def ? gearStatLine(def, rarMin) : "",
     giftRarName: rarD.name,
     giftRarColor: rarD.color,
+$1giftRarColorText: rarD.textDark,
     giftWear: "",
     giftKind: gift ? "preview" : "none",
     win: false,
@@ -3156,6 +3178,7 @@ function chapterRewardView(ch, mode) {
     view.giftWear = runSummary.gearGiftAuto ? "立刻穿上" : "入包";
     view.giftRarName = rarD.name;
     view.giftRarColor = rarD.color;
+$1view.giftRarColorText = rarD.textDark;
   } else if (!gift) {
     view.giftKind = "none";
   } else {
@@ -3369,6 +3392,7 @@ function roomRewardView(tierIdx, mode, extra) {
     bagRar: rarFloor,
     bagRarName: rarD.name,
     bagRarColor: rarD.color,
+$1bagRarColorText: rarD.textLight,
     bagBoostName: boostD.name,
     bagMiss: extra.bagMiss || "",
     gemKind: gemKind,
@@ -3393,6 +3417,7 @@ function roomRewardView(tierIdx, mode, extra) {
     rarD = DATA_GEAR_RARITY[view.bagRar] || rarD;
     view.bagRarName = rarD.name;
     view.bagRarColor = rarD.color;
+$1view.bagRarColorText = rarD.textLight;
     gems = roomGemStats(tier, view.speed);
     view.gemN = gems.n;
     view.gemXp = gems.xp;
@@ -3619,7 +3644,7 @@ function armEnterCine(kind, extra) {
         kicker: rule ? "加菜局 · 可跳过" : ("第" + ((GAME.chapterIdx | 0) + 1) + "章"),
         title: rule ? rule.name : (ch ? ch.name : "出击"),
         land: chapterLandLine(ch),
-        knife: rule ? "" : chapterKnifeLine(ch),
+        knife: rule ? (rule.knife || "") : chapterKnifeLine(ch),
         theme: mapThemeLine(ch),
         goal: chapterGoalLine(ch),
         giftHead: rule ? "加菜回礼" : "本章回礼",
@@ -8124,6 +8149,13 @@ function drawBeatSoonBanner(ctx) {
 }
 
 // 【v1.5】曲目解析: 主题绑定 或 玩家在设置里锁一首。胜负 jingle / BOSS / 怪潮仍走功能轨。
+// 【v1.196】BATTLE_A 改为**读章节 bgmId**：该字段自 R3 起就声明在 DATA_CHAPTER（注释明写
+//   "战斗曲轨 id"），但此前全项目**零读取点**（对照：同族 bgmRate 有 7 处读取）——
+//   `bgmTrackByScene.BATTLE_A` 硬编码 "march"，三个切歌点只传 bgmRate。
+//   现改为 `ch.bgmId || "march"`：**当前 6 章值全为 "march" ⇒ 行为逐字节不变**，
+//   只是把"字段写了没人读"的豁口封上；将来换某章曲目只需改那一个数据值。
+//   ⚠ 若将来给某章填非 march 的曲：新曲**必须**登记进 ci/bgm-melody.py 的 TRACKS
+//     （旋律/垫层/低音音高集合），否则该曲的层掩蔽判据会被**静默跳过**。
 var BGM_CHOICE_ORDER = ["theme", "harbor", "meadow", "city", "dune", "frost", "march"];
 function resolveBgmScene(scene) {
   if (scene === "WIN") return "win";
@@ -8133,6 +8165,11 @@ function resolveBgmScene(scene) {
   var choice = (saveData && saveData.bgmChoice) ? saveData.bgmChoice : "theme";
   if (choice !== "theme" && DATA_BGM[choice]) return choice;
   if (scene === "HOME") return worldThemeOf().homeTrack;
+  if (scene === "BATTLE_A") {
+    var _bch = (typeof chapterOf === "function") ? chapterOf() : null;
+    var _bid = (_bch && _bch.bgmId) || "";
+    if (_bid && DATA_BGM[_bid]) return _bid;
+  }
   return "march";
 }
 function setBgmChoice(id) {
@@ -8428,7 +8465,7 @@ var DATA_PASSIVE = {
   windbell: { id: "windbell", name: "风之铃",   maxLv: 5, per: { movePct: 0.04 }, tag: "机动", desc: "移速+4%/级; 短冲刺 0.5s x2 速(CD 30s, 5 级 20s); 与风车草籽成档=冲刺留铃浪" },  // 短冲刺 [来源]; 【v1.41】疾风对偶
   moss:     { id: "moss",     name: "苔藓护甲", maxLv: 5, per: { armorPct: 0.04, regen: 0.1 }, tag: "生存", desc: "受击减伤 4%/级, 回血+0.1/s/级; 与晨露菇成档=受击绽露甲" },  // 【v1.43】磐石对偶
   magnet:   { id: "magnet",   name: "磁石蘑菇", maxLv: 5, per: { pickupPct: 0.10, magnetPct: 0.20 }, tag: "经济", desc: "拾取半径+10%/级, 磁吸+20%/级; 与智慧果成档=拾珠爆金环, 珠越大环越狠" },   // 【v1.26】咕石分叉B磁砾密环; 【v1.46】聚宝对偶
-  wisdom:   { id: "wisdom",   name: "智慧果",   maxLv: 5, per: { xpPct: 0.08, mergePct: 0.02 }, tag: "经济", desc: "XP+8%/级, 宝石合并值+2%/级; 与磁石蘑菇成档=大珠爆大环刮伤吸珠" },   // R6: xpPct 5%→8%【R6】; 【v1.46】聚宝对偶
+  wisdom:   { id: "wisdom",   name: "智慧果",   maxLv: 5, per: { xpPct: 0.08, mergePct: 0.02 }, tag: "经济", desc: "XP+8%/级, 宝石合并值+2%/级; 与磁石蘑菇成档=拾珠爆金环·珠越大环越狠, 刮伤吸珠" },   // R6: xpPct 5%→8%【R6】; 【v1.46】聚宝对偶
   dandelion: { id: "dandelion", name: "蒲公英球", maxLv: 5, per: { sizePct: 0.12, armorPct: 0.02 }, tag: "环绕+生存", desc: "弹体体积+12%/级, 受击减伤+2%/级; 与扎根苔成档=站住生绒田刮伤减速" },   // 【R18】环绕 tag 第二件; 【v1.21】解锁蜂群分叉B绒球卫队; 【v1.48】扎根对偶
   spinachseed: { id: "spinachseed", name: "风车草籽", maxLv: 5, per: { movePct: 0.06 }, tag: "机动", desc: "移速+6%/级; 与风之铃成档=冲刺留铃浪刮伤", chMin: 3 },   // 【R18】机动 tag 第二件; 【v1.15】松果分叉B; 【v1.21】飞叶分叉B; 【v1.41】疾风对偶
   dewcap: { id: "dewcap", name: "晨露菇", maxLv: 5, per: { regen: 0.25 }, tag: "生存", desc: "回血+0.25/s/级; 与苔藓护甲成档=受击绽露甲回血推开", chMin: 5 },   // 【R18】生存 tag 第二件; 【v1.15】正片起入池, 接脉冲花环分叉; 【v1.43】磐石对偶
@@ -10175,7 +10212,7 @@ function synCardHint(opt) {
   }
   if ((opt.kind === "newPassive" || opt.kind === "upPassive") && hoardIsPairId(opt.id)) {
     if (hoardWouldHold(opt) && !hoardPairOn()) {
-      return { tone: "complete", text: "成档 聚宝 · 大珠爆大环", tags: ["经济"], pair: "hoard" };
+      return { tone: "complete", text: "成档 聚宝 · 拾珠爆金环", tags: ["经济"], pair: "hoard" };
     }
     if (hoardPairOn()) {
       return { tone: "active", text: "已成档 聚宝 · 珠越大环越狠", tags: ["经济"], pair: "hoard" };
@@ -10347,21 +10384,27 @@ var DATA_CODEX_FORK = [
   { from: "thunder", branches: [{ id: "thunderstorm", feel: "连锁雷云", pick: "怪挤成一堆时选它" }, { id: "pepperbolt", feel: "短链快劈", pick: "要劈得快、劈得准选它" }] },
   { from: "laserflower", branches: [{ id: "solarflare", feel: "宽束慢扫", pick: "慢慢扫、扫得宽选它" }, { id: "nectarsnap", feel: "窄束瞬斩", pick: "短促高频切近敌选它" }] }
 ];
+// 【v1.184】配方卡面文案按「最窄卡」定稿：7 条配方在 720px 宽内排 4+3 列，
+//   前 4 张卡宽 148px（可用 128px），后 3 张 201px（可用 181px）。原 effect/contrast 长句
+//   在 148px 卡内被 hudFitText 截成「…」（实测 11/28 字段带省略号），玩家读到的是半句话。
+//   定稿原则：删的是**冗余虚词与空格**，不删信息点 —— 「冲刺留铃浪 · 近刮 · CD缩短」→
+//   「冲刺留铃·近刮·CD短」仍保留「冲刺留铃浪 / 近刮 / CD 缩短」三件事，只是挤掉分隔空格。
+//   门禁：ci/card-fit.mjs（按真实字体度量逐字段判超宽）+ ci/term-consistency.mjs。
 var DATA_CODEX_PAIR = [
   { id: "gale", name: "疾风成档", a: "windbell", b: "spinachseed", tag: "机动",
-    effect: "冲刺留铃浪 · 近刮 · CD缩短", contrast: "不是数值 +6% 埋进总伤" },
+    effect: "冲刺留铃·近刮·CD短", contrast: "不是数值+6%堆总伤" },
   { id: "dew", name: "磐石成档", a: "moss", b: "dewcap", tag: "生存",
-    effect: "受击绽露甲 · 回血推开近敌", contrast: "不是疾风冲刺铃浪换皮" },
+    effect: "受击绽甲·回血退敌", contrast: "不是疾风冲刺换皮" },
   { id: "hoard", name: "聚宝成档", a: "magnet", b: "wisdom", tag: "经济",
-    effect: "拾珠爆金环 · 珠越大环越狠", contrast: "不是冲刺也不是挨打" },
+    effect: "拾珠爆金环·大珠大环", contrast: "不是冲刺挨打换皮" },
   { id: "root", name: "扎根成档", a: "rootmoss", b: "dandelion", tag: "扎根",
-    effect: "站住生绒田 · 短中满田刮伤", contrast: "不是冲刺/受击/拾珠换皮" },
+    effect: "站住生绒田·满田刮", contrast: "不是冲刺/受击/拾珠" },
   { id: "spice", name: "爆辣成档", a: "nutshell", b: "peppercorn", tag: "爆辣",
     effect: "击杀掉尸爆 · 小刮连爆大清兔", contrast: "爆点在尸体, 不是身周环" },
   { id: "mist", name: "清露成档", a: "nectar", b: "mistleaf", tag: "清露",
     effect: "击杀或拾取喷清雾 · 清弹吸珠", contrast: "是雾不是伤圈, 也不是拾珠金环" },
   { id: "hearth", name: "暖巢成档", a: "warmfluff", b: "nesttwig", tag: "暖巢",
-    effect: "清波结暖巢 · 回血短护罩", contrast: "不是磐石受击绽甲, 也不是清雾清弹" }
+    effect: "清波结暖巢 · 回血短护罩", contrast: "不是磐石绽甲, 也不是清雾清弹" }
 ];
 function petCodexStars(def) {
   var d = def || DATA_BEAST[0];
@@ -10723,12 +10766,12 @@ var DATA_HALL_UNLOCK = [
     price: 80 },
   { id: "startmag", kind: "combat", item: "magnet", name: "开局磁铁",
     cond: { type: "anchor", boss: "boss2" },
-    condText: "击破 6:00 锚点首领（熔岩狮）",
+    condText: "击破锚点首领（熔岩狮）",
     gainText: "下局开局身边落地一枚磁铁",
     price: 90 },
   { id: "mapledart", kind: "weapon", item: "mapledart", name: "枫叶双镖",
     cond: { type: "anchor", boss: "boss3" },
-    condText: "击破 10:00 终局首领（深渊鲸王）",
+    condText: "击破终局首领（深渊鲸王）",
     gainText: "下局开局多带这把武",
     price: 140 },
   { id: "mistleaf", kind: "passive", item: "mistleaf", name: "净露叶",
@@ -11283,18 +11326,21 @@ var DATA_DAILY = {
   d_tide: {
     id: "d_tide", name: "潮汐加压", desc: "潮汐提前加压",
     rule: "加菜约5分钟：潮汐提前加压，打完回大厅。",
+    knife: "潮水提前不是催你，是它也怕来不及。",
     chapterIdx: 1, durMin: 5, giftCoins: 42, color: "#e07a2a",
     hordeShift: -24, hordeCountMul: 1.22, hordeDensMul: 1.15
   },
   d_elite: {
     id: "d_elite", name: "精英更密", desc: "精英更密",
     rule: "加菜约6分钟：精英更密，清掉换金币回礼。",
+    knife: "都挤过来不是趁火，是这里还亮着。",
     chapterIdx: 2, durMin: 6, giftCoins: 48, color: "#8a5ac2",
     eliteEveryMul: 0.52
   },
   d_ban: {
     id: "d_ban", name: "禁珠开局补", desc: "少掉经验珠，开局补给补偿",
     rule: "加菜约5分钟：少掉经验珠，开局补给补偿。",
+    knife: "少掉的不是扣下，是先塞进你手里。",
     chapterIdx: 1, durMin: 5, giftCoins: 40, color: "#3aa0c8",
     banGems: true, startBombs: 2, startFields: ["magnet", "drumstick"],
     playerHpMul: 1.12, fieldBias: "magnet"
@@ -12677,7 +12723,14 @@ var Audio = {
       this.lastNode = name;
       this.cueSkip = "";
       if (ev.duck) {
-        GAME.nodeDuckT = CONFIG.audio.nodeDuckSec;
+      GAME.nodeDuckT = CONFIG.audio.nodeDuckSec;
+      /* v1.191 duck 覆盖可听段 */
+      //   窗口 = max(nodeDuckSec, 本音起点 + 本音实响时长)；实响 = buf.duration / (rate*rateMul)。
+      //   目的: 让"压垫乐"覆盖整条可听段, 而不是固定 0.68s 后放尾音裸奔。
+      if (CONFIG.audio.nodeDuckCover && buf && buf.duration > 0) {
+        var duckNeed = (delay || 0) + buf.duration / ((rate || 1) * (this.rateMul || 1));
+        if (duckNeed > GAME.nodeDuckT) GAME.nodeDuckT = duckNeed;
+      }
         this.syncDuck(false);       // 【v1.83】过场/弹层内不跟节点音再压一跳
       }
     }
@@ -21763,7 +21816,7 @@ function openLevelUp() {
 // 【纪律级】金币唯一入账点=confirmResult 的 saveData.coins += runSummary.coins;
 //   其余任何代码路径禁对 saveData.coins 做加写入账(专项测试盯防: 生产代码中 += 仅此一处);
 //   消费类只允许 -= (buyUpgrade/buyBeast/enhanceGearUid/craftHallUnlock/buyHallTalent)。翻倍: 每局 1 次只翻金币, 走 Hooks.requestCoinDouble->AdService。
-var runSummary = { win: false, coins: 0, doubled: false, stages: 1, survivedSec: 0, kills: 0,
+var runSummary = { win: false, coins: 0, doubled: false, stages: 1, survivedSec: 0, kills: 0, prevEndless: null,   // 【v1.193】无尽历史最佳快照(enterResult 时刻定格, 用于结算对比)
   chIdx: 0, chId: "", chName: "", firstClearBonus: 0, firstClearPaid: 0, achPend: 0, prevBest: null, note: "",
   endless: false, endlessTime: 0, endlessKills: 0, gearDrop: "", gearDropId: "", gearDropRar: 0, gearInRun: 0, clearGiftTitle: "",
   heroName: "", heroWeapon: "", petName: "", petLv: 1, roomClears: 0, roomBestTier: -1, roomLog: [], forgeMark: false,
@@ -21826,6 +21879,12 @@ function computeRunSummary(win) {
   // 【R26】无尽败局快照: 存活=入口时刻起算, 击杀=入口起计
   runSummary.endless = GAME.endlessMode && !win;
   runSummary.endlessTime = runSummary.endless ? Math.max(0, Math.floor(GAME.runTime - GAME.endlessStartT)) : 0;
+  /* 【v1.193】无尽历史最佳快照: 必须在下方"取历史更优"写入之前读, 否则本局成绩会顶掉自己 */
+  if (runSummary.endless) {
+    var _pe = saveData.chapterBest[runSummary.chId];
+    runSummary.prevEndless = (_pe && (_pe.endlessTime > 0 || _pe.endlessKills > 0))
+      ? { time: _pe.endlessTime | 0, kills: _pe.endlessKills | 0 } : null;
+  }
   runSummary.endlessKills = runSummary.endless ? Math.max(0, player.killCount - GAME.endlessStartKills) : 0;
   runSummary.note = GAME.dailyMode && dailyRuleNow()
     ? ("加菜 · " + dailyRuleNow().name + (win ? " 完成" : " 未完成"))
@@ -24612,7 +24671,7 @@ function renderGame() {
     ctx.fillStyle = "#fff7e0";
     ctx.font = "bold 15px " + FONT_STACK;
     ctx.fillText("走进开战 " + Math.ceil(rpLeft) + "s", rp.x, rp.y + 28);
-    ctx.fillStyle = rpView.bagRarColor || "#ffe082";
+    ctx.fillStyle = rpView.bagRarColorText || rpView.bagRarColor || "#ffe082";  // 【v1.192】暗底用 textLight
     ctx.font = "bold 12px " + FONT_STACK;
     ctx.fillText(roomBagLine(rpView) + " · " + roomGemLine(rpView), rp.x, rp.y + 44);
     ctx.globalAlpha = 1;
@@ -27512,6 +27571,43 @@ function drawDailyPickPanel(ctx, m) {
   ctx.fillStyle = c.cardDesc;
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText("三种短局 · 后置加菜 · 不冲正片主桌", CONFIG.viewW / 2, py + 112);
+  /* 【v1.194】今日最佳行: 原缺陷——saveData.dailyBest 五字段全写盘 + clamp 携带 + 注释声明,
+     却零渲染点, 玩家"今天加菜的最好成绩"永久不可见。
+     落位: 卡片区末(136+2*160+150=606) 与 返回钮顶(756-88=668) 之间的空档。
+     口径: 只在记录属于"今天"时展示当日战绩; 否则视为"今日尚未开桌"。
+     【v1.194b】补齐 date / ruleId 两个"写而不显"字段:
+       · ruleId → 展示为**口味名**(玩家看得懂的是名字, 不是 id)
+       · date   → 展示为**月/日**, 让"这份记录属于哪一天"有据可查(跨天后仍能自证) */
+  (function drawDailyBestLine() {
+    var _db = saveData.dailyBest;
+    var _today = todayStamp();
+    var _has = !!(_db && typeof _db === "object" && _db.date === _today && (_db.wins | 0) + (_db.bestKills | 0) > 0);
+    ctx.font = "bold 15px " + FONT_STACK;
+    if (_has) {
+      var _bs = _db.bestSec | 0;
+      var _bm = (_bs / 60) | 0, _bx = _bs % 60;
+      /* ruleId -> 口味名: 查表失败时退回 id 原样, 绝不显示 undefined */
+      var _rn = "";
+      var _rr = DATA_DAILY[_db.ruleId];
+      if (_rr && _rr.name) _rn = _rr.name;
+      else if (typeof _db.ruleId === "string" && _db.ruleId) _rn = _db.ruleId;
+      /* date(YYYY-MM-DD) -> M月D日 */
+      var _dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(_db.date);
+      var _ds = _dm ? (parseInt(_dm[2], 10) + "月" + parseInt(_dm[3], 10) + "日") : "";
+      ctx.fillStyle = "#3a5a20";
+      ctx.fillText("今日最佳 · 完成 " + (_db.wins | 0) + " 场 · 击杀 " + (_db.bestKills | 0)
+        + " · 最快 " + (_bm + ":" + (_bx < 10 ? "0" : "") + _bx), CONFIG.viewW / 2, py + 618);
+      if (_rn || _ds) {
+        ctx.font = "bold 13px " + FONT_STACK;
+        ctx.fillStyle = "#6a6a5a";
+        ctx.fillText((_rn ? "口味 " + _rn : "") + (_rn && _ds ? " · " : "") + (_ds || ""),
+          CONFIG.viewW / 2, py + 640);
+      }
+    } else {
+      ctx.fillStyle = "#8a8a76";
+      ctx.fillText("今日尚未开桌 · 挑一种口味试一把", CONFIG.viewW / 2, py + 622);
+    }
+  })();
   ctx.fillStyle = "#6a6a5a";
   ctx.font = "bold 14px " + FONT_STACK;
   ctx.fillText("正片出击仍在大厅主钮 · 加菜不发锻纹/章礼", CONFIG.viewW / 2, py + m.panelH - 118);
@@ -29485,6 +29581,44 @@ function drawResultPanel(ctx, m) {
     ctx.fillStyle = "#c0392b";
     ctx.fillText(runSummary.note, cx, py + 132);
   }
+  // 【v1.193】无尽结算第二行: 本局成绩 vs 历史最佳(原缺陷: endlessTime/Kills 写盘+clamp 携带但零渲染点,
+  //   玩家"最长无尽存活/最高击杀"永久不可见; 且 prevBest 只在 wins>0 时赋值, 无尽局恒 null → 无从显示)
+  if (runSummary.endless) {
+    var _ee = runSummary.prevEndless;
+    var _tSec = (runSummary.endlessTime | 0);
+    var _tm = (_tSec / 60) | 0, _ts = _tSec % 60;
+    var _line = "本局 " + (_tm + ":" + (_ts < 10 ? "0" : "") + _ts)
+      + " · " + (runSummary.endlessKills | 0) + "杀";
+    if (_ee) {
+      var _em = ((_ee.time | 0) / 60) | 0, _es = (_ee.time | 0) % 60;
+      _line += "   最佳 " + (_em + ":" + (_es < 10 ? "0" : "") + _es)
+        + " · " + (_ee.kills | 0) + "杀";
+      /* 【v1.193b】纪录标记须同时认两个维度: 存活时长与击杀数各自独立破纪录。
+         原写法只认 time —— "杀得更多但活得更短"时不标, 与"取历史更优"的语义不符。 */
+      var _newT = (_ee.time | 0) > 0 && (runSummary.endlessTime | 0) > (_ee.time | 0);
+      var _newK = (_ee.kills | 0) > 0 && (runSummary.endlessKills | 0) > (_ee.kills | 0);
+      if (_newT || _newK) _line += "  ★" + (_newT && _newK ? "双纪录" : (_newT ? "时长纪录" : "击杀纪录"));
+    } else {
+      _line += "   首度无尽";
+    }
+    ctx.fillStyle = (_ee && ((runSummary.endlessTime | 0) > (_ee.time | 0) || (runSummary.endlessKills | 0) > (_ee.kills | 0))) ? "#7a6220" : c.cardDesc;
+    ctx.fillText(_line, cx, py + 132);
+    /* 【v1.194c】章历史最高(落盘持久记录)常驻行。
+       上面那行读的是 runSummary.prevEndless —— enterResult 时刻的**临时快照**, 只服务
+       "本局 vs 上一局"。saveData.chapterBest[].endlessTime/endlessKills 才是真正落盘的
+       **历史最高**, 此前全项目零读取点。这里补上, 让"我能活多久"成为可回看的目标。 */
+    var _pe2 = saveData.chapterBest[runSummary.chId];
+    if (_pe2 && ((_pe2.endlessTime | 0) > 0 || (_pe2.endlessKills | 0) > 0)) {
+      var _pm = ((_pe2.endlessTime | 0) / 60) | 0, _ps = (_pe2.endlessTime | 0) % 60;
+      ctx.font = "bold 14px " + FONT_STACK;
+      ctx.fillStyle = "#6a6a5a";
+      ctx.fillText(runSummary.chName + " 无尽最高 · 存活 " + (_pm + ":" + (_ps < 10 ? "0" : "") + _ps)
+        + " · 击杀 " + (_pe2.endlessKills | 0), cx, py + 158);
+    }
+  } else if (!runSummary.win && runSummary.note) {
+    ctx.fillStyle = "#c0392b";
+    ctx.fillText(runSummary.note, cx, py + 132);
+  }
   drawRewardTrio(ctx, cx - 260, trioY, 520, CONFIG.resultTrioH || 118, view, true);
 
   drawSoftCard(ctx, cx - 260, goldY, 520, CONFIG.resultGoldH || 128, "#5a7a32", "rgba(212,228,184,0.92)", true);
@@ -29510,7 +29644,7 @@ function drawResultPanel(ctx, m) {
   ctx.fillText("局内装备 " + (runSummary.gearInRun | 0) + " 件已入账", cx, cardY + 64);
   ctx.font = "bold 15px " + FONT_STACK;
   if (runSummary.gearDrop) {
-    ctx.fillStyle = view.giftRarColor || "#c9a24b";
+    ctx.fillStyle = view.giftRarColorText || view.giftRarColor || "#c9a24b";  // 【v1.192】亮底用 textDark
     ctx.fillText("通关礼在上方三格 · " + (view.giftWear || "入账") + (view.giftStat ? (" · " + view.giftStat) : ""), cx, cardY + 96);
   } else {
     ctx.fillStyle = c.cardDesc;
@@ -30515,7 +30649,18 @@ function syncCodexFit() {
   GAME.codexCloseY = cb + 154;
   GAME.codexFitH = Math.min(CONFIG.viewH, GAME.codexCloseY + 64 + 40);
   codexShiftWidgets((CONFIG.viewH - (GAME.codexFitH || CONFIG.viewH)) / 2);   // 控件随面板平移
-  if (uiBeastClose) uiBeastClose.rect.y = GAME.codexCloseY;
+  // 【v1.185】「返回」按钮不得出屏。
+  //   病根：上一行 codexShiftWidgets 的平移在**钳制时恒等于 0**（fitH 触顶 viewH → py=0），
+  //   而本行原来无条件 `rect.y = codexCloseY` → 配方 tab 的 closeY=1248 + 按钮高 64 = 底 1312
+  //   > viewH 1280 → **底部裁掉 32px**（CDP 运行时实测：pet −26 正常 / fork +32 出屏 / enemy −148 正常）。
+  //   返回钮是图鉴的**唯一出口**，被裁即有真实可用性代价。
+  //   修法：加 viewH 下限钳制，保证「按钮底 ≤ viewH − 8」。**不碰面板几何**（fitH/面板高/其它控件全不变），
+  //   所以这是一处纯增益的收敛修复，不影响任何已验收的布局指标。
+  if (uiBeastClose) {
+    var bh = uiBeastClose.rect.h || 64;
+    var maxY = CONFIG.viewH - bh - 8;
+    uiBeastClose.rect.y = Math.min(GAME.codexCloseY, maxY);
+  }
 }
 function drawBeastPanel(ctx, m) {
   syncCodexFit();
@@ -30868,7 +31013,14 @@ function makeCodexPairCard(idx, x, y, w, h) {
       ctx.fillText(hudFitText(ctx, view.name, textW), nameX, r.y + 22);
       ctx.fillStyle = view.color;
       ctx.font = (r.w < 240 ? "bold 12px " : "bold 13px ") + FONT_STACK;
-      ctx.fillText(hudFitText(ctx, flowNameOf(view.tag) + " · " + view.aName + "+" + view.bName, r.w - 20), r.x + 10, r.y + 48);
+      // 【v1.184】窄卡下 tag 行必被截断：4 列 148px 卡里「疾风流 · 风之铃+风车草籽」12px 需 146px，可用仅 128px。
+      //   做法有两处：① 紧凑分隔符（" · " → "·"，省 8px，零信息损失）② flowNameOf 的「流」字在卡面冗余
+      //   （「疾风流」的流派义已由同卡 color 色点 + effect 表达），窄卡下裁掉尾字。
+      //   ⚠ 阈值 r.w < 240：配方 tab 现有两种列宽（4 列 148 / 3 列 201）**都** < 240，故当前全部走紧凑分支；
+      //   "≥240 保留全称" 是给未来更宽布局留的口子，现在拿不到。改列宽时请同步 ci/card-fit.mjs。
+      var tagName = flowNameOf(view.tag);
+      if (r.w < 240 && tagName.length > 2 && tagName.slice(-1) === "流") tagName = tagName.slice(0, -1);
+      ctx.fillText(hudFitText(ctx, tagName + (r.w < 240 ? "·" : " · ") + view.aName + "+" + view.bName, r.w - 20), r.x + 10, r.y + 48);
       ctx.fillStyle = "#8a5a10";
       ctx.font = "bold 13px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, view.effect, r.w - 20), r.x + 10, r.y + 68);
