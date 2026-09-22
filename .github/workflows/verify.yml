@@ -144,6 +144,20 @@ jobs:
         run: |
           node ci/orphan-wave-table.mjs --selftest
           node ci/orphan-wave-table.mjs
+      # BGM 规格自洽审计：第 23 个"无人守"的维度。
+      # 【v1.198】病根=**规格声明与实现各写一份，且没有任何一处比它们** ——
+      #   `DATA_BGM` 表头注释明写「44100Hz 参考采样数与 spec 给定值逐一吻合」，但 `refSmp`
+      #   在 loop 曲上**全项目零读取**（消费点只有 jingle 分支 L12158 一处）⇒ 写错永不报错。
+      #   实测连错三处：怪潮 288000 应为 576000（**恰好减半**）· 深渊 252000 应为 504000（**恰好减半**）
+      #   · 启程 注释仍写 168000（v1.94 由 8 拍扩到 32 拍后未同步，表内 717560 才是对的）。
+      #   ⚠ 既有门禁全测不到：值非空、有注释、参与渲染（只是那次渲染不读它）。
+      #   判据 A 算术闭合(refSmp==beats*60/bpm*44100) · B 表头注释与表内值逐条相等 · C 全部曲被 BGM_TRACK_ORDER 收录。
+      #   ⚠ 抽取必须**限定在声明段内**（曾因正则太宽，把解释性注释「应为 576000」当声明 → 6 处假红）。
+      #   **硬门禁**（发现规格不自洽即 exit 1）。
+      - name: BGM 规格自洽审计（GATE）
+        run: |
+          node ci/bgm-spec-coherence.mjs --selftest
+          node ci/bgm-spec-coherence.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
