@@ -50,6 +50,10 @@ const SPIKE_W = 5.0;               // 孤立瞬态判据：超阈簇宽 < 此值
 const SPIKE_N = 16;                //   ——低频垫层半周期(55Hz=9ms)不可能这么窄，故窄簇必为叠加瞬态
 const SPIKE_EXT = 0.50;            // 簇向两侧扩展阈值：|x| 回落到 ratio*peak 以下
 const SPIKE_TGT = 0.84;            // 瞬态压到"非瞬态峰值"的 84%（约 -1.5dB，仍是全曲最响点）
+// 【2026-09-22】abyss(BOSS) 专用：默认 -1.5dB 给不出足够余量（它要 +3.86dB 才够 battle 锚点），
+//   需把瞬态压到≈非瞬态峰(落差比→1.02) ⇒ 压后峰值≈restPk，天花板下可施加 +4.35dB > 所需 +3.86dB。
+const SPIKE_DEEP_TGT = 1.02;       // 目标"落差比"(peak/restPk)；越小压越狠。1.02=几乎压到非瞬态峰
+const DEEP_SPIKE_TIDS = ["bgm_abyss"]; // ⚠ tid 带 bgm_ 前缀(与 TRACK_LANE 的 key 一致)，写成 "abyss" 不会命中
 // ⚠ 原版 softKnee(KNEE=0.72) 是**空操作**：全谱峰值仅 0.70~0.72，|x|>0.72 的样本几乎为空，
 //   tanh 膝点永远踩不到 → "4/4 selftest 全绿"其实绿在一个什么都没做的函数上。
 //   改为「只压孤立瞬态簇」：语义明确、只动全曲 ~0.1% 样本、且保住瞬态的音乐功能。
@@ -65,6 +69,16 @@ const TRACK_LANE = {
   bgm_win: 'result', bgm_lose: 'result',
 };
 const LANE_GAIN = { home: 0.115, battle: 0.16, daily: 0.17, result: 0.12 };
+// 【2026-09-22】⚠ 与门禁 `ci/bgm-lane-loudness.py: TRACK_TRIM` **必须保持一致**（同源码 CONFIG.audio.bgmTrim）。
+//   修复器此前**完全不知道逐曲 trim**（有效响度 = 内容 + 20log10(laneGain) + 20log10(trim)），
+//   导致它按"裸 P95"判缺斤两 → 对已被 trim 配平的曲目**误报"待修·触顶"**（abyss 就是假警报）。
+//   照这个假警报去改音频，反而会把本来平衡的搞坏（实测 abyss 从 ±0.04dB 被改成 +3.87dB）。
+//   ⇒ 两侧口径不一致的守卫比没有更危险：它不只是"没拦住"，它会**主动把好的改坏**。
+const TRACK_TRIM = {
+  bgm_march: 0.8300, bgm_horde: 0.6597, bgm_abyss: 1.1872,
+  bgm_meadow: 1.3703, bgm_frost: 1.3706, bgm_dune: 1.2368,
+  bgm_harbor: 1.1080, bgm_city: 1.0000
+};
 
 // ── WAV I/O（16bit PCM mono，与项目同规格）────────────────────
 function readWav(p) {
@@ -156,6 +170,10 @@ const NEED_LANES = new Set(['battle']);
 //   ⚠ abyss 的"已修值"（−18.70，比 horde 还高）是**一次过头**的结果：压瞬态后可用增益 1.65×
 //     被用满（封顶 0.98），把整曲抬过了头。新锚 −19.05 会把它正确回落到"恰好齐平 horde"。
 const ANCHOR_P95 = { battle: -19.05, result: null, home: null };
+// 【2026-09-22】锚点取自哪一曲：目标必须**连同该曲的 trim** 一起算，否则目标比真实有效电平高
+//   出一个 trim 的量（battle 锚点是 horde，trim=0.6597 → -3.61dB）。改前目标 -34.97，
+//   而 horde 实际有效 -36.68 ⇒ 三首都"低于锚"，修复器就误报"都要抬"（含已配平的 abyss）。
+const ANCHOR_TID = { battle: "bgm_horde", result: null, home: null };
 // 只抬不压：need = 锚 − 当前值，且 need > 0 才动手
 const ONLY_RAISE = true;
 
@@ -396,7 +414,7 @@ for (const f of files) {
     //   已修文件 0.980/0.8228 = 1.191 —— 落差已恒定，说明"压到位"了，不该再动。
     //   ⇒ 判据 = 当前落差比 > 目标落差比（1/SPIKE_TGT）才压；deSpike 用比值直接算，天然幂等。
     const curRatio = restPk > 0 ? sp.pk / restPk : 1;
-    const wantRatio = 1 / SPIKE_TGT;
+    const wantRatio = DEEP_SPIKE_TIDS.indexOf(tid) >= 0 ? SPIKE_DEEP_TGT : (1 / SPIKE_TGT);
     if (curRatio > wantRatio * 1.001) {
       deSpike = wantRatio / curRatio;
       shaped = scaleSpans(samples, sp.offs, deSpike);
@@ -406,7 +424,11 @@ for (const f of files) {
               p95: p95Db(shaped, fmt.sr), peak: peakOf(shaped),
               rawPeak: sp.pk, rawP95: p95Db(samples, fmt.sr) });
 }
-for (const r of rows) r.eff = r.p95 + 20 * Math.log10(LANE_GAIN[r.lane]);
+// ⚠ 必须与门禁同口径：有效响度 = P95 + 20log10(laneGain) + 20log10(逐曲trim)
+for (const r of rows) {
+  r.trim = TRACK_TRIM[r.tid] === undefined ? 1 : TRACK_TRIM[r.tid];
+  r.eff = r.p95 + 20 * Math.log10(LANE_GAIN[r.lane]) + 20 * Math.log10(r.trim);
+}
 
 const byLane = {};
 for (const r of rows) (byLane[r.lane] = byLane[r.lane] || []).push(r);
@@ -414,9 +436,11 @@ for (const r of rows) (byLane[r.lane] = byLane[r.lane] || []).push(r);
 const target = {};
 for (const lane in byLane) {
   const a = ANCHOR_P95[lane];
+  const atId = ANCHOR_TID[lane];
+  const atTrim = atId ? (TRACK_TRIM[atId] === undefined ? 1 : TRACK_TRIM[atId]) : 1;
   target[lane] = (a === null || a === undefined)
     ? Math.max(...byLane[lane].map((r) => r.eff))
-    : a + 20 * Math.log10(LANE_GAIN[lane]);
+    : a + 20 * Math.log10(LANE_GAIN[lane]) + 20 * Math.log10(atTrim);
 }
 
 console.log(`模式: ${APPLY ? 'APPLY' : 'DRY-RUN'} ｜ 文件 ${rows.length} ｜ 峰值封顶 ${PEAK_CEIL} ｜ 瞬态判据 簇宽<${SPIKE_W}ms且簇数<=${SPIKE_N}`);
