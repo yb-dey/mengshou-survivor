@@ -29531,11 +29531,15 @@ function drawResultPanel(ctx, m) {
       var _em = ((_ee.time | 0) / 60) | 0, _es = (_ee.time | 0) % 60;
       _line += "   最佳 " + (_em + ":" + (_es < 10 ? "0" : "") + _es)
         + " · " + (_ee.kills | 0) + "杀";
-      if ((runSummary.endlessTime | 0) > (_ee.time | 0)) _line += "  ★新纪录";
+      /* 【v1.193b】纪录标记须同时认两个维度: 存活时长与击杀数各自独立破纪录。
+         原写法只认 time —— "杀得更多但活得更短"时不标, 与"取历史更优"的语义不符。 */
+      var _newT = (_ee.time | 0) > 0 && (runSummary.endlessTime | 0) > (_ee.time | 0);
+      var _newK = (_ee.kills | 0) > 0 && (runSummary.endlessKills | 0) > (_ee.kills | 0);
+      if (_newT || _newK) _line += "  ★" + (_newT && _newK ? "双纪录" : (_newT ? "时长纪录" : "击杀纪录"));
     } else {
       _line += "   首度无尽";
     }
-    ctx.fillStyle = _ee && (runSummary.endlessTime | 0) > (_ee.time | 0) ? "#7a6220" : c.cardDesc;
+    ctx.fillStyle = (_ee && ((runSummary.endlessTime | 0) > (_ee.time | 0) || (runSummary.endlessKills | 0) > (_ee.kills | 0))) ? "#7a6220" : c.cardDesc;
     ctx.fillText(_line, cx, py + 132);
   } else if (!runSummary.win && runSummary.note) {
     ctx.fillStyle = "#c0392b";
