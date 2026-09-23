@@ -1338,6 +1338,7 @@ if (PACING) {
   let picks = 0, frames = 0, revives = 0, firstPickRt = null, firstDeathRt = null
   let frozenFrames = 0, lvFrames = 0, rtBack = 0, guardHit = 0
   let stressFails = 0, stressRetries = 0, stressErrMsg = "", stressCalls = 0, reviveStuck = 0, negInjected = false
+  let frozenPlayingFrames = 0, frozenPlayIntervals = 0, frozenModalIntervals = 0, guardWallFrames = 0
   const frozenBy = {}   // 冻结帧按**冻结当时的 state** 归类：探针自己量，不猜哪个状态冻时钟
   let endAt = null, endState = null
   const rows = []
@@ -1345,7 +1346,9 @@ if (PACING) {
   //   而 state 仍可能读作 PLAYING ⇒ 只有按 runTime 取点，曲线才落在游戏的时间轴上（P1 探针对位）。
   //   墙钟代价单独记账：frames/60 是"这一章实际要玩家坐多久"的上界（真机 60fps 时两者接近）。
   for (let t = P_STEP; t <= T_END && !endAt; t += P_STEP) {
-    const GUARD = P_STEP * FPS * 8   // 单个采样区间最多驱动 8 倍名义帧数：时钟被冻住时不空转
+    // 【v17】20× 名义帧数：BOSS 战期间 runTime 按设计暂停（母版注释"BOSS 战计时暂停"），
+    //   站桩假人打不动 BOSS 会把区间拉得很长 ⇒ 旧值 8× 会误判成探针故障。
+    const GUARD = P_STEP * FPS * 20
     let guard = 0
     while (sandbox.GAME.runTime < t && !endAt && guard++ < GUARD) {
       const rt0 = sandbox.GAME.runTime
@@ -1355,6 +1358,7 @@ if (PACING) {
       if (sandbox.GAME.runTime - rt0 < 0.005) { frozenFrames++; frozenBy[st0] = (frozenBy[st0] || 0) + 1 }
       if (sandbox.GAME.runTime < rt0 - 0.001) rtBack++
       if (st0 === flow.LEVELUP_MODAL) lvFrames++
+      if (st0 === flow.PLAYING && sandbox.GAME.runTime - rt0 < 0.005) frozenPlayingFrames++
       let st = sandbox.GAME.state
       if (st === flow.LEVELUP_MODAL) {
         try { if (D.levelupTap) D.levelupTap(); else sandbox.onTapLevelupCard(0) } catch (e) { void e }
@@ -1390,7 +1394,14 @@ if (PACING) {
       }
       if (st === flow.RESULT_LOSE || st === flow.RESULT_WIN) { endAt = +sandbox.GAME.runTime.toFixed(1); endState = stName(st); break }
     }
-    if (guard >= GUARD) guardHit++
+    // 【v17】冻结区间分流：PLAYING 期冻结 = 设计内（BOSS 战计时暂停）⇒ 记账不判错；
+    //   弹窗类冻结 = 探针没处理掉 ⇒ 仍然 guardHit（判错）。
+    if (guard >= GUARD) {
+      guardWallFrames += frames
+      const stNow = stName(sandbox.GAME.state)
+      if (stNow === "PLAYING") frozenPlayIntervals++
+      else frozenModalIntervals++
+    }
     // ⚠ v13：stress() 抛错时**最多重试 3 帧**并记下最后一条错误 —— 旧版 `catch { return null }`
     //   把 cause 吞了，云端只看到 `同屏怪 -1`，说不出为什么（本轮就是这么卡住的）。
     let sk = null, skErr = "", skTries = 0
@@ -1441,6 +1452,9 @@ if (PACING) {
     (endAt === null ? ' · 打到采样结束' : ` · ${endState} @ t≈${endAt}s`))
   console.log(`        墙钟代价：游戏内 ${last.rt}s 共驱动 ${frames} 帧 = ${(frames / FPS).toFixed(1)}s 墙钟（比率 ${ratio}）· 时钟冻结 ${frozenSec}s`)
   console.log(`        冻结归属：${fzTop} · 复活 ${revives} 次 · 升级弹窗帧 ${lvFrames}`)
+  if (frozenPlayIntervals) {
+    console.log(`        设计内暂停（PLAYING 期时钟不走，如 BOSS 战计时暂停）：${frozenPlayIntervals} 个采样区间 · 共驱动 ${frozenPlayingFrames} 帧`)
+  }
   const pFails = []
   // 【终局行豁免】本局若在某个采样区间内结束（RESULT_WIN/LOSE，或 --no-revive 下的 REVIVE_MODAL），
   //   该区间的采样点**必然**到不了目标（时钟停走）—— 那是"本局跑完了"，不是"采样不对位"：
@@ -1454,7 +1468,9 @@ if (PACING) {
   if (judged.length < minRows) pFails.push(`有效采样点只有 ${judged.length} 个（实际跑 ${span}s，应 ≥${minRows}）`)
   if (rtBack) pFails.push(`runTime 出现 ${rtBack} 次回退（时钟被重置）`)
   if (rtStuck) pFails.push('PLAYING 相邻样本 runTime 没前进')
-  if (guardHit) pFails.push(`${guardHit} 个采样区间的时钟被冻住（驱动到 8 倍名义帧数仍没走到目标）`)
+  if (frozenModalIntervals) {
+    pFails.push(`${frozenModalIntervals} 个采样区间卡在**弹窗态**（探针没处理掉：驱动到 20× 名义帧数仍未推进）`)
+  }
   const offTarget = judged.filter((r) => Math.abs(r.rt - r.t) > 1)
   if (offTarget.length) pFails.push(`${offTarget.length} 个采样点没落在 runTime 目标上（最大偏 ${Math.max(...offTarget.map((r) => Math.abs(r.rt - r.t))).toFixed(1)}s）`)
   if (terminalShort) console.log(`        终局行豁免：t=${terminalShort.t}s 只采到 rt=${terminalShort.rt}s（本局在 ${endState} 结束，时钟停走，不计入对位判定）`)
