@@ -648,7 +648,9 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.201",                   // 【v1.201】触屏宿主操作提示: 设置页帮助行与暂停层提示按宿主换文案(小游戏无键盘); 只改文案, 不动输入逻辑/数值
+  version: "1.202",                   // 【v1.202】合规公告可读性: 正文 11px/0.42→12px/0.62、标题 12→13px、备案号行 10→12px;
+                                     //   实测对比度 3.85→6.77:1（WCAG AA 小字下限 4.5）; 坐标/文案一字未动
+                                     //   【v1.201】触屏宿主操作提示: 设置页帮助行与暂停层提示按宿主换文案(小游戏无键盘)
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -28090,20 +28092,24 @@ function drawHomeBase(ctx) {
   //     四个主按钮占 1096–1244，故 1246–1278 落在底栏内且位于按钮下方；
   //     全文件扫描该带内**没有任何内容元素**（只有 drawPlayVignette 的暗角遮罩与顶层边框条，均为背景绘制）。
   //   ⛔ 日后若调整底栏高度或按钮布局，**必须重新核对 1246–1278 是否仍空闲**。
-  //   自检：node ci/compliance-notice-check.mjs ｜ 关闭：CONFIG.complianceNotice = false
+  //   【v1.202】可读性修正（实测，不是审美）：原文案 11px + alpha 0.42 压在底栏 rgba(12,16,12,0.94) 上，
+  //     WCAG 对比度 ≈ **3.8:1**（AA 小字下限 4.5:1），且 11px 逻辑 ≈ 6.0pt 物理 ⇒ **强制公告实际看不清**。
+  //     ⇒ 正文 11→12px / 0.42→0.62（对比度 ≈ 6.8:1）、标题 12→13px / 0.55→0.72；
+  //       宽度复核：正文 56 字 × 12px = 672 < 720（720 宽视图内仍单行居中，**不动任何布局坐标**）。
+  //   自检：node ci/compliance-notice-check.mjs（含字号/对比度判据）｜ 关闭：CONFIG.complianceNotice = false
   if (CONFIG.complianceNotice !== false) {
     var _pFont = ctx.font, _pFill = ctx.fillStyle, _pAlign = ctx.textAlign;
     ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(255,247,224,0.55)";
-    ctx.font = "bold 12px " + FONT_STACK;
+    ctx.fillStyle = "rgba(255,247,224,0.72)";
+    ctx.font = "bold 13px " + FONT_STACK;
     ctx.fillText("健康游戏忠告", CONFIG.viewW / 2, 1252);
-    ctx.fillStyle = "rgba(255,247,224,0.42)";
-    ctx.font = "11px " + FONT_STACK;
+    ctx.fillStyle = "rgba(255,247,224,0.62)";
+    ctx.font = "12px " + FONT_STACK;
     ctx.fillText("抵制不良游戏，拒绝盗版游戏。注意自我保护，谨防受骗上当。适度游戏益脑，沉迷游戏伤身。合理安排时间，享受健康生活。", CONFIG.viewW / 2, 1270);
     // 备案通过后把号码填进 CONFIG.icpNo，它会显示在标题行右侧
     if (CONFIG.icpNo) {
       ctx.textAlign = "right";
-      ctx.font = "10px " + FONT_STACK;
+      ctx.font = "12px " + FONT_STACK;   // 【v1.202】随正文一起抬档（同一条公告，别一半清楚一半糊）
       ctx.fillText("备案编号 " + CONFIG.icpNo, CONFIG.viewW - 12, 1252);
     }
     ctx.font = _pFont; ctx.fillStyle = _pFill; ctx.textAlign = _pAlign;

@@ -21,6 +21,11 @@
  * 用法:
  *   node compliance-notice-check.mjs [html路径]      # 默认 game/ 下的母版
  *   node compliance-notice-check.mjs --selftest      # 阴性对照：造齐 → PASS，抽掉一句 → FAIL
+ *
+ * 【第 59 轮】新增**可读性判据**：光有文字不算数 —— 强制公告要"看得清"。
+ *   实测教训：原实现正文 11px + alpha 0.42 压在底栏上，WCAG 对比度只有 **3.8:1**（AA 小字下限 4.5:1），
+ *   11px 逻辑在 390pt 手机上 ≈ **6.0pt** 物理 ⇒ 条文"在"，但人眼读不出来。
+ *   判据：正文/标题字号 ≥12px 且对比度 ≥4.5:1；并内建 3 条对照（含**旧值必须 FAIL**）。
  */
 
 import { readFileSync, readdirSync } from 'node:fs'
@@ -91,6 +96,54 @@ if (process.argv.includes('--selftest')) {
   process.exit(pass ? 0 : 1)
 }
 
+// ── 可读性判据（第 59 轮）────────────────────────────────────────────────────
+//   从**渲染代码**里读字号与颜色，算 WCAG 对比度 —— 只验"文字在不在"会放过"看不清"。
+//   底栏是 rgba(12,16,12,0.94)：最坏情形（压在最亮的场景上）合成后约 (27,31,27)，本判据按此取保守值。
+const BAR = [12 * 0.94 + 255 * 0.06, 16 * 0.94 + 255 * 0.06, 12 * 0.94 + 255 * 0.06]
+const srgb = (v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4) }
+const lum = (rgb) => 0.2126 * srgb(rgb[0]) + 0.7152 * srgb(rgb[1]) + 0.0722 * srgb(rgb[2])
+function contrastOver(textRGB, alpha, bg) {
+  const mixed = [0, 1, 2].map((i) => textRGB[i] * alpha + bg[i] * (1 - alpha))
+  const a = lum(mixed), b = lum(bg)
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+}
+// 从一段渲染代码里抽出「字号」与「rgba 透明度」
+function parseStyle(block) {
+  const fonts = [...block.matchAll(/ctx\.font = "(?:bold )?(\d+(?:\.\d+)?)px/g)].map((m) => Number(m[1]))
+  const alphas = [...block.matchAll(/rgba\(255,247,224,([0-9.]+)\)/g)].map((m) => Number(m[1]))
+  return { fonts, alphas }
+}
+// 判据：正文/标题都 ≥12px 且 ≥4.5:1
+function legibilityFails(fonts, alphas) {
+  const out = []
+  if (!fonts.length || !alphas.length) { out.push("抽不到字号/颜色 —— 判据无法成立"); return out }
+  const minPx = Math.min(...fonts)
+  const minAlpha = Math.min(...alphas)
+  const cr = contrastOver([255, 247, 224], minAlpha, BAR)
+  if (minPx < 12) out.push(`最小字号 ${minPx}px < 12px`)
+  if (cr < 4.5) out.push(`对比度 ${cr.toFixed(2)}:1 < 4.5:1（WCAG AA 小字下限）`)
+  return out
+}
+// 内建对照（每次都跑）：旧值必须 FAIL —— 否则这条判据就是恒绿的假保证
+const LEGIBILITY_CASES = [
+  { n: "旧值 11px/0.42 + 12px/0.55（修复前）", fonts: [12, 11], alphas: [0.55, 0.42], want: "FAIL" },
+  { n: "当前 13px/0.72 + 12px/0.62", fonts: [13, 12], alphas: [0.72, 0.62], want: "PASS" },
+  { n: "更小更淡 9px/0.30", fonts: [9], alphas: [0.3], want: "FAIL" },
+  { n: "够大但太淡 13px/0.35", fonts: [13], alphas: [0.35], want: "FAIL" },
+]
+function runLegibilityCase() {
+  let bad = 0
+  console.log("")
+  console.log("## 可读性判据自证（含**旧值必须 FAIL**）")
+  for (const k of LEGIBILITY_CASES) {
+    const f = legibilityFails(k.fonts, k.alphas)
+    const got = f.length ? "FAIL" : "PASS"
+    const ok = got === k.want
+    if (!ok) bad++
+    console.log(`- ${ok ? "✅" : "✘"} ${k.n}：期望 ${k.want} / 实际 ${got}${f.length ? " —— " + f.join("；") : ""}`)
+  }
+  return bad
+}
 // ── 主流程 ─────────────────────────────────────────────────────────────────
 const arg = process.argv.slice(2).find((a) => !a.startsWith('--'))
 let target = arg
@@ -101,6 +154,19 @@ if (!target) {
 }
 const html = readFileSync(target, 'utf8')
 const { failN, warnN } = report(check(html), target)
+// 【第 59 轮】可读性：先从真实源码里截出忠告块（`if (CONFIG.complianceNotice !== false) {` … `ctx.font = _pFont`）
+const noticeBlock = (() => {
+  const i = html.indexOf('CONFIG.complianceNotice !== false')
+  if (i < 0) return ''
+  const j = html.indexOf('ctx.font = _pFont', i)
+  return j > i ? html.slice(i, j) : html.slice(i, i + 1200)
+})()
+const st = parseStyle(noticeBlock)
+const legFails = legibilityFails(st.fonts, st.alphas)
+const caseBad = runLegibilityCase()
+console.log('')
+console.log(`真实源码：字号 [${st.fonts.join(', ')}] · 透明度 [${st.alphas.join(', ')}] · 对比度(最淡那条) ${st.alphas.length ? contrastOver([255, 247, 224], Math.min(...st.alphas), BAR).toFixed(2) : '?'}:1`)
+console.log(legFails.length ? `❌ 可读性未过：${legFails.join('；')}` : '✅ 可读性通过（字号 ≥12px 且对比度 ≥4.5:1）')
 console.log('')
 console.log(`结论：强制项缺 ${failN} 项，提示项缺 ${warnN} 项`)
 if (failN > 0) {
@@ -108,4 +174,6 @@ if (failN > 0) {
   console.log('⚠ 这些是**备案/上架强制项**，缺失会卡审核。修法见 内容分部审查.md 的 D3 节。')
   process.exit(1)
 }
+if (caseBad > 0) { console.log(`✘ 可读性判据自证失败 ${caseBad} 例 —— 判据不可信，不得上岗`); process.exit(1) }
+if (legFails.length) { console.log('⚠ 强制公告"在但看不清" = 等同于没有；修法见本轮工作日志（v1.202）。'); process.exit(1) }
 process.exit(0)
