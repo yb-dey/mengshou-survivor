@@ -25,7 +25,11 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.199 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.200 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.200 美术】按钮副标可读性（第 47 轮看图发现）：v1.198 给暂停层「回大厅」加的副标走的是
+//   `makeButton` 默认副标色 #d8c898（暗卡其），压在绿按钮面上 4× 放大即可见对比不足。
+//   修法：给渲染器加**可选** `subInk`（不设则与历史逐字一致），「回大厅」副标改浅琥珀 #ffe9b0；
+//   ⛔ 不用 `tone`——tone 会连带改按钮底色/字色，属于动既有观感。不动数值/掉落/节奏/布局。
 // 【v1.199 美术】大厅抬头遮挡修正（`内容分部审查.md` A4，第 45 轮首次真的"看见"才发现的）：
 //   标题与两行副标原本被英雄立绘压住 —— 标题 x110→≈246 与舞台盒 x210→504 重叠 36px，副标整句铺到 ≈472
 //   ⇒ 画面上文字中段读不到、右侧露尾。现改为：舞台 210,46,294,312 → 252,52,256,272（保比例），
@@ -640,7 +644,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.199",                   // 【v1.199】大厅抬头遮挡修正(A4): 英雄舞台右移收窄 + 副标拆三行, 文案一字未改; 不动数值/掉落/节奏
+  version: "1.200",                   // 【v1.200】按钮副标可读性: 新增可选 subInk, 暂停层「回大厅」副标改浅琥珀(原默认色压在绿面上对比不足)
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -7524,6 +7528,9 @@ function pausePanelRect() {
 //   ⛔ 不改结算语义本身：普通章「退出 = 作废」是有意设计（风险/收益完整性，注释里的 T14.6 口径），本轮只补知情。
 function syncPauseQuitNotice() {
   if (!uiBtnGoHome) return;
+  // 【v1.200】副标色：默认 #d8c898 压在绿按钮面上对比不足（第 47 轮 4× 放大实测），改用浅琥珀；
+  //   ⚠ 不用 `tone`：tone 会连带改按钮底色/字色（见 makeButton 默认分支），那会动到既有观感。
+  uiBtnGoHome.subInk = "#ffe9b0";
   var loot = (run && (run.coinsGained | 0)) || 0;
   if (GAME.endlessMode) {
     uiBtnGoHome.sub = "自动结算";
@@ -28454,11 +28461,13 @@ function makeButton(id, x, y, w, h, label, onTap) {
       if (this.sub) {
         ctx.fillText(this.label, r.x + r.w / 2, faceY - 10);
         ctx.font = "bold 13px " + FONT_STACK;
-        ctx.fillStyle = tone === "ok" ? "#d8f5a8"
+        // 【v1.200】`subInk` 可选覆盖副标色：默认副标色 #d8c898 是给浅底按钮的，
+        //   压在深色/绿色实心面上对比不足（暂停层「回大厅」实测）。不设则行为与历史逐字一致。
+        ctx.fillStyle = this.subInk || (tone === "ok" ? "#d8f5a8"
           : (tone === "poor" ? "#ffd0c4"
             : (tone === "arm" ? "#ffe9b0"
               : (tone === "idle" ? "#cfe8b0"
-                : (tone === "done" ? "#55603c" : "#d8c898"))));
+                : (tone === "done" ? "#55603c" : "#d8c898")))));
         ctx.fillText(this.sub, r.x + r.w / 2, faceY + 14);
       } else {
         ctx.fillText(this.label, r.x + r.w / 2, faceY);
