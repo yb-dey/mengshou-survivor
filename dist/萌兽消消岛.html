@@ -28003,6 +28003,32 @@ function drawHomeBase(ctx) {
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.textAlign = "center";
   ctx.fillText("部分内容由 AI 生成 · 适龄提示 8+", CONFIG.viewW / 2, 1056);
+  // 【合规】《健康游戏忠告》—— 跨平台**强制**项，不是可选：
+  //   微信《运营规范》三·小游戏特别规范 2.6.2 / 抖音《小游戏自审标准》/ 支付宝《小游戏行业管理规范》/
+  //   快手《内容规范》均逐字要求「在游戏开始前，必须在画面的显著位置全文登载《健康游戏忠告》」；
+  //   新闻出版总署 2003 通知另要求一并标明适龄提示及备案编号。缺此项会卡备案审核。
+  //   ⚠ 位置依据（坐标实测，非估算）：底栏为 fillRect(0,1072,CONFIG.viewW,208)，
+  //     四个主按钮占 1096–1244，故 1246–1278 落在底栏内且位于按钮下方；
+  //     全文件扫描该带内**没有任何内容元素**（只有 drawPlayVignette 的暗角遮罩与顶层边框条，均为背景绘制）。
+  //   ⛔ 日后若调整底栏高度或按钮布局，**必须重新核对 1246–1278 是否仍空闲**。
+  //   自检：node ci/compliance-notice-check.mjs ｜ 关闭：CONFIG.complianceNotice = false
+  if (CONFIG.complianceNotice !== false) {
+    var _pFont = ctx.font, _pFill = ctx.fillStyle, _pAlign = ctx.textAlign;
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(255,247,224,0.55)";
+    ctx.font = "bold 12px " + FONT_STACK;
+    ctx.fillText("健康游戏忠告", CONFIG.viewW / 2, 1252);
+    ctx.fillStyle = "rgba(255,247,224,0.42)";
+    ctx.font = "11px " + FONT_STACK;
+    ctx.fillText("抵制不良游戏，拒绝盗版游戏。注意自我保护，谨防受骗上当。适度游戏益脑，沉迷游戏伤身。合理安排时间，享受健康生活。", CONFIG.viewW / 2, 1270);
+    // 备案通过后把号码填进 CONFIG.icpNo，它会显示在标题行右侧
+    if (CONFIG.icpNo) {
+      ctx.textAlign = "right";
+      ctx.font = "10px " + FONT_STACK;
+      ctx.fillText("备案编号 " + CONFIG.icpNo, CONFIG.viewW - 12, 1252);
+    }
+    ctx.font = _pFont; ctx.fillStyle = _pFill; ctx.textAlign = _pAlign;
+  }
   chs = hallChapterStats();
   if (uiHomeDaily) {
     uiHomeDaily.label = "后置加菜";
