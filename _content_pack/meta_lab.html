@@ -68,6 +68,9 @@
         <button class="btn gold" id="btnStart">▶ 开始本局</button>
         <button class="btn red" id="btnEnd" disabled>■ 结束本局</button>
         <button class="btn gray" id="btnBgm">🎵 大厅 BGM：关</button>
+        <button class="btn gray" id="btnSave">💾 存档演示</button>
+        <input type="file" id="saveFile" accept=".json" style="display:none">
+        <button class="btn gray" id="btnLoad">📂 导入存档</button>
       </div>
       <h2>✨ 永久加成 <small>已购强化对本局的提升</small></h2>
       <div id="perm"></div>
@@ -288,6 +291,56 @@ document.getElementById("btnBgm").addEventListener("click", function(){
     bgmAudio.pause(); ambAudio.pause();
     this.textContent = "🎵 大厅声景：关";
   }
+});
+/* ===== 存档演示（data/save_spec.json 字段契约 + integrity 容错）===== */
+function log(msg){
+  var el = document.getElementById("feed") || document.getElementById("log");
+  if (el) { var d = document.createElement("div"); d.textContent = msg; el.insertBefore(d, el.firstChild);
+    while (el.childNodes.length > 30) el.removeChild(el.lastChild); }
+  else { console.log(msg); }
+}
+var stats = { runs: 0, killsTotal: 0, coinsEarned: 0, deaths: 0 };
+function buildSave(){
+  var lv = {};
+  for (var k in profile.levels) { if (PERM[k]) lv[k] = profile.levels[k]; }
+  return {
+    saveVersion: 1, profileId: "local", metaCoins: profile.coins,
+    permanentLevels: lv, heroesUnlocked: ["spirit_deer"],
+    achievements: {}, dailyProgress: {}, lastDailyDate: new Date().toISOString().slice(0,10),
+    endlessBest: { bestWave: 0, bestTimeSec: 0, killTotal: stats.killsTotal || 0 },
+    stats: { runsPlayed: stats.runs || 0, killsTotal: stats.killsTotal || 0, coinsEarned: stats.coinsEarned || 0, deaths: stats.deaths || 0 },
+    settings: { music: 0.8, amb: 0.5, sfx: 0.7, lang: "zh-CN" }
+  };
+}
+document.getElementById("btnSave").addEventListener("click", function(){
+  var data = buildSave();
+  var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "mengshou_save_v1.json";
+  a.click();
+  log("💾 已导出存档（" + Object.keys(data.permanentLevels).length + " 项强化 / " + data.metaCoins + " 🍀）");
+});
+document.getElementById("btnLoad").addEventListener("click", function(){ document.getElementById("saveFile").click(); });
+document.getElementById("saveFile").addEventListener("change", function(ev){
+  var f = ev.target.files[0]; if (!f) return;
+  var fr = new FileReader();
+  fr.onload = function(){
+    var obj;
+    try { obj = JSON.parse(fr.result); } catch (e) { log("📂 导入失败：JSON 解析错误"); return; }
+    var dropped = 0;
+    if (obj.permanentLevels) {
+      var lv = {};
+      for (var k in obj.permanentLevels) {
+        if (PERM[k]) { lv[k] = Math.max(0, Math.min(PERM[k].maxLevel, obj.permanentLevels[k] | 0)); } else { dropped++; }
+      }
+      profile.levels = lv;
+    }
+    if (typeof obj.metaCoins === "number") profile.coins = Math.max(0, obj.metaCoins | 0);
+    renderShop(); renderPerm(); renderRun();
+    log("📂 导入完成：丢弃未知字段 " + dropped + " 个（save_spec integrity 容错生效）");
+  };
+  fr.readAsText(f);
 });
 renderShop(); renderPerm(); renderRun();
 setInterval(tick, 250);

@@ -75,6 +75,7 @@ DATA_CN = {
     'challenge_mods': '挑战修饰符系统',
     'music_layers_boss': 'Boss 分层组',
     'enemy_candidates': '候选敌种包',
+    'save_spec': '存档字段契约',
 }
 PICKUP_CN = {
     'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',

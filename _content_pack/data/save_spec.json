@@ -1,0 +1,61 @@
+{
+  "system": "森灵存档字段契约",
+  "version": 1,
+  "description": "《萌兽消消岛》玩家存档字段契约（纯设计规格，非游戏代码）。定义主游戏接入时**必须持久化什么、字段从哪来、脏数据怎么容错**——字段全部来自既有系统：meta_upgrades（已购永久强化）/ achievements（成就与每日任务进度）/ heroes（已解锁英雄）/ economy（森灵币余额）/ endless（无尽最佳记录）。明确排除项：局内升级进度（upgrades.json）**不入档**（一局结束即失效），避免存档膨胀与跨版本污染。消费点：meta_lab.html「💾 存档演示」（导出/导入/重置 + 脏数据容错校验）。",
+  "references": [
+    "存档契约惯例：只存「跨局持久状态」+「统计」+「设置」三类，局内状态一律不落盘（Vampire Survivors 的存档也只有解锁/金币/统计）",
+    "存档健壮性惯例：载入时做 id 白名单校验，未知/失效 id 静默丢弃并计数告警，防止旧档或篡改档导致启动崩溃"
+  ],
+  "schema": {
+    "saveVersion": { "type": "int", "value": 1, "note": "存档格式版本；迁移时按 version 逐级升级" },
+    "profileId": { "type": "string", "note": "本机档案标识（单档实现可固定为 'local'）" },
+    "metaCoins": { "type": "int", "min": 0, "source": "economy.json 的森灵币余额（产出 − 消耗）" },
+    "permanentLevels": {
+      "type": "object", "keyRef": "meta_upgrades.json → metaUpgrades 的键",
+      "value": "0..maxLevel 整数", "note": "已购永久强化等级；缺省视为 0"
+    },
+    "heroesUnlocked": {
+      "type": "array", "keyRef": "heroes.json → heroes 的键",
+      "note": "已解锁英雄；spirit_deer 为默认解锁（unlockCost 0），载入时强制包含"
+    },
+    "achievements": {
+      "type": "object", "keyRef": "achievements.json → achievements 的键",
+      "value": "bool", "note": "已达成成就（一次性，永久 true）"
+    },
+    "dailyProgress": {
+      "type": "object", "keyRef": "achievements.json → daily.pool 的键",
+      "value": "int", "note": "当日任务进度；跨日自动重置（比对 lastDailyDate）"
+    },
+    "lastDailyDate": { "type": "string", "format": "YYYY-MM-DD", "note": "用于每日任务跨日重置判定" },
+    "endlessBest": {
+      "type": "object", "fields": { "bestWave": "int", "bestTimeSec": "number", "killTotal": "int" },
+      "source": "endless.json 里程碑与无尽结算"
+    },
+    "stats": {
+      "type": "object", "fields": { "runsPlayed": "int", "killsTotal": "int", "coinsEarned": "int", "deaths": "int" },
+      "note": "累计统计（供成就判定与图鉴展示）"
+    },
+    "settings": {
+      "type": "object", "fields": { "music": "0..1", "amb": "0..1", "sfx": "0..1", "lang": "string" },
+      "note": "三通道音量对应 §2.15 双通道 + §2.18 分层组的增益基线"
+    }
+  },
+  "excluded": {
+    "upgrades": "局内升级进度不入档（一局结束即失效）",
+    "runState": "当前局内血量/位置/场上敌人一律不入档",
+    "reason": "避免存档膨胀与跨版本语义漂移；局内状态重开即重建"
+  },
+  "integrity": {
+    "loadRule": "载入时按 keyRef 白名单校验每个 id；未知/失效 id 静默丢弃并累加 droppedCount 告警，不抛异常",
+    "clampRule": "数值字段按 min/max 与 maxLevel 夹紧（防篡改档负数或超上限）",
+    "defaultRule": "缺失字段用默认值补齐（空对象/0/默认设置），不因缺字段失败",
+    "dailyResetRule": "lastDailyDate 与今日不同 → dailyProgress 清空、lastDailyDate 更新"
+  },
+  "migration": {
+    "policy": "仅支持向上迁移；saveVersion 高于当前版本时拒绝载入并提示升级客户端（防降级丢数据）",
+    "steps": [
+      { "from": 1, "to": 1, "note": "首发版本，无迁移逻辑" }
+    ]
+  },
+  "consumerNote": "消费点：meta_lab.html「💾 存档演示」面板——导出当前 profile 为 JSON 文件、导入时按 integrity 规则校验（脏数据容错可见：未知 id 被丢弃并计数）、重置回默认档。零主游戏依赖，纯前端 file:// 可用。"
+}
