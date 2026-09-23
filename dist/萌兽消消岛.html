@@ -10554,7 +10554,7 @@ var UPGRADE_DEFS = [
 ];
 
 // ===== 【R22】局外天赋路径节点表(r22b 锋芒/磐石互斥二选一): 每路 3 节点×pathMaxLv 级, 行 schema 对齐 UPGRADE_DEFS =====
-// 独立成表不并入 UPGRADE_DEFS: 冻结断言 gate_d_upgrade Da1/Da5 按"该表 5 线×10 级"闭合(价格合计 29939 口径),
+// 独立成表不并入 UPGRADE_DEFS: 冻结断言 ci/upgrade-price-lock.mjs(第 31 维度) 按"该表 5 线×10 级"闭合(价格合计 29980 口径;
 // 并入即击穿; 存储仍走 saveData.upgrades 同一对象(零新顶层结构, 旧档无 path 键=未抉择态, 零迁移)。
 // 互斥(规格裁决): 对立路径任一节点 lv>=1 即双向同锁, 选路=首次购买(不设独立抉择标记);
 // 价格沿用 ceil(base×1.6^(n-1)) 既有公式; 效果六 stat 键均为既有 Stats 字段(recomputeStats 天赋乘区镜像被动区公式)。

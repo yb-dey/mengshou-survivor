@@ -245,6 +245,19 @@ jobs:
         run: |
           node ci/room-tier-cross.mjs --selftest
           node ci/room-tier-cross.mjs
+      # 第 31 维度（v1.207）：局外强化价格锁 —— UPGRADE_DEFS × CONFIG.upPriceExp / upMaxLv。
+      #   病根族 = **假保证**（第 36 轮查出）：母版 L10557 注释声称有「冻结断言 gate_d_upgrade …(价格合计 29939 口径)」，
+      #     实测**全仓库没有 gate_d_upgrade**（grep 只命中那条注释本身）⇒ 这张价格表**没有任何门禁在守**；
+      #     且注释里的 29939 与代码自身公式（`upgradePriceAt = ceil(base×upPriceExp^lv)`）实算的 **29,980** 不符（差 41）。
+      #   判据：A 解析完整性（5 线·base>0）· B 曲线参数锚定（upPriceExp 1.6 / upMaxLv 10）
+      #     · C 逐线满级合计锁定（atk/hp 5451 · aspd/move 7267 · pickup 4544）· D 五线合计锁定 **29,980**
+      #     · E 首级价锁定 **30**（首局门槛 = 产品口径，见 `产品视角-小游戏化.md` 第九节）。
+      #   ⚠ 作用域纪律：**不纳入 PATH_NODE_DEFS / DATA_BEAST**（另一套价格语义）—— selftest 用例 7/8 专测不误报。
+      #   **硬门禁**（改价未同步锁表即 exit 1）。
+      - name: 局外强化价格锁（GATE）
+        run: |
+          node ci/upgrade-price-lock.mjs --selftest
+          node ci/upgrade-price-lock.mjs
       # 第 30 维度（备案轮）：合规标识 —— **备案/上架的强制项**，缺一条直接卡审核。
       #   病根：这类"要求写在平台规范里、不在代码里"的项，**没有任何门禁会守**，
       #     改着改着就会被覆盖掉 —— 2026-09-23 实测《健康游戏忠告》在全项目出现 **0 次**。
