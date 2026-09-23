@@ -30,6 +30,10 @@ const REPO = [join(HERE, '..'), join(HERE, '..', 'mengshou-survivor')]
   || join(HERE, '..', 'mengshou-survivor')
 const SELFTEST = process.argv.includes('--selftest')
 const FRAMES = (() => { const i = process.argv.indexOf('--frames'); return i > 0 ? Number(process.argv[i + 1]) : 5 })()
+// 【第 62 轮】节奏实测模式：`--pacing`（步长 `--step`、上限 `--tmax` 可覆盖）
+const PACING = process.argv.includes('--pacing')
+const P_STEP = (() => { const i = process.argv.indexOf('--step'); return i > 0 ? Number(process.argv[i + 1]) : 30 })()
+const P_TMAX = (() => { const i = process.argv.indexOf('--tmax'); return i > 0 ? Number(process.argv[i + 1]) : 0 })()
 
 // ── 取出游戏脚本 ───────────────────────────────────────────────────────────
 // ⚠ 优先验**构建产物** `game.bundle.js`（那才是要发布的东西）；
@@ -941,6 +945,7 @@ const AB = AUDIO.buffers || []
   }
 }
 
+
 const used = (sandbox.__wxadapter && sandbox.__wxadapter.used) || {}
 const rows = Object.entries(used).sort((a, b) => b[1] - a[1])
 console.log(`\n宿主 API 用量（适配层实际被调到的部分）：`)
@@ -1280,6 +1285,132 @@ if (!SELFTEST) {
   ok = okSub && ok
 }
 
+// ── ⑱ 节奏实测（--pacing，第 62 轮新增）────────────────────────────────────────
+//   为什么要有它：仓库里 100+ 条判据全是"静态一致性"或"单帧/单屏"，**没有一条量"一局怎么走"** ——
+//   而"内容什么时候给到玩家、一局到底多久、压力怎么爬"正是产品视角最关心的那几条。
+//   两段输出：① **六章设计节拍**（时长/通关线/BOSS/潮窗）② **单章连续实战采样**。
+//   ⚠ 方法学（三版教训都留在这，别再退回去）：
+//     · v1 用 seek 跳时 + 每点只驱动 1.5s ⇒ 每 30s 只真跑 1.5s，击杀/经验/掉血全被少算
+//       （实测"24 次选卡却只有 Lv3"就是这么来的）⇒ 改成**连续 60fps 驱动**，等价真人从头玩到通关线。
+//     · 时间戳必须**跨帧单调**（照抄 ⑭/⑮ 的 3e6 基准）：重数帧会把游戏时钟推成负值。
+//     · 漂移判据只对 PLAYING 行生效：弹窗/结算**合法冻结** runTime（站桩死在 BOSS 后就会冻在 180s）。
+//   ⚠ 口径：站桩不躲 + 每次都选第一张卡 ⇒ 阵亡时刻与同屏怪量都是**下界**（真人会走位/换卡）。
+if (PACING) {
+  const W = sandbox.window || sandbox
+  const D = (W && W.MENGSHOU_DEBUG) || sandbox.MENGSHOU_DEBUG || {}
+  const flow = (sandbox.GAME && sandbox.GAME.flow) || {}
+  const stName = (v) => Object.keys(flow).find((k) => flow[k] === v) || String(v)
+  const reviveHook = W.onTapReviveBtn || sandbox.onTapReviveBtn || null
+  const P_REVIVE = !process.argv.includes('--no-revive')
+  let clock = 3.6e6
+  const drive = (n) => { for (let i = 0; i < n; i++) { const cb = rafPending.shift(); if (cb) cb(clock); clock += 16.7 } }
+  console.log('\n=== ⑱ 节奏实测（--pacing）===')
+  console.log(`  钩子探测：levelupTap=${typeof D.levelupTap} · onTapReviveBtn=${typeof reviveHook} · spine=${typeof D.spine} · 自动复活=${P_REVIVE ? '开' : '关（--no-revive）'}`)
+  // ① 六章设计节拍（冻帧起局，只读表）
+  const chapters = []
+  for (let i = 0; i < 6; i++) {
+    try { sandbox.debugPlayClean(i, '', true); const sp = D.spine ? D.spine() : null; if (sp) chapters.push(sp) } catch (e) { void e }
+  }
+  if (chapters.length) {
+    console.log('  章节设计节拍：')
+    console.log('  ch      时长(分)  通关线    BOSS 时刻                潮窗时刻')
+    for (const c of chapters) {
+      console.log(`  ${String(c.ch).padEnd(7)} ${String(c.durMin).padStart(6)}  ${String(c.winTime).padStart(6)}s  ${('[' + c.bossTimes.join(', ') + ']').padEnd(22)} [${c.hordeTimes.join(', ')}]`)
+    }
+    const total = chapters.reduce((a, c) => a + (c.winTime || 0), 0)
+    const longest = chapters.reduce((a, c) => Math.max(a, c.winTime || 0), 0)
+    console.log(`  ⇒ 六章通关线合计 ${total}s（${(total / 60).toFixed(1)} 分钟）· 单章最长 ${longest}s（${(longest / 60).toFixed(1)} 分钟）`)
+  } else console.log('  ⚠ spine() 读不到章节表')
+  // ② 单章连续实战采样（默认第 1 章；--ch N 换章）
+  const P_CH = (() => { const i = process.argv.indexOf('--ch'); return i > 0 ? Number(process.argv[i + 1]) : 0 })()
+  const FPS = 60
+  const chRow = chapters[P_CH] || {}
+  const line = chRow.winTime || P_TMAX || 600
+  const T_END = P_TMAX || Math.ceil(line / P_STEP) * P_STEP
+  console.log(`  连续实战：第 ${P_CH + 1} 章 · ${FPS}fps 连续驱动到 ${T_END}s（通关线 ${line}s）· 站桩不躲 + 总选第一张卡`)
+  sandbox.debugPlayClean(P_CH, '', false)
+  let picks = 0, frames = 0, revives = 0, firstPickRt = null, firstDeathRt = null
+  let frozenFrames = 0, lvFrames = 0, rtBack = 0, guardHit = 0
+  const frozenBy = {}   // 冻结帧按**冻结当时的 state** 归类：探针自己量，不猜哪个状态冻时钟
+  let endAt = null, endState = null
+  const rows = []
+  // ⚠ 采样轴 = 游戏自己的 runTime（不是墙钟帧数）：死亡定格/复活/BOSS 计时停走时 runTime 会停，
+  //   而 state 仍可能读作 PLAYING ⇒ 只有按 runTime 取点，曲线才落在游戏的时间轴上（P1 探针对位）。
+  //   墙钟代价单独记账：frames/60 是"这一章实际要玩家坐多久"的上界（真机 60fps 时两者接近）。
+  for (let t = P_STEP; t <= T_END && !endAt; t += P_STEP) {
+    const GUARD = P_STEP * FPS * 8   // 单个采样区间最多驱动 8 倍名义帧数：时钟被冻住时不空转
+    let guard = 0
+    while (sandbox.GAME.runTime < t && !endAt && guard++ < GUARD) {
+      const rt0 = sandbox.GAME.runTime
+      const st0 = sandbox.GAME.state
+      drive(1)
+      frames++
+      if (sandbox.GAME.runTime - rt0 < 0.005) { frozenFrames++; frozenBy[st0] = (frozenBy[st0] || 0) + 1 }
+      if (sandbox.GAME.runTime < rt0 - 0.001) rtBack++
+      if (st0 === flow.LEVELUP_MODAL) lvFrames++
+      let st = sandbox.GAME.state
+      if (st === flow.LEVELUP_MODAL) {
+        try { if (D.levelupTap) D.levelupTap(); else sandbox.onTapLevelupCard(0) } catch (e) { void e }
+        if (sandbox.GAME.state !== flow.LEVELUP_MODAL) {
+          picks++
+          if (picks === 1) firstPickRt = +sandbox.GAME.runTime.toFixed(1)
+        }
+      }
+      st = sandbox.GAME.state
+      if (st === flow.REVIVE_MODAL) {
+        if (firstDeathRt === null) firstDeathRt = +sandbox.GAME.runTime.toFixed(1)
+        if (P_REVIVE && reviveHook) {
+          try { reviveHook(); if (sandbox.GAME.state !== flow.REVIVE_MODAL) revives++ } catch (e) { void e }
+        } else if (!P_REVIVE) { endAt = +sandbox.GAME.runTime.toFixed(1); endState = stName(st); break }
+      }
+      if (st === flow.RESULT_LOSE || st === flow.RESULT_WIN) { endAt = +sandbox.GAME.runTime.toFixed(1); endState = stName(st); break }
+    }
+    if (guard >= GUARD) guardHit++
+    const sk = (() => { try { return D.stress ? D.stress() : null } catch (e) { return null } })()
+    rows.push({
+      t, rt: +sandbox.GAME.runTime.toFixed(1), wall: +(frames / FPS).toFixed(1),
+      state: stName(sandbox.GAME.state), picks,
+      enemy: sk ? sk.enemyCount : -1, horde: sk && sk.hordeActive ? 1 : 0,
+      lv: (sandbox.run && sandbox.run.level) | 0, hp: (sandbox.player && sandbox.player.hp) | 0,
+      maxHp: (sandbox.player && sandbox.player.maxHp) | 0,
+    })
+  }
+  console.log('  游戏t(s)  runTime  墙钟(s)  同屏怪  潮  等级  选卡  HP        state')
+  for (const r of rows) {
+    console.log(`  ${String(r.t).padStart(8)}  ${String(r.rt).padStart(7)}  ${String(r.wall).padStart(7)}  ${String(r.enemy).padStart(6)}  ${String(r.horde).padStart(2)}  ${String(r.lv).padStart(4)}  ${String(r.picks).padStart(4)}  ${(r.hp + '/' + r.maxHp).padStart(8)}  ${r.state}`)
+  }
+  const peak = rows.reduce((a, r) => (r.enemy > a.enemy ? r : a), { enemy: -1, t: 0 })
+  const playRows = rows.filter((r) => r.state === 'PLAYING')
+  const hordeRatio = playRows.length ? playRows.filter((r) => r.horde).length / playRows.length : 0
+  const last = rows[rows.length - 1] || {}
+  // 时钟账（v10）：采样轴就是 runTime，所以不再需要"滞后 = 开局定格 + 冻结"那种补偿账；
+  //   只报"这段游戏时间花了多少墙钟"—— 死亡定格/复活/BOSS 计时停走都会让墙钟变长。
+  const frozenSec = +(frozenFrames / FPS).toFixed(1)
+  const ratio = last.rt > 0 ? +(last.rt / (frames / FPS)).toFixed(3) : 0
+  const fzTop = Object.keys(frozenBy).sort((a, b) => frozenBy[b] - frozenBy[a]).slice(0, 4)
+    .map((k) => `${k} ${(frozenBy[k] / FPS).toFixed(1)}s`).join(' / ') || '（无冻结帧）'
+  const rtStuck = 0   // 采样轴改为 runTime 后，"墙钟行对位"不再需要：逐帧 rtBack 已在循环里数过
+  console.log(`  派生：同屏怪峰值 ${peak.enemy}（t=${peak.t}s，该点 state=${peak.state}）· 潮窗覆盖 ${(hordeRatio * 100).toFixed(0)}%（${playRows.length} 个 PLAYING 样本，30s 粒度）`)
+  console.log(`        首次升级 t=${firstPickRt === null ? '未升级' : firstPickRt + 's'} · 选卡 ${picks} 次 · 终局 Lv${last.lv} / HP ${last.hp}/${last.maxHp}` +
+    (firstDeathRt === null ? ' · 全程未阵亡' : ` · 站桩首次阵亡 t=${firstDeathRt}s` + (revives ? `（自动复活 ${revives} 次续行）` : '')) +
+    (endAt === null ? ' · 打到采样结束' : ` · ${endState} @ t≈${endAt}s`))
+  console.log(`        墙钟代价：游戏内 ${last.rt}s 共驱动 ${frames} 帧 = ${(frames / FPS).toFixed(1)}s 墙钟（比率 ${ratio}）· 时钟冻结 ${frozenSec}s`)
+  console.log(`        冻结归属：${fzTop} · 复活 ${revives} 次 · 升级弹窗帧 ${lvFrames}`)
+  const pFails = []
+  const minRows = Math.max(2, Math.floor((T_END / P_STEP) / 2))   // 名义采样数的一半：--tmax 短跑时不误判
+  if (rows.length < minRows) pFails.push(`采样点只有 ${rows.length} 个（本设置应 ≥${minRows}）`)
+  if (rtBack) pFails.push(`runTime 出现 ${rtBack} 次回退（时钟被重置）`)
+  if (rtStuck) pFails.push('PLAYING 相邻样本 runTime 没前进')
+  if (guardHit) pFails.push(`${guardHit} 个采样区间的时钟被冻住（驱动到 8 倍名义帧数仍没走到目标）`)
+  const offTarget = rows.filter((r) => Math.abs(r.rt - r.t) > 1)
+  if (offTarget.length) pFails.push(`${offTarget.length} 个采样点没落在 runTime 目标上（最大偏 ${Math.max(...offTarget.map((r) => Math.abs(r.rt - r.t))).toFixed(1)}s）`)
+  if (rows.length && last.enemy < 0) pFails.push('读不到 stress().enemyCount')
+  if (!D.spine) pFails.push('读不到 MENGSHOU_DEBUG.spine（调试口没挂上）')
+  if (P_REVIVE && reviveHook && rows.some((r) => r.state === 'REVIVE_MODAL') && revives === 0) pFails.push('复活钩子调了但没生效（REVIVE_MODAL 卡住 ⇒ 后续样本全是冻结帧）')
+  if (last.lv > 2 && picks < last.lv - 2) pFails.push(`选卡 ${picks} 次远少于等级跨度 ${last.lv - 1}（漏清升级卡）`)
+  if (pFails.length) { console.log('  ❌ 节奏探针自身不过：'); for (const f of pFails) console.log('     - ' + f); ok = false }
+  else console.log(`  ✅ 节奏探针自证通过（${rows.length} 个采样点全部落在 runTime 目标 ±1s 内 · 驱动 ${frames} 帧 · runTime 回退 ${rtBack} 次 · 复活 ${revives} 次）`)
+}
 console.log(`\n结论：${ok ? (NOPLAY ? '启动 + 输入 通过（--no-play：未跑实战）' : '启动 + 输入 + 实战 全部通过') : '失败'}（本轮：初始化帧 ${FRAMES}、实战帧 ${playFrames}；rAF 待驱动 ${rafPending.length} 个；分包场景 ${SUBPKG_SCENARIO}）`)
 if (SELFTEST) {
   // 阴性对照的期望是"必须失败"
