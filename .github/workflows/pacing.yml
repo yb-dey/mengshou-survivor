@@ -1,0 +1,65 @@
+name: pacing
+# 微信小游戏《萌兽不好惹》**整局节奏实测**（`minigame/smoke.mjs --pacing`，第 62 轮新增）。
+#
+# 为什么要有它：⑱ 是仓库里第一条"整局级"判据（六章设计节拍 + 单章连续实战曲线），
+#   但单章连续驱动就要上万到数万帧（ch6 实测 48431 帧）—— 本机跑六章会明显占 CPU，
+#   而公开仓库的 Actions 分钟数免费不限 ⇒ 这件吃算力的活放云端（用户第 5 条）。
+#
+# 判据边界（重要）：本 job **只判"探针自身可信"**——采样点必须落在 runTime 目标 ±1s 内、
+#   runTime 不回退、区间冻死必须报错。曲线数字（同屏怪峰值/等级/阵亡时刻）是**数据不是阈值**：
+#   站桩 + 总选第一张卡 = **下界**口径，给它们设阈值只会制造假保证。
+#
+# 读结果：每章派生行打成 `::notice::`（annotations 匿名可读，见 MEMORY「远程读红因」）；
+#   完整采样表在 ci/out/pacing-ch*.log 产物里。
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'game/**'
+      - 'minigame/**'
+      - 'ci/**'
+      - '.github/workflows/pacing.yml'
+permissions:
+  contents: read
+jobs:
+  pacing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # ⑱ 的输入 = 内联母版重建出的 dist + 小游戏包（与 minigame-smoke 同一条链）
+      - name: 重建 dist + 小游戏包
+        run: node ci/build-dist.js && node minigame/build-minigame.mjs
+
+      # 六章逐章连续驱动；每章一次 run-gate.sh（失败时 ::error:: 判据行 + 尾部匿名可读）
+      - name: 六章节奏实测（逐章连续驱动，派生行打成 notice）
+        run: |
+          set -u
+          # 通关线（秒）= 游戏 CONFIG 章节表的 winTime；只作 --tmax 驱动上限，权威源仍是 spine()
+          LINES="240 300 360 480 600 600"
+          i=0
+          for line in $LINES; do
+            i=$((i+1))
+            log="ci/out/pacing-ch$i.log"
+            bash ci/run-gate.sh "$log" node minigame/smoke.mjs --pacing --ch $((i-1)) --tmax "$line"
+            if [ "$i" = "1" ]; then
+              grep -E '^  (ch[0-9]|⇒ 六章)' "$log" | sed 's/%/%25/g; s/^/::notice::/' || true
+            fi
+            grep -E '派生：|首次升级|墙钟代价|冻结归属|节奏探针自证' "$log" \
+              | sed 's/%/%25/g; s/^ */  /; s/^/::notice::/' || true
+            echo "::notice::第 $i 章节奏探针 exit=0（完整采样表见产物 ci/out/pacing-ch$i.log）"
+          done
+          echo "::notice::六章节奏实测完成：探针自证全部通过（数字见上面各章 notice，口径=站桩下界）"
+
+      - name: 上传采样日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pacing
+          path: ci/out/pacing-ch*.log
+          retention-days: 14
