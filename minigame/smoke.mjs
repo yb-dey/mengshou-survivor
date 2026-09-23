@@ -909,6 +909,29 @@ const AB = AUDIO.buffers || []
   if (rows.length < 24) aFails.push(`E 覆盖度不足：不同长度 ${rows.length} < 24（事件种类变少 = 音频退化）`)
   if (bgmRefs.length && bgmHit < 8) aFails.push(`E BGM 只命中 ${bgmHit}/${bgmRefs.length}（<8）`)
   if (sfxRows.length < 14) aFails.push(`E SFX 不同长度只有 ${sfxRows.length} < 14`)
+  // ── ⑰b 逐事件合成（比"数长度"更硬）────────────────────────────────────────
+  //   母版 `_renderAll()` 对 `CONFIG.audio.gains` 的**每个 id** 调 `_renderOne`；而 `_renderOne` 末尾有
+  //   「未知 id ⇒ `_alloc(0.01)` 静音兜底」（L12483）。⇒ 某个 id 缺分支时，纯程序化形态（小游戏）下
+  //   那个事件**永远是哑的**，而"buffer 个数 / 长度种类"这类统计完全看不出来。
+  //   判据用母版自己的静音阈值：`peak > 0.0001`（L12700 同款）。
+  const sfxIds = (() => { try { return Object.keys(sandbox.CONFIG.audio.gains) } catch (e) { return [] } })()
+  const silentIds = []
+  const idPeak = (w) => { let pk = 0; for (let i = 0; i < w.length; i++) { const v = w[i] < 0 ? -w[i] : w[i]; if (v > pk) pk = v } return pk }
+  for (const id of sfxIds) {
+    let pk = -1, len = 0
+    try { const w = sandbox.Audio._renderOne(id, 44100); len = w.length; pk = idPeak(w) } catch (e) { void e }
+    if (!(pk > 0.0001)) silentIds.push(`${id}(len=${len},peak=${pk < 0 ? "抛错" : pk.toFixed(5)})`)
+  }
+  // 判据自证：造一个**不存在**的 id ⇒ 必须掉进静音兜底（长度 441、峰值 0），否则这判据测不出缺失分支
+  let idProbeOk = false
+  try {
+    const bogus = sandbox.Audio._renderOne('SFX___NOT_A_REAL_ID___', 44100)
+    idProbeOk = bogus.length === 441 && idPeak(bogus) === 0
+  } catch (e) { void e }
+  console.log(`  逐事件合成：${sfxIds.length} 个 id，静音 ${silentIds.length} 个；自证（假 id 必须是 441 全零）：${idProbeOk ? '✅' : '✘'}`)
+  if (!sfxIds.length) aFails.push('B 读不到 CONFIG.audio.gains —— 逐事件判据无法成立')
+  if (silentIds.length) aFails.push(`B 有 ${silentIds.length} 个事件合成出来是静音（小游戏形态下这些音永远听不到）：${silentIds.slice(0, 6).join(' ')}`)
+  if (!idProbeOk) aFails.push('判据自证失败：假 id 没掉进静音兜底 ⇒ 这条判据测不出缺失分支（假保证）')
   if (aFails.length) {
     console.log('  ❌ 程序化音频体检未过：')
     for (const f of aFails) console.log('     - ' + f)
