@@ -3,6 +3,9 @@ name: fx-audit
 # 并与"不触发特效时的帧间差"做对照，判定每个特效是否真的在画面上可见。
 on:
   workflow_dispatch:
+  # 【第 49 轮】加 push 触发：这些只读审计此前只能手动跑，从没在代理提交上执行过
+  push:
+    branches: [main]
 jobs:
   fx:
     runs-on: ubuntu-latest

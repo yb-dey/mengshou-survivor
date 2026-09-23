@@ -25,7 +25,11 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.200 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.201 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.201 平台】触屏宿主的操作提示：小游戏是纯触屏，而设置页唯一的帮助行与暂停层默认提示都是键鼠文案
+//   （「WASD / 方向键 / Esc / 空格」）⇒ 对目标平台玩家信息量为 0。新增 `touchOnlyHost()`（看 `window.__wxadapter`），
+//   两处**只在文案上**分支：设置页 → 「拖动屏幕摇杆走位 · 右上角暂停 · 倒下可复活」；暂停层 → 「点「继续游戏」」。
+//   ⛔ 不动任何输入逻辑（键鼠在两种宿主里都仍可用）、不动数值/掉落/节奏/布局坐标。
 // 【v1.200 美术】按钮副标可读性（第 47 轮看图发现）：v1.198 给暂停层「回大厅」加的副标走的是
 //   `makeButton` 默认副标色 #d8c898（暗卡其），压在绿按钮面上 4× 放大即可见对比不足。
 //   修法：给渲染器加**可选** `subInk`（不设则与历史逐字一致），「回大厅」副标改浅琥珀 #ffe9b0；
@@ -644,7 +648,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.200",                   // 【v1.200】按钮副标可读性: 新增可选 subInk, 暂停层「回大厅」副标改浅琥珀(原默认色压在绿面上对比不足)
+  version: "1.201",                   // 【v1.201】触屏宿主操作提示: 设置页帮助行与暂停层提示按宿主换文案(小游戏无键盘); 只改文案, 不动输入逻辑/数值
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -1781,6 +1785,13 @@ function readEnvSafeArea() {
     document.documentElement.removeChild(probe);
   } catch (err) { /* env() 不可用时保持 0, 走 guessPhoneSafeCss */ }
   return out;
+}
+// 【v1.201 平台】是否"纯触屏宿主"（小游戏/适配层在场 ⇒ 没有键盘）。
+//   用途：把**键鼠专属的操作提示**换成触屏文案 —— 小游戏是纯触屏，玩家看到「WASD / Esc / 空格」
+//   学不到任何能用的操作（第 48 轮渲染设置页才发现，见 `内容分部审查.md` A5）。
+//   ⚠ 只在**文案**上分支：不动任何输入逻辑（键鼠在两种宿主里都仍然可用），也不新增全局状态。
+function touchOnlyHost() {
+  return !!(typeof window !== "undefined" && window.__wxadapter);
 }
 function guessPhoneSafeCss(w, h) {
   w = w || 0;
@@ -28892,7 +28903,10 @@ function drawPausePanel(ctx, m) {
       void sec.kind;
     }
   }
-  hint = GAME.pauseHint || "已有战斗物 / 差1 / 将成点看怎么来的 · Esc 继续";
+  // 【v1.201】同一处"键鼠专属提示"：触屏宿主改为指按钮（触屏上「Esc」不存在）
+  hint = GAME.pauseHint || (touchOnlyHost()
+    ? "已有战斗物 / 差1 / 将成点看怎么来的 · 点「继续游戏」"
+    : "已有战斗物 / 差1 / 将成点看怎么来的 · Esc 继续");
   ctx.fillStyle = GAME.pauseHint ? "#8a5a10" : c.cardTitle;
   ctx.font = "bold 13px " + FONT_STACK;
   ctx.textAlign = "center";
@@ -34247,7 +34261,10 @@ function drawSettingsPanel(ctx, m) {
   fillRoundRect(ctx, CONFIG.viewW / 2 - 72, py + 80, 144, 3, 1.5);
   ctx.fillStyle = c.cardDesc;
   ctx.font = "bold 15px " + FONT_STACK;
-  ctx.fillText("局内 WASD / 方向键走位 · Esc 暂停 · 空格咆哮(过场则跳过)", CONFIG.viewW / 2, py + 106);
+  // 【v1.201】触屏宿主（小游戏）没有键盘: 原句只讲键鼠 ⇒ 触屏玩家在设置页学不到任何操作（A5）
+  ctx.fillText(touchOnlyHost()
+    ? "拖动屏幕摇杆走位 · 右上角暂停 · 倒下可复活"
+    : "局内 WASD / 方向键走位 · Esc 暂停 · 空格咆哮(过场则跳过)", CONFIG.viewW / 2, py + 106);
   ctx.textAlign = "left";
   ctx.fillStyle = "#55603c";
   ctx.font = "bold 14px " + FONT_STACK;

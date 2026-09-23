@@ -14,6 +14,9 @@ name: sfx-runtime-freq
 #   3) ci/sfx-freq-vs-loud.selftest.mjs —— 阴性对照（证明门禁真的会报错）
 on:
   workflow_dispatch:
+  # 【第 49 轮】加 push 触发：这些只读审计此前只能手动跑，从没在代理提交上执行过
+  push:
+    branches: [main]
 jobs:
   freq:
     runs-on: ubuntu-latest
