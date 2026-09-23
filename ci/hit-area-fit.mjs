@@ -50,6 +50,17 @@ const ALLOW_OVERLAP = [];   // 允许的重叠（当前为空：任何同屏重�
 //   这种「没量到」绝不能长得像「量过且没问题」（本工作区反复踩的同一个坑）。低于下限 ⇒ FAIL。
 const EXPECT_MIN = { 'HOME(大厅)': 8, '设置': 4, '图鉴': 4, '装备库': 4, '宝库': 4, '每日挑战': 2,
   '暂停': 4, '升级三选一': 3, '复活/死亡': 2, '结算': 2 };
+// ── 偏小台账：可点节点短边 < 44 CSS px 必须在这里登记"为什么先这样"，否则 FAIL ──
+//   ⚠ 与静态判据的 ALLOW_NEW 同款纪律：**报告不是契约**。60 个偏小如果只是打印出来，
+//   下一个人加一个 18px 的可点条目也不会有任何东西拦他。
+//   ⚠ 已核对：构筑芯（pausechip/resultchip）**不是**多余的可点 —— 结算页 L31755 明写
+//   「点条目看怎么来的」，是**被文案prompt的**交互 ⇒ 不能靠"删 onTap"消掉，只能改视觉（见 PM §18.10）。
+const ALLOW_SMALL = [
+  { re: /^pausechip\d+$/, why: '暂停面板构筑芯（点条目看提示）· 行高由面板密度决定，扩命中区会压到相邻芯（安全 pad 仅 3）⇒ 待视觉重排' },
+  { re: /^resultchip\d+$/, why: '结算面板构筑芯（结算页文案明写「点条目看怎么来的」）· 18.4 CSS px 是全游戏最紧 ⇒ 待视觉重排' },
+  { re: /^hallboard\d+$/, why: '大厅六部位框 · 运行时生成的簇，彼此极近（安全 pad 2）⇒ 待视觉重排' },
+  { re: /^runechip\d+$/, why: '大厅符文槽 · 同上，运行时生成的簇' },
+];
 
 const scanExpr = (extra) => `
 (function(){
@@ -207,6 +218,14 @@ const smallGlobal = ok.flatMap((c) => c.small.map((s) => ({ screen: c.label, ...
 const worst = smallGlobal.slice().sort((a, b) => a.css - b.css).slice(0, 6);
 const padable = smallGlobal.filter((s) => s.verdict.startsWith('可补'));
 const underfilled = ok.filter((c) => c.underfilled);
+const uniqSmall = [...new Set(smallGlobal.map((s) => s.id))];
+const unlisted = uniqSmall.filter((id) => !ALLOW_SMALL.some((a) => a.re.test(id)));
+const staleSmall = ALLOW_SMALL.filter((a) => !uniqSmall.some((id) => a.re.test(id)));
+const digest = (() => {
+  const m = new Map();
+  for (const id of uniqSmall) { const k = id.replace(/\d+$/, "#"); m.set(k, (m.get(k) || 0) + 1); }
+  return [...m.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => k + '×' + n).join(' · ');
+})();
 const md = ['# ⑲ 命中区运行时体检', '',
   `- 屏数 ${ok.length}（跳过 ${report.cases.filter((c) => c.skipped).length}）· 页面错误 ${pageErrors.length}`,
   `- **同屏命中区重叠 ${overlapsGlobal.length} 处**（硬门禁）· 偏小控件 ${smallGlobal.length} 个，其中**可零像素补 pad ${padable.length} 个**`,
@@ -221,6 +240,7 @@ fs.writeFileSync(path.join(OUT, 'hit-area-fit.md'), md.join('\n'), 'utf8');
 const skipped = report.cases.filter((c) => c.skipped).length;
 console.log(`::notice::⑲ 命中区逐屏（可点/偏小/重叠）::` + ok.map((c) => `${c.label} ${c.n}/${c.small.length}/${c.overlaps.length}`).join(' · ')
   + (skipped ? ` · ⚠ 跳过 ${skipped} 屏（未量到）` : ' · 10 屏全覆盖'));
+console.log(`::notice::⑲ 偏小 id 摘要（台账用）::` + digest + ` · 未登记 ${unlisted.length} 个`);
 console.log(`::notice::⑲ 偏小 ${smallGlobal.length} 个 · 可零像素补 pad ${padable.length} 个 · 最紧::` +
   worst.map((s) => `${s.screen}:${s.id} ${s.css}css pad${s.need}≤${s.safe}`).join(' · '));
 
@@ -235,6 +255,16 @@ if (SELFTEST) {
   const failed = report.selftest.filter(([, o]) => !o);
   if (failed.length) { bad++; console.log(`::error::⑲ 自测未通过 ${failed.length}/${report.selftest.length}::` + failed.map(([n]) => n).join(' · ')); }
   else console.log(`✅ 自测 ${report.selftest.length}/${report.selftest.length} 通过（纯逻辑 + 注入重叠）`);
+}
+if (unlisted.length) {
+  bad++;
+  console.log('::error::⑲ 有未登记的偏小可点节点（<44 CSS px）⇒ 请补尺寸/改视觉，或登记到 ALLOW_SMALL 并写原因::' +
+    unlisted.slice(0, 8).join(' · ') + (unlisted.length > 8 ? ' …共 ' + unlisted.length + ' 个' : ''));
+}
+if (staleSmall.length) {
+  bad++;
+  console.log('::error::⑲ ALLOW_SMALL 台账失效（这些条目现在已达标/不存在）⇒ 从台账删除::' +
+    staleSmall.map((a) => String(a.re)).join(' · '));
 }
 if (underfilled.length) {
   bad++;
