@@ -44,6 +44,9 @@ jobs:
       - name: 六章节奏实测（一章一行 notice）
         run: |
           set -u
+          # ⚠ GitHub 的 run 步骤是 bash -e：任何裸命令失败都会立刻退出脚本（后面那句 code=$? 根本不会执行）。
+          #   这里用 trap 兜底，保证任何失败都至少留下一条可读注解。
+          trap 'echo "::error::pacing 步骤异常退出（exit=$?，章 i=${i:-?}，log=${log:-?}）"' ERR
           # 通关线（秒）= 游戏 CONFIG 章节表的 winTime；只作 --tmax 驱动上限，权威源仍是 spine()
           mkdir -p ci/out   # 原先由 run-gate.sh 建目录，这里自己建
           LINES="240 300 360 480 600 600"
@@ -56,8 +59,12 @@ jobs:
             # ⚠ 不用 run-gate.sh：它失败时会发 ~10 条 ::error::，把"每级只留前 10 条"的配额吃满，
             #   我自己那条带原因的单行注解就发不出来了（131827a 实测：只剩老三样，原因又丢了）。
             #   这里直接跑 node、自己收 exit code，只发**一条** ::error:: ⇒ 配额内必达。
-            node minigame/smoke.mjs --pacing --ch $((i-1)) --tmax "$line" > "$log" 2>&1
-            code=$?
+            # ⚠ 必须放进 if 条件位：bash -e 下裸命令失败会直接退出，code=$? 永远执行不到（实测踩过）。
+            if node minigame/smoke.mjs --pacing --ch $((i-1)) --tmax "$line" > "$log" 2>&1; then
+              code=0
+            else
+              code=$?
+            fi
             if [ "$code" = "0" ]; then
               if [ "$i" = "1" ]; then
                 t=$(grep -E '^  (ch[0-9]|⇒ 六章)' "$log" | sed 's/^  */  /' | tr '\n' '~' | sed 's/%/%25/g')
