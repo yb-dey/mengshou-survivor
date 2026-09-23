@@ -17,7 +17,9 @@ jobs:
           node-version: '22'
       - run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
       - name: 音频专项体检
-        run: node ci/audio-audit.mjs
+        # 【第 62 轮】此前是裸 `node`：失败时注解里只有 GitHub 的 "exit code 2"，没有 ::error:: 判据行，
+        #   代理远程定位不了（annotations 通道漏了一个口子）。改走 run-gate.sh ⇒ 判据行 + 尾部匿名可读。
+        run: bash ci/run-gate.sh ci/out/audio-audit.log node ci/audio-audit.mjs
       - name: 上传产物
         if: always()
         uses: actions/upload-artifact@v4
