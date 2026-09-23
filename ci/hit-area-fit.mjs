@@ -140,13 +140,24 @@ try {
     await page.waitForTimeout(400);
     await scan('每日挑战', 'MENGSHOU_DEBUG.closeVault(); MENGSHOU_DEBUG.hall(); MENGSHOU_DEBUG.dailyPick();');
     await page.waitForTimeout(400);
-    // ── 进战斗后才有 4 屏（点主 CTA，沿用 screen-sweep 的成熟做法）──
-    await page.evaluate(() => { try { window.MENGSHOU_DEBUG.closeVault(); window.MENGSHOU_DEBUG.hall(); } catch (e) { void e; } });
+    // ── 进战斗后才有 4 屏 ──
+    // ⚠ 第 70 轮云端首跑实测：点主 CTA 那条路**进不去战斗**（新手引导/首局路由会拦），
+    //   结果是这 4 屏被静默跳过、只剩 6 屏 —— 而"复活/升级"恰恰是全游戏误触代价最高的两屏。
+    //   ⇒ 主路径改成调试口 `MENGSHOU_DEBUG.start(0)`（= debugPlayClean，直通 PLAYING），
+    //     点 CTA 降级为回退；两条都失败才记 SKIP（并把跳过数写进 notice）。
+    await page.evaluate(() => { try { const D = window.MENGSHOU_DEBUG; D.closeVault(); if (D.guideSkipAll) D.guideSkipAll(); D.hall(); } catch (e) { void e; } });
     await page.waitForTimeout(700);
-    const geom = await page.evaluate(() => { const c = document.querySelector('canvas'); const r = c.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, cw: c.width, ch: c.height }; });
-    await page.mouse.click(geom.l + (316 / geom.cw) * geom.w, geom.t + (617 / geom.ch) * geom.h);
+    await page.evaluate(() => { try { window.MENGSHOU_DEBUG.start(0); } catch (e) { void e; } });
     await page.waitForTimeout(2500);
-    if (await pollFor("MENGSHOU_DEBUG.state().playing", 20, 500)) {
+    let playing = await pollFor("MENGSHOU_DEBUG.state().playing", 24, 500);
+    if (!playing) {
+      const geom = await page.evaluate(() => { const c = document.querySelector('canvas'); const r = c.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, cw: c.width, ch: c.height }; });
+      await page.mouse.click(geom.l + (316 / geom.cw) * geom.w, geom.t + (617 / geom.ch) * geom.h);
+      await page.waitForTimeout(2500);
+      playing = await pollFor("MENGSHOU_DEBUG.state().playing", 24, 500);
+      console.log("（start(0) 未进战斗，已回退点主 CTA ⇒ playing=" + playing + "）");
+    }
+    if (playing) {
       await page.evaluate(() => { try { window.MENGSHOU_DEBUG.pause(true); } catch (e) { void e; } });
       await page.waitForTimeout(700);
       await scan('暂停', 'MENGSHOU_DEBUG.pause(true);');
@@ -164,7 +175,7 @@ try {
       if (await pollFor('/RESULT_(WIN|LOSE)/.test(MENGSHOU_DEBUG.state().name)', 24, 500)) await scan('结算', '');
       else { console.log('SKIP [结算] 未进入 RESULT_*'); report.cases.push({ label: '结算', skipped: true }); }
     } else {
-      console.log('SKIP [战斗相关四屏] 未进入 PLAYING');
+      console.log('SKIP [战斗相关四屏] start(0) 与点 CTA 都没进 PLAYING');
       for (const l of ['暂停', '升级三选一', '复活/死亡', '结算']) report.cases.push({ label: l, skipped: true });
     }
   }
@@ -189,7 +200,9 @@ const md = ['# ⑲ 命中区运行时体检', '',
   ...smallGlobal.map((s) => `| ${s.screen} | ${s.id} | ${s.w}×${s.h} | ${s.css} | ${s.need} | ${s.safe} | ${s.verdict} |`), ''];
 fs.writeFileSync(path.join(OUT, 'hit-area-fit.md'), md.join('\n'), 'utf8');
 
-console.log(`::notice::⑲ 命中区逐屏（可点/偏小/重叠）::` + ok.map((c) => `${c.label} ${c.n}/${c.small.length}/${c.overlaps.length}`).join(' · '));
+const skipped = report.cases.filter((c) => c.skipped).length;
+console.log(`::notice::⑲ 命中区逐屏（可点/偏小/重叠）::` + ok.map((c) => `${c.label} ${c.n}/${c.small.length}/${c.overlaps.length}`).join(' · ')
+  + (skipped ? ` · ⚠ 跳过 ${skipped} 屏（未量到）` : ' · 10 屏全覆盖'));
 console.log(`::notice::⑲ 偏小 ${smallGlobal.length} 个 · 可零像素补 pad ${padable.length} 个 · 最紧::` +
   worst.map((s) => `${s.screen}:${s.id} ${s.css}css pad${s.need}≤${s.safe}`).join(' · '));
 
