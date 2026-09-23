@@ -1397,19 +1397,28 @@ if (PACING) {
   console.log(`        墙钟代价：游戏内 ${last.rt}s 共驱动 ${frames} 帧 = ${(frames / FPS).toFixed(1)}s 墙钟（比率 ${ratio}）· 时钟冻结 ${frozenSec}s`)
   console.log(`        冻结归属：${fzTop} · 复活 ${revives} 次 · 升级弹窗帧 ${lvFrames}`)
   const pFails = []
-  const minRows = Math.max(2, Math.floor((T_END / P_STEP) / 2))   // 名义采样数的一半：--tmax 短跑时不误判
-  if (rows.length < minRows) pFails.push(`采样点只有 ${rows.length} 个（本设置应 ≥${minRows}）`)
+  // 【终局行豁免】本局若在某个采样区间内结束（RESULT_WIN/LOSE，或 --no-revive 下的 REVIVE_MODAL），
+  //   该区间的采样点**必然**到不了目标（时钟停走）—— 那是"本局跑完了"，不是"采样不对位"：
+  //   云端第 5 章就是这么被误判的（本机 `--no-revive` 复现：`1 个采样点没落在 runTime 目标上`）。
+  const terminal = endAt !== null && rows.length ? rows[rows.length - 1] : null
+  //   只豁免**确实没到目标**的终局行；若它正好落在目标上（如 ch1 在 240s 整结算），照常判定。
+  const terminalShort = terminal && terminal.rt < terminal.t - 1 ? terminal : null
+  const judged = terminalShort ? rows.slice(0, -1) : rows
+  const span = Math.min(T_END, endAt === null ? T_END : endAt)
+  const minRows = Math.max(1, Math.floor((span / P_STEP) / 2))   // 按**实际跑到**的时长算，短局不误判
+  if (judged.length < minRows) pFails.push(`有效采样点只有 ${judged.length} 个（实际跑 ${span}s，应 ≥${minRows}）`)
   if (rtBack) pFails.push(`runTime 出现 ${rtBack} 次回退（时钟被重置）`)
   if (rtStuck) pFails.push('PLAYING 相邻样本 runTime 没前进')
   if (guardHit) pFails.push(`${guardHit} 个采样区间的时钟被冻住（驱动到 8 倍名义帧数仍没走到目标）`)
-  const offTarget = rows.filter((r) => Math.abs(r.rt - r.t) > 1)
+  const offTarget = judged.filter((r) => Math.abs(r.rt - r.t) > 1)
   if (offTarget.length) pFails.push(`${offTarget.length} 个采样点没落在 runTime 目标上（最大偏 ${Math.max(...offTarget.map((r) => Math.abs(r.rt - r.t))).toFixed(1)}s）`)
+  if (terminalShort) console.log(`        终局行豁免：t=${terminalShort.t}s 只采到 rt=${terminalShort.rt}s（本局在 ${endState} 结束，时钟停走，不计入对位判定）`)
   if (rows.length && last.enemy < 0) pFails.push('读不到 stress().enemyCount')
   if (!D.spine) pFails.push('读不到 MENGSHOU_DEBUG.spine（调试口没挂上）')
   if (P_REVIVE && reviveHook && rows.some((r) => r.state === 'REVIVE_MODAL') && revives === 0) pFails.push('复活钩子调了但没生效（REVIVE_MODAL 卡住 ⇒ 后续样本全是冻结帧）')
   if (last.lv > 2 && picks < last.lv - 2) pFails.push(`选卡 ${picks} 次远少于等级跨度 ${last.lv - 1}（漏清升级卡）`)
   if (pFails.length) { console.log('  ❌ 节奏探针自身不过：'); for (const f of pFails) console.log('     - ' + f); ok = false }
-  else console.log(`  ✅ 节奏探针自证通过（${rows.length} 个采样点全部落在 runTime 目标 ±1s 内 · 驱动 ${frames} 帧 · runTime 回退 ${rtBack} 次 · 复活 ${revives} 次）`)
+  else console.log(`  ✅ 节奏探针自证通过（${judged.length} 个有效采样点全部落在 runTime 目标 ±1s 内` + (terminalShort ? '，终局行已豁免' : '') + ` · 驱动 ${frames} 帧 · runTime 回退 ${rtBack} 次 · 复活 ${revives} 次）`)
 }
 console.log(`\n结论：${ok ? (NOPLAY ? '启动 + 输入 通过（--no-play：未跑实战）' : '启动 + 输入 + 实战 全部通过') : '失败'}（本轮：初始化帧 ${FRAMES}、实战帧 ${playFrames}；rAF 待驱动 ${rafPending.length} 个；分包场景 ${SUBPKG_SCENARIO}）`)
 if (SELFTEST) {
