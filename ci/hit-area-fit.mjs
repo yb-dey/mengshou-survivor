@@ -45,6 +45,11 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const base = `http://127.0.0.1:${server.address().port}/`;
 const SELFTEST = process.argv.includes('--selftest');
 const ALLOW_OVERLAP = [];   // 允许的重叠（当前为空：任何同屏重叠都算缺陷）
+// ⚠ 每屏「至少应有几个可点节点」的下限 —— 防「量到 0 个却报 ok」：
+//   首跑实测「复活/死亡 0/0/0」：state 轮询说到了 REVIVE_MODAL，扫描却一个可点节点都没有 ——
+//   这种「没量到」绝不能长得像「量过且没问题」（本工作区反复踩的同一个坑）。低于下限 ⇒ FAIL。
+const EXPECT_MIN = { 'HOME(大厅)': 8, '设置': 4, '图鉴': 4, '装备库': 4, '宝库': 4, '每日挑战': 2,
+  '暂停': 4, '升级三选一': 3, '复活/死亡': 2, '结算': 2 };
 
 const scanExpr = (extra) => `
 (function(){
@@ -67,6 +72,8 @@ const scanExpr = (extra) => `
 })()
 `;
 const stateExpr = `(function(){ try { return JSON.stringify(window.MENGSHOU_DEBUG.state()); } catch(e){ return '{"err":1}'; } })()`;
+// 页内"可见可点节点数"：等屏时用（光等 state 不够 —— 首跑复活屏就是 state 到了、节点还没显）
+const NODES = "(function(){var a=UIStack.list||[],c=0;for(var i=0;i<a.length;i++){var n=a[i];if(n&&n.visible&&n.rect&&n.onTap&&(n.kind||'')!=='Modal')c++}return c})()";
 const readCase = (label, raw) => {
   const o = JSON.parse(raw);
   if (!o.ok) return { label, err: o.err };
@@ -86,6 +93,11 @@ const scan = async (label, setup) => {
   catch (e) { raw = JSON.stringify({ ok: false, err: String(e.message).slice(0, 180) }); }
   const r = readCase(label, raw);
   if (r.err) { console.log(`ERR  [${label}] ${r.err}`); report.cases.push(r); return r; }
+  const need = EXPECT_MIN[label];
+  if (need != null && r.n < need) {
+    r.underfilled = { got: r.n, need: need };
+    console.log(`FAIL [${label}] 只量到 ${r.n} 个可点节点（下限 ${need}）⇒ 探针与屏幕状态不一致`);
+  }
   const st = await page.evaluate(stateExpr).catch(() => '{}');
   r.state = (JSON.parse(st) || {}).name || '?';
   report.cases.push(r);
@@ -163,16 +175,21 @@ try {
       await scan('暂停', 'MENGSHOU_DEBUG.pause(true);');
       await page.evaluate(() => { try { window.MENGSHOU_DEBUG.pause(false); } catch (e) { void e; } });
       await page.waitForTimeout(500);
-      const gotLu = await pollFor('(function(){var s=MENGSHOU_DEBUG.levelup();return s&&s.cards&&s.cards.length>0;})()', 70, 500);
+      const gotLu = await pollFor('(' + NODES + ') >= 3 && (function(){var s=MENGSHOU_DEBUG.levelup();return s&&s.cards&&s.cards.length>0;})()', 70, 500);
       if (gotLu) await scan('升级三选一', '');
       else { console.log('SKIP [升级三选一] 35s 内没等到升级'); report.cases.push({ label: '升级三选一', skipped: true }); }
       await page.evaluate(() => { const D = window.MENGSHOU_DEBUG || {}; try { D.levelupTap && D.levelupTap(); } catch (e) { void e; } try { D.closeCards && D.closeCards(); } catch (e) { void e; } });
       await page.waitForTimeout(700);
-      await page.evaluate(() => { try { window.MENGSHOU_DEBUG.die('ui-hit-audit'); } catch (e) { void e; } });
-      if (await pollFor("MENGSHOU_DEBUG.state().name === 'REVIVE_MODAL'", 24, 500)) await scan('复活/死亡', '');
-      else { console.log('SKIP [复活/死亡] 未进入 REVIVE_MODAL'); report.cases.push({ label: '复活/死亡', skipped: true }); }
+      let reviveUp = false;
+      for (let attempt = 0; attempt < 2 && !reviveUp; attempt++) {
+        await page.evaluate(() => { try { window.MENGSHOU_DEBUG.die('ui-hit-audit'); } catch (e) { void e; } });
+        reviveUp = await pollFor("(" + NODES + ") >= 2 && MENGSHOU_DEBUG.state().name === 'REVIVE_MODAL'", 20, 500);
+        if (!reviveUp) { console.log('（第 ' + (attempt + 1) + ' 次 die() 后复活盘未就位，重试）'); await page.waitForTimeout(800); }
+      }
+      if (reviveUp) await scan('复活/死亡', '');
+      else { console.log('SKIP [复活/死亡] 两次 die() 后仍未进入 REVIVE_MODAL（或节点未就位）'); report.cases.push({ label: '复活/死亡', skipped: true }); }
       await page.evaluate(() => { try { window.MENGSHOU_DEBUG.giveUp(); } catch (e) { void e; } });
-      if (await pollFor('/RESULT_(WIN|LOSE)/.test(MENGSHOU_DEBUG.state().name)', 24, 500)) await scan('结算', '');
+      if (await pollFor('(' + NODES + ') >= 2 && /RESULT_(WIN|LOSE)/.test(MENGSHOU_DEBUG.state().name)', 24, 500)) await scan('结算', '');
       else { console.log('SKIP [结算] 未进入 RESULT_*'); report.cases.push({ label: '结算', skipped: true }); }
     } else {
       console.log('SKIP [战斗相关四屏] start(0) 与点 CTA 都没进 PLAYING');
@@ -189,11 +206,12 @@ const overlapsGlobal = ok.flatMap((c) => c.overlaps.map((v) => ({ screen: c.labe
 const smallGlobal = ok.flatMap((c) => c.small.map((s) => ({ screen: c.label, ...s })));
 const worst = smallGlobal.slice().sort((a, b) => a.css - b.css).slice(0, 6);
 const padable = smallGlobal.filter((s) => s.verdict.startsWith('可补'));
+const underfilled = ok.filter((c) => c.underfilled);
 const md = ['# ⑲ 命中区运行时体检', '',
   `- 屏数 ${ok.length}（跳过 ${report.cases.filter((c) => c.skipped).length}）· 页面错误 ${pageErrors.length}`,
   `- **同屏命中区重叠 ${overlapsGlobal.length} 处**（硬门禁）· 偏小控件 ${smallGlobal.length} 个，其中**可零像素补 pad ${padable.length} 个**`,
   '', '| 屏 | 状态 | 可点 | 偏小 | 重叠 |', '|---|---|---|---|---|',
-  ...ok.map((c) => `| ${c.label} | ${c.state} | ${c.n} | ${c.small.length} | ${c.overlaps.length} |`), '',
+  ...ok.map((c) => `| ${c.label} | ${c.state} | ${c.n}${c.underfilled ? ' ⚠低于下限' + c.underfilled.need : ''} | ${c.small.length} | ${c.overlaps.length} |`), '',
   '## 逐屏命中区（可点/偏小/重叠）', '', ...ok.map((c) => `- ${c.label} ${c.n}/${c.small.length}/${c.overlaps.length}`), '',
   '## 偏小清单（运行时安全 pad = 本屏内 ½×最近邻居间距，两轴取小）', '',
   '| 屏 | 控件 | 尺寸 | 短边 CSS px | 需 pad | 本屏安全上限 | 结论 |', '|---|---|---|---|---|---|---|',
@@ -218,6 +236,11 @@ if (SELFTEST) {
   if (failed.length) { bad++; console.log(`::error::⑲ 自测未通过 ${failed.length}/${report.selftest.length}::` + failed.map(([n]) => n).join(' · ')); }
   else console.log(`✅ 自测 ${report.selftest.length}/${report.selftest.length} 通过（纯逻辑 + 注入重叠）`);
 }
+if (underfilled.length) {
+  bad++;
+  console.log('::error::⑲ 有屏只量到不足下限的可点节点 ⇒ 探针与屏幕状态不一致（「没量到」不许长得像「没问题」）::' +
+    underfilled.map((c) => `${c.label} 实得${c.underfilled.got}/下限${c.underfilled.need}`).join(' · '));
+}
 if (!ok.length) { bad++; console.log('::error::⑲ 没有任何一屏量到数据（探针失效）::检查 MENGSHOU_DEBUG / UIStack 是否还在'); }
 if (bad) { console.log('\n结论：FAIL'); process.exit(1); }
-console.log(`\n结论：PASS —— ${ok.length} 屏同屏命中区无重叠 · 偏小 ${smallGlobal.length} 个（可零像素补 pad ${padable.length} 个）`);
+console.log(`\n结论：PASS —— ${ok.length} 屏同屏命中区无重叠 · 偏小 ${smallGlobal.length} 个（可零像素补 pad ${padable.length} 个）· 每屏可点节点均达下限`);
