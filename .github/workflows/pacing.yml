@@ -91,7 +91,7 @@ jobs:
             kln=$(echo $spec | cut -d' ' -f2)
             klog="ci/out/pacing-kite-ch$((kch+1)).log"
             if node minigame/smoke.mjs --pacing --kite --ch $kch --tmax $kln > "$klog" 2>&1; then
-              kd=$(grep -E '产出：|走位：' "$klog" | sed 's/^ */  /' | tr '\n' '~' | sed 's/%/%25/g')
+              kd=$(grep -E '产出：|走位：|首次升级|同屏怪峰值' "$klog" | sed 's/^ */  /' | tr '\n' '~' | sed 's/%/%25/g')
               KITE_LINE="${KITE_LINE}第 $((kch+1)) 章[走位] $kd~~"
             else
               echo "::error::走位·第 $((kch+1)) 章探针自证没过（见产物 pacing-kite-ch$((kch+1)).log）"
