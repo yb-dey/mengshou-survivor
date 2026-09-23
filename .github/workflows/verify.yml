@@ -354,8 +354,12 @@ jobs:
           node ci/color-palette-lock.mjs
       # 【v1.206 期】触控目标锁（第 69 轮）：逻辑画布 720 宽映射到 390pt 手机 ⇒ ×0.5417，
       #   通行下限 44 CSS px（iOS HIG）/ 48dp（Android）⇒ 取 **81 逻辑px**。
-      #   实测 27 个具名控件里只有 4 个达标（最紧 homeabout 100×44 ⇒ 23.8 CSS px）——
-      #   扩命中区需 gap-aware（x/y 多为表达式，静态算不全）⇒ 本轮只锁"不许变小 + 不许新增偏小"。
+      #   实测 **39 个可解析调用**里只有 **9 个**达标（最紧 homeabout 100×44 ⇒ 23.8 CSS px）。
+      #   采集器 v3 已能解析 CONFIG 嵌套表 / 布局函数返回字面量 / `||` 兜底 / 算术式；
+      #   18 个"布局函数局部变量算出的尺寸"登记在 ALLOW_BLIND（有新增盲区即 FAIL）。
+      #   邻居间距算出来后：30 个偏小控件里 **29 个可用对称 hitPad 零像素补到 44 CSS px**（最紧的
+      #   homeguide pad 19 ≤ 上限 243；btnrevive/btngiveup pad 6 ≤ 上限 10）。⚠ 补之前必须把邻居集合
+      #   从"按钮"扩到"所有可点控件（makeCard / 带 onTap 的 makeModal）"—— 本判据目前只算了按钮 ⇒ 见 PM §18。
       #   （约定：ci-only 轮次不涨母版版本，故标「vN 期」= 该判据守的是哪个母版；见 PM §18）
       - name: 触控目标锁（GATE · 不许变小 / 不许新增偏小控件）
         run: |
