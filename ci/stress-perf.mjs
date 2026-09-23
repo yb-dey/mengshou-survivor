@@ -135,8 +135,20 @@ while (Date.now() - tWait0 < 55000) {
   //   ⇒ 改用 fx-audit 已验证有效的**确定性钩子** `D.levelupTap()`（直接选中卡，不依赖像素命中）。
   if (s.st === S.LEVELUP) {
     lvTaps++;
-    await page.evaluate(() => { const D = window.MENGSHOU_DEBUG || {}; try { if (D.levelupTap) D.levelupTap(); } catch (e) { void e; } });
-    await page.waitForTimeout(350);
+    // 【第 54 轮修】不选卡，只清场 —— 见文件头/README 的"应力条件"说明：
+    //   轨迹实测（t=0..53s，每 6s 一条 annotation）：选卡 21 次 ⇒ 同屏怪 1–14 震荡、峰值 14；
+    //   而本门禁历史上测到的峰值 53 来自"点中央点不掉卡 ⇒ 升级很少生效 ⇒ 玩家弱 ⇒ 怪堆得起来"。
+    //   ⇒ 为了量"高密度下的帧时间"，这里**故意不选卡**（保持低级 = 低 DPS），让游戏自己的刷怪器把密度堆上去。
+    //   ⚠ 顺序不能反：清 pendingLevels → close → **显式 setState(PLAYING)**（closeLevelupUi 不改 state，
+    //     不改就会被 update() 里的 `pendingLevels>0 → openLevelUp()` 立刻重开，第 51 轮本机探针实测过）。
+    await page.evaluate(() => {
+      try {
+        if (window.run) window.run.pendingLevels = 0;
+        if (typeof window.closeLevelupUi === 'function') window.closeLevelupUi();
+        if (window.GAME && window.GAME.flow) window.GAME.setState(window.GAME.flow.PLAYING);
+      } catch (e) { void e; }
+    });
+    await page.waitForTimeout(250);
     continue;
   }
   if (s.st === S.REVIVE) {      // 复活弹窗没有对应的确定性钩子 → 保留"点中央"
