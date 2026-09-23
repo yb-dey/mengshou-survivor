@@ -6,15 +6,16 @@ name: pacing
 #   而公开仓库的 Actions 分钟数免费不限 ⇒ 这件吃算力的活放云端（用户第 5 条）。
 #
 # 判据边界（重要）：本 job **只判"探针自身可信"**——采样点必须落在 runTime 目标 ±1s 内、
-#   runTime 不回退、区间冻死必须报错。曲线数字（同屏怪峰值/等级/阵亡时刻）是**数据不是阈值**：
-#   站桩 + 总选第一张卡 = **下界**口径，给它们设阈值只会制造假保证。
+#   runTime 不回退、区间冻死必须报错、本局提前结束时豁免终局行。曲线数字（同屏怪峰值/等级/
+#   阵亡时刻）是**数据不是阈值**：站桩 + 总选第一张卡 = **下界**口径，给它们设阈值只会制造假保证。
 #
-# 失败诊断（第 62 轮实测补强）：run-gate.sh 的通用"判据行 + 尾部 18 行"会被 GitHub 去重/截断，
-#   第 5 章那次我只看到采样表、看不到探针报的 `- 原因` 行 ⇒ 现在失败时**额外**显式打印
-#   `grep -n '❌' -A 6`（原因区）与派生行。
+# ⚠ 通道限制（实测，改这个文件前先读）：
+#   · GitHub 对**每一级注解只保留前 10 条**，且会去重/截断 ⇒ 必须**一章一行**：
+#     第一版每章发 3–4 条 notice，ch2~ch6 的数据全被丢掉，只剩 ch1。
+#   · 失败信息也要压成**一行**（原因区/派生/日志尾用 ~ 拼），多行 ::error:: 一条都拿不到。
 #
-# 读结果：每章派生行打成 `::notice::`（annotations 匿名可读，见 MEMORY「远程读红因」）；
-#   完整采样表在 ci/out/pacing-ch*.log 产物里。
+# 读结果：`::notice::` 一行一章（含同屏怪/等级序列），表格线单独一行；完整采样表在
+#   ci/out/pacing-ch*.log 产物里（下载需权限）。
 on:
   workflow_dispatch:
   push:
@@ -40,27 +41,28 @@ jobs:
       - name: 重建 dist + 小游戏包
         run: node ci/build-dist.js && node minigame/build-minigame.mjs
 
-      # 六章逐章连续驱动；每章一次 run-gate.sh（失败时 ::error::）
-      - name: 六章节奏实测（逐章连续驱动，派生行打成 notice）
+      - name: 六章节奏实测（一章一行 notice）
         run: |
           set -u
           # 通关线（秒）= 游戏 CONFIG 章节表的 winTime；只作 --tmax 驱动上限，权威源仍是 spine()
           LINES="240 300 360 480 600 600"
+          # 采样表行（8 列：游戏t/runTime/墙钟/同屏怪/潮/等级/选卡/HP/state），用它抽序列
+          ROW='^ +[0-9]+ +[0-9.]+ +[0-9.]+ +[0-9]+ +[01] +[0-9]+ +[0-9]+ +[0-9]+/[0-9]+ +[A-Z_]+$'
           i=0
           for line in $LINES; do
             i=$((i+1))
             log="ci/out/pacing-ch$i.log"
             if bash ci/run-gate.sh "$log" node minigame/smoke.mjs --pacing --ch $((i-1)) --tmax "$line"; then
               if [ "$i" = "1" ]; then
-                grep -E '^  (ch[0-9]|⇒ 六章)' "$log" | sed 's/%/%25/g; s/^/::notice::/' || true
+                t=$(grep -E '^  (ch[0-9]|⇒ 六章)' "$log" | sed 's/^  */  /' | tr '\n' '~' | sed 's/%/%25/g')
+                echo "::notice::六章节拍（时长/通关线/BOSS/潮窗）: $t"
               fi
-              grep -E '派生：|首次升级|墙钟代价|冻结归属|节奏探针自证' "$log" \
-                | sed 's/%/%25/g; s/^ */  /; s/^/::notice::/' || true
-              echo "::notice::第 $i 章节奏探针 exit=0（完整采样表见产物 ci/out/pacing-ch$i.log）"
+              d=$(grep -E '派生：|首次升级|墙钟代价' "$log" | sed 's/^  */  /' | tr '\n' '~' | sed 's/%/%25/g')
+              e=$(grep -E "$ROW" "$log" | awk '{printf "%s,", $4}' | sed 's/,$//')
+              l=$(grep -E "$ROW" "$log" | awk '{printf "%s,", $6}' | sed 's/,$//')
+              echo "::notice::第 $i 章（--tmax $line）: $d · 同屏怪序列: $e · 等级序列: $l"
             else
-              # ⚠ 多行注解会被 GitHub 去重/截断：实测"判据区上下文 + 派生行"两组 ::error:: 全都拿不到，
-              #   注解里只剩 run-gate.sh 的老三样（判据行 1 条 + 尾部 6 行）⇒ 远程仍然定位不了。
-              #   ⇒ 改成**单行注解**，把原因区/派生/日志尾用 ~ 拼在一起（注解上限 64KB，够用）。
+              # ⚠ 多行注解拿不到（去重/截断）⇒ 压成一行：原因区 + 派生 + 日志尾
               reason=$(grep -A 6 '❌' "$log" | tr '\n' '~' | sed 's/%/%25/g')
               derived=$(grep -E '派生：|首次升级|墙钟代价|冻结归属' "$log" | tr '\n' '~' | sed 's/%/%25/g')
               tail3=$(tail -n 3 "$log" | tr '\n' '~' | sed 's/%/%25/g')
@@ -68,7 +70,7 @@ jobs:
               exit 1
             fi
           done
-          echo "::notice::六章节奏实测完成：探针自证全部通过（数字见上面各章 notice，口径=站桩下界）"
+          echo "::notice::六章节奏实测完成（口径=站桩不躲+总选第一张卡，数字是下界）"
 
       - name: 上传采样日志
         if: always()
