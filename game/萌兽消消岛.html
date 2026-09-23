@@ -26,6 +26,9 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 "use strict";
 // ============================================================
 // 《萌兽不好惹》v1.194 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.196 移植】安全区来源改准: `Platform.SafeArea.init` 优先用宿主透传的真实 safeArea(小游戏无 DOM, env() 拿不到)。
+//   ⚠ **没有**改任何布局坐标 —— 大厅满幅页头在小游戏里的让位要靠"绘制路径里的 letterbox"(见 `小游戏移植/README.md` 三·五);
+//     试过的"顶栏 inset"方案**已实测否决**: 顶栏下移会盖住标题与主角头顶, 整页下移又把底栏(1072..1280)推出屏幕。
 // 【v1.195 美术】统一眼睛语言: 16 只 A 类(熊/猪/狐/兔/猴/鼠/獾/刺猬/鸦/蟾/蟹/盾蝽/蘑菇/电鼠/BOSS3/主角)由「白眼球+虹膜+瞳孔+高光」改为 B 类「深色实心豆豆眼+一点高光」, 与宠物 7 只(ursa/盾龟/绒羊/蜜罐/鼹鼠/兔/火狮)同语言; 墨色沿用各角色原瞳孔色, 尺度按 B 类基准(眼窝 0.45 宽 / 0.52 高), 边界解析抗锯齿; **只动这 16 张贴图**, 其余 162 张与全部代码/数值/掉落/进化/10 分钟轴不动。
 // 【v1.194 美术】早波剪影控制点约 8–12% 再点名(paintEnemySilhouette): 兔颊更满、狐尾更蓬、鼠吻更瘦、蟾腹更圆, 粉彩填色不动; 接触影再软一档更扁椭圆(drawEarlyTrashContactShadow); 出战地面奶油铭牌 #f4efe2 + 2px 苔缘 #5c7044 + 短标 #2c3a22, 窗下软唇对齐大厅中脊(drawHomeBase); 英雄卡技能名 #2c3a22、血/速条改静橄榄(makeHeroChip/drawHeroMeter); 点出战预览与英雄卡聚焦走 SFX_UI 软 notch(Audio._start sortiepreview/heropick)。叠层外墨与填体 α≥0.92 保持。数值/掉落/进化/复活次数/10 分钟轴不动。
 // 【v1.193 美术】设置/关于/怎么玩/后置加菜盘奶油填 #f4efe2 + 2px 软苔缘 #5c7044(makeModal comfort); 后置加菜条标题 #2c3a22、副标奶油字压橄榄(makeButton quiet / drawDailyPickPanel); 悬停或聚焦时软墨脉冲(notePointerHover); 灯笼港湾选中签软墨再加一档(makeThemeChip); 早波吻尖/耳腔仍实心粉彩(paintEnemySilhouette muzzleDot); 开设置走 SFX_UI 软 notch(Audio._start settingsopen)。1.192 回港条盖住层/HUD 发丝保持。数值/掉落/进化/复活次数/10 分钟轴不动。
@@ -625,7 +628,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.195",                   // 【v1.195】统一眼睛语言: 16 只 A 类改实心豆豆眼(与 7 只宠物同语言), 只动贴图。不改掉率/价格/锻造/进化/复活次数/10 分钟轴
+  version: "1.196",                   // 【v1.196】安全区改由宿主真实 safeArea 驱动(透传优先于宽高比猜测); 只改安全区来源, 不动任何布局坐标/数值/掉率/10 分钟轴
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -1702,9 +1705,21 @@ var Platform = {
   SafeArea: {
     top: 0, right: 0, bottom: 0, left: 0,
     init: function () {
-      var env, guess, app, w, h;
+      var env, guess, app, w, h, hostSa;
       w = window.innerWidth || 0;
       h = window.innerHeight || 0;
+      // 【v1.196】宿主（小游戏）给出**真实**安全区时优先用它，不再靠 env()（小游戏无 DOM）+ 宽高比去猜。
+      //   适配层把 wx.getSystemInfoSync().safeArea 原样透传（CSS px，与 env() 同口径）。
+      //   ⚠ 这**不动大厅构图**：消费它的是 hudChromeLayout（战斗 HUD 留边）与 measureViewSafe；
+      //     大厅满幅页头的让位要靠"绘制路径里的 letterbox"（见 `小游戏移植/README.md` 三·五），不是靠 inset。
+      hostSa = (typeof window !== "undefined" && window.__wxadapter && window.__wxadapter.safeArea) || null;
+      if (hostSa) {
+        this.top = hostSa.top || 0;
+        this.right = hostSa.right || 0;
+        this.bottom = hostSa.bottom || 0;
+        this.left = hostSa.left || 0;
+        return;              // 小游戏没有 DOM 可写；绘制路径消费 SafeArea（见 measureViewSafe/viewSafe）
+      }
       env = typeof readEnvSafeArea === "function" ? readEnvSafeArea() : { top: 0, right: 0, bottom: 0, left: 0 };
       guess = typeof guessPhoneSafeCss === "function" ? guessPhoneSafeCss(w, h) : { top: 0, right: 0, bottom: 0, left: 0 };
       this.top = env.top > 0 ? env.top : guess.top;
