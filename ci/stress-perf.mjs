@@ -151,10 +151,18 @@ while (Date.now() - tWait0 < 55000) {
     await page.waitForTimeout(250);
     continue;
   }
-  if (s.st === S.REVIVE) {      // 复活弹窗没有对应的确定性钩子 → 保留"点中央"
+  if (s.st === S.REVIVE) {
     reviveTaps++;
-    await page.mouse.click(geom.left + geom.width / 2, geom.top + geom.height / 2);
-    await page.waitForTimeout(400);
+    // 【第 54 轮修③】原来点"画面中央"实测**点不掉**：轨迹显示 REVIVE_MODAL 卡了 32s、runTime 冻在 108.28、
+    //   怪停在 19 只 —— 玩家一死，采样窗口就白费。母版 L34677 `onTapReviveBtn()` 走 Hooks.requestRevive
+    //   → AdService 桩（本形态无广告）同步回调 ok → `doRevive()`，runTime 继续走 ⇒ 应力条件得以延续。
+    await page.evaluate(() => { try { if (typeof window.onTapReviveBtn === 'function') window.onTapReviveBtn(); } catch (e) { void e; } });
+    await page.waitForTimeout(300);
+    const st2 = await page.evaluate(() => { try { return (window.MENGSHOU_DEBUG.state() || {}).state; } catch (e) { return ''; } });
+    if (st2 === S.REVIVE) {      // 兜底：万一复活没生效，再点一次中央
+      await page.mouse.click(geom.left + geom.width / 2, geom.top + geom.height / 2);
+      await page.waitForTimeout(300);
+    }
     continue;
   }
   // 结算/失败 → 这一波已过，重开一局再进潮
