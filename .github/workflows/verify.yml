@@ -326,7 +326,7 @@ jobs:
       #   本轮实测抓到的真 bug：DATA_RUNES 的键自带前缀，而检查点又拼了一次 "rune_" ⇒ dim 成了
       #   "rune_rune_berserk"，5 条符文成就（1500 金）**永远无法解锁**。这类病根不报错、不崩、门禁照绿。
       #   自证 = 4 组合成样本 + **真实母版正/负对照**（把历史 bug 注入内存副本必须 FAIL）。
-      - name: 成就接线（GATE · 每个成就 dim 必须有生产者）
+      - name: 成就/解锁接线（GATE · dim 与条件键都必须有生产者）
         run: |
           node ci/achieve-wiring.mjs --selftest
           node ci/achieve-wiring.mjs

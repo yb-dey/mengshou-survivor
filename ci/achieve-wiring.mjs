@@ -1,11 +1,11 @@
-// ci/achieve-wiring.mjs —— 成就**接线**判据（第 63 轮新增）
+// ci/achieve-wiring.mjs —— 成就 / 大厅解锁的**接线**判据（第 63 轮新增）
 //
-// 存在理由（本轮实测抓到的真 bug，且属于"内容齐全但永远拿不到"这一类）：
-//   母版 `DATA_RUNES` 的**键**自带前缀（`rune_berserk`），`GAME.runeId` 存的就是这个键，
-//   而成就检查点却写成 `checkAchieves("rune_" + GAME.runeId, …)` ⇒ dim 成了 `rune_rune_berserk`，
-//   与 `DATA_ACHIEVE` 里的 `rune_berserk` **永不相等** ⇒ 5 条符文成就（1500 金）永远无法解锁。
-//   这类病根（"表里有、代码从不产生对应触发值"）不报错、不崩、门禁照绿：
-//   **只有把"表里的 dim"与"调用点真的会传的 dim"对上账，才看得见。**
+// 覆盖两类"表里有、玩家永远拿不到"的病根：
+//   A. **成就 dim**：母版 `DATA_RUNES` 的键自带前缀（`rune_berserk`），`GAME.runeId` 存的就是这个键，
+//      而成就检查点却写成 `checkAchieves("rune_" + GAME.runeId, …)` ⇒ dim 成了 `rune_rune_berserk`，
+//      与 `DATA_ACHIEVE` 里的 `rune_berserk` **永不相等** ⇒ 5 条符文成就（1500 金）永远无法解锁。
+//   B. **大厅解锁条件键**：`cond.type/chId/boss/ach` 任一处拼错（不存在的章节、白名单外的锚点、
+//      不存在的成就、没有处理器的新类型）同样"永远不解锁"，同样不报错、不崩、门禁照绿。
 //
 // 判据（静态，零依赖）：
 //   1. 每个成就 `dim` 必须有**生产者**：某个 `checkAchieves(<expr>, …)` 的取值集合包含它。缺 ⇒ FAIL。
@@ -128,12 +128,52 @@ export function analyze(src) {
   }
   for (const d of dimSet) if (!producers.has(d)) fails.push(`成就 dim「${d}」没有任何 checkAchieves 调用点会传它 ⇒ 该成就**永不可解锁**`);
   for (const p of producers) if (!dimSet.has(p)) fails.push(`checkAchieves 会传 dim「${p}」，但 DATA_ACHIEVE 里没有对应成就 ⇒ 空转调用（或成就表漏了条目）`);
+
+  // ── 同族：大厅解锁条件（第 63 轮手工审过一遍，这里把它变成判据，免得以后烂掉）──────
+  //   条件键写错（chId 拼错 / boss 不存在 / 引用不存在的成就）同样会"永远不解锁"，且不报错。
+  const hallTbl = tableOf(src, 'DATA_HALL_UNLOCK');
+  if (!hallTbl) { fails.push('找不到 DATA_HALL_UNLOCK 表'); return { fails, warns, info, dims: [...dimSet], producers: [...producers] }; }
+  const chTbl = tableOf(src, 'DATA_CHAPTER');
+  const chIds = new Set([...(chTbl ? chTbl.matchAll(/chId\s*:\s*["']([^"']+)["']/g) : [])].map((m) => m[1]));
+  const achIds = new Set([...achTbl.matchAll(/id\s*:\s*["']([^"']+)["']/g)].map((m) => m[1]));
+  const hm = /function\s+hallCondMet[\s\S]*?\n\}/.exec(src);
+  const handled = new Set([...(hm ? hm[0].matchAll(/case\s+["']([^"']+)["']\s*:/g) : [])].map((m) => m[1]));
+  const na = /function\s+noteHallAnchor[\s\S]*?\n\}/.exec(src);
+  const bosses = new Set([...(na ? na[0].matchAll(/["'](boss\d+)["']/g) : [])].map((m) => m[1]));
+  info.push(`大厅解锁 ${(hallTbl.match(/\bid\s*:\s*["']/g) || []).length} 条 · 条件类型处理器 {${[...handled].join(', ')}} · 锚点白名单 {${[...bosses].join(', ')}} · 章节键 ${chIds.size} 个`);
+  const chunks = hallTbl.split(/(?=\{\s*id\s*:\s*["'])/).slice(1);
+  for (const c of chunks) {
+    const id = (/id\s*:\s*["']([^"']+)["']/.exec(c) || [])[1] || '<未知id>';
+    const cond = /cond\s*:\s*\{([^}]*)\}/.exec(c);
+    if (!cond) { fails.push(`大厅解锁「${id}」没有 cond（永不满足）`); continue; }
+    const body = cond[1];
+    const type = (/type\s*:\s*["']([^"']+)["']/.exec(body) || [])[1];
+    if (!type) { fails.push(`大厅解锁「${id}」的 cond 没有 type`); continue; }
+    if (!handled.has(type)) { fails.push(`大厅解锁「${id}」的条件类型「${type}」在 hallCondMet 里没有 case ⇒ 该配方**永不解锁**`); continue; }
+    if (type === 'clear') {
+      const v = (/chId\s*:\s*["']([^"']+)["']/.exec(body) || [])[1];
+      if (!v) fails.push(`大厅解锁「${id}」clear 条件缺 chId`);
+      else if (!chIds.has(v)) fails.push(`大厅解锁「${id}」引用了不存在的章节「${v}」⇒ 永不解锁（DATA_CHAPTER 有：${[...chIds].join(', ')}）`);
+    } else if (type === 'anchor') {
+      const v = (/boss\s*:\s*["']([^"']+)["']/.exec(body) || [])[1];
+      if (!v) fails.push(`大厅解锁「${id}」anchor 条件缺 boss`);
+      else if (bosses.size && !bosses.has(v)) fails.push(`大厅解锁「${id}」引用了 noteHallAnchor 白名单外的锚点「${v}」⇒ 永不解锁（白名单：${[...bosses].join(', ')}）`);
+    } else if (type === 'achieve') {
+      const v = (/ach\s*:\s*["']([^"']+)["']/.exec(body) || [])[1];
+      if (!v) fails.push(`大厅解锁「${id}」achieve 条件缺 ach`);
+      else if (!achIds.has(v)) fails.push(`大厅解锁「${id}」引用了不存在的成就「${v}」⇒ 永不解锁`);
+    }
+  }
   return { fails, warns, info, dims: [...dimSet], producers: [...producers] };
 }
 
 const isMain = process.argv[1] && /achieve-wiring\.mjs$/.test(process.argv[1].replace(/\\/g, '/'));
 if (isMain && process.argv.includes('--selftest')) {
-  const shape = (call) => `
+  const shape = (call, hallCond = '{ type: "clear", chId: "ch1" }') => `
+var DATA_CHAPTER = [
+  { chId: "ch1", id: "ch1", name: "芽芽原", chapter: 1, winTime: 240 },
+  { chId: "ch6", id: "ch6", name: "星星巅", chapter: 6, winTime: 600, bossIds: ["boss1", "boss2", "boss3"] }
+];
 var DATA_RUNES = {
   rune_berserk: { id: "rune_berserk", name: "狂暴符文", hpMul: 1.3 },
   rune_tiny:    { id: "rune_tiny",    name: "小小符文", enemyR: 0.8 }
@@ -143,6 +183,23 @@ var DATA_ACHIEVE = [
   { id: "rune_berserk", name: "狂暴通关", dim: "rune_berserk", target: 6,   reward: 300 },
   { id: "rune_tiny",   name: "小小通关", dim: "rune_tiny",    target: 6,   reward: 300 }
 ];
+var DATA_HALL_UNLOCK = [
+  { id: "seedvolley", kind: "weapon", item: "seedvolley", name: "种子散射",
+    cond: ${hallCond}, condText: "通关芽芽原", price: 60 }
+];
+function hallCondMet(rec) {
+  var c = rec.cond;
+  switch (c.type) {
+    case "clear": return true;
+    case "anchor": return true;
+    case "achieve": return true;
+    default: return false;
+  }
+}
+function noteHallAnchor(type) {
+  if (type !== "boss1" && type !== "boss2" && type !== "boss3") return [];
+  return [1];
+}
 function makeRuneChip(i) {
   var keys = [], k;
   for (k in DATA_RUNES) keys.push(k);
@@ -159,6 +216,11 @@ function onClear() {
     { name: '阳性B：修好之后（裸变量 GAME.runeId，且三元赋值易被误当 ===）', src: fixed, wantFail: false },
     { name: '阴性C：成就 dim 无生产者（表里多一条 roar）', src: fixed.replace('reward: 100 },', 'reward: 100 },\n  { id: "roar_10", name: "狮吼功", dim: "roar", target: 10, reward: 150 },'), wantFail: true },
     { name: '阴性D：动态 dim 变量无赋值链', src: shape('checkAchieves("rune_" + mysteryVar, 6);'), wantFail: true },
+    { name: '阴性E：大厅解锁 chId 拼错（ch7）', src: shape('checkAchieves(GAME.runeId, GAME.chapterIdx + 1);', '{ type: "clear", chId: "ch7" }'), wantFail: true },
+    { name: '阴性F：大厅解锁 boss 不在 noteHallAnchor 白名单', src: shape('checkAchieves(GAME.runeId, GAME.chapterIdx + 1);', '{ type: "anchor", boss: "boss9" }'), wantFail: true },
+    { name: '阴性G：大厅解锁引用不存在的成就', src: shape('checkAchieves(GAME.runeId, GAME.chapterIdx + 1);', '{ type: "achieve", ach: "kill_999" }'), wantFail: true },
+    { name: '阴性H：大厅解锁条件类型无处理器（win）', src: shape('checkAchieves(GAME.runeId, GAME.chapterIdx + 1);', '{ type: "win", chId: "ch1" }'), wantFail: true },
+    { name: '阳性I：三种条件各一条且都合法', src: fixed.replace('cond: { type: "clear", chId: "ch1" }', 'cond: { type: "clear", chId: "ch1" }').replace('price: 60 }\n];', 'price: 60 },\n  { id: "startmag", cond: { type: "anchor", boss: "boss2" }, price: 90 },\n  { id: "mistleaf", cond: { type: "achieve", ach: "kill_100" }, price: 100 }\n];'), wantFail: false },
   ];
   let bad = 0;
   for (const c of cases) {
@@ -181,7 +243,7 @@ function onClear() {
     if (ok2) console.log(`      · ${r2.fails.find((f) => f.includes('rune_')) || r2.fails[0]}`);
     if (!ok1 || !ok2) bad++;
   } catch (e) { console.log(`⚠ 真实母版对照跳过：${e.message}`); }
-  console.log(bad ? `\n✗ 自测失败 ${bad} 项` : '\n✅ 成就接线判据自测通过（4 组合成样本 + 真实母版正/负对照）');
+  console.log(bad ? `\n✗ 自测失败 ${bad} 项` : '\n✅ 成就/解锁接线判据自测通过（9 组合成样本 + 真实母版正/负对照）');
   process.exit(bad ? 1 : 0);
 }
 if (isMain) {
