@@ -70,6 +70,17 @@ jobs:
           if [ "$code" = "0" ]; then echo "::error::阴性对照失效 —— 抽掉波形后程序化音频体检仍然绿（假保证）"; exit 1; fi
           echo "✅ 阴性对照有效（波形体检测的是样本，不是计数器）"
 
+      # 【第 61 轮】画布预算的阴性对照：假装预渲染失控（多算 200 张 512²）⇒ 必须 FAIL
+      #   这条守的是移植形态最大的真机风险：预渲染画布 ≈185 MB @RGBA（README §五 头号风险）。
+      - name: 画布预算阴性对照（预渲染失控必须报错）
+        run: |
+          set +e
+          CANVAS_HOG=200 node minigame/smoke.mjs > /tmp/neg-canvas.log 2>&1
+          code=$?
+          grep -E "画布预算|张数|体量" /tmp/neg-canvas.log | tail -n 4
+          if [ "$code" = "0" ]; then echo "::error::阴性对照失效 —— 画布凭空翻倍后预算仍然绿（假保证）"; exit 1; fi
+          echo "✅ 阴性对照有效（画布预算确实会拦人）"
+
       - name: 上传产物（日志 + 体积报告）
         if: always()
         uses: actions/upload-artifact@v4

@@ -969,6 +969,32 @@ if (perFrameCounts.length) {
   console.log(`  → ${warmGrow === 0 ? '✅ 不随帧增长（＝一次性缓存，非泄漏）' : '⚠ 仍在增长，需查是否泄漏'}（判据：同一脚本跑 5 帧与 60 帧，总数应相同）`)
 }
 for (const [k, v] of [...sizeTally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)) console.log(`  ${k.padEnd(14)} × ${v}`)
+// ── 【第 61 轮】画布预算门禁（把"内存风险量"从只打印变成会拦人）──────────────────
+//   为什么：小游戏形态最大的真实风险就是这段预渲染缓存（README §五 的头号风险），
+//   而阶段⑦ 只断言"建过画布" ⇒ 缓存翻一倍也不会有人知道，直到低端机 OOM。
+//   阈值来源（实测，不是拍的）：真图桩复测 **1105–1107 张 / 48.5–49.0 Mpx ≈ 185–187 MB @RGBA**
+//   ⇒ 上限 **1200 张 / 55 Mpx**（≈+10% 余量：加一批预渲染会红，正常波动不会）。
+//   同时把"预热后不再新建"这条（原来只打印）也变成硬判据 —— 它正是"泄漏 vs 一次性缓存"的分界。
+const CANVAS_MAX_N = +(process.env.CANVAS_MAX_N || 1200)
+const CANVAS_MAX_MPX = +(process.env.CANVAS_MAX_MPX || 55)
+const CANVAS_HOG = +(process.env.CANVAS_HOG || 0)   // 阴性对照：凭空多算 N 张 512²，预算必须 FAIL
+if (CANVAS_HOG) {
+  for (let i = 0; i < CANVAS_HOG; i++) canvasObjs.push({ width: 512, height: 512 })
+  console.log(`  （阴性对照 CANVAS_HOG=${CANVAS_HOG}：多算 ${CANVAS_HOG} 张 512² ⇒ 预算必须 FAIL）`)
+}
+const budgetPx = canvasObjs.reduce((s, c) => s + (c.width * c.height), 0)
+const warmGrow2 = perFrameCounts.slice(1).reduce((a, b) => a + b, 0)
+const canvasFails = []
+if (canvasObjs.length > CANVAS_MAX_N) canvasFails.push(`画布张数 ${canvasObjs.length} > 上限 ${CANVAS_MAX_N}`)
+if (budgetPx / 1e6 > CANVAS_MAX_MPX) canvasFails.push(`画布体量 ${(budgetPx / 1e6).toFixed(1)} Mpx > 上限 ${CANVAS_MAX_MPX} Mpx（≈${(budgetPx * 4 / 1048576).toFixed(0)} MB @RGBA）`)
+if (warmGrow2 > 0) canvasFails.push(`预热后每帧仍在新建 ${warmGrow2} 张 ⇒ 疑似泄漏（判据：同脚本跑 5 帧与 60 帧总数应相同）`)
+if (canvasFails.length) {
+  console.log('  ❌ 画布预算未过：')
+  for (const f of canvasFails) console.log('     - ' + f)
+  ok = false
+} else {
+  console.log(`  ✅ 画布预算通过（${canvasObjs.length} 张 / ${(budgetPx / 1e6).toFixed(1)} Mpx ≈ ${(budgetPx * 4 / 1048576).toFixed(0)} MB @RGBA；上限 ${CANVAS_MAX_N} 张 / ${CANVAS_MAX_MPX} Mpx）`)
+}
 
 const errs = (sandbox.__wxadapter && sandbox.__wxadapter.errors) || []
 if (errs.length) { console.log(`\n⚠ 事件监听器抛异常 ${errs.length} 次，前 3 条：`); errs.slice(0, 3).forEach((e) => console.log('  ' + e.slice(0, 120))) }
