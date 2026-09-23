@@ -330,6 +330,14 @@ jobs:
         run: |
           node ci/achieve-wiring.mjs --selftest
           node ci/achieve-wiring.mjs
+      # 【v1.204】触屏宿主文案（GATE）：小游戏是纯触屏，WASD/空格/Esc 这类键鼠文案对目标玩家信息量为 0。
+      #   v1.201 只修了「设置页 + 暂停层」两处，教学短条第 0 步 / 「怎么玩」①行 / 过场跳过钮副标签仍是键鼠文案
+      #   —— 同一病根改一处漏四处。本判据要求：命中键鼠词的字符串字面量必须挂 `touchOnlyHost()`（或走三个文案函数），
+      #   非玩家文案（CI 证据字段等）走**显式白名单 + 理由**。自证 = 6 组合成样本 + 真实母版。
+      - name: 触屏宿主文案（GATE · 键鼠文案必须挂宿主开关）
+        run: |
+          node ci/touch-copy-check.mjs --selftest
+          node ci/touch-copy-check.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4

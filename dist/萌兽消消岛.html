@@ -11,7 +11,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.203">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.204">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -650,7 +650,8 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.203",                   // 【v1.203】修符文成就 dim 拼错前缀（5 条成就永不可解锁）+ 加成就接线判据；
+  version: "1.204",                   // 【v1.204】触屏宿主文案收敛（走位/跳过/过场副标签统一走宿主开关）；
+                                       //   前版 v1.203：修符文成就 dim 拼错前缀（5 条成就永不可解锁）+ 加成就接线判据；
                                        //   前版 v1.202：合规公告可读性: 正文 11px/0.42→12px/0.62、标题 12→13px、备案号行 10→12px;
                                      //   实测对比度 3.85→6.77:1（WCAG AA 小字下限 4.5）; 坐标/文案一字未动
                                      //   【v1.201】触屏宿主操作提示: 设置页帮助行与暂停层提示按宿主换文案(小游戏无键盘)
@@ -1795,6 +1796,15 @@ function readEnvSafeArea() {
 //   用途：把**键鼠专属的操作提示**换成触屏文案 —— 小游戏是纯触屏，玩家看到「WASD / Esc / 空格」
 //   学不到任何能用的操作（第 48 轮渲染设置页才发现，见 `内容分部审查.md` A5）。
 //   ⚠ 只在**文案**上分支：不动任何输入逻辑（键鼠在两种宿主里都仍然可用），也不新增全局状态。
+// 【v1.204】统一"走位提示"文案（触屏宿主不说 WASD）。
+//   为什么要有这个函数：v1.201 只改了设置页与暂停层两处，教学短条第 0 步与「怎么玩」帮助页①行仍写着
+//   "…或 WASD 走位" —— 小游戏是纯触屏，这类残留对目标玩家信息量为 0（同族第 2 次漏）。
+//   ⛔ 只分支文案：不动任何输入逻辑（键鼠在两种宿主里都仍可用）。
+function moveHintText() { return touchOnlyHost() ? "拖动摇杆走位" : "拖动摇杆或 WASD 走位"; }
+// 【v1.204】跳过提示：触屏宿主没有空格/Esc，说"点击"即可；桌面分支保留键鼠说明。
+function skipHintText() { return touchOnlyHost() ? "点击可跳过" : "点击 / 空格 / Esc 可跳过"; }
+// 【v1.204】过场跳过钮的副标签：触屏上说清"点这个钮就行"。
+function skipChipSubText() { return touchOnlyHost() ? "点按跳过过场" : "跳过钮 / 空格 / Esc"; }
 function touchOnlyHost() {
   return !!(typeof window !== "undefined" && window.__wxadapter);
 }
@@ -2211,7 +2221,7 @@ var DATA_LORE = {
     "走散的不是恨，是冷。潮声里还听得见旧名字。抢到的热会从掌心漏走，所以才要再守一晚。",
     "你不是来征服的——你护着最后一簇火。护住，岛才还能再开一局。别问火还能烧多久。"
   ],
-  skipHint: "点击 / 空格 / Esc 可跳过"
+  skipHint: "点击可跳过"   // 【v1.204】宿主中立；键鼠措辞统一由 skipHintText() 负责
 };
 
 // 【v1.19】挑战房三档: 对标弹壳「门越后奖励越好」结构, 不是抄门皮。复用既有精英/行为怪/装备袋。
@@ -3623,7 +3633,7 @@ function loreAboutBody() {
   return loreAboutParas().join("");
 }
 function loreSkipHint() {
-  return (DATA_LORE && DATA_LORE.skipHint) || "点击 / 空格 / Esc 可跳过";
+  return skipHintText();   // 【v1.204】原为两处重复字面量（数据表 + 回退），现统一走宿主开关
 }
 function loreHanCount(text) {
   var m = String(text || "").match(/[\u4e00-\u9fff]/g);
@@ -30026,7 +30036,7 @@ var guideActive = -1;              // 当前显示序号, -1=无
 var guideQueue = [];               // 排队(仅 HUD 步 0/2, 至多 2 项)
 var guideHudT = 0;                 // 当前短条剩余秒(只在可见时衰减)
 var guideData = [
-  { flag: "joystick", text: "摇杆或 WASD 走位, 武器自己开火" },
+  { flag: "joystick", text: moveHintText() + ", 武器自己开火" },   // 【v1.204】触屏宿主不说 WASD
   { flag: "levelup", text: "三选一: 金=武器 赤=战斗 青=被动 橙=跟宠升星" },
   { flag: "gem", text: "走近宝石就能捡, 攒满升级" },
   { flag: "revive", text: "倒下可复活再战, 放弃也会入账" }
@@ -31401,7 +31411,7 @@ function drawEnterCine(ctx) {
   ctx.fillText("跳过", x + w / 2, skipY + skipH / 2 - 7);
   ctx.fillStyle = "#c9c0a8";
   ctx.font = "bold 13px " + FONT_STACK;
-  ctx.fillText("跳过钮 / 空格 / Esc", x + w / 2, skipY + skipH / 2 + 12);
+  ctx.fillText(skipChipSubText(), x + w / 2, skipY + skipH / 2 + 12);   // 【v1.204】触屏宿主不说空格/Esc
   if (GAME.hudSnap && GAME.hudSnap.enter) {
     GAME.hudSnap.enter.skip = { x: skipX, y: skipY, w: skipW, h: skipH };
   }
@@ -34409,7 +34419,7 @@ function drawGuidePanel(ctx, m) {
   ctx.fillText("上手四步 · 入袋 → 现在 → 开战", CONFIG.viewW / 2, py + 172);
   ctx.fillStyle = "#243218";
   ctx.font = "bold 18px " + FONT_STACK;
-  ctx.fillText("① 拖动摇杆或 WASD 走位, 武器自己开火", CONFIG.viewW / 2, py + 218);
+  ctx.fillText("① " + moveHintText() + ", 武器自己开火", CONFIG.viewW / 2, py + 218);   // 【v1.204】同源文案
   ctx.fillText("② 走近宝石升级, 三选一强化(提示可跳过)", CONFIG.viewW / 2, py + 264);
   ctx.fillText("③ 装备袋走近才开箱, 通关再得一件", CONFIG.viewW / 2, py + 310);
   ctx.fillText("④ 倒下可复活再战, 放弃也会把金币入账", CONFIG.viewW / 2, py + 356);
