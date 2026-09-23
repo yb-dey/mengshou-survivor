@@ -362,6 +362,18 @@
 
 - **消费点**：`boss_arena.html`「🎵 Boss 分层」开关（layerAudios 三轨同播，`mixBossLayers(phaseIdx)` 在 enterPhase 实时混音，音量 0.15 插值平滑）。
 - **校验**：三轨实测时长 31.3043s 完全一致；boss_arena `node --check` 通过（修复替换残留的孤立 `});`）；`music_layers.html` 重生成含 👹 Boss 分层组区块（混音矩阵表 + 3 层卡）。
+## 2.22 候选敌种包（6 个候选 · 独立表不动现有链 · 本轮新增）
+
+> 为 wave_design 6 敌种扩容提供候选池：6 个候选敌种（灰烬蛾/泡囊蛙/卵石蟹/辉光萤/荆刺野豕/灰烬狼），**五元素全覆盖**，每个都有**非数值机制**——自爆（数量压制）/ 减速（走位惩罚）/ 正面格挡（输出角度）/ 治疗光环（优先级判断）/ 冲锋（站桩惩罚）/ 后撤撕咬（失误捕捉），避免纯数值堆叠。数值与现有敌种同量纲（HP 40–85、移速 ×0.7–1.4）。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `data/enemy_candidates.json` | 候选敌种规格 | 6 候选（element/role/hp/speed/mechanism/suggestedPhases/sprite）+ 状态说明 + 平衡口径 + **接入约束清单** |
+| `enemy_candidates/*.png` | 6 个程序化精灵 | 96×96 RGBA 真透底（`tools/gen_enemy_candidates.py` 纯标准库：ell/tri/eyes/feet 原语），Q 版风格与现有 6 敌种一致 |
+| `enemy_pack_demo.html` | 候选包展示页 | 接入约束卡 + 6 候选卡（HP/移速条 + 机制 + 设计意图 + 建议接入阶段）+ 现有敌种同量纲对照表 |
+
+- **独立成表的原因**：不修改也不引用 wave_design.json 的敌种表，避免破坏 campaign/endless 的既有 DATA_SYNC 校验链。正式接入清单（另做决策）：wave_design enemies 增量 → endless phases 池增量 → campaign/endless_lab 内联同步 → 三方校验与文档同步。
+- **校验**：`data/enemy_candidates.json` 合法 JSON；元素 ∈ 五元素、HP ∈ 30–90、移速 ∈ 0.6–1.5、suggestedPhases ∈ 1–4；精灵 6/6 存在；**与现有敌种 key 零冲突**（独立键名 cand_*）；`enemy_pack_demo.html` 0 占位符、8 名称全在（6 候选 + 现有对照）、6 图标引用存在。
 ## 3. 目录结构
 
 ```
@@ -452,6 +464,8 @@ _content_pack/
 ├── pickups/               # 拾取物精灵（RGBA 真透底，小物件视觉系）
 ├── hero_portraits/        # 英雄徽章头像（RGBA 真透底，圆形徽章+元素色双环）
 ├── decors/                # 场景装饰件（RGBA 真透底，低饱和布景系）
+├── enemy_candidates/      # 候选敌种精灵（RGBA 真透底，Q 版与现有敌种同风格）
+│   └── cand_*.png（6 个：灰烬蛾/泡囊蛙/卵石蟹/辉光萤/荆刺野豕/灰烬狼）
 │   └── decor_*.png（8 个：双草丛/灌木/树/石头/两种花/发光蘑菇）
 │   └── portrait_*.png（4 个：灵鹿祭司/雷羽鹰/霜甲熊/焰心术士）
 │   └── pickup_*.png（8 个：治愈果实/金币袋/经验晶露/磁石/震地菇/灵盾花/幸运骰/宝箱）
@@ -473,7 +487,8 @@ _content_pack/
 │   ├── heroes.json            # 英雄图鉴：4 英雄差异化数值 + 被动 + 技能绑定 + 元素口径修正
 │   ├── skills.json            # 技能完整规格：8 技能系数/目标/范围/成长 + 反应联动
 │   ├── music_layers.json      # 战斗分层自适应音乐：3 层轨 + 触发阈值 + 滞回混音规则
-│   └── challenge_mods.json    # 挑战修饰符系统：8 修饰符（玩家×敌人成对）+ ISO 周轮换规则
+│   ├── challenge_mods.json    # 挑战修饰符系统：8 修饰符（玩家×敌人成对）+ ISO 周轮换规则
+│   └── enemy_candidates.json  # 候选敌种包：6 候选敌种 + 机制 + 建议接入阶段（独立表）
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -500,7 +515,9 @@ _content_pack/
     ├── build_skills_chart.py # 由 data/skills.json 生成 技能规格参考页
     ├── build_music_layers.py # 由 data/music_layers.json 生成 分层音乐参考页
     ├── gen_decors.py         # 场景装饰件生成（纯标准库，ell/blade/tri 原语）
-    └── build_music_layers.py # 分层音乐参考页（tide 组 + Boss 组）
+    ├── build_music_layers.py # 分层音乐参考页（tide 组 + Boss 组）
+    ├── gen_enemy_candidates.py # 候选敌种精灵生成（纯标准库）
+    └── build_enemy_pack_demo.py # 候选敌种展示页（含现有敌种同量纲对照）
     ├── gen_hero_portraits.py # 英雄徽章生成（纯标准库，复用 gen_vfx.Canvas）
     ├── sim_balance.py        # 数值平衡蒙特卡洛模拟器（seed 固定可复现，0.9s）
     ├── sim_result.json       # 模拟结果（endless/builds/economy 三组）
@@ -554,11 +571,12 @@ _content_pack/
 - 英雄图鉴：`data/heroes.json` 为合法 JSON（4 英雄：灵鹿祭司/雷羽鹰/霜甲熊/焰心术士；元素引用 ∈ 五元素、技能绑定 8 key 全部存在于 skill_cooldowns、精灵 4/4 存在、unlockLink 与 meta_upgrades 解锁项一一对应）；DPS 天平复算一致（灵鹿 44.4 / 雷羽鹰 53.3 / 霜甲熊 31.4 / 焰心 43.6+灼烧有效≈54.5）；**元素口径统一修正**——meta_upgrades.json 两处「雷元素/冰元素」描述改为「光元素·雷羽映射/水元素·霜甲映射」（与五元素体系/克制链/反应系统兼容）；`hero_chart.html` 由 `tools/build_hero_chart.py` 数据驱动生成，0 占位符、4 立绘引用存在；`endless_lab.html` 英雄选择器内联 `HEROES` 与 JSON 逐项比对一致（base/passive 全参数无漂移）、`node --check` 通过。；4 枚程序化徽章（hero_portraits/）均 128×128 RGBA 非空行 96%，portrait 字段已入 DATA_SYNC 校验（lab 内联/JSON/文件三方一致），`endless_lab` 选择器与 `hero_chart` 头像已切换为徽章（sprites 仅作战斗占位）
 - 战斗分层自适应音乐：`data/music_layers.json` 为合法 JSON（3 层轨 cp_layer_tide_* 均存在、**实测时长 33.1034s 三轨完全一致**——叠播对齐充要条件、峰值均 85% 无削波、RMS 8.2–22.4%）；触发阈值与滞回规则（淡入 8/淡出 6）写入规格；`music_layers.html` 由 `tools/build_music_layers.py` 数据驱动生成，0 占位符；`endless_lab.html`「自适应分层」开关按场上实时敌数驱动 L2/L3 音量渐变（滞回混音），`audio_demo.html` 3 试听卡覆盖；两页面 `node --check` 通过；体系定位明确——Music 通道内部自适应子层，战斗场景替代整曲 BGM 避免旋律叠吵。
 - Boss 分层组：`music_layers.json` 扩展 bossGroup（92 BPM/31.30s/A 小调厚重小调，mixByPhase 三阶段增益矩阵与 boss_phases hpLow 阈值一一对应）；3 条 cp_layer_boss_* 实测时长 31.3043s 完全一致、峰值 85%、RMS 达标；`boss_arena.html`「🎵 Boss 分层」开关三轨同播、enterPhase 实时按阶段混音（mixBossLayers 0.15 插值平滑），`node --check` 通过；`music_layers.html` 重生成含 👹 Boss 分层组混音矩阵表与 3 层卡（0 占位符）。
+- 候选敌种包：`data/enemy_candidates.json` 为合法 JSON（6 候选：元素 ∈ 五元素、HP ∈ 30–90、移速 ∈ 0.6–1.5、suggestedPhases ∈ 1–4；**与现有 wave_design 敌种 key 零冲突**，独立键名 cand_*）；精灵 6/6 均 96×96 `colorType=6` RGBA 非空行 40–61%；`enemy_pack_demo.html` 由 `tools/build_enemy_pack_demo.py` 数据驱动生成，0 占位符、8 名称全在、6 图标引用存在；接入约束（不修改 wave_design、四步接入清单）写入 JSON 与展示页，确保评估期零影响现有玩法数据。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵 + 4 枚英雄徽章 + 8 个场景装饰件）+ 音乐（7 BGM + 33 SFX + 4 环境音 + 6 战斗分层）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（16 份 JSON）+ 可视化参考页与可玩校验场（13 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵 + 4 枚英雄徽章 + 8 个场景装饰件 + 6 个候选敌种）+ 音乐（7 BGM + 33 SFX + 4 环境音 + 6 战斗分层）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（17 份 JSON）+ 可视化参考页与可玩校验场（13 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -604,4 +622,5 @@ _content_pack/
 33. ~~**场景装饰件（8 个程序化布景 + 实验室装饰层）**~~ ✅ 已交付 8 个 96×96 RGBA 装饰件（`tools/gen_decors.py` 纯标准库：双草丛/灌木/树/石头/两种花/发光蘑菇，低饱和远景配色）+ `endless_lab.html` 场景装饰层（初始化随机撒 14 个、z-index 底层、随机缩放）。校验：8/8 colorType=6 非空行 39–84%（布景稀疏合理）；lab `node --check` 通过；`manifest.json` 加 decors 类目（=8）、`index.html` 加「场景装饰件」统计卡、`README` §2.19/§3/§7/引言同步。精灵视觉语言第六系（**decors 布景**），让无尽战场有森林生态感。
 34. ~~**挑战修饰符系统（每周轮换 + 真机选择器）**~~ ✅ 已交付 `data/challenge_mods.json`（8 修饰符成对设计：玩家侧 元素大师·火 30%/迅捷之风 20%/聚宝周 币×2/泉涌之愈 治疗+50%；敌人侧 敌潮 生成+30%/迅敌 速度+15%/铁壁 HP+25%/狂暴 伤害+20%；每周 ISO 周数种子抽 1+1、同周一致可复现）+ `mod_chart.html`（轮换规则+平衡口径+8 卡）+ `endless_lab.html`「🎲 本周挑战」选择器（按周种子自动选中，点击启用后敌伤/敌HP/生成速率/币产出四挂点真实生效）。校验：icon/sfx 零缺失（fx_horde 不存在已改 fx_telegraph）、效果字段 8 种全有挂点、DATA_SYNC_OK（effects/icons/weekly-picker 对齐）、`node --check` 通过；`index.html` 加 🎲 导航卡、`README` §2.20/§3/§7/引言同步（design_data 15→16）。修饰符只改变量起点不改变难度曲线（与 R37 校准兼容），为无尽模式提供「本周玩点」重玩多样性。
 35. ~~**Boss 分层组（按 Boss 阶段混音）**~~ ✅ 已交付 3 条 31.30s 分层轨（`cp_layer_boss_drums/bass/lead`，92 BPM 厚重小调 Am–F–C–G：定音鼓式 kick 重压/锯齿低音 −12 半音四分顿挫/锯齿小调琶音上行+不祥钟声动机每 3 小节；三轨时长差 <0.001s 叠播对齐）+ `music_layers.json` 扩展 **bossGroup**（mixByPhase 三阶段增益矩阵：阶段 1 仅 L1 → 2 +L2(0.7) → 3 +L3(0.8)，与 boss_phases.json hpLow 66%/33% 阈值一一对应）+ `music_layers.html` 重生成（tide 组+Boss 组双组结构）。消费点：`boss_arena.html`「🎵 Boss 分层」开关替换原整曲开关——layerAudios 三轨同播，`mixBossLayers(phaseIdx)` 在 enterPhase 实时混音（音量 0.15 插值平滑）；`audio_demo.html` 加 3 卡（50 条全覆盖）。校验：三轨时长一致断言、boss_arena `node --check`（修复替换残留孤立 `});`）、规格页 0 占位符；`index.html` 加 👹 导航卡、`README` §2.21/§3/§6/§7 同步。自适应音乐第二触发维度（敌数→Boss 阶段）落地，Boss 战「阶段越深音乐越满」。
+36. ~~**候选敌种包（6 个候选 + 程序化精灵 + 展示页）**~~ ✅ 已交付 `data/enemy_candidates.json`（灰烬蛾 fire 飞行·自爆 40HP / 泡囊蛙 water 远程·减速 55HP / 卵石蟹 earth 装甲·格挡 85HP / 辉光萤 light 支援·治疗 45HP / 荆刺野豕 wood 冲锋·撞击 70HP / 灰烬狼 fire 游击·撕咬 60HP；五元素全覆盖，每个都有非数值机制而非纯数值堆叠；数值与现有 6 敌种同量纲）+ **6 个 96×96 程序化精灵**（`tools/gen_enemy_candidates.py` 纯标准库，Q 版风格与现有敌种一致）+ `enemy_pack_demo.html`（接入约束卡 + 6 候选 HP/移速条 + 机制 + 设计意图 + 现有敌种同量纲对照表）。**关键设计决策：独立成表不修改/不引用 wave_design.json**，避免破坏 campaign/endless 的既有 DATA_SYNC 校验链；接入清单写入 JSON 的 integrationNote 供后续决策。校验：元素/HP/移速/阶段区间枚举全过、key 与现有敌种零冲突、精灵 6/6 存在、展示页 0 占位符；`index.html` 加 🐾 导航卡与「候选敌种」统计卡、`manifest.json` 加 enemy_candidates 类目（=6）、`README` §2.22/§3/§6/§7 同步（design_data 16→17）。
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23 07:05:09",
+  "generated_at": "2026-09-23 10:02:33",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
@@ -9,7 +9,8 @@
     "pickups": 8,
     "hero_portraits": 4,
     "decors": 8,
-    "design_data": 16,
+    "enemy_candidates": 6,
+    "design_data": 17,
     "audio": 50,
     "bgm": 7,
     "sfx": 33
@@ -576,6 +577,44 @@
       "bytes": 532
     }
   ],
+  "enemy_candidates": [
+    {
+      "key": "cand_ash_wolf",
+      "w": 96,
+      "h": 96,
+      "bytes": 1202
+    },
+    {
+      "key": "cand_bubble_toad",
+      "w": 96,
+      "h": 96,
+      "bytes": 546
+    },
+    {
+      "key": "cand_ember_moth",
+      "w": 96,
+      "h": 96,
+      "bytes": 1660
+    },
+    {
+      "key": "cand_glow_moth",
+      "w": 96,
+      "h": 96,
+      "bytes": 2231
+    },
+    {
+      "key": "cand_pebble_crab",
+      "w": 96,
+      "h": 96,
+      "bytes": 533
+    },
+    {
+      "key": "cand_thorn_boar",
+      "w": 96,
+      "h": 96,
+      "bytes": 425
+    }
+  ],
   "design_data": [
     {
       "key": "achievements",
@@ -611,6 +650,11 @@
       "key": "endless",
       "cn": "无尽模式",
       "bytes": 3805
+    },
+    {
+      "key": "enemy_candidates",
+      "cn": "候选敌种包",
+      "bytes": 4688
     },
     {
       "key": "heroes",

@@ -44,6 +44,7 @@ skill = uniq_keys(os.path.join(ROOT, 'skill_icons'), ('.png',))
 pickups = uniq_keys(os.path.join(ROOT, 'pickups'), ('.png',))
 portraits = uniq_keys(os.path.join(ROOT, 'hero_portraits'), ('.png',))
 decors = uniq_keys(os.path.join(ROOT, 'decors'), ('.png',))
+ecands = uniq_keys(os.path.join(ROOT, 'enemy_candidates'), ('.png',))
 data = uniq_keys(os.path.join(ROOT, 'data'), ('.json',))
 audio = uniq_keys(os.path.join(ROOT, 'audio'), ('.wav',))
 bgm = [k for k in audio if k.startswith('cp_bgm_')]
@@ -90,6 +91,7 @@ DATA_CN = {
     'decors': '场景装饰件',
     'challenge_mods': '挑战修饰符系统',
     'music_layers_boss': 'Boss 分层组',
+    'enemy_candidates': '候选敌种包',
 }
 PICKUP_CN = {
     'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',
@@ -126,6 +128,12 @@ for k in skill:
     w, h = png_size(p)
     skill_list.append({'key': k, 'cn': SKILL_CN.get(k, ''), 'group': 'element' if k.startswith('el_') else 'ability',
                        'w': w, 'h': h, 'bytes': os.path.getsize(p)})
+
+ecand_list = []
+for k in ecands:
+    p = os.path.join(ROOT, 'enemy_candidates', k + '.png')
+    w, h = png_size(p)
+    ecand_list.append({'key': k, 'w': w, 'h': h, 'bytes': os.path.getsize(p)})
 
 decor_list = []
 for k in decors:
@@ -165,13 +173,13 @@ manifest = {
     'counts': {
         'sprites': len(sprites), 'vfx': len(vfx), 'icons': len(icons),
         'skill_icons': len(skill), 'pickups': len(pickups), 'hero_portraits': len(portraits),
-        'decors': len(decors),
+        'decors': len(decors), 'enemy_candidates': len(ecands),
         'design_data': len(data), 'audio': len(audio),
         'bgm': len(bgm), 'sfx': len(sfx),
     },
     'sprites': sprite_list, 'vfx': vfx_list, 'icons': icon_list,
     'skill_icons': skill_list, 'pickups': pickup_list, 'hero_portraits': portrait_list,
-    'decors': decor_list,
+    'decors': decor_list, 'enemy_candidates': ecand_list,
     'design_data': data_list, 'audio': audio_list,
 }
 

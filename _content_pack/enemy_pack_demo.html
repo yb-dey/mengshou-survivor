@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森灵萌兽 · 候选敌种包</title>
+<style>
+  :root{ --leaf:#3fa66a; --gold:#e8c463; --cream:#f3f7ee; }
+  *{ box-sizing:border-box;margin:0;padding:0 }
+  body{ font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(130% 120% at 50% -10%, #2f6b45 0%, #1c4a30 45%, #0f2f1f 100%);
+    color:var(--cream); min-height:100vh; padding:40px 18px; display:flex; flex-direction:column; align-items:center; }
+  h1{ font-size:30px; letter-spacing:2px; margin-bottom:6px }
+  .sub{ opacity:.8; margin-bottom:26px; font-size:14px; text-align:center; max-width:860px; line-height:1.6 }
+  .wrap{ width:100%; max-width:920px; display:flex; flex-direction:column; gap:22px }
+  .card{ background:rgba(15,47,31,.55); border:1px solid rgba(159,224,180,.25); border-radius:16px; padding:22px 24px }
+  .card h2{ font-size:18px; margin-bottom:12px }
+  .card h2 small{ opacity:.6; font-weight:400; font-size:13px }
+  table.tbl{ border-collapse:collapse; width:100%; font-size:12.5px; margin-top:6px }
+  table.tbl th,table.tbl td{ border:1px solid rgba(159,224,180,.25); padding:6px 10px; text-align:center }
+  table.tbl th{ background:rgba(232,196,99,.12); font-weight:700 }
+  .tier{ border:1px solid; border-radius:12px; padding:12px 14px; margin:10px 0; background:rgba(255,255,255,.03) }
+  .tier-h{ font-size:16px; font-weight:700; display:flex; align-items:center; gap:10px; margin-bottom:8px }
+  .tier-h small{ opacity:.7; font-weight:400; font-size:12px }
+  .eimg{ width:52px; height:52px; border-radius:9px; background:rgba(0,0,0,.25) }
+  .mrow{ display:flex; align-items:center; gap:8px; margin:4px 0; font-size:12px }
+  .mrow .lb{ width:34px; flex:none; opacity:.8 }
+  .mrow .bar{ flex:1; height:9px; background:rgba(255,255,255,.08); border-radius:5px; overflow:hidden }
+  .mrow .bar i{ display:block; height:100% }
+  .mrow .vv{ width:36px; text-align:right; color:var(--gold); font-weight:700 }
+  .uc-e{ margin:7px 0 4px }
+  .eff{ font-size:11.5px; background:rgba(255,255,255,.06); border:1px solid rgba(159,224,180,.3); border-radius:6px; padding:1px 7px }
+  .uc-d{ font-size:12.5px; opacity:.8; line-height:1.55 }
+  .uc-k code{ font-size:11px; opacity:.45 }
+  .note{ font-size:12.5px; opacity:.82; line-height:1.75 }
+  .note b{ color:var(--gold) }
+  .warn{ border-left:4px solid var(--gold); background:rgba(232,196,99,.07); border-radius:8px; padding:10px 14px; font-size:12.5px; line-height:1.7 }
+  footer{ margin-top:26px; font-size:12px; opacity:.5; text-align:center; line-height:1.7; max-width:840px }
+</style>
+</head>
+<body>
+  <h1>🐾 候选敌种包</h1>
+  <div class="sub">《萌兽消消岛》候选敌种（纯设计数据，非游戏代码）：6 个候选敌种，每个都有<b>非数值机制</b>（自爆/减速/格挡/治疗/冲锋/后撤）而非纯数值堆叠。候选（未接入）—— 独立 JSON + 独立精灵目录 enemy_candidates/，零影响现有链。数据来自 <code>data/enemy_candidates.json</code>，本页由 <code>tools/build_enemy_pack_demo.py</code> 生成。</div>
+  <div class="wrap">
+    <div class="card">
+      <h2>⚠️ 接入约束 <small>为什么独立成表</small></h2>
+      <div class="warn">正式接入清单（另做决策）：① wave_design.json enemies 表增量；② endless.json phases 池增量；③ campaign.html / endless_lab.html 内联敌种数据同步；④ 三方 DATA_SYNC 校验与 README 同步。在此之前本包仅供展示与评估（enemy_pack_demo.html）。</div>
+      <div class="note" style="margin-top:8px">HP 40–85（与现有 30–90 同量纲）、移速 0.7–1.4；每个候选都有「非数值机制」（自爆/减速/格挡/治疗/冲锋/后撤），避免纯数值堆叠。建议接入节奏：阶段 2 引入 2 个、阶段 3 再 2 个、阶段 4 全量——与 endless.json 的四阶段难度曲线（budget/hpMul/dmgMul）叠加后需重跑 sim_balance.py 双档复核。</div>
+    </div>
+    <div class="card">
+      <h2>🐾 候选清单 <small>6 个 · 五元素全覆盖</small></h2>
+      <div class="tier" style="border-color:#ff722666"><div class="tier-h" style="color:#ff7226"><img src="enemy_candidates/cand_ember_moth.png" class="eimg" alt="">灰烬蛾 <small>火 · 飞行·自爆</small></div><div class="mrow"><span class="lb">HP</span><span class="bar"><i style="width:44%;background:#ff7226"></i></span><span class="vv">40</span></div><div class="mrow"><span class="lb">移速</span><span class="bar"><i style="width:68%;background:#5ab6ff"></i></span><span class="vv">×1.15</span></div><div class="uc-e"><span class="eff">建议接入：w5+ · w15+</span></div><div class="uc-d"><b>机制：</b>成群直线飞向玩家，接触时自爆造成一次小范围火焰伤害（自身消亡）。</div><div class="uc-d" style="margin-top:4px"><b>设计意图：</b>数量压制型：靠低血量与自爆制造「必须持续走位」的压力，克制站桩输出。</div><div class="uc-k" style="margin-top:5px"><code>cand_ember_moth</code></div></div><div class="tier" style="border-color:#59bfff66"><div class="tier-h" style="color:#59bfff"><img src="enemy_candidates/cand_bubble_toad.png" class="eimg" alt="">泡囊蛙 <small>水 · 远程·减速</small></div><div class="mrow"><span class="lb">HP</span><span class="bar"><i style="width:61%;background:#59bfff"></i></span><span class="vv">55</span></div><div class="mrow"><span class="lb">移速</span><span class="bar"><i style="width:18%;background:#5ab6ff"></i></span><span class="vv">×0.75</span></div><div class="uc-e"><span class="eff">建议接入：w5+ · w10+ · w15+</span></div><div class="uc-d"><b>机制：</b>保持距离吐出泡囊，命中后减速 35%（持续 2.5 秒），冷却 3 秒。</div><div class="uc-d" style="margin-top:4px"><b>设计意图：</b>走位惩罚型：减速窗口会被其他敌种利用，逼迫玩家优先处理或拉开射程。</div><div class="uc-k" style="margin-top:5px"><code>cand_bubble_toad</code></div></div><div class="tier" style="border-color:#8c6b3f66"><div class="tier-h" style="color:#8c6b3f"><img src="enemy_candidates/cand_pebble_crab.png" class="eimg" alt="">卵石蟹 <small>土 · 装甲·格挡</small></div><div class="mrow"><span class="lb">HP</span><span class="bar"><i style="width:94%;background:#8c6b3f"></i></span><span class="vv">85</span></div><div class="mrow"><span class="lb">移速</span><span class="bar"><i style="width:12%;background:#5ab6ff"></i></span><span class="vv">×0.7</span></div><div class="uc-e"><span class="eff">建议接入：w10+ · w15+</span></div><div class="uc-d"><b>机制：</b>正面格挡：来自其朝向的伤害 -40%，绕背或用 AOE/DoT 才能高效处理。</div><div class="uc-d" style="margin-top:4px"><b>设计意图：</b>时间拖延型：高血量与方向性减伤，考验玩家的输出角度与构筑宽度。</div><div class="uc-k" style="margin-top:5px"><code>cand_pebble_crab</code></div></div><div class="tier" style="border-color:#ffd83f66"><div class="tier-h" style="color:#ffd83f"><img src="enemy_candidates/cand_glow_moth.png" class="eimg" alt="">辉光萤 <small>光 · 支援·治疗</small></div><div class="mrow"><span class="lb">HP</span><span class="bar"><i style="width:50%;background:#ffd83f"></i></span><span class="vv">45</span></div><div class="mrow"><span class="lb">移速</span><span class="bar"><i style="width:43%;background:#5ab6ff"></i></span><span class="vv">×0.95</span></div><div class="uc-e"><span class="eff">建议接入：w10+ · w15+</span></div><div class="uc-d"><b>机制：</b>为半径内友军持续回复生命（每秒 2 点，最多 3 个目标），自身不攻击。</div><div class="uc-d" style="margin-top:4px"><b>设计意图：</b>优先级型：不处理就永远清不完——教玩家识别「战场里的支援单位」。</div><div class="uc-k" style="margin-top:5px"><code>cand_glow_moth</code></div></div><div class="tier" style="border-color:#66d85966"><div class="tier-h" style="color:#66d859"><img src="enemy_candidates/cand_thorn_boar.png" class="eimg" alt="">荆刺野豕 <small>木 · 冲锋·撞击</small></div><div class="mrow"><span class="lb">HP</span><span class="bar"><i style="width:77%;background:#66d859"></i></span><span class="vv">70</span></div><div class="mrow"><span class="lb">移速</span><span class="bar"><i style="width:99%;background:#5ab6ff"></i></span><span class="vv">×1.4</span></div><div class="uc-e"><span class="eff">建议接入：w5+ · w10+ · w15+</span></div><div class="uc-d"><b>机制：</b>蓄力 0.6 秒后直线冲锋，命中造成击退 + 短眩晕（0.4 秒），冲锋后短暂僵直。</div><div class="uc-d" style="margin-top:4px"><b>设计意图：</b>站桩惩罚型：冲锋可预测、可躲，失误代价高——奖励会看预警的玩家。</div><div class="uc-k" style="margin-top:5px"><code>cand_thorn_boar</code></div></div><div class="tier" style="border-color:#ff722666"><div class="tier-h" style="color:#ff7226"><img src="enemy_candidates/cand_ash_wolf.png" class="eimg" alt="">灰烬狼 <small>火 · 游击·撕咬</small></div><div class="mrow"><span class="lb">HP</span><span class="bar"><i style="width:66%;background:#ff7226"></i></span><span class="vv">60</span></div><div class="mrow"><span class="lb">移速</span><span class="bar"><i style="width:81%;background:#5ab6ff"></i></span><span class="vv">×1.25</span></div><div class="uc-e"><span class="eff">建议接入：w10+ · w15+</span></div><div class="uc-d"><b>机制：</b>高速接近—撕咬—后撤循环，命中附加短灼烧（每秒 2 点，2 秒）。</div><div class="uc-d" style="margin-top:4px"><b>设计意图：</b>失误捕捉型：不持续贴脸，专抓玩家停下来输出的瞬间，与坦克型互补。</div><div class="uc-k" style="margin-top:5px"><code>cand_ash_wolf</code></div></div>
+    </div>
+    <div class="card">
+      <h2>📚 现有敌种（wave_design.json 6 个） <small>同量纲对照</small></h2>
+      <table class="tbl"><tr><th>名称</th><th>元素</th><th>HP</th><th>定位</th></tr><tr><td>芽芽兔</td><td>木</td><td>30</td><td>小兵·分裂</td></tr><tr><td>火苗狐</td><td>火</td><td>36</td><td>快速·灼烧</td></tr><tr><td>水滴蛙</td><td>水</td><td>50</td><td>远程·水弹</td></tr><tr><td>星羽鸟</td><td>光</td><td>44</td><td>飞行·俯冲</td></tr><tr><td>石甲龟</td><td>土</td><td>90</td><td>坦克·减伤</td></tr><tr><td>森林古木</td><td>木</td><td>200</td><td>BOSS·召唤</td></tr></table>
+    </div>
+  </div>
+  <footer>萌兽消消岛 · 森灵内容包 · 独立命名空间（_content_pack/）<br>候选包精灵由 gen_enemy_candidates.py 纯标准库程序化生成（零外部素材），风格与现有 6 敌种 Q 版一致；本页为评估与展示用，不改变任何既有玩法数据。</footer>
+</body>
+</html>

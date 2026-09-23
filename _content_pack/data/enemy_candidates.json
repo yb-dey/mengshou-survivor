@@ -1,0 +1,62 @@
+{
+  "system": "森灵候选敌种包",
+  "version": 1,
+  "description": "《萌兽消消岛》候选敌种规格（纯设计数据，非游戏代码）。6 个**候选**敌种（程序化 Q 版精灵 + 数值 + 定位 + 建议接入阶段），目的是为 wave_design 6 敌种（芽芽兔/火苗狐/水滴蛙/星羽鸟/石甲龟/森林古木）扩容提供候选池。关键约束：**本包独立成表，不修改也不引用 wave_design.json 的敌种表**（避免破坏 campaign/endless 的既有 DATA_SYNC 校验链）；正式接入需另做决策与联动修改（endless phases 池、wave_design 关卡波次、campaign/endless 内联数据三方同步）。数值口径与现有敌种同量纲（HP 40–85、移速倍率 0.7–1.4）。",
+  "references": [
+    "Vampire Survivors 敌种设计：每波引入 1–2 个新敌种并逐步加密，敌种按行为模式（群冲/远程/装甲/支援）分工而非仅数值分层",
+    "幸存品类敌种行为分工惯例：swarm 数量压制 / ranged 逼走位 / tank 拖时间 / support 抬血线 / charger 惩罚站桩 / skirmisher 抓失误"
+  ],
+  "status": "候选（未接入）—— 独立 JSON + 独立精灵目录 enemy_candidates/，零影响现有链",
+  "candidates": {
+    "cand_ember_moth": {
+      "cn": "灰烬蛾", "element": "fire", "role": "飞行·自爆",
+      "hp": 40, "speed": 1.15,
+      "mechanism": "成群直线飞向玩家，接触时自爆造成一次小范围火焰伤害（自身消亡）。",
+      "suggestedPhases": [2, 4],
+      "sprite": "enemy_candidates/cand_ember_moth.png",
+      "desc": "数量压制型：靠低血量与自爆制造「必须持续走位」的压力，克制站桩输出。"
+    },
+    "cand_bubble_toad": {
+      "cn": "泡囊蛙", "element": "water", "role": "远程·减速",
+      "hp": 55, "speed": 0.75,
+      "mechanism": "保持距离吐出泡囊，命中后减速 35%（持续 2.5 秒），冷却 3 秒。",
+      "suggestedPhases": [2, 3, 4],
+      "sprite": "enemy_candidates/cand_bubble_toad.png",
+      "desc": "走位惩罚型：减速窗口会被其他敌种利用，逼迫玩家优先处理或拉开射程。"
+    },
+    "cand_pebble_crab": {
+      "cn": "卵石蟹", "element": "earth", "role": "装甲·格挡",
+      "hp": 85, "speed": 0.7,
+      "mechanism": "正面格挡：来自其朝向的伤害 -40%，绕背或用 AOE/DoT 才能高效处理。",
+      "suggestedPhases": [3, 4],
+      "sprite": "enemy_candidates/cand_pebble_crab.png",
+      "desc": "时间拖延型：高血量与方向性减伤，考验玩家的输出角度与构筑宽度。"
+    },
+    "cand_glow_moth": {
+      "cn": "辉光萤", "element": "light", "role": "支援·治疗",
+      "hp": 45, "speed": 0.95,
+      "mechanism": "为半径内友军持续回复生命（每秒 2 点，最多 3 个目标），自身不攻击。",
+      "suggestedPhases": [3, 4],
+      "sprite": "enemy_candidates/cand_glow_moth.png",
+      "desc": "优先级型：不处理就永远清不完——教玩家识别「战场里的支援单位」。"
+    },
+    "cand_thorn_boar": {
+      "cn": "荆刺野豕", "element": "wood", "role": "冲锋·撞击",
+      "hp": 70, "speed": 1.4,
+      "mechanism": "蓄力 0.6 秒后直线冲锋，命中造成击退 + 短眩晕（0.4 秒），冲锋后短暂僵直。",
+      "suggestedPhases": [2, 3, 4],
+      "sprite": "enemy_candidates/cand_thorn_boar.png",
+      "desc": "站桩惩罚型：冲锋可预测、可躲，失误代价高——奖励会看预警的玩家。"
+    },
+    "cand_ash_wolf": {
+      "cn": "灰烬狼", "element": "fire", "role": "游击·撕咬",
+      "hp": 60, "speed": 1.25,
+      "mechanism": "高速接近—撕咬—后撤循环，命中附加短灼烧（每秒 2 点，2 秒）。",
+      "suggestedPhases": [3, 4],
+      "sprite": "enemy_candidates/cand_ash_wolf.png",
+      "desc": "失误捕捉型：不持续贴脸，专抓玩家停下来输出的瞬间，与坦克型互补。"
+    }
+  },
+  "balanceNote": "HP 40–85（与现有 30–90 同量纲）、移速 0.7–1.4；每个候选都有「非数值机制」（自爆/减速/格挡/治疗/冲锋/后撤），避免纯数值堆叠。建议接入节奏：阶段 2 引入 2 个、阶段 3 再 2 个、阶段 4 全量——与 endless.json 的四阶段难度曲线（budget/hpMul/dmgMul）叠加后需重跑 sim_balance.py 双档复核。",
+  "integrationNote": "正式接入清单（另做决策）：① wave_design.json enemies 表增量；② endless.json phases 池增量；③ campaign.html / endless_lab.html 内联敌种数据同步；④ 三方 DATA_SYNC 校验与 README 同步。在此之前本包仅供展示与评估（enemy_pack_demo.html）。"
+}

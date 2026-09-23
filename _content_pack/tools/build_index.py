@@ -19,6 +19,7 @@ skill = uniq_keys(os.path.join(ROOT, 'skill_icons'), ('.png',))
 pickups = uniq_keys(os.path.join(ROOT, 'pickups'), ('.png',))
 portraits = uniq_keys(os.path.join(ROOT, 'hero_portraits'), ('.png',))
 decors = uniq_keys(os.path.join(ROOT, 'decors'), ('.png',))
+ecands = uniq_keys(os.path.join(ROOT, 'enemy_candidates'), ('.png',))
 data = uniq_keys(os.path.join(ROOT, 'data'), ('.json',))
 audio = uniq_keys(os.path.join(ROOT, 'audio'), ('.wav',))
 
@@ -73,6 +74,7 @@ DATA_CN = {
     'decors': '场景装饰件',
     'challenge_mods': '挑战修饰符系统',
     'music_layers_boss': 'Boss 分层组',
+    'enemy_candidates': '候选敌种包',
 }
 PICKUP_CN = {
     'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',
@@ -134,6 +136,7 @@ html = f'''<!DOCTYPE html>
     <div class="stat"><b>{len(pickups)}</b><span>拾取物精灵</span></div>
     <div class="stat"><b>{len(portraits)}</b><span>英雄徽章</span></div>
     <div class="stat"><b>{len(decors)}</b><span>场景装饰件</span></div>
+    <div class="stat"><b>{len(ecands)}</b><span>候选敌种</span></div>
     <div class="stat"><b>{len(audio)}</b><span>音频（{len(bgm)} BGM + {len(sfx)} SFX）</span></div>
   </div>
   <div class="nav">
@@ -170,6 +173,9 @@ html = f'''<!DOCTYPE html>
     <a class="ncard" href="meta_chart.html" target="_blank">
       <div class="ico">🌱</div><div class="t">局外成长系统</div>
       <div class="d">跨局永久强化 + 森灵币经济闭环：18 项永久强化 × 5 类（几何成本），产出-消耗水槽（积压率 0.22 健康），含可玩实验室 meta_lab.html。</div></a>
+    <a class="ncard" href="enemy_pack_demo.html" target="_blank">
+      <div class="ico">🐾</div><div class="t">候选敌种包</div>
+      <div class="d">6 个候选敌种（五元素全覆盖），每个都有非数值机制：自爆/减速/格挡/治疗/冲锋/后撤——独立表不破坏现有校验链。</div></a>
     <a class="ncard" href="music_layers.html" target="_blank">
       <div class="ico">👹</div><div class="t">Boss 分层组</div>
       <div class="d">92 BPM 厚重小调三层轨（定音鼓/厚重低音/铜管旋律），按 Boss 三阶段实时混音（阶段 1 鼓 → 2 +低音 → 3 +旋律），boss_arena 真机演示。</div></a>
