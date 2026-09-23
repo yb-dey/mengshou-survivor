@@ -102,6 +102,10 @@ await page.evaluate((t) => { try { window.MENGSHOU_DEBUG.seek(t); } catch (e) {}
 const S = { LEVELUP: 'LEVELUP_MODAL', REVIVE: 'REVIVE_MODAL', WIN: 'RESULT_WIN', LOSE: 'RESULT_LOSE' };
 let peak = { enemyCount: 0, activeTotal: 0 };
 const LOAD_TARGET = +(process.env.LOAD_TARGET || 45);
+// 【第 54 轮】驱动器**自证轨迹**：上一轮红的时候只知道"峰值 16 < 45"，看不出卡在哪一步
+//   （没进战斗？潮没起？怪被杀光？弹窗一直挡着？）。annotations 匿名可读 ⇒ 把轨迹打出去，
+//   下次红时直接从云端读出因果。计数同时进汇总行，便于和其它 run 对比。
+let polls = 0, seeks = 0, lvTaps = 0, reviveTaps = 0, exitWhy = '超时 55s（没到目标）';
 const tWait0 = Date.now();
 while (Date.now() - tWait0 < 55000) {
   const s = await page.evaluate(() => {
@@ -110,9 +114,19 @@ while (Date.now() - tWait0 < 55000) {
     let sk = null; try { sk = D.stress ? D.stress() : null; } catch (e) {}
     return { st, sk };
   });
+  polls++;
   if (s.sk) {
     if (s.sk.enemyCount > peak.enemyCount) peak = s.sk;
-    if (peak.enemyCount >= LOAD_TARGET) break;
+    if (peak.enemyCount >= LOAD_TARGET) { exitWhy = '达到目标'; break; }
+  }
+  // 轨迹（每 12 次轮询 ≈ 6s 一条；step 的注解条数有上限，别发太密）
+  if (polls % 12 === 1) {
+    const t = ((Date.now() - tWait0) / 1000).toFixed(0);
+    if (s.sk) {
+      console.log(`::warning::驱动 t=${t}s state=${s.st} runTime=${s.sk.runTime} enemy=${s.sk.enemyCount} active=${s.sk.activeTotal} peak=${peak.enemyCount} horde=${s.sk.hordeActive ? 'on' : 'off'}#${s.sk.hordeIdx} seek=${seeks} 升级卡清=${lvTaps}`);
+    } else {
+      console.log(`::warning::驱动 t=${t}s state=${s.st} —— D.stress() 读不到（可能还没进战斗）`);
+    }
   }
   // 弹窗会暂停刷怪 → 必须**真的把卡点掉**。
   // 【第 53 轮修】原实现是"点画面中央"：云端实测**峰值只到 14**（< 45 → 判样本无效，verify-dist 红）。
@@ -120,25 +134,30 @@ while (Date.now() - tWait0 < 55000) {
   //   怪根本灌不进来（"帧率好"这种假阴性正是本门禁最想避免的，结果它自己被同一类问题卡住）。
   //   ⇒ 改用 fx-audit 已验证有效的**确定性钩子** `D.levelupTap()`（直接选中卡，不依赖像素命中）。
   if (s.st === S.LEVELUP) {
+    lvTaps++;
     await page.evaluate(() => { const D = window.MENGSHOU_DEBUG || {}; try { if (D.levelupTap) D.levelupTap(); } catch (e) { void e; } });
     await page.waitForTimeout(350);
     continue;
   }
   if (s.st === S.REVIVE) {      // 复活弹窗没有对应的确定性钩子 → 保留"点中央"
+    reviveTaps++;
     await page.mouse.click(geom.left + geom.width / 2, geom.top + geom.height / 2);
     await page.waitForTimeout(400);
     continue;
   }
   // 结算/失败 → 这一波已过，重开一局再进潮
-  if (s.st === S.WIN || s.st === S.LOSE) break;
+  if (s.st === S.WIN || s.st === S.LOSE) { exitWhy = '结算/' + s.st + '（这一波结束）'; break; }
   // 潮窗已过（idx 前移且场上怪在掉）→ 重新 seek 回潮首，继续灌
   if (s.sk && s.sk.hordeTimes && s.sk.hordeIdx >= 1 && peak.enemyCount < LOAD_TARGET) {
     const ht = s.sk.hordeTimes[Math.min(s.sk.hordeIdx, s.sk.hordeTimes.length - 1)];
+    seeks++;
     await page.evaluate((t) => { try { window.MENGSHOU_DEBUG.seek(t); } catch (e) {} }, ht + 1);
     await page.waitForTimeout(300);
   }
   await page.waitForTimeout(500);
 }
+// 驱动器汇总（无论红绿都发一条，便于跨 run 对比"驱动器健康度"）
+console.log(`::warning::驱动汇总 轮询=${polls} seek=${seeks} 清升级卡=${lvTaps} 清复活=${reviveTaps} 峰值=${peak.enemyCount}/${LOAD_TARGET} 结束原因=${exitWhy}`);
 
 // —— 量帧时间（重载窗口）——
 // 【v1.174】窗口 5s → 10s：**5s 太短，p95 方差大到把哨兵变成掷骰子**。
