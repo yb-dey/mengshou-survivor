@@ -245,7 +245,7 @@ jobs:
         run: |
           node ci/room-tier-cross.mjs --selftest
           node ci/room-tier-cross.mjs
-      # 第 31 维度（v1.207）：局外强化价格锁 —— UPGRADE_DEFS × CONFIG.upPriceExp / upMaxLv。
+      # 第 31 维度（v1.206 期）：局外强化价格锁 —— UPGRADE_DEFS × CONFIG.upPriceExp / upMaxLv。
       #   病根族 = **假保证**（第 36 轮查出）：母版 L10557 注释声称有「冻结断言 gate_d_upgrade …(价格合计 29939 口径)」，
       #     实测**全仓库没有 gate_d_upgrade**（grep 只命中那条注释本身）⇒ 这张价格表**没有任何门禁在守**；
       #     且注释里的 29939 与代码自身公式（`upgradePriceAt = ceil(base×upPriceExp^lv)`）实算的 **29,980** 不符（差 41）。
@@ -258,7 +258,7 @@ jobs:
         run: |
           node ci/upgrade-price-lock.mjs --selftest
           node ci/upgrade-price-lock.mjs
-      # 第 32 维度（v1.208）：结算双倍领取的"每局一次"契约 —— 防**重复入账**（经济漏洞类）。
+      # 第 32 维度（v1.206 期）：结算双倍领取的"每局一次"契约 —— 防**重复入账**（经济漏洞类）。
       #   病根族 = 假保证（第 39 轮查出**第二例**幻影门禁）：结算页注释原写「…gate_d Db1.5/Dc3.3
       #     以任意态直调为既有契约(见其 L78 "由 onTap 守卫"注)」，而**本仓库没有 gate_d 套件**
       #     （全仓库唯一 gate* 文件是 ci/gate-audit.mjs = 跑门禁的工具本身）。
@@ -345,13 +345,22 @@ jobs:
         run: |
           node ci/text-scale-check.mjs --selftest
           node ci/text-scale-check.mjs
-      # 【v1.207】卡道配色锁 + 色觉可达性台账：教学明写"金=武器 赤=战斗 青=被动 橙=跟宠升星"，
+      # 【v1.206 期】卡道配色锁 + 色觉可达性台账：教学明写"金=武器 赤=战斗 青=被动 橙=跟宠升星"，
       #   而实测红绿色盲下"赤↔橙"塌成一片（deutan ΔE 4.2）—— 候选色扫描证明**换色解决不了**，
       #   需加冗余文字/图标通道（待拍板，会让备案截图换版）。本判据守的是"配色一动就必须重审"。
       - name: 卡道配色锁（GATE · 改色必须重跑色觉审查）
         run: |
           node ci/color-palette-lock.mjs --selftest
           node ci/color-palette-lock.mjs
+      # 【v1.206 期】触控目标锁（第 69 轮）：逻辑画布 720 宽映射到 390pt 手机 ⇒ ×0.5417，
+      #   通行下限 44 CSS px（iOS HIG）/ 48dp（Android）⇒ 取 **81 逻辑px**。
+      #   实测 27 个具名控件里只有 4 个达标（最紧 homeabout 100×44 ⇒ 23.8 CSS px）——
+      #   扩命中区需 gap-aware（x/y 多为表达式，静态算不全）⇒ 本轮只锁"不许变小 + 不许新增偏小"。
+      #   （约定：ci-only 轮次不涨母版版本，故标「vN 期」= 该判据守的是哪个母版；见 PM §18）
+      - name: 触控目标锁（GATE · 不许变小 / 不许新增偏小控件）
+        run: |
+          node ci/tap-target-check.mjs --selftest
+          node ci/tap-target-check.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
