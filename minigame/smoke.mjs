@@ -1302,6 +1302,8 @@ if (PACING) {
   const stName = (v) => Object.keys(flow).find((k) => flow[k] === v) || String(v)
   const reviveHook = W.onTapReviveBtn || sandbox.onTapReviveBtn || null
   const P_REVIVE = !process.argv.includes('--no-revive')
+  // 【故障注入】--stress-flaky=N：**每 N 次** D.stress() 调用注入一次抛错（N=1 ⇒ 每次都抛）。
+  const P_FLAKY = Number(((process.argv.find((a) => a.indexOf('--stress-flaky=') === 0) || '').split('=')[1]) || 0)
   let clock = 3.6e6
   const drive = (n) => { for (let i = 0; i < n; i++) { const cb = rafPending.shift(); if (cb) cb(clock); clock += 16.7 } }
   console.log('\n=== ⑱ 节奏实测（--pacing）===')
@@ -1331,6 +1333,7 @@ if (PACING) {
   sandbox.debugPlayClean(P_CH, '', false)
   let picks = 0, frames = 0, revives = 0, firstPickRt = null, firstDeathRt = null
   let frozenFrames = 0, lvFrames = 0, rtBack = 0, guardHit = 0
+  let stressFails = 0, stressRetries = 0, stressErrMsg = "", stressCalls = 0
   const frozenBy = {}   // 冻结帧按**冻结当时的 state** 归类：探针自己量，不猜哪个状态冻时钟
   let endAt = null, endState = null
   const rows = []
@@ -1366,7 +1369,22 @@ if (PACING) {
       if (st === flow.RESULT_LOSE || st === flow.RESULT_WIN) { endAt = +sandbox.GAME.runTime.toFixed(1); endState = stName(st); break }
     }
     if (guard >= GUARD) guardHit++
-    const sk = (() => { try { return D.stress ? D.stress() : null } catch (e) { return null } })()
+    // ⚠ v13：stress() 抛错时**最多重试 3 帧**并记下最后一条错误 —— 旧版 `catch { return null }`
+    //   把 cause 吞了，云端只看到 `同屏怪 -1`，说不出为什么（本轮就是这么卡住的）。
+    let sk = null, skErr = "", skTries = 0
+    while (skTries < 3 && !sk) {
+      skTries++
+      try {
+        if (P_FLAKY) { stressCalls++; if (stressCalls % P_FLAKY === 0) throw new Error("注入故障：第 " + stressCalls + " 次 stress()") }
+        sk = D.stress ? D.stress() : null
+        if (!sk) skErr = "stress() 返回空"
+      } catch (e) {
+        skErr = String((e && e.message) || e)
+        if (!sk) { try { drive(1) } catch (e2) { void e2 } frames++ }
+      }
+    }
+    if (skTries > 1) stressRetries++
+    if (!sk) { stressFails++; if (skErr) stressErrMsg = skErr }
     rows.push({
       t, rt: +sandbox.GAME.runTime.toFixed(1), wall: +(frames / FPS).toFixed(1),
       state: stName(sandbox.GAME.state), picks,
@@ -1413,12 +1431,16 @@ if (PACING) {
   const offTarget = judged.filter((r) => Math.abs(r.rt - r.t) > 1)
   if (offTarget.length) pFails.push(`${offTarget.length} 个采样点没落在 runTime 目标上（最大偏 ${Math.max(...offTarget.map((r) => Math.abs(r.rt - r.t))).toFixed(1)}s）`)
   if (terminalShort) console.log(`        终局行豁免：t=${terminalShort.t}s 只采到 rt=${terminalShort.rt}s（本局在 ${endState} 结束，时钟停走，不计入对位判定）`)
-  if (rows.length && last.enemy < 0) pFails.push('读不到 stress().enemyCount')
+  if (stressFails) {
+    pFails.push(`${stressFails} 个采样点读不到 stress()（重试 3 帧仍失败）最后错误：${stressErrMsg || '（无错误信息）'}`)
+  } else if (rows.length && last.enemy < 0) {
+    pFails.push('最后一行的 enemyCount 为 -1，但重试统计显示都读到了（口径不一致，需查）')
+  }
   if (!D.spine) pFails.push('读不到 MENGSHOU_DEBUG.spine（调试口没挂上）')
   if (P_REVIVE && reviveHook && rows.some((r) => r.state === 'REVIVE_MODAL') && revives === 0) pFails.push('复活钩子调了但没生效（REVIVE_MODAL 卡住 ⇒ 后续样本全是冻结帧）')
   if (last.lv > 2 && picks < last.lv - 2) pFails.push(`选卡 ${picks} 次远少于等级跨度 ${last.lv - 1}（漏清升级卡）`)
   if (pFails.length) { console.log('  ❌ 节奏探针自身不过：'); for (const f of pFails) console.log('     - ' + f); ok = false }
-  else console.log(`  ✅ 节奏探针自证通过（${judged.length} 个有效采样点全部落在 runTime 目标 ±1s 内` + (terminalShort ? '，终局行已豁免' : '') + ` · 驱动 ${frames} 帧 · runTime 回退 ${rtBack} 次 · 复活 ${revives} 次）`)
+  else console.log(`  ✅ 节奏探针自证通过（${judged.length} 个有效采样点全部落在 runTime 目标 ±1s 内 · stress 重试 ${stressRetries} 次` + (terminalShort ? '，终局行已豁免' : '') + ` · 驱动 ${frames} 帧 · runTime 回退 ${rtBack} 次 · 复活 ${revives} 次）`)
 }
 console.log(`\n结论：${ok ? (NOPLAY ? '启动 + 输入 通过（--no-play：未跑实战）' : '启动 + 输入 + 实战 全部通过') : '失败'}（本轮：初始化帧 ${FRAMES}、实战帧 ${playFrames}；rAF 待驱动 ${rafPending.length} 个；分包场景 ${SUBPKG_SCENARIO}）`)
 if (SELFTEST) {
