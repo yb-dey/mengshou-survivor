@@ -28,9 +28,9 @@ jobs:
           node-version: '22'
       - run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
       - name: 1) 运行时 SFX 频次实测
-        run: node ci/sfx-runtime-freq.mjs
+        run: bash ci/run-gate.sh ci/out/sfx-runtime-freq.log node ci/sfx-runtime-freq.mjs
       - name: 2) 频率 × 响度交叉判定
-        run: node ci/sfx-freq-vs-loud.mjs
+        run: bash ci/run-gate.sh ci/out/sfx-freq-vs-loud.log node ci/sfx-freq-vs-loud.mjs
       - name: 3) 阴性对照（门禁必须会报错）
         run: node ci/sfx-freq-vs-loud.selftest.mjs
       - name: 上传产物

@@ -17,7 +17,7 @@ jobs:
           node-version: '22'
       - run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
       - name: 特效专项体检
-        run: node ci/fx-audit.mjs
+        run: bash ci/run-gate.sh ci/out/fx-audit.log node ci/fx-audit.mjs
       - name: 上传产物
         if: always()
         uses: actions/upload-artifact@v4

@@ -145,7 +145,7 @@ jobs:
         continue-on-error: true
         env:
           VERIFY_DIR: dist
-        run: node ci/verify.mjs
+        run: bash ci/run-gate.sh ci/out/verify.log node ci/verify.mjs
 
       # 【v1.171】重载帧时体检：verify.mjs 只量**开局轻载** fps；本作最重场景是**怪潮**
       #   (ch6 无尽可达 maxEnemy=200 同屏) —— 轻载 60fps 不能证明重载不卡。
@@ -156,7 +156,7 @@ jobs:
         continue-on-error: true
         env:
           VERIFY_DIR: dist
-        run: node ci/stress-perf.mjs
+        run: bash ci/run-gate.sh ci/out/stress-perf.log node ci/stress-perf.mjs
 
       # 【v1.172】存档完整性体检：SAVE_SCHEMA/迁移链/钳制是**唯一持久化通道**，
       #   而 Storage.load 的 catch **静默**落 defaultSave() —— 存档损坏时玩家只看到
@@ -167,7 +167,7 @@ jobs:
         continue-on-error: true
         env:
           VERIFY_DIR: dist
-        run: node ci/save-integrity.mjs
+        run: bash ci/run-gate.sh ci/out/save-integrity.log node ci/save-integrity.mjs
 
       # 【v1.172】⚠ 必须补齐的收口步骤 —— 否则上面三个体检**报了 FAIL 也显示 success**
       #   （本轮实测踩到：save-integrity 报告写着 FAIL，步骤却是绿勾）。

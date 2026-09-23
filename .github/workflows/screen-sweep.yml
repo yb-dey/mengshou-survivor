@@ -15,7 +15,7 @@ jobs:
           node-version: '22'
       - run: npm install --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
       - name: 全界面巡检截图
-        run: node ci/screen-sweep.mjs
+        run: bash ci/run-gate.sh ci/out/screen-sweep.log node ci/screen-sweep.mjs
       # 【2026-09-21】图像分析搬进 CI：用户硬规则是"吃算力的活（验证/构建/**分析**）全走云端，
       #   本机只做文本编辑"。此前逐像素统计（13 屏 × 72 万像素）都在本机跑 = 违规。
       - name: 安装分析依赖
