@@ -1353,7 +1353,7 @@ if (PACING) {
   const chRow = chapters[P_CH] || {}
   const line = chRow.winTime || P_TMAX || 600
   const T_END = P_TMAX || Math.ceil(line / P_STEP) * P_STEP
-  console.log(`  连续实战：第 ${P_CH + 1} 章 · ${FPS}fps 连续驱动到 ${T_END}s（通关线 ${line}s）· 站桩不躲 + 总选第一张卡`)
+  console.log(`  连续实战：第 ${P_CH + 1} 章 · ${FPS}fps 连续驱动到 ${T_END}s（通关线 ${line}s）· ${P_KITE ? '绕场巡游（会走位）' : '站桩不躲'} + 总选第一张卡`)
   sandbox.debugPlayClean(P_CH, '', false)
   // 注：合成触摸在本 harness 里**到不了游戏**（假 canvas 的 addEventListener 是空实现，见文件头说明），
   //   所以走位改用键盘轴注入；触摸链路的缺口另记（不动 harness）。
@@ -1485,7 +1485,7 @@ if (PACING) {
   const _mins = last.t / 60
   console.log(`        产出：金币 ${last.coins}（≈${(last.coins / (_mins || 1)).toFixed(1)}/分）· 击杀 ${last.kills}（≈${(last.kills / (_mins || 1)).toFixed(1)}/分）`)
   console.log(`        首次升级 t=${firstPickRt === null ? '未升级' : firstPickRt + 's'} · 选卡 ${picks} 次 · 终局 Lv${last.lv} / HP ${last.hp}/${last.maxHp}` +
-    (firstDeathRt === null ? ' · 全程未阵亡' : ` · 站桩首次阵亡 t=${firstDeathRt}s` + (revives ? `（自动复活 ${revives} 次续行）` : '')) +
+    (firstDeathRt === null ? ' · 全程未阵亡' : ` · ${P_KITE ? '走位' : '站桩'}首次阵亡 t=${firstDeathRt}s` + (revives ? `（自动复活 ${revives} 次续行）` : '')) +
     (endAt === null ? ' · 打到采样结束' : ` · ${endState} @ t≈${endAt}s`))
   console.log(`        墙钟代价：游戏内 ${last.rt}s 共驱动 ${frames} 帧 = ${(frames / FPS).toFixed(1)}s 墙钟（比率 ${ratio}）· 时钟冻结 ${frozenSec}s`)
   console.log(`        冻结归属：${fzTop} · 复活 ${revives} 次 · 升级弹窗帧 ${lvFrames}`)
