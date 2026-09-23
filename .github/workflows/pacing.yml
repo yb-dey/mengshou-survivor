@@ -58,11 +58,13 @@ jobs:
                 | sed 's/%/%25/g; s/^ */  /; s/^/::notice::/' || true
               echo "::notice::第 $i 章节奏探针 exit=0（完整采样表见产物 ci/out/pacing-ch$i.log）"
             else
-              # ⚠ 通用尾部会被去重/截断吃掉（实测漏掉了探针自己报的原因行）⇒ 显式打判据区上下文
-              echo "::error::第 $i 章节奏探针自证没过 —— 判据区上下文（❌ 后 6 行 = 原因）"
-              grep -n '❌' -A 6 "$log" | sed 's/%/%25/g; s/^/::error::/' || true
-              echo "::error::---- 该章派生行（能出现说明跑到了最后）----"
-              grep -E '派生：|首次升级|墙钟代价|冻结归属' "$log" | sed 's/%/%25/g; s/^/::error::/' || true
+              # ⚠ 多行注解会被 GitHub 去重/截断：实测"判据区上下文 + 派生行"两组 ::error:: 全都拿不到，
+              #   注解里只剩 run-gate.sh 的老三样（判据行 1 条 + 尾部 6 行）⇒ 远程仍然定位不了。
+              #   ⇒ 改成**单行注解**，把原因区/派生/日志尾用 ~ 拼在一起（注解上限 64KB，够用）。
+              reason=$(grep -A 6 '❌' "$log" | tr '\n' '~' | sed 's/%/%25/g')
+              derived=$(grep -E '派生：|首次升级|墙钟代价|冻结归属' "$log" | tr '\n' '~' | sed 's/%/%25/g')
+              tail3=$(tail -n 3 "$log" | tr '\n' '~' | sed 's/%/%25/g')
+              echo "::error::第 $i 章节奏探针自证没过（--ch $((i-1)) --tmax $line）｜原因区: ${reason}｜派生: ${derived}｜日志尾: ${tail3}"
               exit 1
             fi
           done
