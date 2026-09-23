@@ -1,0 +1,24 @@
+{
+  "description": "《萌兽不好惹》微信小游戏移植工程（由单文件 HTML5 母版移植）",
+  "compileType": "game",
+  "libVersion": "2.19.0",
+  "appid": "touristappid",
+  "projectname": "mengshou-minigame",
+  "miniprogramRoot": "./",
+  "packOptions": {
+    "ignore": [
+      { "type": "file", "value": "smoke.mjs" },
+      { "type": "file", "value": "build-minigame.mjs" },
+      { "type": "file", "value": "README.md" },
+      { "type": "file", "value": "_L.log" }
+    ]
+  },
+  "setting": {
+    "urlCheck": false,
+    "es6": false,
+    "enhance": false,
+    "postcss": false,
+    "minified": false,
+    "autoAudits": false
+  }
+}

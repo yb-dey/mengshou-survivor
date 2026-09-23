@@ -1,0 +1,58 @@
+name: minigame-smoke
+# 微信小游戏移植工程（仓库内 `minigame/`）—— 第 55 轮新增。
+#
+# 为什么要有它：移植工程此前在**仓库外**，云端 100+ 条门禁**一条也没覆盖它**，
+#   16 阶段冒烟只有手动跑才会跑（`小游戏移植/README.md` §五 记着这个结构性缺口）。
+#   现在源文件入库（产物 gitignore），云端跑：master → dist 重建 → 体积/分包闸门 → 真入口冒烟（4 分支）。
+#
+# ⚠ 失败诊断：全部走 `ci/run-gate.sh` 包装 —— 失败时把判据行打成 `::error::` annotation，
+#   没有 admin 权限也能远程读到原因（与 verify-dist 同一套机制）。
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'game/**'
+      - 'ci/**'
+      - 'minigame/**'
+permissions:
+  contents: read
+jobs:
+  minigame:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 先从内联母版重建 dist（顺带验证 master→dist 那条链没断），移植工程的输入就是它
+      - name: 重建 dist（内联母版 → 外链形态）
+        run: node ci/build-dist.js
+
+      - name: 体积/分包判据自测（6 例对照，必须全对）
+        run: bash ci/run-gate.sh ci/out/minigame-build-selftest.log node minigame/build-minigame.mjs --selftest
+
+      - name: 构建小游戏包（体积 + 分包声纳）
+        run: bash ci/run-gate.sh ci/out/minigame-build.log node minigame/build-minigame.mjs
+
+      # 真入口冒烟：16 阶段（含 ⑯ 分包门控 4 分支）。默认场景 = 分包加载成功
+      - name: 冒烟测试（16 阶段，默认场景 ok）
+        run: bash ci/run-gate.sh ci/out/minigame-smoke.log node minigame/smoke.mjs
+
+      # 三个分支各自是一次**期望行为**断言（跑通即 exit 0）—— 它们证明门控真的分得清四种情形
+      - name: 分包分支：下载失败必须兜底启动
+        run: bash ci/run-gate.sh ci/out/minigame-smoke-fail.log node minigame/smoke.mjs --no-play --subpackage-fail
+      - name: 分包分支：老基础库无 API 直接启动
+        run: bash ci/run-gate.sh ci/out/minigame-smoke-skip.log node minigame/smoke.mjs --no-play --no-loadsubpackage
+      - name: 分包分支：永不回调必须**不**启动（阴性对照）
+        run: bash ci/run-gate.sh ci/out/minigame-smoke-stall.log node minigame/smoke.mjs --no-play --subpackage-stall
+
+      - name: 上传产物（日志 + 体积报告）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: minigame-smoke
+          path: ci/out/minigame-*.log
+          retention-days: 14

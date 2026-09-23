@@ -1,0 +1,7 @@
+# 【第 55 轮】这些是**构建产物**，不入库：云端由 master → dist → minigame 链现场重建
+#   （源文件仅 ~148 KB；产物 game.bundle.js 1.83 MB + assets/ 1.99 MB）
+game.bundle.js
+assets/
+# 本地/CI 运行产物
+*.log
+ci-out/
