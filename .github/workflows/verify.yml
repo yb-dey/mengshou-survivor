@@ -258,6 +258,20 @@ jobs:
         run: |
           node ci/upgrade-price-lock.mjs --selftest
           node ci/upgrade-price-lock.mjs
+      # 第 32 维度（v1.208）：结算双倍领取的"每局一次"契约 —— 防**重复入账**（经济漏洞类）。
+      #   病根族 = 假保证（第 39 轮查出**第二例**幻影门禁）：结算页注释原写「…gate_d Db1.5/Dc3.3
+      #     以任意态直调为既有契约(见其 L78 "由 onTap 守卫"注)」，而**本仓库没有 gate_d 套件**
+      #     （全仓库唯一 gate* 文件是 ci/gate-audit.mjs = 跑门禁的工具本身）。
+      #   判据（全在 onTapDoubleBtn 一个函数体内）：A 解析完整性（找得到 ∧ 含 coins *= 2）
+      #     · B 入口守卫 `if (runSummary.doubled) return;` · C 回调复核 `ok && !runSummary.doubled`
+      #     · D 状态置位 `runSummary.doubled = true` · E 置位必须在翻倍**之后**（反了会先锁后翻、静默失效）。
+      #   ⚠ 作用域纪律：**不含**广告桩 / 结算面板绘制 / 其它按钮的 state 守卫（另一套语义）
+      #     —— selftest 用例 7/8 专测不误报。
+      #   **硬门禁**（守卫被删即 exit 1；连点两次可重复翻倍，而此前没有任何门禁会报）。
+      - name: 结算双倍领取守卫（GATE）
+        run: |
+          node ci/result-double-guard.mjs --selftest
+          node ci/result-double-guard.mjs
       # 第 30 维度（备案轮）：合规标识 —— **备案/上架的强制项**，缺一条直接卡审核。
       #   病根：这类"要求写在平台规范里、不在代码里"的项，**没有任何门禁会守**，
       #     改着改着就会被覆盖掉 —— 2026-09-23 实测《健康游戏忠告》在全项目出现 **0 次**。

@@ -30376,7 +30376,10 @@ function registerUi() {
   uiBtnDouble.skin = "resultfoot";
   // 结算确认回大厅(步骤8 注册, 步骤10 改结算确认语义)
   // 【R10】结算重入闸门设在 onTap 派发侧: 双击第二发在首发 goHome(HOME)后被拦, 防二次入账;
-  //   confirmResult 本体保持纯入账——gate_d Db1.5/Dc3.3 以任意态直调为既有契约(见其 L78 "由 onTap 守卫"注), 不能内闸。
+  //   confirmResult 本体保持纯入账——"以任意态直调"是既有契约, 不能内闸。
+  //   ⚠ 【第 39 轮核】原注释引用 gate_d Db1.5/Dc3.3(及其 L78)声称该契约有门禁钉住 —— **本仓库没有 gate_d 套件**
+  //     (全仓库唯一 gate* 文件是 ci/gate-audit.mjs = 跑门禁的工具本身) ⇒ 幻影引用(与 gate_d_upgrade 同族)。
+  //     双倍领取的"每局一次"现由 ci/result-double-guard.mjs(第 32 维度) 静态钉住; 结算重入仍靠 onTap 派发侧的 state 守卫。
   uiResultHome = makeButton("resulthome", resultAct.home.x, resultAct.home.y, resultAct.home.w, resultAct.home.h, "入账回大厅", function () {
     if (GAME.state !== GAME.flow.RESULT_WIN && GAME.state !== GAME.flow.RESULT_LOSE) return;
     confirmResult();
