@@ -11,7 +11,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.202">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.203">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -650,7 +650,8 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.202",                   // 【v1.202】合规公告可读性: 正文 11px/0.42→12px/0.62、标题 12→13px、备案号行 10→12px;
+  version: "1.203",                   // 【v1.203】修符文成就 dim 拼错前缀（5 条成就永不可解锁）+ 加成就接线判据；
+                                       //   前版 v1.202：合规公告可读性: 正文 11px/0.42→12px/0.62、标题 12→13px、备案号行 10→12px;
                                      //   实测对比度 3.85→6.77:1（WCAG AA 小字下限 4.5）; 坐标/文案一字未动
                                      //   【v1.201】触屏宿主操作提示: 设置页帮助行与暂停层提示按宿主换文案(小游戏无键盘)
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
@@ -21791,7 +21792,10 @@ function killEnemy(e) {
         rollGearDrop(GAME.chapterIdx, true);      // 【v1.42】无尽转换不进 RESULT_WIN, 通关礼必须在此发, 否则星星巅首通礼被吞
         checkAchieves("clear", GAME.chapterIdx + 1);
         refreshHallUnlocks();       // 【v1.72】无尽转换通关也解锁仓库
-        if (GAME.runeId) checkAchieves("rune_" + GAME.runeId, GAME.chapterIdx + 1);   // 【R30】符文成就(带符文通关第 6 章; PLAYING 态入本局结算)
+        // 【v1.203】修 dim 拼错前缀：GAME.runeId 存的是 DATA_RUNES 的**键**（形如 "rune_berserk"，见 L29703-29712），
+        //   这里再拼一次 "rune_" ⇒ dim 变成 "rune_rune_berserk"，与 DATA_ACHIEVE 的 dim（"rune_berserk"）永不相等，
+        //   5 条符文成就（共 1500 金）**永远无法解锁**。改为直接传 GAME.runeId（不再二次加前缀）。
+        if (GAME.runeId) checkAchieves(GAME.runeId, GAME.chapterIdx + 1);   // 【R30】符文成就(带符文通关第 6 章; PLAYING 态入本局结算)
         GAME.endlessMode = true;
         GAME.endlessStartT = GAME.runTime;        // 无尽存活/hp 指数计时锚点
         GAME.endlessStartKills = player.killCount;
