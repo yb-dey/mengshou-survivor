@@ -83,6 +83,22 @@ jobs:
               exit 1
             fi
           done
+          # 【v18】会走位的假人（--kite）：只跑首尾两章，量化"站桩下界"与"会走位"的差。
+          #   ⚠ 注解配额每级只留前 10 条：上面已用 6+1+1=8 条 ⇒ 这里**必须压成 1 条**。
+          KITE_LINE=""
+          for spec in "0 240" "5 600"; do
+            kch=$(echo $spec | cut -d' ' -f1)
+            kln=$(echo $spec | cut -d' ' -f2)
+            klog="ci/out/pacing-kite-ch$((kch+1)).log"
+            if node minigame/smoke.mjs --pacing --kite --ch $kch --tmax $kln > "$klog" 2>&1; then
+              kd=$(grep -E '产出：|走位：' "$klog" | sed 's/^ */  /' | tr '\n' '~' | sed 's/%/%25/g')
+              KITE_LINE="${KITE_LINE}第 $((kch+1)) 章[走位] $kd~~"
+            else
+              echo "::error::走位·第 $((kch+1)) 章探针自证没过（见产物 pacing-kite-ch$((kch+1)).log）"
+              exit 1
+            fi
+          done
+          echo "::notice::会走位的假人（--kite，与上面站桩口径同章对照）: ${KITE_LINE}"
           echo "::notice::六章节奏实测完成（口径=站桩不躲+总选第一张卡，数字是下界）"
 
       - name: 上传采样日志

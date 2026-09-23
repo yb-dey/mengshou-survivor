@@ -1308,6 +1308,26 @@ if (PACING) {
   const P_EXHAUST = Number(((process.argv.find((a) => a.indexOf('--revive-exhaust=') === 0) || '').split('=')[1]) || 0)
   // 【故障注入】--enemy-neg：把某个采样点的同屏怪数强行写成 -1，给"计数穿负"判据做阴性对照。
   const P_NEG = process.argv.includes('--enemy-neg')
+  // 【v18】--kite：会走位的假人（真实触摸路径驱动摇杆，绕场慢速环游）。
+  const P_KITE = process.argv.includes('--kite')
+  const kiteMk = (x, y) => ({ touches: [{ clientX: x, clientY: y, identifier: 0 }], changedTouches: [{ clientX: x, clientY: y, identifier: 0 }] })
+  // ⚠ 母版 `pointerToView` 用 canvas 的**真实 rect** 归一化（L13357-13363），所以这里也反解 rect：
+  //   clientX = rect.left + 逻辑x × rect.width / 720（y 同理）。硬用 DEVW/720 会落错位置。
+  const kiteRect = (function () {
+    try {
+      const el = sandbox.CANVAS && sandbox.CANVAS.el
+      const r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null
+      if (r && r.width > 0) return r
+    } catch (e) { void e }
+    return { left: 0, top: 0, width: DEVW, height: DEVH }
+  })()
+  const kiteCvt = (lx, ly) => ({
+    x: kiteRect.left + lx * kiteRect.width / 720,
+    y: kiteRect.top + ly * kiteRect.height / 1280,
+  })
+  const kiteOriginL = { x: 180, y: 900 }   // 逻辑坐标下的落指原点（左半区且在摇杆绑定域内：x≤430, y≥210）
+  const kiteOrigin = kiteCvt(kiteOriginL.x, kiteOriginL.y)
+  const KITE_DEFLECT = 0.85   // 相对摇杆半径的推杆量（死区之外、按满速归一）
   let clock = 3.6e6
   const drive = (n) => { for (let i = 0; i < n; i++) { const cb = rafPending.shift(); if (cb) cb(clock); clock += 16.7 } }
   console.log('\n=== ⑱ 节奏实测（--pacing）===')
@@ -1335,9 +1355,13 @@ if (PACING) {
   const T_END = P_TMAX || Math.ceil(line / P_STEP) * P_STEP
   console.log(`  连续实战：第 ${P_CH + 1} 章 · ${FPS}fps 连续驱动到 ${T_END}s（通关线 ${line}s）· 站桩不躲 + 总选第一张卡`)
   sandbox.debugPlayClean(P_CH, '', false)
+  // 注：合成触摸在本 harness 里**到不了游戏**（假 canvas 的 addEventListener 是空实现，见文件头说明），
+  //   所以走位改用键盘轴注入；触摸链路的缺口另记（不动 harness）。
+  var kiteKeys = P_KITE ? ((sandbox.Input && sandbox.Input.keys) || null) : null   // 在此声明：后面才用到，避免 TDZ
   let picks = 0, frames = 0, revives = 0, firstPickRt = null, firstDeathRt = null
   let frozenFrames = 0, lvFrames = 0, rtBack = 0, guardHit = 0
   let stressFails = 0, stressRetries = 0, stressErrMsg = "", stressCalls = 0, reviveStuck = 0, negInjected = false
+  let kiteTravel = 0, kiteLast = { x: null, y: null }, kiteMoves = 0
   let frozenPlayingFrames = 0, frozenPlayIntervals = 0, frozenModalIntervals = 0, guardWallFrames = 0
   const frozenBy = {}   // 冻结帧按**冻结当时的 state** 归类：探针自己量，不猜哪个状态冻时钟
   let endAt = null, endState = null
@@ -1351,8 +1375,21 @@ if (PACING) {
     const GUARD = P_STEP * FPS * 20
     let guard = 0
     while (sandbox.GAME.runTime < t && !endAt && guard++ < GUARD) {
+      if (P_KITE && kiteKeys) {
+        // 绕场巡游：0.9 rad/s（约 7 秒一圈），按 8 向近似按键（阈值 0.35 ⇒ 每帧至少一个轴有效）。
+        const th = (frames / FPS) * 0.9
+        const vx = Math.cos(th), vy = Math.sin(th)
+        kiteKeys.l = vx < -0.35 ? 1 : 0; kiteKeys.r = vx > 0.35 ? 1 : 0
+        kiteKeys.u = vy < -0.35 ? 1 : 0; kiteKeys.d = vy > 0.35 ? 1 : 0
+        kiteMoves++
+      }
       const rt0 = sandbox.GAME.runTime
       const st0 = sandbox.GAME.state
+      if (P_KITE && sandbox.player) {
+        const px = sandbox.player.x, py = sandbox.player.y
+        if (kiteLast.x !== null) kiteTravel += Math.sqrt((px - kiteLast.x) * (px - kiteLast.x) + (py - kiteLast.y) * (py - kiteLast.y))
+        kiteLast.x = px; kiteLast.y = py
+      }
       drive(1)
       frames++
       if (sandbox.GAME.runTime - rt0 < 0.005) { frozenFrames++; frozenBy[st0] = (frozenBy[st0] || 0) + 1 }
@@ -1452,6 +1489,14 @@ if (PACING) {
     (endAt === null ? ' · 打到采样结束' : ` · ${endState} @ t≈${endAt}s`))
   console.log(`        墙钟代价：游戏内 ${last.rt}s 共驱动 ${frames} 帧 = ${(frames / FPS).toFixed(1)}s 墙钟（比率 ${ratio}）· 时钟冻结 ${frozenSec}s`)
   console.log(`        冻结归属：${fzTop} · 复活 ${revives} 次 · 升级弹窗帧 ${lvFrames}`)
+  if (P_KITE) {
+    console.log(`        [diag] touch.start=${typeof touch.start} touch.move=${typeof touch.move}` +
+      ` rect=${JSON.stringify({ l: Math.round(kiteRect.left), t: Math.round(kiteRect.top), w: Math.round(kiteRect.width), h: Math.round(kiteRect.height) })}` +
+      ` joyActive=${!!(sandbox.Input && sandbox.Input.joy && sandbox.Input.joy.active)}` +
+      ` px=${sandbox.player ? Math.round(sandbox.player.x) : "?"} py=${sandbox.player ? Math.round(sandbox.player.y) : "?"}` +
+      ` moves=${kiteMoves}`)
+    console.log(`        走位：累计位移 ${Math.round(kiteTravel)} 逻辑px（≈${(kiteTravel / ((last.rt || 1))).toFixed(0)}/秒）· 策略=绕场环游 0.9rad/s`)
+  }
   if (frozenPlayIntervals) {
     console.log(`        设计内暂停（PLAYING 期时钟不走，如 BOSS 战计时暂停）：${frozenPlayIntervals} 个采样区间 · 共驱动 ${frozenPlayingFrames} 帧`)
   }
@@ -1485,6 +1530,7 @@ if (PACING) {
   }
   if (!D.spine) pFails.push('读不到 MENGSHOU_DEBUG.spine（调试口没挂上）')
   if (P_REVIVE && reviveHook && rows.some((r) => r.state === 'REVIVE_MODAL') && revives === 0) pFails.push('复活钩子调了但没生效（REVIVE_MODAL 卡住 ⇒ 后续样本全是冻结帧）')
+  if (P_KITE && kiteTravel < 200) pFails.push(`--kite 下累计位移只有 ${Math.round(kiteTravel)} 逻辑px（应 >200）⇒ 虚拟手指没驱动到摇杆，别拿这轮数据当"会走位"`)
   if (last.lv > 2 && picks < last.lv - 2) pFails.push(`选卡 ${picks} 次远少于等级跨度 ${last.lv - 1}（漏清升级卡）`)
   if (pFails.length) { console.log('  ❌ 节奏探针自身不过：'); for (const f of pFails) console.log('     - ' + f); ok = false }
   else console.log(`  ✅ 节奏探针自证通过（${judged.length} 个有效采样点全部落在 runTime 目标 ±1s 内 · stress 重试 ${stressRetries} 次` + (terminalShort ? '，终局行已豁免' : '') + ` · 驱动 ${frames} 帧 · runTime 回退 ${rtBack} 次 · 复活 ${revives} 次）`)
