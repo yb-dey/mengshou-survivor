@@ -114,8 +114,17 @@ while (Date.now() - tWait0 < 55000) {
     if (s.sk.enemyCount > peak.enemyCount) peak = s.sk;
     if (peak.enemyCount >= LOAD_TARGET) break;
   }
-  // 弹窗会暂停刷怪 → 点画面中央推进（升级/选卡=点掉；复活=取消）
-  if (s.st === S.LEVELUP || s.st === S.REVIVE) {
+  // 弹窗会暂停刷怪 → 必须**真的把卡点掉**。
+  // 【第 53 轮修】原实现是"点画面中央"：云端实测**峰值只到 14**（< 45 → 判样本无效，verify-dist 红）。
+  //   中央那一点可能落在两张升级卡的**缝隙**上 —— 点了等于没点，游戏一直停在 LEVELUP_MODAL，
+  //   怪根本灌不进来（"帧率好"这种假阴性正是本门禁最想避免的，结果它自己被同一类问题卡住）。
+  //   ⇒ 改用 fx-audit 已验证有效的**确定性钩子** `D.levelupTap()`（直接选中卡，不依赖像素命中）。
+  if (s.st === S.LEVELUP) {
+    await page.evaluate(() => { const D = window.MENGSHOU_DEBUG || {}; try { if (D.levelupTap) D.levelupTap(); } catch (e) { void e; } });
+    await page.waitForTimeout(350);
+    continue;
+  }
+  if (s.st === S.REVIVE) {      // 复活弹窗没有对应的确定性钩子 → 保留"点中央"
     await page.mouse.click(geom.left + geom.width / 2, geom.top + geom.height / 2);
     await page.waitForTimeout(400);
     continue;
