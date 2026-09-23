@@ -105,9 +105,12 @@ const LOAD_TARGET = +(process.env.LOAD_TARGET || 45);
 // 【第 54 轮】驱动器**自证轨迹**：上一轮红的时候只知道"峰值 16 < 45"，看不出卡在哪一步
 //   （没进战斗？潮没起？怪被杀光？弹窗一直挡着？）。annotations 匿名可读 ⇒ 把轨迹打出去，
 //   下次红时直接从云端读出因果。计数同时进汇总行，便于和其它 run 对比。
-let polls = 0, seeks = 0, lvTaps = 0, reviveTaps = 0, exitWhy = '超时 55s（没到目标）';
+// 【第 54 轮修④】窗口 55s → 85s：轨迹实测（清卡 + 确定性复活都修好之后）同屏怪数一秒约 +1.3 只，
+//   到 55s 窗口结束时才 **40** 且仍在爬 ⇒ 缺的是时间，不是"怪堆不起来"。可用 LOAD_WAIT_MS 覆盖。
+const WAIT_MS = +(process.env.LOAD_WAIT_MS || 85000);
+let polls = 0, seeks = 0, lvTaps = 0, reviveTaps = 0, exitWhy = '超时 ' + Math.round(WAIT_MS / 1000) + 's（没到目标）';
 const tWait0 = Date.now();
-while (Date.now() - tWait0 < 55000) {
+while (Date.now() - tWait0 < WAIT_MS) {
   const s = await page.evaluate(() => {
     const D = window.MENGSHOU_DEBUG || {};
     let st = ''; try { st = (D.state ? D.state() : {}).state || ''; } catch (e) {}
@@ -177,7 +180,7 @@ while (Date.now() - tWait0 < 55000) {
   await page.waitForTimeout(500);
 }
 // 驱动器汇总（无论红绿都发一条，便于跨 run 对比"驱动器健康度"）
-console.log(`::warning::驱动汇总 轮询=${polls} seek=${seeks} 清升级卡=${lvTaps} 清复活=${reviveTaps} 峰值=${peak.enemyCount}/${LOAD_TARGET} 结束原因=${exitWhy}`);
+console.log(`::warning::驱动汇总 轮询=${polls} seek=${seeks} 清升级卡=${lvTaps} 清复活=${reviveTaps} 峰值=${peak.enemyCount}/${LOAD_TARGET} 窗口=${Math.round(WAIT_MS / 1000)}s 结束原因=${exitWhy}`);
 
 // —— 量帧时间（重载窗口）——
 // 【v1.174】窗口 5s → 10s：**5s 太短，p95 方差大到把哨兵变成掷骰子**。
