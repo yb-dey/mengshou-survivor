@@ -11,7 +11,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.204">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.205">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -650,7 +650,8 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.204",                   // 【v1.204】触屏宿主文案收敛（走位/跳过/过场副标签统一走宿主开关）；
+  version: "1.205",                   // 【v1.205】killEnemy 加已死守卫（修 enemyCount 计数穿负）；
+                                       //   前版 v1.204：触屏宿主文案收敛（走位/跳过/过场副标签统一走宿主开关）；
                                        //   前版 v1.203：修符文成就 dim 拼错前缀（5 条成就永不可解锁）+ 加成就接线判据；
                                        //   前版 v1.202：合规公告可读性: 正文 11px/0.42→12px/0.62、标题 12→13px、备案号行 10→12px;
                                      //   实测对比度 3.85→6.77:1（WCAG AA 小字下限 4.5）; 坐标/文案一字未动
@@ -21745,6 +21746,11 @@ WEAPON_HANDLERS.maplecross = WEAPON_HANDLERS.mapledart;   // 【v1.25】对穿�
 WEAPON_HANDLERS.nectarsnap = WEAPON_HANDLERS.laserflower; // 【v1.25】瞬斩花束=激光同源, 窄束快刺
 
 function killEnemy(e) {
+  // 【v1.205】已死即返回：kills 只应对"活着的敌人"生效一次。
+  //   原实现无守卫，四处调用里两处自带 `if (e.active)`、爆果果自爆路径（L20291）没有 ⇒
+  //   同一实体若被走两次就会二次递减 `enemyCount`，云端 pacing 实测读到 **-1**（计数穿负），
+  //   而 enemyCount 参与刷怪模式判定与调试补满循环 ⇒ 会扭曲刷怪节奏。
+  if (!e || !e.active) return;
   // 【R3】组0 入账序修: 金币掉落累积先于末位 BOSS 的 enterResult 结算快照——原序为快照后累积,
   //   末位 BOSS 自身掉落(coinRate/coinNum)丢失出结算; 上移后 cdef 供下方宝箱/顿帧复用(单次取表)。
   var cdef = DATA_ENEMY[e.type];

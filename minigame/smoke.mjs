@@ -1306,6 +1306,8 @@ if (PACING) {
   const P_FLAKY = Number(((process.argv.find((a) => a.indexOf('--stress-flaky=') === 0) || '').split('=')[1]) || 0)
   // 【故障注入】--revive-exhaust=N：成功复活 N 次后**不再点复活**，用来模拟"复活次数用尽"（游戏侧会一直弹窗）。
   const P_EXHAUST = Number(((process.argv.find((a) => a.indexOf('--revive-exhaust=') === 0) || '').split('=')[1]) || 0)
+  // 【故障注入】--enemy-neg：把某个采样点的同屏怪数强行写成 -1，给"计数穿负"判据做阴性对照。
+  const P_NEG = process.argv.includes('--enemy-neg')
   let clock = 3.6e6
   const drive = (n) => { for (let i = 0; i < n; i++) { const cb = rafPending.shift(); if (cb) cb(clock); clock += 16.7 } }
   console.log('\n=== ⑱ 节奏实测（--pacing）===')
@@ -1335,7 +1337,7 @@ if (PACING) {
   sandbox.debugPlayClean(P_CH, '', false)
   let picks = 0, frames = 0, revives = 0, firstPickRt = null, firstDeathRt = null
   let frozenFrames = 0, lvFrames = 0, rtBack = 0, guardHit = 0
-  let stressFails = 0, stressRetries = 0, stressErrMsg = "", stressCalls = 0, reviveStuck = 0
+  let stressFails = 0, stressRetries = 0, stressErrMsg = "", stressCalls = 0, reviveStuck = 0, negInjected = false
   const frozenBy = {}   // 冻结帧按**冻结当时的 state** 归类：探针自己量，不猜哪个状态冻时钟
   let endAt = null, endState = null
   const rows = []
@@ -1403,12 +1405,13 @@ if (PACING) {
         if (!sk) { try { drive(1) } catch (e2) { void e2 } frames++ }
       }
     }
+    if (P_NEG && !negInjected && sk && t >= 60) { sk.enemyCount = -1; negInjected = true }   // 故障注入（阴性对照用）
     if (skTries > 1) stressRetries++
     if (!sk) { stressFails++; if (skErr) stressErrMsg = skErr }
     rows.push({
       t, rt: +sandbox.GAME.runTime.toFixed(1), wall: +(frames / FPS).toFixed(1),
       state: stName(sandbox.GAME.state), picks,
-      enemy: sk ? sk.enemyCount : -1, horde: sk && sk.hordeActive ? 1 : 0,
+      enemy: sk ? sk.enemyCount : null, horde: sk && sk.hordeActive ? 1 : 0,   // v15: 读不到=null（不再用 -1 当哨兵）
       lv: (sandbox.run && sandbox.run.level) | 0, hp: (sandbox.player && sandbox.player.hp) | 0,
       maxHp: (sandbox.player && sandbox.player.maxHp) | 0,
     })
@@ -1417,7 +1420,7 @@ if (PACING) {
   for (const r of rows) {
     console.log(`  ${String(r.t).padStart(8)}  ${String(r.rt).padStart(7)}  ${String(r.wall).padStart(7)}  ${String(r.enemy).padStart(6)}  ${String(r.horde).padStart(2)}  ${String(r.lv).padStart(4)}  ${String(r.picks).padStart(4)}  ${(r.hp + '/' + r.maxHp).padStart(8)}  ${r.state}`)
   }
-  const peak = rows.reduce((a, r) => (r.enemy > a.enemy ? r : a), { enemy: -1, t: 0 })
+  const peak = rows.filter((r) => typeof r.enemy === "number").reduce((a, r) => (r.enemy > a.enemy ? r : a), { enemy: -1, t: 0 })
   const playRows = rows.filter((r) => r.state === 'PLAYING')
   const hordeRatio = playRows.length ? playRows.filter((r) => r.horde).length / playRows.length : 0
   const last = rows[rows.length - 1] || {}
@@ -1453,8 +1456,12 @@ if (PACING) {
   if (terminalShort) console.log(`        终局行豁免：t=${terminalShort.t}s 只采到 rt=${terminalShort.rt}s（本局在 ${endState} 结束，时钟停走，不计入对位判定）`)
   if (stressFails) {
     pFails.push(`${stressFails} 个采样点读不到 stress()（重试 3 帧仍失败）最后错误：${stressErrMsg || '（无错误信息）'}`)
-  } else if (rows.length && last.enemy < 0) {
-    pFails.push('最后一行的 enemyCount 为 -1，但重试统计显示都读到了（口径不一致，需查）')
+  }
+  // 【v15】"读不到"与"游戏侧计数穿负"是两回事：前者是探针问题，后者是**游戏不变量被破坏**，必须分开报。
+  const negRows = rows.filter((r) => typeof r.enemy === "number" && r.enemy < 0)
+  if (negRows.length) {
+    pFails.push(`${negRows.length} 个采样点读到**负的同屏怪数**（${negRows.map((r) => `t=${r.t}:${r.enemy}`).join(", ")}）` +
+      '—— enemyCount 只剩 ++/--/=0 三处维护，负值意味着同一个敌人被 killEnemy 处理了两次（游戏侧计数不变量被破坏）')
   }
   if (!D.spine) pFails.push('读不到 MENGSHOU_DEBUG.spine（调试口没挂上）')
   if (P_REVIVE && reviveHook && rows.some((r) => r.state === 'REVIVE_MODAL') && revives === 0) pFails.push('复活钩子调了但没生效（REVIVE_MODAL 卡住 ⇒ 后续样本全是冻结帧）')
