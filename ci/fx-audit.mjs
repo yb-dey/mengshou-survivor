@@ -185,11 +185,30 @@ const dmLine = dmBefore && dmAfter
   ? `- 死亡帧计数：spawned ${dmBefore.spawned}→**${dmAfter.spawned}** ／ drawn ${dmBefore.drawn}→**${dmAfter.drawn}** ／ _dead 贴图 ${dmAfter.sprites} 张 → **${dmOk ? '✅ 确认触发并绘制' : '❌'}**`
   : '- 死亡帧计数：读取失败 ❌';
 // ---- 受击白闪（0.07s 瞬时，帧差采样难命中）→ 同样用计数口 ----
-const hfBefore = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.hitFlash ? window.MENGSHOU_DEBUG.hitFlash() : null; } catch (e) { return null; } });
+// 【第 53 轮修】原实现用 `killDemo()` 触发受击白闪 —— 云端实测 **spawned 15→16 ／ drawn 12→12**，
+//   判据报「❌ 受击白闪未被确认触发/绘制」(exit 6)。回代码读清了原因，**是探针选错了触发方式**：
+//     ① 致命一击同样置 `e.flashT = CONFIG.hitFlashDur`（母版 L21928），但敌人当帧就被击杀/进死亡流程，
+//        绘制循环里的 `if (e.flashT > 0 && SPRITES.hitFlash)`（L26401）根本轮不到它 ⇒ 有 spawn、无 draw；
+//     ② killDemo 打死怪 → 攒经验 → **升级三选一 → 游戏暂停**（本文件 L104 早写过这个坑），
+//        采样窗口里连帧都不推进，白闪一次也画不出来。
+//   ⇒ 改成「**打一只能挨一下的怪** + 采样期间保持存活」：只有非致命受击，才谈得上"白闪该被画出来"。
+const readHitFlash = () => page.evaluate(() => { try { return window.MENGSHOU_DEBUG.hitFlash ? window.MENGSHOU_DEBUG.hitFlash() : null; } catch (e) { return null; } });
+const hfBefore = await readHitFlash();
 await ensureLive('白闪复测');
-await page.evaluate(() => { try { window.MENGSHOU_DEBUG.killDemo(); } catch (e) { void e; } });
-await page.waitForTimeout(900);
-const hfAfter = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.hitFlash ? window.MENGSHOU_DEBUG.hitFlash() : null; } catch (e) { return null; } });
+await page.evaluate(() => {
+  const D = window.MENGSHOU_DEBUG || {};
+  // ① 80 HP 的杂兵（debugGiveCrowd 里 e.maxHp = e.hp = 80）：一下打不死 ⇒ 白闪会被画到
+  try { (D.giveCrowd || window.debugGiveCrowd)(10); } catch (e) { void e; }
+  // ② 再补一个高血量目标（BOSS）：即便武器一下能秒杂兵，BOSS 也保证"非致命受击"这件事真的发生
+  try { if (D.spawnBoss) D.spawnBoss('boss1'); } catch (e) { void e; }
+});
+let hfAfter = null;
+for (let i = 0; i < 8; i++) {          // 采样 ~2s；每 250ms 一次，防止升级弹窗把游戏冻住导致量不到
+  await page.waitForTimeout(250);
+  hfAfter = await readHitFlash();
+  if (hfAfter && hfBefore && hfAfter.drawn > hfBefore.drawn) break;
+  if (i % 3 === 2) await ensureLive('白闪采样保活');
+}
 const hfOk = !!(hfBefore && hfAfter && hfAfter.spawned > hfBefore.spawned && hfAfter.drawn > hfBefore.drawn);
 const hfLine = hfBefore && hfAfter
   ? `- 受击白闪计数：spawned ${hfBefore.spawned}→**${hfAfter.spawned}** ／ drawn ${hfBefore.drawn}→**${hfAfter.drawn}** ／ 时长 ${hfAfter.sec}s ／ 贴图 ${hfAfter.sprite ? '有' : '无'} → **${hfOk ? '✅ 确认触发并绘制' : '❌'}**`

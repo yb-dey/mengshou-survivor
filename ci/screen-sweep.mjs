@@ -234,6 +234,20 @@ try {
   const geom = await page.evaluate(() => { const c = document.querySelector('canvas'); const r = c.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, cw: c.width, ch: c.height }; });
   await page.mouse.click(geom.l + (316 / geom.cw) * geom.w, geom.t + (617 / geom.ch) * geom.h);
   await page.waitForTimeout(7000);
+  // 【第 53 轮修】7 s 无人操作足够升一级 ⇒「升级三选一」会整块盖住战场，state 变成 LEVELUP_MODAL，
+  //   下面那句 playing===true 的断言必然失败（云端实测：11-battle 判「LEVELUP_MODAL ❌」→ 整条 sweep 红）。
+  //   ⚠ 这不是游戏缺陷：升级弹窗本来就该拦住操作。是**探针**没清场 —— 与第 51 轮我在本机探针上
+  //     踩到的是同一个坑（弹窗抢屏：dh/err 全绿，只有看图/读 state 才发现）。
+  //   ⇒ 截图前先清掉待结算升级并显式回到 PLAYING；12-levelup 那一屏才是「该弹窗」的合法截图。
+  await page.evaluate(() => {
+    try {
+      if (window.run) window.run.pendingLevels = 0;
+      if (typeof window.closeLevelupUi === 'function') window.closeLevelupUi();
+      if (typeof window.closePauseUi === 'function') window.closePauseUi();
+      if (window.GAME && window.GAME.flow) window.GAME.setState(window.GAME.flow.PLAYING);
+    } catch (e) { void e; }
+  });
+  await page.waitForTimeout(400);
   await page.screenshot({ path: path.join(OUT, '11-battle.png') });
   prevHash = crypto.createHash('sha1').update(fs.readFileSync(path.join(OUT, '11-battle.png'))).digest('hex').slice(0, 12);
   {
