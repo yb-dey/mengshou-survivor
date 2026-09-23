@@ -1,9 +1,9 @@
 name: minigame-smoke
-# 微信小游戏移植工程（仓库内 `minigame/`）—— 第 55 轮新增。
+# 微信小游戏移植工程（仓库内 `minigame/`）—— 第 55 轮新增；第 56 轮加"安全区/出屏门禁"矩阵。
 #
-# 为什么要有它：移植工程此前在**仓库外**，云端 100+ 条门禁**一条也没覆盖它**，
-#   16 阶段冒烟只有手动跑才会跑（`小游戏移植/README.md` §五 记着这个结构性缺口）。
-#   现在源文件入库（产物 gitignore），云端跑：master → dist 重建 → 体积/分包闸门 → 真入口冒烟（4 分支）。
+# 为什么要有它：移植工程此前在**仓库外**，云端 100+ 条门禁**一条也没覆盖它**。
+#   现在源文件入库（产物 gitignore），云端跑：master → dist 重建 → 体积/分包闸门 → 真入口冒烟（4 分支）
+#   → **4 个设备剖面的安全区/出屏门禁**（刘海有没有吃掉 HUD 文字，这条以前只能本机手动看数字）。
 #
 # ⚠ 失败诊断：全部走 `ci/run-gate.sh` 包装 —— 失败时把判据行打成 `::error::` annotation，
 #   没有 admin 权限也能远程读到原因（与 verify-dist 同一套机制）。
@@ -34,7 +34,7 @@ jobs:
       - name: 体积/分包判据自测（6 例对照，必须全对）
         run: bash ci/run-gate.sh ci/out/minigame-build-selftest.log node minigame/build-minigame.mjs --selftest
 
-      - name: 构建小游戏包（体积 + 分包声纳）
+      - name: 构建小游戏包（体积 + 分包声明）
         run: bash ci/run-gate.sh ci/out/minigame-build.log node minigame/build-minigame.mjs
 
       # 真入口冒烟：16 阶段（含 ⑯ 分包门控 4 分支）。默认场景 = 分包加载成功
@@ -49,6 +49,16 @@ jobs:
       - name: 分包分支：永不回调必须**不**启动（阴性对照）
         run: bash ci/run-gate.sh ci/out/minigame-smoke-stall.log node minigame/smoke.mjs --no-play --subpackage-stall
 
+      # 【第 56 轮】布局门禁的阴性对照：故意抽掉 safeArea 透传 ⇒ 必须 FAIL（证明它不是恒绿）
+      - name: 布局门禁阴性对照（抽掉安全区透传必须报错）
+        run: |
+          set +e
+          node minigame/smoke.mjs --no-play --layout --device 390x844 --safe 47 --no-safe-passthrough > /tmp/neg-safe.log 2>&1
+          code=$?
+          tail -n 5 /tmp/neg-safe.log
+          if [ "$code" = "0" ]; then echo "::error::阴性对照失效 —— 抽掉安全区透传后布局门禁仍然绿（假保证）"; exit 1; fi
+          echo "✅ 阴性对照有效（布局门禁确实拦下了没生效的剖面）"
+
       - name: 上传产物（日志 + 体积报告）
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,3 +66,28 @@ jobs:
           name: minigame-smoke
           path: ci/out/minigame-*.log
           retention-days: 14
+
+  # 【第 56 轮】安全区/出屏门禁：4 个设备剖面各跑一次 `--no-play --layout`
+  #   钉住的判据：A1 剖面真的生效（宿主 safeArea 传到母版）；A2 刘海带内文字元素 = 0。
+  #   "越过画布边界 700~1196 个"与"带内 280 个 fill"**故意不判**（背景/世界元素铺满屏是设计内）。
+  safe-area:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { device: '375x667', safe: 0,  label: '基准·无刘海' }
+          - { device: '390x844', safe: 47, label: 'iPhone13类·刘海47' }
+          - { device: '414x896', safe: 44, label: 'iPhone11类·刘海44' }
+          - { device: '360x780', safe: 0,  label: '安卓窄屏·无刘海' }
+    name: safe-area · ${{ matrix.label }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 重建 dist + 小游戏包
+        run: node ci/build-dist.js && node minigame/build-minigame.mjs
+      - name: 出屏/安全区体检（${{ matrix.device }} +${{ matrix.safe }}）
+        run: bash ci/run-gate.sh ci/out/minigame-safe-${{ matrix.safe }}.log node minigame/smoke.mjs --no-play --layout --device ${{ matrix.device }} --safe ${{ matrix.safe }}

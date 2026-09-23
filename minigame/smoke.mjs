@@ -299,6 +299,9 @@ const canvasObjs = []   // 记下所有画布对象，跑完再看它们的**最
 const DEV = (() => { const i = process.argv.indexOf('--device'); return i > 0 ? process.argv[i + 1] : '375x667' })()
 const [DEVW, DEVH] = DEV.split('x').map(Number)
 const SAFE = (() => { const i = process.argv.indexOf('--safe'); return i > 0 ? Number(process.argv[i + 1]) : 0 })()
+// 【第 56 轮】阴性对照开关：**故意不把 safeArea 透传给游戏**，用来证明布局门禁真的会拦人
+//   （第 33 轮踩过的正是这个坑：`--device/--safe` 因 TDZ 从没传进游戏，“四个剖面出屏 0 个”其实是同一个 375x667 跑了四遍）。
+const NOSAFE = process.argv.includes('--no-safe-passthrough')
 
 const wx = {
   createCanvas: () => { const c = makeCanvas(); canvasObjs.push(c); return c },
@@ -306,8 +309,8 @@ const wx = {
   getSystemInfoSync: () => ({
     windowWidth: DEVW, windowHeight: DEVH, screenWidth: DEVW, screenHeight: DEVH,
     pixelRatio: 2, platform: 'devtools', system: 'node-smoke', SDKVersion: '2.19.0',
-    safeArea: { top: SAFE, bottom: DEVH, left: 0, right: DEVW, width: DEVW, height: DEVH - SAFE },
-    windowTop: SAFE, windowBottom: 0,
+    safeArea: { top: NOSAFE ? 0 : SAFE, bottom: DEVH, left: 0, right: DEVW, width: DEVW, height: DEVH - SAFE },
+    windowTop: NOSAFE ? 0 : SAFE, windowBottom: 0,
   }),
   onTouchStart: (f) => { touch.start = f }, onTouchMove: (f) => { touch.move = f },
   onTouchEnd: (f) => { touch.end = f }, onTouchCancel: (f) => { touch.cancel = f },
@@ -968,6 +971,43 @@ if (LAYOUT) {
     const usedW = CONTENT.reduce((m, b) => Math.max(m, b.x1), 0)
     const usedH = CONTENT.reduce((m, b) => Math.max(m, b.y1), 0)
     console.log(`  内容实际用到 ${usedW.toFixed(0)}x${usedH.toFixed(0)}（画布 ${W}x${H}）⇒ ${usedW < W * 0.98 ? '⚠ 右侧有未用区' : '✅ 横向铺满'}`)
+
+    // ── 【第 56 轮】把"出屏体检"从**只打印**升级成**门禁**（云端 4 剖面跑它）─────────────
+    //   只钉两条**可判定**的（本轮 4 剖面实测：越过边界 700~1196、带内 280 个全是 fill ——
+    //   两者都属设计内，当判据就会永远红，属"判据选错对象"）：
+    //     A1 剖面真的生效：宿主 safeArea 必须如实传到母版（`--safe 47` ⇒ SafeArea.top 必须是 47）；
+    //     A2 刘海带内文字元素必须为 0（只有文字/UI 进带才是"被刘海吃掉"，母版 L945 同口径）。
+    const layoutFails = [];
+    let saTopRaw = null;
+    try { saTopRaw = sandbox.Platform && sandbox.Platform.SafeArea ? sandbox.Platform.SafeArea.top : null } catch (e) { void e }
+    const saTopNum = Number(saTopRaw);
+    if (!Number.isFinite(saTopNum) || Math.abs(saTopNum - SAFE) > 0.01) {
+      layoutFails.push(`A1 剖面没生效：--safe ${SAFE} 但母版 Platform.SafeArea.top=${JSON.stringify(saTopRaw)}` +
+        '（此时「这一屏没被刘海吃掉」这类结论全是假的 —— 第 33 轮同型）')
+    }
+    if (notchText.length) {
+      layoutFails.push(`A2 刘海带里有 ${notchText.length} 个文字元素（应 0）：` +
+        notchText.slice().sort((a, b) => a.y0 - b.y0).slice(0, 3).map((b) => `y${b.y0.toFixed(0)}「${String(b.t || '').slice(0, 8)}」`).join(' '))
+    }
+    // 判据自证：同一个规则函数喂**合成盒子**，四种情形必须分对（否则判据本身不可信）
+    const notchRule = (boxes, safeTop) => (safeTop > 0
+      ? boxes.filter((b) => (b.op === 'fillText' || b.op === 'strokeText') && b.y0 < safeTop - 1).length : 0);
+    const PROBE = [
+      ['文字在带内 → 抓到', [{ op: 'fillText', y0: 5 }], 94, 1],
+      ['fill 在带内 → 不算（设计内）', [{ op: 'fill', y0: 0 }], 94, 0],
+      ['文字在带下方 → 不算', [{ op: 'fillText', y0: 120 }], 94, 0],
+      ['无刘海(safeTop=0) → 规则不适用', [{ op: 'fillText', y0: 5 }], 0, 0],
+    ];
+    const probeBad = PROBE.filter(([, boxes, st, want]) => notchRule(boxes, st) !== want).map(([n]) => n);
+    console.log(`  判据自证（合成盒子 4 例）：${probeBad.length ? '✘ ' + probeBad.join(' / ') : '✅ 全对'}`)
+    if (probeBad.length) layoutFails.push('判据自证失败：' + probeBad.join(' / '))
+    if (layoutFails.length) {
+      console.log('  ❌ 布局门禁未过：')
+      for (const f of layoutFails) console.log('     - ' + f)
+      ok = false
+    } else {
+      console.log('  ✅ 布局门禁通过（剖面已生效 + 刘海带内 0 个文字）')
+    }
   }
   // 底部细查：这条带里到底画了什么 —— 用于核对《健康游戏忠告》的落位（当初只靠静态坐标扫描定在
   //   逻辑 y 1246–1278 = device 2492–2556，**从未被渲染/运行时验证过**）。
