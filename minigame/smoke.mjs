@@ -1304,6 +1304,8 @@ if (PACING) {
   const P_REVIVE = !process.argv.includes('--no-revive')
   // 【故障注入】--stress-flaky=N：**每 N 次** D.stress() 调用注入一次抛错（N=1 ⇒ 每次都抛）。
   const P_FLAKY = Number(((process.argv.find((a) => a.indexOf('--stress-flaky=') === 0) || '').split('=')[1]) || 0)
+  // 【故障注入】--revive-exhaust=N：成功复活 N 次后**不再点复活**，用来模拟"复活次数用尽"（游戏侧会一直弹窗）。
+  const P_EXHAUST = Number(((process.argv.find((a) => a.indexOf('--revive-exhaust=') === 0) || '').split('=')[1]) || 0)
   let clock = 3.6e6
   const drive = (n) => { for (let i = 0; i < n; i++) { const cb = rafPending.shift(); if (cb) cb(clock); clock += 16.7 } }
   console.log('\n=== ⑱ 节奏实测（--pacing）===')
@@ -1333,7 +1335,7 @@ if (PACING) {
   sandbox.debugPlayClean(P_CH, '', false)
   let picks = 0, frames = 0, revives = 0, firstPickRt = null, firstDeathRt = null
   let frozenFrames = 0, lvFrames = 0, rtBack = 0, guardHit = 0
-  let stressFails = 0, stressRetries = 0, stressErrMsg = "", stressCalls = 0
+  let stressFails = 0, stressRetries = 0, stressErrMsg = "", stressCalls = 0, reviveStuck = 0
   const frozenBy = {}   // 冻结帧按**冻结当时的 state** 归类：探针自己量，不猜哪个状态冻时钟
   let endAt = null, endState = null
   const rows = []
@@ -1362,9 +1364,27 @@ if (PACING) {
       st = sandbox.GAME.state
       if (st === flow.REVIVE_MODAL) {
         if (firstDeathRt === null) firstDeathRt = +sandbox.GAME.runTime.toFixed(1)
-        if (P_REVIVE && reviveHook) {
-          try { reviveHook(); if (sandbox.GAME.state !== flow.REVIVE_MODAL) revives++ } catch (e) { void e }
-        } else if (!P_REVIVE) { endAt = +sandbox.GAME.runTime.toFixed(1); endState = stName(st); break }
+        if (P_REVIVE && reviveHook && !(P_EXHAUST && revives >= P_EXHAUST)) {
+          try {
+            reviveHook()
+            if (sandbox.GAME.state !== flow.REVIVE_MODAL) { revives++; reviveStuck = 0 } else reviveStuck++
+          } catch (e) { void e }
+        } else if (!P_REVIVE) {
+          endAt = +sandbox.GAME.runTime.toFixed(1); endState = stName(st); break
+        } else {
+          reviveStuck++   // 次数用尽（或注入）：游戏侧弹窗不会自己消失 ⇒ 计数等"放弃"
+        }
+        // 【v14】连点 120 帧（≈2s）仍无效 ⇒ 判定"复活次数用尽"：走游戏的放弃钩子收局，绝不空转把时钟耗死。
+        //   （云端第 6 章就是这么挂的：站桩复活 50+ 次后 canReviveNow() 变 false，弹窗常驻。）
+        if (reviveStuck > 120) {
+          const giveUp = sandbox.onTapGiveUpBtn || W.onTapGiveUpBtn
+          try { if (giveUp) giveUp() } catch (e) { void e }
+          if (sandbox.GAME.state !== flow.REVIVE_MODAL) {
+            endAt = +sandbox.GAME.runTime.toFixed(1)
+            endState = stName(sandbox.GAME.state) + '(复活次数用尽)'
+            break
+          }
+        }
       }
       if (st === flow.RESULT_LOSE || st === flow.RESULT_WIN) { endAt = +sandbox.GAME.runTime.toFixed(1); endState = stName(st); break }
     }
