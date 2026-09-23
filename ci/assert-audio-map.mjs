@@ -25,10 +25,10 @@
  *   ⑤ （v1.169 新增，**最强的一条**）`DATA_SFX` 里 `sfx: "SFX_XXX"` 引用的每个 buffer
  *      都必须同时存在于 gains 与 sfxFiles。
  *      —— 前四条都是"声明表之间互相印证"，而 ⑤ 引入的是**真正的消费方**：
- *         `DATA_SFX` 有 66 个条目（shoot/beam/hit/boom/eventfog/...），全部落回 19 个 buffer。
+ *         `DATA_SFX` 有 69 个条目（shoot/beam/hit/boom/eventfog/...），全部落回 19 个 buffer。
  *         这才是"游戏实际会播放的声音"的权威口径。
  *         只对 gains↔sfxFiles 做闭环，**两张表可以一起漏**（都在 HTML 里、一起改就一起错）；
- *         而 DATA_SFX 是 66 个游戏事件，漏一个立即在事件层露馅。
+ *         而 DATA_SFX 是 69 个游戏事件，漏一个立即在事件层露馅。
  *
  *   ⑥ （v1.169 新增）**加载清单必须遍历声明表，不能是手抄副本** ——
  *      `tryLoadLocalFiles()` 里若出现 `var localBgm = {...}` / `var localSfx = {...}`

@@ -12,11 +12,19 @@
   已修：duck 窗口改为 `max(nodeDuckSec, delay + buf.duration/(rate*rateMul))`（覆盖整条可听段）。
 
 判据（3 条，任一不满足 → exit 1）
-  A. 解析器不退化：`DATA_SFX` == 66 条（**实测值**）；`nodeDuckSec` 能取到
+
+  A. 解析器不退化：`DATA_SFX` == 69 条（**实测值**）；`nodeDuckSec` 能取到
   B. 每条 `duck:true` 的音，必须能定位到 WAV 文件并读出时长（否则判据在看空气）
   C. **可听尾段 = 0**：对每条 duck 音，duck 窗口之后 RMS >= 峰值 20%（约 -14dB）的**持续**时长
      必须 <= 0.05s。"持续" = 连续 >= 2 个分析窗（见 SUSTAIN_K），避免把"自然衰减中的最后一格抖动"
      误判成缺陷。
+
+⚠ 绊线数字的更新记录（本数字是"表变了必须有人确认"的绊线，确认后随表更新）
+   · 66 → **69**（第 44 轮）：`da7bc06` 用 v1.194 母版恢复仓库后，`DATA_SFX` 从 66 条变 69 条，
+     新增 `equiptick` / `settingsopen` / `sortiepreview`（三条都是 `SFX_UI`，属内容包 UI 反馈音效集）。
+     已人工确认这三条是真事件行（有 `sfx:`/`rate:`/`gain:` 字段，不是解析器的假阳性）后随表更新。
+   · 云端 verify #508（141fbf0）就是因为这条绊线**先于**本文件更新而红的：本机没有 python，
+     这条门禁在本机**从未跑过**（见 `_dsh-kit/run-ci-gates.mjs` 的覆盖口径更正）。
 
 ⚠ 判据 C 的"持续"口径与两条真实缺陷的形态（v1.191 实测校准）
   "持续" = 窗口之后**连续 >= SUSTAIN_K(2) 个分析窗** RMS >= 峰值 20%，才计入尾音时长。
@@ -186,8 +194,8 @@ cover = bool(re.search(r'nodeDuckCover:\s*true', html))
 
 # 判据 A：解析器不退化（期望值为**实测**，写错会让门禁当场失败 —— 设计意图）
 rows = re.findall(r'^\s{2}([a-z][a-z0-9_]*):\s*\{\s*sfx:\s*"([A-Z_]+)"([^}]*)\}', html, re.M)
-if len(rows) != 66:
-    print('❌ 解析器退化：DATA_SFX 切出 %d 条，实测期望 66 条' % len(rows))
+if len(rows) != 69:
+    print('❌ 解析器退化：DATA_SFX 切出 %d 条，实测期望 69 条' % len(rows))
     sys.exit(1)
 
 def numf(body, k, dflt=None):
@@ -212,7 +220,7 @@ lines = []
 lines.append('# 节点音 duck 窗口 vs 实际可听段（第 18 维度）')
 lines.append('')
 lines.append('- 入口: `%s`' % HTML.replace('\\', '/'))
-lines.append('- `nodeDuckSec` = **%.2fs** · `nodeDuckCover` = **%s** · `DATA_SFX` = **%d/66** 条 · `duck:true` = **%d** 条' % (
+lines.append('- `nodeDuckSec` = **%.2fs** · `nodeDuckCover` = **%s** · `DATA_SFX` = **%d/69** 条 · `duck:true` = **%d** 条' % (
     duck_sec, 'on' if cover else 'off', len(rows), len(ducked)))
 lines.append('- 可听阈值 = 峰值 **%.0f%%**（约 -14dB）· 分析窗 %.0fms · 尾段容差 %.2fs · 持续判定 >= %d 窗' % (
     AUDIBLE_PCT * 100, WIN * 1000, TAIL_TOL, SUSTAIN_K))
