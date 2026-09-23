@@ -1570,6 +1570,116 @@ def synth_layer_boss_lead(path):
     return total
 
 
+
+# ---------------- UI 反馈音效集（Round-46 · 短促清晰，不抢戏） ----------------
+def _ui_tone(path, dur, f0, f1, amp, wave='sine', a=0.001, d=0.03, s_=0.55, r=0.06, harm=None):
+    N = int(dur * SR)
+    buf = [0.0] * N
+    for i in range(N):
+        t = i / SR
+        k = i / N
+        f = f0 + (f1 - f0) * k
+        v = amp * env_adsr(t, dur, a, d, s_, r) * tone(t, f, wave)
+        if harm:
+            v += amp * 0.3 * env_adsr(t, dur, a, d, s_, r) * tone(t, f * harm, 'sine')
+        buf[i] = v
+    write_wav(path, buf)
+    return dur
+
+
+def ui_click(path):
+    """按钮点击：极短中性 tick（880Hz，60ms）。"""
+    return _ui_tone(path, 0.06, 900, 780, 0.30, 'square', a=0.001, d=0.015, s_=0.25, r=0.03)
+
+
+def ui_hover(path):
+    """悬停：更轻更高的极短点（1320Hz，45ms，低音量）。"""
+    return _ui_tone(path, 0.045, 1320, 1320, 0.16, 'sine', a=0.001, d=0.012, s_=0.2, r=0.02)
+
+
+def ui_confirm(path):
+    """确认：上行双音（660→990Hz），明亮肯定。"""
+    N = int(0.26 * SR)
+    buf = [0.0] * N
+    for n, (f, off) in enumerate([(660, 0.0), (990, 0.09)]):
+        for i in range(int(0.16 * SR)):
+            idx = int(off * SR) + i
+            if idx >= N:
+                break
+            t = i / SR
+            buf[idx] += 0.26 * env_adsr(t, 0.16, 0.002, 0.03, 0.5, 0.08) * tone(t, f, 'triangle')
+    write_wav(path, buf)
+    return 0.26
+
+
+def ui_cancel(path):
+    """取消：下行双音（780→520Hz），克制不刺耳。"""
+    N = int(0.24 * SR)
+    buf = [0.0] * N
+    for f, off in [(780, 0.0), (520, 0.09)]:
+        for i in range(int(0.14 * SR)):
+            idx = int(off * SR) + i
+            if idx >= N:
+                break
+            t = i / SR
+            buf[idx] += 0.22 * env_adsr(t, 0.14, 0.002, 0.03, 0.45, 0.08) * tone(t, f, 'triangle')
+    write_wav(path, buf)
+    return 0.24
+
+
+def ui_error(path):
+    """错误：低沉短促 buzz（220Hz 方波 + 轻微失谐，180ms）。"""
+    N = int(0.18 * SR)
+    buf = [0.0] * N
+    for i in range(N):
+        t = i / SR
+        env = env_adsr(t, 0.18, 0.004, 0.05, 0.6, 0.06)
+        buf[i] = 0.24 * env * (tone(t, 220, 'square') * 0.7 + tone(t, 233, 'square') * 0.5)
+    write_wav(path, buf)
+    return 0.18
+
+
+def ui_open(path):
+    """面板打开：上行扫频（440→1200Hz，220ms）。"""
+    return _ui_tone(path, 0.22, 440, 1200, 0.20, 'sine', a=0.01, d=0.05, s_=0.6, r=0.1)
+
+
+def ui_close(path):
+    """面板关闭：下行扫频（1200→440Hz，200ms）。"""
+    return _ui_tone(path, 0.20, 1200, 440, 0.18, 'sine', a=0.01, d=0.05, s_=0.55, r=0.1)
+
+
+def ui_purchase(path):
+    """购买成功：金币叮 + 上行铃（0.34s）。"""
+    N = int(0.34 * SR)
+    buf = [0.0] * N
+    for f, off, amp in [(1046, 0.0, 0.24), (1318, 0.05, 0.22), (1568, 0.12, 0.18)]:
+        for i in range(int(0.14 * SR)):
+            idx = int(off * SR) + i
+            if idx >= N:
+                break
+            t = i / SR
+            buf[idx] += amp * env_adsr(t, 0.14, 0.001, 0.02, 0.3, 0.08) * tone(t, f, 'sine')
+    write_wav(path, buf)
+    return 0.34
+
+
+def ui_unlock(path):
+    """解锁：庄严上行三音（G-B-D 大三和弦分解，0.6s）。"""
+    N = int(0.60 * SR)
+    buf = [0.0] * N
+    for f, off in [(392, 0.0), (494, 0.13), (587, 0.26)]:
+        for i in range(int(0.30 * SR)):
+            idx = int(off * SR) + i
+            if idx >= N:
+                break
+            t = i / SR
+            buf[idx] += 0.20 * env_adsr(t, 0.30, 0.01, 0.06, 0.6, 0.16) * tone(t, f, 'triangle')
+            buf[idx] += 0.07 * env_adsr(t, 0.30, 0.01, 0.06, 0.6, 0.16) * tone(t, f * 2, 'sine')
+    write_wav(path, buf)
+    return 0.60
+
+
 if __name__ == '__main__':
     out_dir = 'D:/新建文件夹/方向3/.workbuddy/v1.162/mengshou/_content_pack/audio'
     import os
@@ -1625,6 +1735,15 @@ if __name__ == '__main__':
         ('cp_layer_boss_drums.wav', synth_layer_boss_drums),
         ('cp_layer_boss_bass.wav', synth_layer_boss_bass),
         ('cp_layer_boss_lead.wav', synth_layer_boss_lead),
+        ('cp_ui_click.wav', ui_click),
+        ('cp_ui_hover.wav', ui_hover),
+        ('cp_ui_confirm.wav', ui_confirm),
+        ('cp_ui_cancel.wav', ui_cancel),
+        ('cp_ui_error.wav', ui_error),
+        ('cp_ui_open.wav', ui_open),
+        ('cp_ui_close.wav', ui_close),
+        ('cp_ui_purchase.wav', ui_purchase),
+        ('cp_ui_unlock.wav', ui_unlock),
     ]
     for name, fn in jobs:
         d = fn(f'{out_dir}/{name}')

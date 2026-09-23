@@ -93,6 +93,7 @@ DATA_CN = {
     'music_layers_boss': 'Boss 分层组',
     'enemy_candidates': '候选敌种包',
     'save_spec': '存档字段契约',
+    'ui_sfx': 'UI 反馈音效集',
 }
 PICKUP_CN = {
     'pickup_heal': '治愈果实', 'pickup_coin': '金币袋', 'pickup_exp': '经验晶露',

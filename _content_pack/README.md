@@ -384,6 +384,17 @@
 
 - **消费点**：`meta_lab.html` 加「💾 存档演示 / 📂 导入存档」——导出当前 profile 为 `mengshou_save_v1.json`；导入时按 integrity 规则校验（**未知 id 被静默丢弃并计数**，脏数据容错可见）；数值按 maxLevel 夹紧。
 - **校验**：`data/save_spec.json` 合法 JSON；4 个 keyRef 分别指向 meta_upgrades/heroes/achievements（成就+每日任务）真实键集合；meta_lab `node --check` 通过（补 log() 回退实现）。
+## 2.24 UI 反馈音效集（9 条界面音 · 本轮新增）
+
+> 补齐此前只有一条极短 tick（cp_sfx_ui）的缺口：9 条界面反馈音覆盖**点击/悬停/确认/取消/错误/开合面板/购买/解锁**八类交互。设计原则：**短促（45–600ms）、中等音量（峰值统一 85%）、音色语义化**——上行=肯定、下行=否定、低沉失谐=错误（区别于取消的「我反悔」）、大三和弦分解=解锁仪式感。UI 音效是「手感」的一半：不抢戏但每次操作都有回应。
+
+| 文件 | 内容 | 用途 |
+|---|---|---|
+| `data/ui_sfx.json` | UI 音效规格 | 9 条（cn/durSec/tone/trigger/desc）+ 混音建议 + 语义一致性说明 |
+| `audio/cp_ui_*.wav` | 9 条 UI 音 | click 0.06s / hover 0.045s / confirm 0.26s / cancel 0.24s / error 0.18s / open 0.22s / close 0.20s / purchase 0.34s / unlock 0.60s |
+
+- **消费点**：`meta_lab.html` 购买永久强化成功播 `cp_ui_purchase`（真实接线）；`audio_demo.html` 9 试听卡（59 条全覆盖）。
+- **校验**：9/9 文件存在、时长与规格一致（±0.02s）、峰值均 85% 无削波、RMS 16.8–36.1%；meta_lab `node --check` 通过。
 ## 3. 目录结构
 
 ```
@@ -425,7 +436,7 @@ _content_pack/
 │   └── <key>.png
 ├── sprites_alpha/         # 透底资产（RGBA，游戏可直接用）
 │   └── <key>.png / <key>.webp
-├── audio/                 # 本包专属音频原型（独立命名空间，零接线，47 条）
+├── audio/                 # 本包专属音频原型（独立命名空间，零接线，59 条）
 │   ├── cp_bgm_forest.wav  # 森林主题 BGM（无缝循环）
 │   ├── cp_bgm_battle.wav  # 战斗主题 BGM（128 BPM，无缝循环）
 │   ├── cp_bgm_boss.wav    # BOSS 主题 BGM（92 BPM，无缝循环）
@@ -465,7 +476,16 @@ _content_pack/
 │   ├── cp_layer_tide_lead.wav  # 分层 L3 旋律层（五声 lead+pad，33.1s 无缝循环）
 │   ├── cp_layer_boss_drums.wav # Boss 分层 L1 定音鼓层（92BPM，31.3s 无缝循环）
 │   ├── cp_layer_boss_bass.wav  # Boss 分层 L2 厚重低音（31.3s 无缝循环）
-│   └── cp_layer_boss_lead.wav  # Boss 分层 L3 铜管旋律（31.3s 无缝循环）
+│   ├── cp_layer_boss_lead.wav  # Boss 分层 L3 铜管旋律（31.3s 无缝循环）
+│   ├── cp_ui_click.wav        # UI·按钮点击（60ms）
+│   ├── cp_ui_hover.wav        # UI·悬停轻响（45ms）
+│   ├── cp_ui_confirm.wav      # UI·确认（上行双音 260ms）
+│   ├── cp_ui_cancel.wav       # UI·取消（下行双音 240ms）
+│   ├── cp_ui_error.wav        # UI·错误（失谐 buzz 180ms）
+│   ├── cp_ui_open.wav         # UI·面板打开（上行扫频 220ms）
+│   ├── cp_ui_close.wav        # UI·面板关闭（下行扫频 200ms）
+│   ├── cp_ui_purchase.wav     # UI·购买成功（三连铃 340ms）
+│   └── cp_ui_unlock.wav       # UI·解锁仪式（大三和弦分解 600ms）
 ├── vfx/                   # 程序化特效精灵（RGBA 真透底）
 │   └── fx_*.png（24 个）
 ├── icons/                 # 状态图标（RGBA 真透底，常驻 HUD 指示）
@@ -499,7 +519,8 @@ _content_pack/
 │   ├── music_layers.json      # 战斗分层自适应音乐：3 层轨 + 触发阈值 + 滞回混音规则
 │   ├── challenge_mods.json    # 挑战修饰符系统：8 修饰符（玩家×敌人成对）+ ISO 周轮换规则
 │   ├── enemy_candidates.json  # 候选敌种包：6 候选敌种 + 机制 + 建议接入阶段（独立表）
-│   └── save_spec.json         # 存档字段契约：11 字段 + 排除项 + 容错规则 + 迁移策略
+│   ├── save_spec.json         # 存档字段契约：11 字段 + 排除项 + 容错规则 + 迁移策略
+│   └── ui_sfx.json           # UI 反馈音效集：9 条界面音 + 语义一致性说明
 └── tools/
     ├── cutout.py          # 通用边缘洪水填充抠图（文件进/出）
     ├── build_showcase.mjs # 构建自包含展示页
@@ -584,11 +605,12 @@ _content_pack/
 - Boss 分层组：`music_layers.json` 扩展 bossGroup（92 BPM/31.30s/A 小调厚重小调，mixByPhase 三阶段增益矩阵与 boss_phases hpLow 阈值一一对应）；3 条 cp_layer_boss_* 实测时长 31.3043s 完全一致、峰值 85%、RMS 达标；`boss_arena.html`「🎵 Boss 分层」开关三轨同播、enterPhase 实时按阶段混音（mixBossLayers 0.15 插值平滑），`node --check` 通过；`music_layers.html` 重生成含 👹 Boss 分层组混音矩阵表与 3 层卡（0 占位符）。
 - 候选敌种包：`data/enemy_candidates.json` 为合法 JSON（6 候选：元素 ∈ 五元素、HP ∈ 30–90、移速 ∈ 0.6–1.5、suggestedPhases ∈ 1–4；**与现有 wave_design 敌种 key 零冲突**，独立键名 cand_*）；精灵 6/6 均 96×96 `colorType=6` RGBA 非空行 40–61%；`enemy_pack_demo.html` 由 `tools/build_enemy_pack_demo.py` 数据驱动生成，0 占位符、8 名称全在、6 图标引用存在；接入约束（不修改 wave_design、四步接入清单）写入 JSON 与展示页，确保评估期零影响现有玩法数据。
 - 存档字段契约：`data/save_spec.json` 为合法 JSON（11 字段；permanentLevels/heroesUnlocked/achievements/dailyProgress 四个 keyRef 分别指向 meta_upgrades（18 键）/heroes（4 键）/achievements（19 键）/daily.pool（6 键）真实集合）；排除项（局内进度不入档）与容错规则（白名单丢弃/夹紧/默认值/跨日重置）写入规格；`meta_lab.html`「💾 存档演示」导出/导入按契约校验、未知 id 丢弃计数可见，`node --check` 通过。
+- UI 反馈音效集：`data/ui_sfx.json` 为合法 JSON（9 条，均含 cn/durSec/tone/trigger/desc）；9/9 wav 存在且**时长与规格一致（±0.02s）**、峰值均 85% 无削波、RMS 16.8–36.1%；`meta_lab.html` 购买强化播 cp_ui_purchase（真实消费点接线）、`node --check` 通过；`audio_demo.html` 9 试听卡覆盖（59 条）。
 - 不变量：未触碰 `game/萌兽消消岛.html` 及任何 GROK 相关文件；所有产物位于 `_content_pack/` 独立命名空间。
 
 ## 7. 后续内容方向（规划中，下一轮执行）
 
-本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵 + 4 枚英雄徽章 + 8 个场景装饰件 + 6 个候选敌种）+ 音乐（7 BGM + 33 SFX + 4 环境音 + 6 战斗分层）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（18 份 JSON）+ 可视化参考页与可玩校验场（13 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
+本内容包已覆盖**美术（8 张角色精灵 + 8 个拾取物精灵 + 4 枚英雄徽章 + 8 个场景装饰件 + 6 个候选敌种）+ 音乐（7 BGM + 33 SFX + 4 环境音 + 6 战斗分层 + 9 UI 音）+ 特效（24 个 VFX）+ 状态图标（12 个）+ 技能/元素图标（13 个）+ 图鉴（codex）+ 设计数值规格（19 份 JSON）+ 可视化参考页与可玩校验场（13 参考页 + 6 实验室 + 竞技场 + 战役 + 演练场）**十大支柱。下一轮继续在独立命名空间扩展：
 
 1. ~~**森林主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_forest.wav`（无缝循环 35.6s）。
 2. ~~**战斗 / BOSS 主题 BGM 原型**~~ ✅ 已交付 `cp_bgm_battle.wav`（128 BPM 驱动，30.0s）+ `cp_bgm_boss.wav`（92 BPM 厚重史诗小调，31.3s），三首 BGM 形成「探索→交战→首领」情绪曲线。
@@ -636,4 +658,5 @@ _content_pack/
 35. ~~**Boss 分层组（按 Boss 阶段混音）**~~ ✅ 已交付 3 条 31.30s 分层轨（`cp_layer_boss_drums/bass/lead`，92 BPM 厚重小调 Am–F–C–G：定音鼓式 kick 重压/锯齿低音 −12 半音四分顿挫/锯齿小调琶音上行+不祥钟声动机每 3 小节；三轨时长差 <0.001s 叠播对齐）+ `music_layers.json` 扩展 **bossGroup**（mixByPhase 三阶段增益矩阵：阶段 1 仅 L1 → 2 +L2(0.7) → 3 +L3(0.8)，与 boss_phases.json hpLow 66%/33% 阈值一一对应）+ `music_layers.html` 重生成（tide 组+Boss 组双组结构）。消费点：`boss_arena.html`「🎵 Boss 分层」开关替换原整曲开关——layerAudios 三轨同播，`mixBossLayers(phaseIdx)` 在 enterPhase 实时混音（音量 0.15 插值平滑）；`audio_demo.html` 加 3 卡（50 条全覆盖）。校验：三轨时长一致断言、boss_arena `node --check`（修复替换残留孤立 `});`）、规格页 0 占位符；`index.html` 加 👹 导航卡、`README` §2.21/§3/§6/§7 同步。自适应音乐第二触发维度（敌数→Boss 阶段）落地，Boss 战「阶段越深音乐越满」。
 36. ~~**候选敌种包（6 个候选 + 程序化精灵 + 展示页）**~~ ✅ 已交付 `data/enemy_candidates.json`（灰烬蛾 fire 飞行·自爆 40HP / 泡囊蛙 water 远程·减速 55HP / 卵石蟹 earth 装甲·格挡 85HP / 辉光萤 light 支援·治疗 45HP / 荆刺野豕 wood 冲锋·撞击 70HP / 灰烬狼 fire 游击·撕咬 60HP；五元素全覆盖，每个都有非数值机制而非纯数值堆叠；数值与现有 6 敌种同量纲）+ **6 个 96×96 程序化精灵**（`tools/gen_enemy_candidates.py` 纯标准库，Q 版风格与现有敌种一致）+ `enemy_pack_demo.html`（接入约束卡 + 6 候选 HP/移速条 + 机制 + 设计意图 + 现有敌种同量纲对照表）。**关键设计决策：独立成表不修改/不引用 wave_design.json**，避免破坏 campaign/endless 的既有 DATA_SYNC 校验链；接入清单写入 JSON 的 integrationNote 供后续决策。校验：元素/HP/移速/阶段区间枚举全过、key 与现有敌种零冲突、精灵 6/6 存在、展示页 0 占位符；`index.html` 加 🐾 导航卡与「候选敌种」统计卡、`manifest.json` 加 enemy_candidates 类目（=6）、`README` §2.22/§3/§6/§7 同步（design_data 16→17）。
 37. ~~**存档字段契约（接入规格 + meta_lab 真机导入导出演示）**~~ ✅ 已交付 `data/save_spec.json`（schema 11 字段：saveVersion/profileId/metaCoins/permanentLevels/heroesUnlocked/achievements/dailyProgress/lastDailyDate/endlessBest/stats/settings；4 个 keyRef 分别指向 meta_upgrades/heroes/achievements 真实键集合；**排除项**：局内升级进度与局内状态不入档）+ integrity 四条容错（白名单丢弃未知 id、数值按 maxLevel 夹紧、缺字段默认值补齐、跨日重置）+ migration 只升不降。消费点：`meta_lab.html` 加「💾 存档演示 / 📂 导入存档」——导出 JSON、导入按契约校验（**未知 id 静默丢弃并计数**，脏数据容错可见）。校验：keyRef 目标集合存在性、meta_lab `node --check`（补 log() 回退）；`README` §2.23/§3/§7/引言同步（design_data 17→18）。为主游戏接入提供明确的字段契约与容错规则，避免旧档/篡改档导致启动崩溃。
+38. ~~**UI 反馈音效集（9 条界面音 + 语义化设计 + meta_lab 真实接线）**~~ ✅ 已交付 `data/ui_sfx.json` + **9 条 UI 音**（click 60ms / hover 45ms / confirm 260ms 上行双音 / cancel 240ms 下行双音 / error 180ms 失谐 buzz / open 220ms 上行扫频 / close 200ms 下行扫频 / purchase 340ms 三连铃 / unlock 600ms 大三和弦分解；synth_audio.py 新增 `_ui_tone` 辅助 + 9 事件编排，纯标准库零素材）。设计原则落地：峰值统一 85%、**音色语义化**（上行=肯定 / 下行=否定 / 低沉失谐=「不允许」区别于取消的「我反悔」/ 和弦分解=解锁仪式）。消费点：`meta_lab.html` 购买永久强化成功播 cp_ui_purchase（真实接线）、`audio_demo.html` 9 卡（59 条全覆盖）。校验：9/9 文件存在、时长与规格一致（±0.02s）、峰值 85% 无削波、RMS 16.8–36.1%、meta_lab `node --check`；`index.html`/`manifest.json`（audio 50→59、design_data 18→19）与 `README` §2.24/§3/§6/§7 同步。音频体系第五类补齐——**事件 SFX / 情绪 BGM / 空间 AMB / 强度分层 LAYER / 界面反馈 UI**。
 > 风格对齐原则：新音乐与音效仅作**原型与占位**，待主文件音频接线（gains/sfxFiles/DATA_SFX 四方一致）完成后，再决定是否替换为制作级音轨，绝不在争议文件上擅自接线。

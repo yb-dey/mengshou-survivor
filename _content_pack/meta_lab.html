@@ -194,6 +194,7 @@ function buy(k){
   const cst = cost(u.cost.base, u.cost.growth, lv+1);
   if(profile.coins < cst) return;
   profile.coins -= cst;
+  try{ new Audio("audio/cp_ui_purchase.wav").play(); }catch(e){}   // R46 UI 音效：购买成功反馈
   profile.levels[k] = lv + 1;
   try{ new Audio("audio/cp_sfx_coin.wav").play(); }catch(e){}
   renderShop(); renderPerm();

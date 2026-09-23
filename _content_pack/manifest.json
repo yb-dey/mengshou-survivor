@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23 10:14:28",
+  "generated_at": "2026-09-23 10:24:44",
   "namespace": "_content_pack",
   "counts": {
     "sprites": 8,
@@ -10,8 +10,8 @@
     "hero_portraits": 4,
     "decors": 8,
     "enemy_candidates": 6,
-    "design_data": 18,
-    "audio": 50,
+    "design_data": 19,
+    "audio": 59,
     "bgm": 7,
     "sfx": 33
   },
@@ -697,6 +697,11 @@
       "bytes": 5805
     },
     {
+      "key": "ui_sfx",
+      "cn": "UI 反馈音效集",
+      "bytes": 3462
+    },
+    {
       "key": "upgrades",
       "cn": "局内成长系统",
       "bytes": 11580
@@ -1207,6 +1212,96 @@
       "bits": 16,
       "channels": 1,
       "duration": 1.1
+    },
+    {
+      "key": "cp_ui_cancel",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 21212,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.24
+    },
+    {
+      "key": "cp_ui_click",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 5336,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.06
+    },
+    {
+      "key": "cp_ui_close",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 17684,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.2
+    },
+    {
+      "key": "cp_ui_confirm",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 22976,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.26
+    },
+    {
+      "key": "cp_ui_error",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 15920,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.18
+    },
+    {
+      "key": "cp_ui_hover",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 4012,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.04
+    },
+    {
+      "key": "cp_ui_open",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 19448,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.22
+    },
+    {
+      "key": "cp_ui_purchase",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 30032,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.34
+    },
+    {
+      "key": "cp_ui_unlock",
+      "cn": "",
+      "kind": "sfx",
+      "bytes": 52964,
+      "sampleRate": 44100,
+      "bits": 16,
+      "channels": 1,
+      "duration": 0.6
     }
   ]
 }
