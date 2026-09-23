@@ -70,7 +70,7 @@ jobs:
                 t=$(grep -E '^  (ch[0-9]|⇒ 六章)' "$log" | sed 's/^  */  /' | tr '\n' '~' | sed 's/%/%25/g')
                 echo "::notice::六章节拍（时长/通关线/BOSS/潮窗）: $t"
               fi
-              d=$(grep -E '派生：|首次升级|墙钟代价' "$log" | sed 's/^  */  /' | tr '\n' '~' | sed 's/%/%25/g')
+              d=$(grep -E '派生：|首次升级|墙钟代价|产出：' "$log" | sed 's/^  */  /' | tr '\n' '~' | sed 's/%/%25/g')
               e=$(grep -E "$ROW" "$log" | awk '{printf "%s,", $4}' | sed 's/,$//')
               l=$(grep -E "$ROW" "$log" | awk '{printf "%s,", $6}' | sed 's/,$//')
               echo "::notice::第 $i 章（--tmax $line）: $d · 同屏怪序列: $e · 等级序列: $l"

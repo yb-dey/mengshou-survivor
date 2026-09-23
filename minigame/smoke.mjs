@@ -1413,12 +1413,14 @@ if (PACING) {
       state: stName(sandbox.GAME.state), picks,
       enemy: sk ? sk.enemyCount : null, horde: sk && sk.hordeActive ? 1 : 0,   // v15: 读不到=null（不再用 -1 当哨兵）
       lv: (sandbox.run && sandbox.run.level) | 0, hp: (sandbox.player && sandbox.player.hp) | 0,
+      coins: (sandbox.run && sandbox.run.coinsGained) | 0,   // 【v16】产出遥测
+      kills: (sandbox.player && sandbox.player.killCount) | 0,
       maxHp: (sandbox.player && sandbox.player.maxHp) | 0,
     })
   }
-  console.log('  游戏t(s)  runTime  墙钟(s)  同屏怪  潮  等级  选卡  HP        state')
+  console.log('  游戏t(s)  runTime  墙钟(s)  同屏怪  潮  等级  选卡  金币  击杀  HP        state')
   for (const r of rows) {
-    console.log(`  ${String(r.t).padStart(8)}  ${String(r.rt).padStart(7)}  ${String(r.wall).padStart(7)}  ${String(r.enemy).padStart(6)}  ${String(r.horde).padStart(2)}  ${String(r.lv).padStart(4)}  ${String(r.picks).padStart(4)}  ${(r.hp + '/' + r.maxHp).padStart(8)}  ${r.state}`)
+    console.log(`  ${String(r.t).padStart(8)}  ${String(r.rt).padStart(7)}  ${String(r.wall).padStart(7)}  ${String(r.enemy).padStart(6)}  ${String(r.horde).padStart(2)}  ${String(r.lv).padStart(4)}  ${String(r.picks).padStart(4)}  ${String(r.coins).padStart(5)}  ${String(r.kills).padStart(5)}  ${(r.hp + '/' + r.maxHp).padStart(8)}  ${r.state}`)
   }
   const peak = rows.filter((r) => typeof r.enemy === "number").reduce((a, r) => (r.enemy > a.enemy ? r : a), { enemy: -1, t: 0 })
   const playRows = rows.filter((r) => r.state === 'PLAYING')
@@ -1432,6 +1434,8 @@ if (PACING) {
     .map((k) => `${k} ${(frozenBy[k] / FPS).toFixed(1)}s`).join(' / ') || '（无冻结帧）'
   const rtStuck = 0   // 采样轴改为 runTime 后，"墙钟行对位"不再需要：逐帧 rtBack 已在循环里数过
   console.log(`  派生：同屏怪峰值 ${peak.enemy}（t=${peak.t}s，该点 state=${peak.state}）· 潮窗覆盖 ${(hordeRatio * 100).toFixed(0)}%（${playRows.length} 个 PLAYING 样本，30s 粒度）`)
+  const _mins = last.t / 60
+  console.log(`        产出：金币 ${last.coins}（≈${(last.coins / (_mins || 1)).toFixed(1)}/分）· 击杀 ${last.kills}（≈${(last.kills / (_mins || 1)).toFixed(1)}/分）`)
   console.log(`        首次升级 t=${firstPickRt === null ? '未升级' : firstPickRt + 's'} · 选卡 ${picks} 次 · 终局 Lv${last.lv} / HP ${last.hp}/${last.maxHp}` +
     (firstDeathRt === null ? ' · 全程未阵亡' : ` · 站桩首次阵亡 t=${firstDeathRt}s` + (revives ? `（自动复活 ${revives} 次续行）` : '')) +
     (endAt === null ? ' · 打到采样结束' : ` · ${endState} @ t≈${endAt}s`))
