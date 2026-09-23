@@ -45,6 +45,7 @@ jobs:
         run: |
           set -u
           # 通关线（秒）= 游戏 CONFIG 章节表的 winTime；只作 --tmax 驱动上限，权威源仍是 spine()
+          mkdir -p ci/out   # 原先由 run-gate.sh 建目录，这里自己建
           LINES="240 300 360 480 600 600"
           # 采样表行（8 列：游戏t/runTime/墙钟/同屏怪/潮/等级/选卡/HP/state），用它抽序列
           ROW='^ +[0-9]+ +[0-9.]+ +[0-9.]+ +[0-9]+ +[01] +[0-9]+ +[0-9]+ +[0-9]+/[0-9]+ +[A-Z_]+$'
@@ -52,7 +53,12 @@ jobs:
           for line in $LINES; do
             i=$((i+1))
             log="ci/out/pacing-ch$i.log"
-            if bash ci/run-gate.sh "$log" node minigame/smoke.mjs --pacing --ch $((i-1)) --tmax "$line"; then
+            # ⚠ 不用 run-gate.sh：它失败时会发 ~10 条 ::error::，把"每级只留前 10 条"的配额吃满，
+            #   我自己那条带原因的单行注解就发不出来了（131827a 实测：只剩老三样，原因又丢了）。
+            #   这里直接跑 node、自己收 exit code，只发**一条** ::error:: ⇒ 配额内必达。
+            node minigame/smoke.mjs --pacing --ch $((i-1)) --tmax "$line" > "$log" 2>&1
+            code=$?
+            if [ "$code" = "0" ]; then
               if [ "$i" = "1" ]; then
                 t=$(grep -E '^  (ch[0-9]|⇒ 六章)' "$log" | sed 's/^  */  /' | tr '\n' '~' | sed 's/%/%25/g')
                 echo "::notice::六章节拍（时长/通关线/BOSS/潮窗）: $t"
@@ -66,7 +72,7 @@ jobs:
               reason=$(grep -A 6 '❌' "$log" | tr '\n' '~' | sed 's/%/%25/g')
               derived=$(grep -E '派生：|首次升级|墙钟代价|冻结归属' "$log" | tr '\n' '~' | sed 's/%/%25/g')
               tail3=$(tail -n 3 "$log" | tr '\n' '~' | sed 's/%/%25/g')
-              echo "::error::第 $i 章节奏探针自证没过（--ch $((i-1)) --tmax $line）｜原因区: ${reason}｜派生: ${derived}｜日志尾: ${tail3}"
+              echo "::error::第 $i 章节奏探针自证没过（--ch $((i-1)) --tmax $line exit=$code）｜原因区: ${reason}｜派生: ${derived}｜日志尾: ${tail3}"
               exit 1
             fi
           done

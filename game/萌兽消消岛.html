@@ -37463,7 +37463,10 @@ function init() {
     //   并区分"帧率低是因为卡"还是"帧率低是因为根本没怪"（后者是假阴性）。
     stress: function () {
       var live = 0, i;
-      for (i = 0; i < enemyTotal; i++) if (enemyPool[i].active) live++;
+      // 【v1.203b】空值保护：逐帧读取时 enemyPool 可能瞬时出现空洞（池子扩容/重建瞬间
+      //   enemyTotal 与数组长度不同步）⇒ 原写法 `enemyPool[i].active` 会 TypeError。
+      //   实测代价：云端 pacing 第 5 章 t≈330/360s（BOSS 360 前后）连续三次读到 -1，探针假红。
+      for (i = 0; i < enemyTotal; i++) { var e = enemyPool[i]; if (e && e.active) live++; }
       var ch = chapterOf();
       return {
         enemyCount: enemyCount, specialCount: specialCount,
