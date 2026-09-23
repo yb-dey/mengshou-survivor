@@ -25,7 +25,12 @@ html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:
 <script>
 "use strict";
 // ============================================================
-// 《萌兽不好惹》v1.194 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 《萌兽不好惹》v1.197 单文件版 · 竖屏 9:16 幸存者弹幕割草
+// 【v1.197 产品】首局路由修正: 新档(无任何通关记录)点「出击」原按 v1.70 直接进 **10 分钟无尽正片**星星巅,
+//   与"教程短章 芽芽原 4min / 花花谷 5min / 果果林 6min"的标注、以及经济弧线(首通 ch1 给 80 金 ≥ 首级强化 30 金)相矛盾。
+//   现在 `pickRecommendedChapter()` 在无通关记录时返回 idx 0(芽芽原), 有过任一通关后恢复 v1.70 原意(指向正片);
+//   选章层仍**全解锁**(`chapterUnlocked=6` 不变), 任何人都能自选任意章。选章卡「推荐」标签改取同一函数, 与主 CTA 同源一致。
+//   只改路由判定与标签取值, 不动任何章节时长/胜法/掉落/难度/开局节奏。
 // 【v1.196 移植】安全区来源改准: `Platform.SafeArea.init` 优先用宿主透传的真实 safeArea(小游戏无 DOM, env() 拿不到)。
 //   ⚠ **没有**改任何布局坐标 —— 大厅满幅页头在小游戏里的让位要靠"绘制路径里的 letterbox"(见 `小游戏移植/README.md` 三·五);
 //     试过的"顶栏 inset"方案**已实测否决**: 顶栏下移会盖住标题与主角头顶, 整页下移又把底栏(1072..1280)推出屏幕。
@@ -628,7 +633,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.196",                   // 【v1.196】安全区改由宿主真实 safeArea 驱动(透传优先于宽高比猜测); 只改安全区来源, 不动任何布局坐标/数值/掉率/10 分钟轴
+  version: "1.197",                   // 【v1.197】首局路由: 新档首局走教程短章(芽芽原 4min), 原为 10 分钟无尽正片; 只改主 CTA/选章默认指向与「推荐」标签取值, 不动章节数值/时长/掉落/难度
   gameName: "萌兽不好惹",              // 玩家可见主标题【2026-09-22 定名】: 从「萌兽幸存者」改为「萌兽不好惹」——
                                        //   原名"XX幸存者"与一堆同类型游戏撞句式、辨识度低；新名保留"萌兽"差异化 + 反差萌钩子。
                                        //   历史别名「萌兽消消岛」（文件沿用此名不改，属内部标识，平台/软著只认登记名）
@@ -722,6 +727,7 @@ var CONFIG = {
   // 阶段/章节系数 (表2 [来源]; 密度语义见数据结构卡 [假设])
   defaultChapter: 5,                // 【v1.70】默认章=星星巅(10min 正片主桌)
   recommendedChapter: 5,            // 【v1.70】首页主 CTA / 选章默认指向 10 分钟正片
+                                    // 【v1.197】新档例外: 无通关记录时主 CTA 与选章默认走 idx 0 教程短章(见 pickRecommendedChapter)
   tutorialChapterMax: 2,            // 【v1.5】下标<=此值为教程短章(芽芽原/花花谷/果果林); 岩岩坡/雾雾泽仍可选
   featuredUnlock: 6,                // 【v1.70】新档解锁到星星巅, 新号直接打 10 分钟正片
   featureWinTime: 600,              // 【v1.70】正片墙钟秒(约 10 分钟)
@@ -29113,7 +29119,18 @@ var uiDailyModal = null, uiDailyCancel = null, uiDailyCards = [];
 function chapterLocked(i) {
   return i + 1 > saveData.chapterUnlocked;
 }
+// 【v1.197】新档判据: 一条通关记录都没有。chapterCleared 缺/非对象时按「新档」处理(与 SAVE_SCHEMA 默认 {} 一致),
+//   旧档兼容链 migrateChain 会给 v3 以下的老档补出 chapterCleared, 不存在「老玩家被当新人」的误判。
+function hasAnyChapterClear() {
+  var cc = saveData && saveData.chapterCleared, k;
+  if (!cc || typeof cc !== "object") return false;
+  for (k in cc) if (cc[k]) return true;
+  return false;
+}
 function pickRecommendedChapter() {
+  // 【v1.197】新档首局走教程短章(idx 0 芽芽原 4min): 原实现在新档下直接返回 CONFIG.recommendedChapter(10 分钟无尽正片),
+  //   等于把第一次点「出击」的玩家丢进最长最难的一章。idx 0 若被锁(理论上不会, 新档 chapterUnlocked=6)则走原逻辑。
+  if (!hasAnyChapterClear() && !chapterLocked(0)) return 0;
   var rec = CONFIG.recommendedChapter;
   if (rec >= 0 && rec < DATA_CHAPTER.length && !chapterLocked(rec)) return rec;
   return Math.min(saveData.chapterUnlocked, DATA_CHAPTER.length) - 1;
@@ -29123,7 +29140,7 @@ function openChapterSelect() {
   hideDailyPickUi();
   closeVaultUi();
   if (uiUpgradeModal && uiUpgradeModal.visible) onTapCloseUpgrade();
-  chapterSelIdx = pickRecommendedChapter();   // 【v1.70】默认正片星星巅(10min)
+  chapterSelIdx = pickRecommendedChapter();   // 【v1.70】默认推荐章;【v1.197】新档=芽芽原 4min, 有通关记录=星星巅 10min
   if (uiChapterModal) uiChapterModal.visible = true;
   for (var i = 0; i < uiChapterCards.length; i++) uiChapterCards[i].visible = true;
   if (uiChapterConfirm) uiChapterConfirm.visible = true;
@@ -29593,9 +29610,9 @@ function makeChapterCard(i, x, y, w, h) {
       ctx.fillText("第" + (this.idx + 1) + "章", r.x + r.w / 2, r.y + 16);
       ctx.font = "bold 20px " + FONT_STACK;
       ctx.fillText(ch.name, r.x + r.w / 2, r.y + 38);
-      ctx.fillStyle = this.idx <= CONFIG.tutorialChapterMax ? "#8a7a40" : (this.idx === CONFIG.recommendedChapter ? "#2e8b47" : CONFIG.colors.cardDesc);
+      ctx.fillStyle = this.idx <= CONFIG.tutorialChapterMax ? "#8a7a40" : (this.idx === pickRecommendedChapter() ? "#2e8b47" : CONFIG.colors.cardDesc);
       ctx.font = "bold 12px " + FONT_STACK;
-      ctx.fillText((this.idx <= CONFIG.tutorialChapterMax ? "教程 " : (this.idx === CONFIG.recommendedChapter ? "推荐 " : "")) + ch.durMin + "分钟 · " + (ch.winMode === "survive" ? "存活" : "讨伐") + (ch.endless && saveData.chapterCleared[ch.chId] ? " · 无尽" : ""), r.x + r.w / 2, r.y + 58);
+      ctx.fillText((this.idx <= CONFIG.tutorialChapterMax ? "教程 " : (this.idx === pickRecommendedChapter() ? "推荐 " : "")) + ch.durMin + "分钟 · " + (ch.winMode === "survive" ? "存活" : "讨伐") + (ch.endless && saveData.chapterCleared[ch.chId] ? " · 无尽" : ""), r.x + r.w / 2, r.y + 58);
       chipY = r.y + 66;
       drawRewardMiniRow(ctx, r.x + 8, chipY, r.w - 16, 24, "#e6c24a", rewardCoinLine(view), view.coinKind === "taken");
       drawRewardMiniRow(ctx, r.x + 8, chipY + 28, r.w - 16, 24, "#8a5ac2", rewardForgeLine(view), view.forgeKind === "taken");
@@ -36980,8 +36997,9 @@ function startRun(chapterIdx) {
   GAME.dailyDrillDone = false;
   GAME.dailyForkHit = false;
   GAME.dailyForkFrom = GAME.dailyMode ? (dailyForkOf(todayStamp()) || "") : "";
-  // v2.0 R2【R2】/【v1.4】: 缺省改推荐正片(岩岩坡), 非法值钳回 recommendedChapter
-  GAME.chapterIdx = (typeof chapterIdx === "number" && chapterIdx >= 0 && chapterIdx < DATA_CHAPTER.length) ? chapterIdx : CONFIG.recommendedChapter;
+  // v2.0 R2【R2】/【v1.4】: 缺省取推荐章(旧注释写"岩岩坡"已过期, v1.70 起推荐章=星星巅);
+  // 【v1.197】非法值钳回 pickRecommendedChapter()(新档=芽芽原), 与主 CTA 同源
+  GAME.chapterIdx = (typeof chapterIdx === "number" && chapterIdx >= 0 && chapterIdx < DATA_CHAPTER.length) ? chapterIdx : pickRecommendedChapter();
   closeChapterSelectUi();
   hideDailyPickUi();
   resetRun();

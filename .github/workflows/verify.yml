@@ -272,6 +272,23 @@ jobs:
         run: |
           node ci/result-double-guard.mjs --selftest
           node ci/result-double-guard.mjs
+      # 第 33 维度（v1.197）：首局路由 —— 新手第一次点「出击」去哪一章（**产品契约**类，此前无人守）。
+      #   病根（第 41 轮查出）：`pickRecommendedChapter()` 对新档没有分支 ⇒ v1.70 的
+      #     `recommendedChapter: 5`（星星巅 10 分钟**无尽**正片）对"零通关记录"的新档同样成立，
+      #     于是新玩家第一次点「出击」被送进最长最难的一章。而表里 idx 0–2 明写「教程」短章
+      #     （芽芽原 4min / 花花谷 5min / 果果林 6min），经济弧线也是按首通 ch1（80 金 ≥ 首级强化 30 金）
+      #     设计的 —— 三处口径互相矛盾，且没有任何门禁看得到。
+      #   判据：① 新档 → idx 0 · ② 有任一通关 → 推荐章 · ③ chapterCleared 缺失/null/全 false → 按新档
+      #     · ④ 推荐章被锁 → 已解锁最后一章 · ⑤ 首局章时长短于推荐章
+      #     · ⑥「推荐」标签与主 CTA **同源**（都取 pickRecommendedChapter()，禁止各处各读一份 CONFIG）
+      #     · ⑦ `!chapterLocked(0)` 守卫在位。
+      #   ⚠ 作用域纪律：**只**管路由与标签取值，不含章节时长/胜法/掉落/难度（另一套语义）
+      #     —— selftest M7 专测数据不变量（把首局章改成 12 分钟即须报错）。
+      #   **硬门禁**（新档分支被删即 exit 1；标签与 CTA 分家、守卫丢失同样报）。
+      - name: 首局路由契约（GATE）
+        run: |
+          node ci/first-session-route.mjs --selftest
+          node ci/first-session-route.mjs
       # 第 30 维度（备案轮）：合规标识 —— **备案/上架的强制项**，缺一条直接卡审核。
       #   病根：这类"要求写在平台规范里、不在代码里"的项，**没有任何门禁会守**，
       #     改着改着就会被覆盖掉 —— 2026-09-23 实测《健康游戏忠告》在全项目出现 **0 次**。
