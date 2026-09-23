@@ -881,7 +881,16 @@ if (errs.length) { console.log(`\n⚠ 事件监听器抛异常 ${errs.length} �
 // ── 布局占用热图（--layout）────────────────────────────────────────────────
 if (LAYOUT) {
   const { createRequire } = await import('node:module')
-  const sharp = createRequire('file:///C:/x.js')('C:/Users/28151/.dsh/profiles/node_modules/sharp')
+  // 【第 56 轮修】sharp 只是**画热图用**，不是判据依赖 —— 原来写死了本机路径，云端必红（实测）。
+  //   解析顺序：常规模块 → 本机 profile 路径 → 放弃（跳过 PNG）。`--no-bitmap` 可强制跳过（等价 CI 环境）。
+  const NO_BITMAP = process.argv.includes('--no-bitmap')
+  let sharpOptional = null
+  if (!NO_BITMAP) {
+    for (const spec of ['sharp', 'C:/Users/28151/.dsh/profiles/node_modules/sharp']) {
+      try { sharpOptional = createRequire('file:///C:/x.js')(spec); break } catch (e) { void e }
+    }
+  }
+  if (!sharpOptional) console.log('  （无 sharp / --no-bitmap：跳过布局热图 PNG —— 判据不依赖它）')
   const mc = canvasObjs.find((c) => c.__isMain) || canvasObjs[0]
   const W = Math.max(1, Math.round(mc.width)), H = Math.max(1, Math.round(mc.height))
   const CELL = 8
@@ -921,10 +930,19 @@ if (LAYOUT) {
     RGB[i * 3 + 1] = Math.round(26 + t * 64)
     RGB[i * 3 + 2] = Math.round(26 + t * 14)
   }
-  const OUT = join(HERE, '..', '_dsh-kit', 'aa-test', 'layout-heat.png')
+  // 【第 56 轮修】输出目录按**候选**挑（工作区布局优先，其次仓库内 `ci/out`）——
+  //   原实现写死 `../_dsh-kit/aa-test/`，在仓库内跑必然「写出失败」（非致命，但日志误导）。
+  const OUT_CANDS = [
+    join(HERE, '..', '_dsh-kit', 'aa-test', 'layout-heat.png'),
+    join(HERE, '..', 'ci', 'out', 'layout-heat.png'),
+  ]
+  const OUT = OUT_CANDS.find((p) => existsSync(dirname(p))) || null
+  if (!OUT) console.log('  （没有可写的热图目录：跳过 PNG）')
   try {
-    await sharp(RGB, { raw: { width: gw, height: gh, channels: 3 } }).resize({ width: 320, kernel: 'nearest' }).png().toFile(OUT)
-    console.log(`\n布局占用热图（只画**内容元素**，背景大块已剔除）-> ${OUT}`)
+    if (sharpOptional && OUT) {
+      await sharpOptional(RGB, { raw: { width: gw, height: gh, channels: 3 } }).resize({ width: 320, kernel: 'nearest' }).png().toFile(OUT)
+      console.log(`\n布局占用热图（只画**内容元素**，背景大块已剔除）-> ${OUT}`)
+    }
   } catch (e) { console.log(`\n布局热图写出失败: ${e.message}`) }
   console.log(`布局占用（--layout）：主画布 ${W}x${H}；记录绘制包围盒 ${BOXES.length} 个`)
   console.log(`  全部绘制：有绘制的格 ${covered}/${gw * gh} = ${(covered / (gw * gh) * 100).toFixed(1)}%（背景铺满，故必然接近 100%，**这个数没有信息量**）`)
