@@ -26,6 +26,9 @@
  *   实测教训：原实现正文 11px + alpha 0.42 压在底栏上，WCAG 对比度只有 **3.8:1**（AA 小字下限 4.5:1），
  *   11px 逻辑在 390pt 手机上 ≈ **6.0pt** 物理 ⇒ 条文"在"，但人眼读不出来。
  *   判据：正文/标题字号 ≥12px 且对比度 ≥4.5:1；并内建 3 条对照（含**旧值必须 FAIL**）。
+ *
+ * 【第 60 轮】再加一条**关系型判据**：AI 隐式标识的 `ai-content-id` 必须等于 `MSBHR-<CONFIG.version>`。
+ *   起因：实测发现它写着 `MSBHR-V1.0` 而游戏早已 v1.202 —— 合规材料里版本自相矛盾（P10 同型：元数据 vs 真实状态）。
  */
 
 import { readFileSync, readdirSync } from 'node:fs'
@@ -125,6 +128,40 @@ function legibilityFails(fonts, alphas) {
   return out
 }
 // 内建对照（每次都跑）：旧值必须 FAIL —— 否则这条判据就是恒绿的假保证
+// ── 元数据 ↔ 版本号（第 60 轮）────────────────────────────────────────────────
+//   AI 隐式标识的 id 形如 `MSBHR-<version>`，与 CONFIG.version 必须一致；不一致时备案/审核材料自相矛盾。
+function metaVersionFails(html) {
+  const out = []
+  const m = /version: "([0-9.]+)"/.exec(html)
+  const id = /<meta name="ai-content-id" content="([^"]+)"/.exec(html)
+  if (!m) out.push("抽不到 CONFIG.version")
+  if (!id) out.push("抽不到 <meta name=ai-content-id>（AI 隐式标识缺失）")
+  if (m && id) {
+    const want = "MSBHR-" + m[1]
+    if (id[1] !== want) out.push(`ai-content-id=${id[1]} 与版本不一致（应为 ${want}）`)
+  }
+  return out
+}
+// 对照：旧值（V1.0）必须 FAIL；与版本一致必须 PASS；缺标识必须 FAIL
+const META_CASES = [
+  { n: "旧值 MSBHR-V1.0（版本漂移）", html: 'version: "1.202" <meta name="ai-content-id" content="MSBHR-V1.0">', want: "FAIL" },
+  { n: "与版本一致", html: 'version: "1.202" <meta name="ai-content-id" content="MSBHR-1.202">', want: "PASS" },
+  { n: "缺 ai-content-id", html: 'version: "1.202"', want: "FAIL" },
+]
+function runMetaCase() {
+  let bad = 0
+  console.log("")
+  console.log("## AI 隐式标识 ↔ 版本号 自证")
+  for (const k of META_CASES) {
+    const f = metaVersionFails(k.html)
+    const got = f.length ? "FAIL" : "PASS"
+    const ok = got === k.want
+    if (!ok) bad++
+    console.log(`- ${ok ? "✅" : "✘"} ${k.n}：期望 ${k.want} / 实际 ${got}${f.length ? " —— " + f.join("；") : ""}`)
+  }
+  return bad
+}
+
 const LEGIBILITY_CASES = [
   { n: "旧值 11px/0.42 + 12px/0.55（修复前）", fonts: [12, 11], alphas: [0.55, 0.42], want: "FAIL" },
   { n: "当前 13px/0.72 + 12px/0.62", fonts: [13, 12], alphas: [0.72, 0.62], want: "PASS" },
@@ -164,6 +201,10 @@ const noticeBlock = (() => {
 const st = parseStyle(noticeBlock)
 const legFails = legibilityFails(st.fonts, st.alphas)
 const caseBad = runLegibilityCase()
+const metaBad = runMetaCase()
+const metaFails = metaVersionFails(html)
+const curVer = (/version: "([0-9.]+)"/.exec(html) || [])[1] || "?"
+console.log(metaFails.length ? `❌ AI 隐式标识：${metaFails.join('；')}` : `✅ AI 隐式标识与版本号一致（MSBHR-${curVer}）`)
 console.log('')
 console.log(`真实源码：字号 [${st.fonts.join(', ')}] · 透明度 [${st.alphas.join(', ')}] · 对比度(最淡那条) ${st.alphas.length ? contrastOver([255, 247, 224], Math.min(...st.alphas), BAR).toFixed(2) : '?'}:1`)
 console.log(legFails.length ? `❌ 可读性未过：${legFails.join('；')}` : '✅ 可读性通过（字号 ≥12px 且对比度 ≥4.5:1）')
@@ -175,5 +216,7 @@ if (failN > 0) {
   process.exit(1)
 }
 if (caseBad > 0) { console.log(`✘ 可读性判据自证失败 ${caseBad} 例 —— 判据不可信，不得上岗`); process.exit(1) }
+if (metaBad > 0) { console.log(`✘ AI 标识判据自证失败 ${metaBad} 例 —— 判据不可信，不得上岗`); process.exit(1) }
+if (metaFails.length) { console.log("⚠ AI 隐式标识与版本号不一致 —— 合规材料会自相矛盾，先改母版再提审。"); process.exit(1) }
 if (legFails.length) { console.log('⚠ 强制公告"在但看不清" = 等同于没有；修法见本轮工作日志（v1.202）。'); process.exit(1) }
 process.exit(0)
