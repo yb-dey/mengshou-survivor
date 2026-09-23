@@ -247,6 +247,10 @@ function readImageSize(b) {
   return { w: 0, h: 0 }
 }
 const AUDIO = { ctx: 0, createOscillator: 0, createBufferSource: 0, createGain: 0, createBuffer: 0, start: 0, stop: 0, connect: 0, disconnect: 0, decodeAudioData: 0, resume: 0 }
+// 【第 57 轮】把每个 AudioBuffer 的**真实样本**留下来（母版用 getChannelData(0).set(out) 写入）
+AUDIO.buffers = []
+// 阴性对照开关：模拟"桩写不进去"的旧行为 ⇒ 程序化音频体检必须 FAIL（证明它测的是波形、不是计数器）
+const SILENT_SYNTH = process.argv.includes('--silent-synth')
 function makeAudioStub() {
   // ⚠ 给音频桩加计数器：母版**静默降级**，所以"跑通了"证明不了"有声音"。
   //   必须显式断言"音频节点真的被创建并 start 过"，否则整个移植可能交付成哑巴游戏。
@@ -267,7 +271,15 @@ function makeAudioStub() {
     createBiquadFilter: () => { AUDIO.createBiquadFilter++; return node() },
     createDynamicsCompressor: node, createDelay: node, createConvolver: node, createWaveShaper: node,
     createStereoPanner: node, createPanner: node, createAnalyser: () => Object.assign(node(), { fftSize: 2048, frequencyBinCount: 1024, getByteFrequencyData() {}, getByteTimeDomainData() {} }),
-    createBuffer: (ch, len, rate) => { AUDIO.createBuffer++; return { numberOfChannels: ch, length: len, sampleRate: rate, duration: len / rate, getChannelData: () => new Float32Array(len) } },
+    createBuffer: (ch, len, rate) => {
+      AUDIO.createBuffer++
+      const data = new Float32Array(len)          // 稳定数组：合成器 set() 进来的内容会留在 data 上
+      AUDIO.buffers.push({ ch, len, rate, data })
+      return {
+        numberOfChannels: ch, length: len, sampleRate: rate, duration: len / rate,
+        getChannelData: () => (SILENT_SYNTH ? new Float32Array(len) : data),
+      }
+    },
     createPeriodicWave: () => ({}),
     decodeAudioData: (buf, ok) => { AUDIO.decodeAudioData++; if (ok) ok({ duration: 1, getChannelData: () => new Float32Array(1) }) },
     resume: () => { AUDIO.resume++; return Promise.resolve() }, suspend: () => Promise.resolve(), close: () => Promise.resolve(),
@@ -846,6 +858,66 @@ ok = stage('⑮ 导出存档：复制必须真的进剪贴板', () => {
   const pasteVal = sandbox.Platform.Clipboard.paste()
   console.log(`   复制 ✅（wx.setClipboardData ×${clipboard.count}，${String(clipboard.last).length} 字符）；导入：paste() 返回 ${pasteVal === null ? 'null（小游戏无同步 prompt ⇒ 已知限制，见 README）' : JSON.stringify(pasteVal)}`)
 }) && ok
+
+// ── ⑰ 程序化音频体检（第 57 轮新增）─────────────────────────────────────────
+// 为什么必须有：小游戏形态**不随包带 wav**（路线 A：适配层不给 fetch）⇒ 玩家听到的 100% 是程序化合成；
+//   而这条路径此前只被"数了数 buffer 个数"（阶段⑩）⇒ 波形层面**零判据**。
+// 判据全部来自实测（本机 30 个 buffer / 28 种长度）：
+//   A 形态一致：采样率一律 44100、单声道；B 全部非静音；C **峰值统一 0.7000**
+//   （与 H5 形态那 19 个 wav 的峰值 0.7000 **同口径** ⇒ 两种形态响度上限等价，这是"听到的"那一路的硬证据）；
+//   D 不削波；E 覆盖度（不同长度 ≥24、BGM 命中 ≥8、SFX 不同长度 ≥14）。
+//   ⚠ 阴性对照 `--silent-synth`（桩写不进去 ⇒ 量到全零）必须让 B/C 报错。
+const AB = AUDIO.buffers || []
+{
+  const byLen = new Map()
+  for (const b of AB) {
+    let g = byLen.get(b.len)
+    if (!g) { g = { len: b.len, n: 0, rate: b.rate, ch: b.ch, peak: 0, rms: 0 }; byLen.set(b.len, g) }
+    g.n++
+    let pk = 0, sq = 0
+    const d = b.data
+    for (let i = 0; i < d.length; i++) { const v = d[i] < 0 ? -d[i] : d[i]; if (v > pk) pk = v; sq += d[i] * d[i] }
+    const rms = d.length ? Math.sqrt(sq / d.length) : 0
+    if (pk > g.peak) g.peak = pk
+    if (rms > g.rms) g.rms = rms
+  }
+  const rows = [...byLen.values()].sort((a, b) => b.len - a.len)
+  const bgmRefs = (() => { try { return Object.values(sandbox.DATA_BGM || {}).map((d) => d.refSmp).filter(Boolean) } catch (e) { return [] } })()
+  const isBgm = (len) => bgmRefs.some((r) => Math.abs(r - len) <= 2)
+  const bgmHit = rows.filter((r) => isBgm(r.len)).length
+  const sfxRows = rows.filter((r) => !isBgm(r.len))
+  console.log(`\n⑰ 程序化音频：AudioBuffer ${AB.length} 个 / 不同长度 ${rows.length} 种（BGM 命中 ${bgmHit}/${bgmRefs.length}，SFX 不同长度 ${sfxRows.length}）`)
+  console.log('   长度      秒      个数  峰值      RMS      BGM?')
+  for (const r of rows.slice(0, 30)) {
+    console.log(`   ${String(r.len).padEnd(9)} ${(r.len / r.rate).toFixed(3).padEnd(7)} ${String(r.n).padEnd(5)} ${r.peak.toFixed(4).padEnd(8)} ${r.rms.toFixed(4).padEnd(8)} ${isBgm(r.len) ? 'BGM' : ''}`)
+  }
+  const aFails = []
+  // 「解锁静音缓冲」是**设计内**的唯一静音：母版 L12943 用 floor(sr*CONFIG.audio.unlockSilentSec) 建它，
+  //   目的是拿一次用户手势去解锁音频（内容本就不该有声音）⇒ 判据要把这一条单独放行、并反过来断言它确实是静的。
+  const unlockLen = (() => { try { return Math.max(1, Math.floor(44100 * sandbox.CONFIG.audio.unlockSilentSec)) } catch (e) { return -1 } })()
+  const badRate = rows.filter((r) => r.rate !== 44100 || r.ch !== 1)
+  if (badRate.length) aFails.push(`A 形态不一致：${badRate.length} 种长度的采样率/声道不是 44100/单声道`)
+  const silent = rows.filter((r) => !(r.peak > 0.01) && r.len !== unlockLen)
+  if (!AB.length) aFails.push('B 一个 AudioBuffer 都没有创建 —— 程序化音频整条路没跑起来')
+  else if (silent.length) aFails.push(`B 有 ${silent.length} 种长度是静音（峰值 ≤0.01，且不是解锁缓冲 ${unlockLen}）: ${silent.slice(0, 4).map((r) => r.len).join(', ')}`)
+  const unlockRow = rows.find((r) => r.len === unlockLen)
+  if (unlockRow && unlockRow.peak > 0.01) aFails.push(`B 解锁缓冲（len=${unlockLen}）本应静音，实测峰值 ${unlockRow.peak.toFixed(4)}`)
+  const offNorm = rows.filter((r) => Math.abs(r.peak - 0.7) > 0.01 && r.len !== unlockLen)
+  if (offNorm.length) aFails.push(`C 峰值未统一到 0.7000（H5 形态 wav 同口径）：${offNorm.slice(0, 4).map((r) => r.len + '→' + r.peak.toFixed(4)).join(', ')}`)
+  const clipped = rows.filter((r) => r.peak > 1.0)
+  if (clipped.length) aFails.push(`D 削波：${clipped.length} 种长度峰值 >1.0`)
+  if (rows.length < 24) aFails.push(`E 覆盖度不足：不同长度 ${rows.length} < 24（事件种类变少 = 音频退化）`)
+  if (bgmRefs.length && bgmHit < 8) aFails.push(`E BGM 只命中 ${bgmHit}/${bgmRefs.length}（<8）`)
+  if (sfxRows.length < 14) aFails.push(`E SFX 不同长度只有 ${sfxRows.length} < 14`)
+  if (aFails.length) {
+    console.log('  ❌ 程序化音频体检未过：')
+    for (const f of aFails) console.log('     - ' + f)
+    ok = false
+  } else {
+    console.log(`  ✅ 程序化音频体检通过（${AB.length} 个 buffer / ${rows.length} 种长度，峰值统一 0.7000，单声道 44100）`)
+  }
+}
+
 const used = (sandbox.__wxadapter && sandbox.__wxadapter.used) || {}
 const rows = Object.entries(used).sort((a, b) => b[1] - a[1])
 console.log(`\n宿主 API 用量（适配层实际被调到的部分）：`)

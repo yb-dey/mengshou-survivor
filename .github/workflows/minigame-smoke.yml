@@ -59,6 +59,17 @@ jobs:
           if [ "$code" = "0" ]; then echo "::error::阴性对照失效 —— 抽掉安全区透传后布局门禁仍然绿（假保证）"; exit 1; fi
           echo "✅ 阴性对照有效（布局门禁确实拦下了没生效的剖面）"
 
+      # 【第 57 轮】程序化音频体检的阴性对照：故意让音频桩写不进样本 ⇒ 必须 FAIL
+      #   （小游戏形态不随包带 wav，玩家听到的 100% 是程序化合成 —— 这条是"听到的"那一路的波形级判据）
+      - name: 程序化音频阴性对照（抽掉波形必须报错）
+        run: |
+          set +e
+          node minigame/smoke.mjs --silent-synth > /tmp/neg-audio.log 2>&1
+          code=$?
+          tail -n 5 /tmp/neg-audio.log
+          if [ "$code" = "0" ]; then echo "::error::阴性对照失效 —— 抽掉波形后程序化音频体检仍然绿（假保证）"; exit 1; fi
+          echo "✅ 阴性对照有效（波形体检测的是样本，不是计数器）"
+
       - name: 上传产物（日志 + 体积报告）
         if: always()
         uses: actions/upload-artifact@v4
