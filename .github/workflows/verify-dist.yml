@@ -66,6 +66,14 @@ jobs:
       - name: 跟宠贴图入库体检（接线级：7 只必须在 AI_ART_TABLE 里且值非空）
         run: TABLE_MODE=1 node ci/beast-art-audit.mjs
 
+      # 阴性对照先跑：证明下面的 GATE **真的会 FAIL**（永远通过的守卫比没有更危险）。
+      #   ⚠ 此前 `_negcontent-check.mjs` **已入库却从未被任何 workflow 调用** —— 等于没有对照。
+      #   做法：造一个"DATA_ENEMY 声明 2 个敌人、AI_ART_TABLE 一个都不给"的最小样本，
+      #     跑 GATE=1 → 期望 exit 1；有效则自身 exit 0，无效则 exit 1（拦下门禁）。
+      #   【环境坑】构造/清理临时目录用 node 的 fs.rmSync，不用 bash 的 rm
+      #     （Bash 的 /tmp 与 node 的 /tmp 不是同一个地方，本项目实测）。
+      - name: 内容缺口扫描·阴性对照（证明 GATE 真会 FAIL）
+        run: node ci/_negcontent-check.mjs
       - name: 内容缺口全维度扫描（12 维度，GATE=1 有缺口即失败）
         run: GATE=1 node ci/content-gap-scan.mjs
 
