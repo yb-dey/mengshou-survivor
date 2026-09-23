@@ -345,6 +345,13 @@ jobs:
         run: |
           node ci/text-scale-check.mjs --selftest
           node ci/text-scale-check.mjs
+      # 【v1.207】卡道配色锁 + 色觉可达性台账：教学明写"金=武器 赤=战斗 青=被动 橙=跟宠升星"，
+      #   而实测红绿色盲下"赤↔橙"塌成一片（deutan ΔE 4.2）—— 候选色扫描证明**换色解决不了**，
+      #   需加冗余文字/图标通道（待拍板，会让备案截图换版）。本判据守的是"配色一动就必须重审"。
+      - name: 卡道配色锁（GATE · 改色必须重跑色觉审查）
+        run: |
+          node ci/color-palette-lock.mjs --selftest
+          node ci/color-palette-lock.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
