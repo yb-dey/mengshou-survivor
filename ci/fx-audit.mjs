@@ -175,14 +175,32 @@ const bad = rows.filter((r) => r.hook !== '-' && r.delta <= ctrl * THRESH && r.d
 
 // ---- 死亡帧：用项目自带证据口 `deathMarks()` 的累计计数做**定量**证明 ----
 //   （闭包内数组外部探不到，项目为此专门开了 spawned/drawn 计数口）
+// 【第 60 轮修】原实现直接 `killDemo()` —— 云端实测 **spawned 10→10**（而 drawn 276→290）判 ❌，exit 5。
+//   根因与受击白闪同型：**探针没验前提**。
+//     ① `drawn` 是"每帧绘制次数"：一个死亡动画连画十几帧也会让 drawn 涨 ⇒ **drawn 涨了证明不了**
+//        这一窗内产生了**新的**死亡动画（spawned 才是对象计数口）；
+//     ② `killDemo()` 在**场上没有活怪**时等于空转 ⇒ spawned 一动不动。
+//   ⇒ 修法：**先造活怪（giveCrowd）→ 再 kill → 轮询直到 spawned 真的增加**，最多 3 轮（每轮重新造怪 + 保活）。
 const dmBefore = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.deathMarks(); } catch (e) { return null; } });
 await ensureLive('死亡帧复测');
-await page.evaluate(() => { try { window.MENGSHOU_DEBUG.killDemo(); } catch (e) { void e; } });
-await page.waitForTimeout(900);
-const dmAfter = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.deathMarks(); } catch (e) { return null; } });
+let dmAfter = null, dmTry = 0;
+for (dmTry = 1; dmTry <= 3; dmTry++) {
+  await page.evaluate(() => {
+    const D = window.MENGSHOU_DEBUG || {};
+    try { (D.giveCrowd || window.debugGiveCrowd)(12); } catch (e) { void e; }   // 前提：场上有活怪可死
+    try { D.killDemo(); } catch (e) { void e; }
+  });
+  for (let i = 0; i < 6; i++) {
+    await page.waitForTimeout(250);
+    dmAfter = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.deathMarks(); } catch (e) { return null; } });
+    if (dmAfter && dmBefore && dmAfter.spawned > dmBefore.spawned && dmAfter.drawn > dmBefore.drawn) break;
+  }
+  if (dmAfter && dmBefore && dmAfter.spawned > dmBefore.spawned && dmAfter.drawn > dmBefore.drawn) break;
+  await ensureLive('死亡帧重试保活');
+}
 const dmOk = !!(dmBefore && dmAfter && dmAfter.spawned > dmBefore.spawned && dmAfter.drawn > dmBefore.drawn);
 const dmLine = dmBefore && dmAfter
-  ? `- 死亡帧计数：spawned ${dmBefore.spawned}→**${dmAfter.spawned}** ／ drawn ${dmBefore.drawn}→**${dmAfter.drawn}** ／ _dead 贴图 ${dmAfter.sprites} 张 → **${dmOk ? '✅ 确认触发并绘制' : '❌'}**`
+  ? `- 死亡帧计数：spawned ${dmBefore.spawned}→**${dmAfter.spawned}** ／ drawn ${dmBefore.drawn}→**${dmAfter.drawn}** ／ _dead 贴图 ${dmAfter.sprites} 张 ／ 尝试 ${dmTry} 轮 → **${dmOk ? '✅ 确认触发并绘制' : '❌'}**`
   : '- 死亡帧计数：读取失败 ❌';
 // ---- 受击白闪（0.07s 瞬时，帧差采样难命中）→ 同样用计数口 ----
 // 【第 53 轮修】原实现用 `killDemo()` 触发受击白闪 —— 云端实测 **spawned 15→16 ／ drawn 12→12**，
