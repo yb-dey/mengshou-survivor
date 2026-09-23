@@ -11,7 +11,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.205">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.206">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -650,7 +650,8 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.205",                   // 【v1.205】killEnemy 加已死守卫（修 enemyCount 计数穿负）；
+  version: "1.206",                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
+                                       //   前版 v1.205：killEnemy 加已死守卫（修 enemyCount 计数穿负）；
                                        //   前版 v1.204：触屏宿主文案收敛（走位/跳过/过场副标签统一走宿主开关）；
                                        //   前版 v1.203：修符文成就 dim 拼错前缀（5 条成就永不可解锁）+ 加成就接线判据；
                                        //   前版 v1.202：合规公告可读性: 正文 11px/0.42→12px/0.62、标题 12→13px、备案号行 10→12px;
@@ -34288,7 +34289,7 @@ function drawSettingsPanel(ctx, m) {
   ctx.fillStyle = "rgba(42,58,24,0.55)";
   fillRoundRect(ctx, CONFIG.viewW / 2 - 72, py + 80, 144, 3, 1.5);
   ctx.fillStyle = c.cardDesc;
-  ctx.font = "bold 15px " + FONT_STACK;
+  ctx.font = "bold 17px " + FONT_STACK;   // 【v1.206】15→17（手机上 8.1→9.2 CSS px）
   // 【v1.201】触屏宿主（小游戏）没有键盘: 原句只讲键鼠 ⇒ 触屏玩家在设置页学不到任何操作（A5）
   ctx.fillText(touchOnlyHost()
     ? "拖动屏幕摇杆走位 · 右上角暂停 · 倒下可复活"
@@ -34417,28 +34418,28 @@ function drawGuidePanel(ctx, m) {
   ctx.fillText("怎么玩（可跳过）", CONFIG.viewW / 2, py + 72);
   ctx.fillStyle = "rgba(30,42,20,0.72)";
   fillRoundRect(ctx, CONFIG.viewW / 2 - 88, py + 96, 176, 3.5, 1.5);
-  ctx.font = "bold 15px " + FONT_STACK;
+  ctx.font = "bold 17px " + FONT_STACK;
   ctx.fillStyle = "#3a4626";
   ctx.fillText("点出击就能玩 · 不必先看完本页", CONFIG.viewW / 2, py + 128);
   ctx.fillStyle = "#2a3818";
-  ctx.font = "bold 15px " + FONT_STACK;
+  ctx.font = "bold 17px " + FONT_STACK;
   ctx.fillText("上手四步 · 入袋 → 现在 → 开战", CONFIG.viewW / 2, py + 172);
   ctx.fillStyle = "#243218";
-  ctx.font = "bold 18px " + FONT_STACK;
+  ctx.font = "bold 21px " + FONT_STACK;
   ctx.fillText("① " + moveHintText() + ", 武器自己开火", CONFIG.viewW / 2, py + 218);   // 【v1.204】同源文案
   ctx.fillText("② 走近宝石升级, 三选一强化(提示可跳过)", CONFIG.viewW / 2, py + 264);
   ctx.fillText("③ 装备袋走近才开箱, 通关再得一件", CONFIG.viewW / 2, py + 310);
   ctx.fillText("④ 倒下可复活再战, 放弃也会把金币入账", CONFIG.viewW / 2, py + 356);
   ctx.fillStyle = "#1f6b3a";
-  ctx.font = "bold 19px " + FONT_STACK;
+  ctx.font = "bold 21px " + FONT_STACK;
   ctx.fillText("没有抽卡, 没有广告, 也不卡关逼你花金币", CONFIG.viewW / 2, py + 442);
   ctx.fillStyle = "#3a4626";
-  ctx.font = "bold 16px " + FONT_STACK;
+  ctx.font = "bold 18px " + FONT_STACK;
   ctx.fillText("局内短条不盖血条, 点「跳过」一次收全部提示", CONFIG.viewW / 2, py + 492);
   ctx.fillText(guideTipsPending() ? "进局后还会出 1～2 条短提示, 随时可跳过" : "局内短提示已关掉。想再看就点重看", CONFIG.viewW / 2, py + 536);
   if (uiGuideMsg) {
     ctx.fillStyle = "#1f6b3a";
-    ctx.font = "bold 16px " + FONT_STACK;
+    ctx.font = "bold 18px " + FONT_STACK;
     ctx.fillText(uiGuideMsg, CONFIG.viewW / 2, py + 596);
   }
 }

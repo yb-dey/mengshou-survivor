@@ -338,6 +338,13 @@ jobs:
         run: |
           node ci/touch-copy-check.mjs --selftest
           node ci/touch-copy-check.mjs
+      # 【v1.206】文字层级（GATE）：逻辑画布 720 宽映射到 390pt 手机 ⇒ ×0.5417，
+      #   12px 逻辑只有 6.5 CSS px（≈1.2mm 字身）。本轮把设置帮助行/帮助页抬到 17–21px，
+      #   其余 <12px 站点（HUD 截断族、装饰字形、副标）登记成台账并写理由 ⇒ 新增小字必须显式登记。
+      - name: 文字层级（GATE · 12px 下限 + 例外台账）
+        run: |
+          node ci/text-scale-check.mjs --selftest
+          node ci/text-scale-check.mjs
       - run: node ci/verify.mjs
       - if: always()
         uses: actions/upload-artifact@v4
