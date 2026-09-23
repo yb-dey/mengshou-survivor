@@ -217,7 +217,9 @@ export function analyze(src) {
     }
     if (short < FLOOR) {
       const g = gaps(c, list);
-      const near = axis === 'h' ? g.vg : g.hg;
+      // ⚠ 第 70 轮纠错：hitPad 是**四面对称**扩张的 ⇒ 并排邻居（水平间距小）同样约束 pad。
+      //   只按"短边所在轴"取间距，会把 homeguide 这类并排钮算成很安全（实测它右侧 8px 就是 homeabout）。
+      const near = Math.min(g.vg, g.hg);
       const need = Math.ceil((FLOOR - short) / 2);
       const safe = isFinite(near) ? Math.floor(near / 2) : Infinity;
       small.push({ name: c.name, w: c.w, h: c.h, css: +(short * SCALE).toFixed(1), near, need, safe,
@@ -256,11 +258,11 @@ if (isMain) {
   console.log(`  具名控件 ${r.now.length} 个（解析盲区 ${r.blind.length}）· 短边 <44 CSS px（${FLOOR} 逻辑px）的 ${r.small.length} 个`);
   console.log(`  · 可**零像素改动**补命中区（对称 pad 不压邻居）的 ${padable.length} 个：`);
   for (const s of padable.sort((a, b) => a.css - b.css)) {
-    console.log(`    ${s.name.padEnd(16)} ${String(s.w).padStart(4)}×${String(s.h).padEnd(4)} 短边 ${String(s.css).padStart(4)} CSS px（${(s.css * 0.183).toFixed(1)} mm）· 邻居间距 ${s.near} · pad ${s.need} ≤ 上限 ${s.safe}`);
+    console.log(`    ${s.name.padEnd(16)} ${String(s.w).padStart(4)}×${String(s.h).padEnd(4)} 短边 ${String(s.css).padStart(4)} CSS px（${(s.css * 0.183).toFixed(1)} mm）· 两轴最近间距 ${s.near} · pad ${s.need} ≤ 上限 ${s.safe}`);
   }
   console.log(`  · 需改视觉（补 pad 会压到邻居）的 ${visual.length} 个：`);
   for (const s of visual.sort((a, b) => a.css - b.css)) {
-    console.log(`    ${s.name.padEnd(16)} ${String(s.w).padStart(4)}×${String(s.h).padEnd(4)} 短边 ${String(s.css).padStart(4)} CSS px · 最近同类控件间距 ${s.near}（安全 pad 上限 ${s.safe}）`);
+    console.log(`    ${s.name.padEnd(16)} ${String(s.w).padStart(4)}×${String(s.h).padEnd(4)} 短边 ${String(s.css).padStart(4)} CSS px · 两轴最近同类间距 ${s.near}（安全 pad 上限 ${s.safe}）`);
   }
   if (r.fails.length) { for (const f of r.fails) console.log('❌ ' + f); console.log('\n结论：FAIL'); process.exit(1); }
   console.log('\n结论：PASS —— 触控目标没有变小，也没有新增偏小控件，且无未登记盲区');

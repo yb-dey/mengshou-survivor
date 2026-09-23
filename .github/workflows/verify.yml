@@ -91,6 +91,17 @@ jobs:
       # 【v1.185】图鉴配方 tab 的「返回」按钮实测底部出屏 32px（closeY 1248 + 64 = 1312 > 1280）。
       #   面板几何体检（screen-profile / card-band）测不到它 —— 那些量的是"面板内空带"，
       #   而出屏控件在视口之外。故独立设"越界"口径。**硬门禁**（有越界即失败）。
+      # 【第 70 轮 · ⑲】命中区运行时体检：静态判据（ci/tap-target-check.mjs）有两处天生短板 ——
+      #   ① 18 个控件的尺寸由布局函数的局部变量算出（静态读不到，只能登记 ALLOW_BLIND）；
+      #   ② 升级卡坐标由 layoutLevelupCards() 运行时摆的，静态算不出，且"跨屏算邻居"会误判。
+      #   本判据用真页面量：同屏 `visible && onTap` 节点的命中矩形 = rect ± (hitPad||0)（母版 L27238）。
+      #   **同屏命中区重叠 = 硬门禁** —— 点中间那块由注册顺序决定谁赢（hit() 从后往前扫 L27229）。
+      #   算法在 ci/hit-area-lib.mjs（纯函数，本机可跑自测：并排 8px ⇒ 安全 pad 只能是 4）。
+      - name: 命中区运行时体检（GATE · 同屏命中区不得重叠）
+        run: |
+          node ci/hit-area-lib.mjs --selftest
+          node ci/hit-area-fit.mjs --selftest
+          node ci/hit-area-fit.mjs
       - name: 界面控件出屏体检（GATE）
         run: |
           node ci/ui-fit.mjs --selftest
