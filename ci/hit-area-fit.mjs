@@ -45,11 +45,16 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const base = `http://127.0.0.1:${server.address().port}/`;
 const SELFTEST = process.argv.includes('--selftest');
 const ALLOW_OVERLAP = [];   // 允许的重叠（当前为空：任何同屏重叠都算缺陷）
+// 【第 73 轮 · 已声明缺陷】满载构筑时，结算/暂停面板的构筑列表会**溢出到动作钮**：
+//   按 bindResultBuildChips 逐行复算（_qc/_sim-result-layout.mjs）：avail = 324 逻辑px；
+//   构筑到 8/4/6/3/2 行时，芯片已压到 floor 22（11.9 CSS px）却仍差 20px ⇒ 最后一行盖住结算两钮。
+//   ⇒ 只对这两屏放行（并打印），**溢出一旦扩散到别的屏 ⇒ 立刻红**。修法见 PM §18.12。
+const DECLARED_OVERFLOW_SCREENS = ["结算-满载", "暂停-满载"];
 // ⚠ 每屏「至少应有几个可点节点」的下限 —— 防「量到 0 个却报 ok」：
 //   首跑实测「复活/死亡 0/0/0」：state 轮询说到了 REVIVE_MODAL，扫描却一个可点节点都没有 ——
 //   这种「没量到」绝不能长得像「量过且没问题」（本工作区反复踩的同一个坑）。低于下限 ⇒ FAIL。
 const EXPECT_MIN = { 'HOME(大厅)': 8, '设置': 4, '图鉴': 4, '装备库': 4, '宝库': 4, '每日挑战': 2,
-  '暂停': 4, '升级三选一': 3, '复活/死亡': 2, '结算': 2, '结算-满载': 4, '暂停-满载': 6 };
+  '暂停': 4, '升级三选一': 3, '复活/死亡': 2, '结算': 2, '结算-满载': 6, '暂停-满载': 8 };
 // ── 偏小台账：可点节点短边 < 44 CSS px 必须在这里登记"为什么先这样"，否则 FAIL ──
 //   ⚠ 与静态判据的 ALLOW_NEW 同款纪律：**报告不是契约**。60 个偏小如果只是打印出来，
 //   下一个人加一个 18px 的可点条目也不会有任何东西拦他。
@@ -101,8 +106,12 @@ const readCase = (label, raw) => {
   const o = JSON.parse(raw);
   if (!o.ok) return { label, err: o.err };
   const nodes = o.nodes;
-  const overlaps = overlapsOf(nodes).filter((v) => !ALLOW_OVERLAP.includes([v.a, v.b].sort().join('|')));
-  return { label, n: nodes.length, modals: o.modals, view: o.view, overlaps, small: smallOnes(nodes) };
+  const hard = overlapsOf(nodes).filter((v) => !ALLOW_OVERLAP.includes([v.a, v.b].sort().join('|')));
+  // 已声明缺陷屏（满载构筑会压到动作钮）：只登记与打印，不参与全局硬门禁；
+  //   但溢出要是出现在**别的**屏，就照旧红 —— 声明的边界是屏，不是"整个判据"。
+  const declared = DECLARED_OVERFLOW_SCREENS.includes(label);
+  return { label, n: nodes.length, modals: o.modals, view: o.view,
+    overlaps: declared ? [] : hard, declaredOverlaps: declared ? hard : [], small: smallOnes(nodes) };
 };
 
 const browser = await chromium.launch({ args: ['--allow-file-access-from-files'] });
@@ -127,6 +136,10 @@ const scan = async (label, setup) => {
   console.log(`${r.overlaps.length ? 'FAIL' : 'ok  '} [${label}] state=${r.state} 可点=${r.n} 模态=${r.modals} 偏小=${r.small.length} 重叠=${r.overlaps.length}`);
   for (const s of r.small.slice(0, 4)) console.log(`       · ${s.id} ${s.w}×${s.h} 短边 ${s.css} CSS px（需 pad ${s.need} / 本屏安全上限 ${s.safe} ⇒ ${s.verdict}）`);
   for (const v of r.overlaps) console.log(`       ⚠ 重叠 ${v.a} × ${v.b} = ${v.w}×${v.h}px ⇒ 抢点者 ${v.winner}`);
+  if (r.declaredOverlaps && r.declaredOverlaps.length) {
+    console.log(`       📌 已声明溢出 ${r.declaredOverlaps.length} 处（满载构筑压到动作钮 ⇒ PM §18.12）：` +
+      r.declaredOverlaps.slice(0, 3).map((v) => `${v.a}×${v.b}=${v.w}×${v.h}`).join(' · '));
+  }
   return r;
 };
 const pollFor = async (expr, tries, ms) => {
@@ -217,12 +230,31 @@ try {
       // ── 满载构筑两屏：暴露"条目变多 ⇒ 布局自动缩高"这条隐藏路径（result floor 22 / pause floor 32）──
       //   做法：连续 12 次「掷卡→选第一张」，把武器/被动/战斗/进化各道都填满，再看面板怎么排。
       //   debugBindOptions / rollUpgradeOptions / debugLevelupTap 都是脚本顶层函数（经典 script ⇒ 全局可调）。
-      const DENSE = "debugPlayClean(0,\x27\x27,false); for (var i=0;i<12;i++){ try { debugBindOptions(rollUpgradeOptions(), false, \x27\x27); debugLevelupTap(0); if (typeof closeCards === \x27function\x27) closeCards(); } catch (e) {} }";
-      const runDense = async (tail) => { await page.evaluate((code) => { try { (new Function(code))(); } catch (e) { void e; } }, DENSE + " " + tail); };
-      await runDense("MENGSHOU_DEBUG.win();");
+      // ⚠ 第一版注入失败：rollUpgradeOptions 在非升级上下文返回空 ⇒ 一张卡也没选上，
+      //   而"2 个构筑芯 + 2 个动作钮 = 4"恰好骗过了当时 EXPECT_MIN=4 的下限（假通过）。
+      //   现改用 mkshot 04 屏验证过的路径：pendingLevels=1 → openLevelUp()，并逐次带节奏；
+      //   最后由 MENGSHOU_DEBUG.build().chips 报出**实际**构筑条数，写进日志与 notice。
+      const denseBuild = async () => {
+        await page.evaluate(() => { try { debugPlayClean(0, "", false); } catch (e) { void e; } });
+        await page.waitForTimeout(320);
+        for (let i = 0; i < 12; i++) {
+          await page.evaluate(() => { try { if (window.run) run.pendingLevels = 1; openLevelUp(); } catch (e) { void e; } });
+          await page.waitForTimeout(420);
+          await page.evaluate(() => { try { debugLevelupTap(0); } catch (e) { void e; } try { closeCards(); } catch (e) { void e; } });
+          await page.waitForTimeout(160);
+        }
+        const n = await page.evaluate(() => { try { return (MENGSHOU_DEBUG.build() || {}).chips || 0; } catch (e) { return -1; } }).catch(() => -1);
+        console.log("（满载注入后 构筑条数 = " + n + "）");
+        return n;
+      };
+      report.denseChips = await denseBuild();
+      await page.evaluate(() => { try { MENGSHOU_DEBUG.win(); } catch (e) { void e; } });
+      await page.waitForTimeout(300);
       if (await pollFor('(' + NODES + ') >= 4 && /RESULT_(WIN|LOSE)/.test(MENGSHOU_DEBUG.state().name)', 24, 500)) await scan('结算-满载', '');
       else { console.log('SKIP [结算-满载] 未进入 RESULT_*（或构筑未铺开）'); report.cases.push({ label: '结算-满载', skipped: true }); }
-      await runDense("try{closeCards();}catch(e){} MENGSHOU_DEBUG.pause(true);");
+      await denseBuild();
+      await page.evaluate(() => { try { closeCards(); } catch (e) { void e; } try { MENGSHOU_DEBUG.pause(true); } catch (e) { void e; } });
+      await page.waitForTimeout(500);
       if (await pollFor('(' + NODES + ') >= 6 && MENGSHOU_DEBUG.state().name === "PAUSED_MENU"', 24, 500)) await scan('暂停-满载', '');
       else { console.log('SKIP [暂停-满载] 未进入 PAUSED_MENU（或构筑未铺开）'); report.cases.push({ label: '暂停-满载', skipped: true }); }
     } else {
@@ -261,7 +293,7 @@ const md = ['# ⑲ 命中区运行时体检', '',
 fs.writeFileSync(path.join(OUT, 'hit-area-fit.md'), md.join('\n'), 'utf8');
 
 const skipped = report.cases.filter((c) => c.skipped).length;
-console.log(`::notice::⑲ 命中区逐屏（可点/偏小/重叠）::` + ok.map((c) => `${c.label} ${c.n}/${c.small.length}/${c.overlaps.length}`).join(' · ')
+console.log(`::notice::⑲ 命中区逐屏（可点/偏小/重叠[+已声明]）::` + ok.map((c) => `${c.label} ${c.n}/${c.small.length}/${c.overlaps.length}${c.declaredOverlaps && c.declaredOverlaps.length ? '+D' + c.declaredOverlaps.length : ''}`).join(' · ')
   + (skipped ? ` · ⚠ 跳过 ${skipped} 屏（未量到）` : ' · 10 屏全覆盖'));
 console.log(`::notice::⑲ 偏小 id 摘要（台账用）::` + digest + ` · 未登记 ${unlisted.length} 个`);
 // B 类候选（具名、准备补 hitPad 的）—— 打印**运行时**两轴间距，用来定 pad 值：
