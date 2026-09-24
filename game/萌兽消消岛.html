@@ -25049,7 +25049,15 @@ function stampGroundGrain(c2, w, h, mt) {
   var NC = 14, NF = 52;                        // 整张瓦片上的粗/细倍频格数
   var s = ((mt.mapId || "m").charCodeAt(0) * 7919 + 104729) | 0;
   var Lc = groundNoiseLUT(NC, s), Lf = groundNoiseLUT(NF, s + 77);
-  var x, y, i, u, v, n, k;
+  // 【v1.210r 美术·地面纵深】新增**超粗一倍频**（NX=4 ⇒ 整张 1024 瓦片上约 256px 的结构）：
+  //   动机（实测）：4×4 块均值 + 两级盒滤波后，地面的**低频 sd 只有 4.96**（≈满量程 2%）——
+  //   也就是"大尺度上几乎是一张平涂"。项目自己 v1.166/v1.167 就为"给战场加纵深"改过底色罩染，
+  //   这条是同一意图的补强：让地面在大尺度上有**地势明暗**，而不是只有细颗粒。
+  //   做法上刻意**不动已有那一层**（中/细频权重与振幅原样保留），只**叠加**超粗项；
+  //   采样仍走 groundNoise 的取模索引 ⇒ **瓦片四边依旧无缝**（v1.210m 量过的接缝比不得退化）。
+  var NX = 4;
+  var Lx = groundNoiseLUT(NX, s + 313);
+  var x, y, i, u, v, n, k, n2;
   for (y = 0; y < h; y++) {
     v = y / h;
     for (x = 0; x < w; x++) {
@@ -25057,7 +25065,8 @@ function stampGroundGrain(c2, w, h, mt) {
       if (data[i + 3] === 0) continue;         // 全透明像素不动
       u = x / w;
       n = 0.62 * groundNoise(Lc, NC, u * NC, v * NC) + 0.38 * groundNoise(Lf, NF, u * NF, v * NF);
-      k = d * (n - 0.5) * 2;
+      n2 = groundNoise(Lx, NX, u * NX, v * NX);
+      k = d * (n - 0.5) * 2 + d * 1.6 * (n2 - 0.5) * 2;
       data[i] = data[i] + k < 0 ? 0 : (data[i] + k > 255 ? 255 : data[i] + k);
       data[i + 1] = data[i + 1] + k < 0 ? 0 : (data[i + 1] + k > 255 ? 255 : data[i + 1] + k);
       data[i + 2] = data[i + 2] + k < 0 ? 0 : (data[i + 2] + k > 255 ? 255 : data[i + 2] + k);
