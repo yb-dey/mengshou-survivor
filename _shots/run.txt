@@ -6,7 +6,7 @@ v22.23.2
 
 === npm i playwright ===
 
-added 2 packages in 2s
+added 2 packages in 1s
 === playwright install --with-deps chromium ===
 FFmpeg (playwright ffmpeg v1011) downloaded to /home/runner/.cache/ms-playwright/ffmpeg-1011
 Downloading Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) from https://cdn.playwright.dev/builds/cft/153.0.8010.12/linux64/chrome-headless-shell-linux64.zip
@@ -43,9 +43,9 @@ Version 1.63.0
 | 08-settings | openSettings | 720×1280 | 538 | 36.6% | 74.02 | SETTINGS |  |
 | 09-about | about | 720×1280 | 524 | 41.8% | 80.04 | ABOUT |  |
 | 10-daily | dailyPick | 720×1280 | 541 | 20.2% | 76.61 | HOME |  |
-| 11-battle | mouse | - | - | - | 43.42 | PLAYING |  |
-| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 64.17 | - |  |
-| 13-pause | pause(true) 轮询成功 | - | - | - | 63.49 | PAUSED_MENU |  |
+| 11-battle | mouse | - | - | - | 43.73 | PLAYING |  |
+| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 64.42 | - |  |
+| 13-pause | pause(true) 轮询成功 | - | - | - | 63.61 | PAUSED_MENU |  |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
 
@@ -58,21 +58,21 @@ Version 1.63.0
 
 === exit=0 ===
 === ci/out ===
-total 4480
-drwxr-xr-x 2 runner runner   4096 Sep 24 15:25 .
-drwxr-xr-x 7 runner runner   4096 Sep 24 15:25 ..
--rw-r--r-- 1 runner runner 466210 Sep 24 15:26 01-home.png
--rw-r--r-- 1 runner runner 307142 Sep 24 15:26 02-chapters.png
--rw-r--r-- 1 runner runner 283480 Sep 24 15:26 03-gear.png
--rw-r--r-- 1 runner runner 398065 Sep 24 15:26 04-upgrade.png
--rw-r--r-- 1 runner runner 362906 Sep 24 15:26 05-vault.png
--rw-r--r-- 1 runner runner 475409 Sep 24 15:26 06-beast.png
--rw-r--r-- 1 runner runner 413569 Sep 24 15:26 07-codex-enemy.png
--rw-r--r-- 1 runner runner 224187 Sep 24 15:26 08-settings.png
--rw-r--r-- 1 runner runner 249054 Sep 24 15:26 09-about.png
--rw-r--r-- 1 runner runner 261591 Sep 24 15:26 10-daily.png
--rw-r--r-- 1 runner runner 445569 Sep 24 15:26 11-battle.png
--rw-r--r-- 1 runner runner 299735 Sep 24 15:26 12-levelup.png
--rw-r--r-- 1 runner runner 356671 Sep 24 15:26 13-pause.png
--rw-r--r-- 1 runner runner   4416 Sep 24 15:26 screens.json
--rw-r--r-- 1 runner runner   1499 Sep 24 15:26 screens.md
+total 4504
+drwxr-xr-x 2 runner runner   4096 Sep 24 15:37 .
+drwxr-xr-x 7 runner runner   4096 Sep 24 15:37 ..
+-rw-r--r-- 1 runner runner 466472 Sep 24 15:38 01-home.png
+-rw-r--r-- 1 runner runner 307073 Sep 24 15:38 02-chapters.png
+-rw-r--r-- 1 runner runner 283538 Sep 24 15:38 03-gear.png
+-rw-r--r-- 1 runner runner 398111 Sep 24 15:38 04-upgrade.png
+-rw-r--r-- 1 runner runner 363049 Sep 24 15:38 05-vault.png
+-rw-r--r-- 1 runner runner 475521 Sep 24 15:38 06-beast.png
+-rw-r--r-- 1 runner runner 413574 Sep 24 15:38 07-codex-enemy.png
+-rw-r--r-- 1 runner runner 224296 Sep 24 15:38 08-settings.png
+-rw-r--r-- 1 runner runner 249177 Sep 24 15:38 09-about.png
+-rw-r--r-- 1 runner runner 261564 Sep 24 15:38 10-daily.png
+-rw-r--r-- 1 runner runner 466892 Sep 24 15:38 11-battle.png
+-rw-r--r-- 1 runner runner 305928 Sep 24 15:39 12-levelup.png
+-rw-r--r-- 1 runner runner 357344 Sep 24 15:39 13-pause.png
+-rw-r--r-- 1 runner runner   4416 Sep 24 15:39 screens.json
+-rw-r--r-- 1 runner runner   1499 Sep 24 15:39 screens.md
