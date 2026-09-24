@@ -10,14 +10,14 @@
 | 03-gear | openGear | 720×1280 | 738 | 22.7% | 65.61 | ARMORY |  |
 | 04-upgrade | openUp | 720×1280 | 615 | 24.7% | 61.18 | HOME |  |
 | 05-vault | openVault | 720×1280 | 611 | 20.4% | 54.58 | HOME |  |
-| 06-beast | openBeast | 720×1280 | 635 | 41.7% | 62.44 | BEAST |  |
-| 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 55.2 | BEAST |  |
-| 08-settings | openSettings | 720×1280 | 537 | 36.7% | 74.25 | SETTINGS |  |
+| 06-beast | openBeast | 720×1280 | 635 | 41.7% | 62.45 | BEAST |  |
+| 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 55.21 | BEAST |  |
+| 08-settings | openSettings | 720×1280 | 537 | 36.7% | 74.24 | SETTINGS |  |
 | 09-about | about | 720×1280 | 524 | 41.8% | 80.19 | ABOUT |  |
 | 10-daily | dailyPick | 720×1280 | 536 | 20.5% | 76.89 | HOME |  |
-| 11-battle | mouse | - | - | - | 43.57 | PLAYING |  |
-| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 63.96 | - |  |
-| 13-pause | pause(true) 轮询成功 | - | - | - | 63.4 | PAUSED_MENU |  |
+| 11-battle | mouse | - | - | - | 43.51 | PLAYING |  |
+| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 63.88 | - |  |
+| 13-pause | pause(true) 轮询成功 | - | - | - | 63.69 | PAUSED_MENU |  |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
 
