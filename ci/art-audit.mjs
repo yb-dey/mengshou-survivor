@@ -26,7 +26,11 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const port = server.address().port;
 
 const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required', '--allow-file-access-from-files'] });
-const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+// 【第 94 轮修·探针不对位】视口 1280×720 → 720×1280（= CONFIG.viewW/viewH）。
+//   原口径把 720 宽的逻辑画布缩到 ~405px，细节被重采样抹掉 —— screen-sweep.mjs L28-30 早已写明
+//   「1280×720 无法用于美术评审」，但本脚本一直没跟着改：结果是**美术审查始终在看一张缩小 44% 的图**，
+//   外墨/描边这类 1–2px 级差异刚好被抹平，判断只能靠猜。改成 1:1 取像后肉眼可判、可量。
+const page = await browser.newPage({ viewport: { width: 720, height: 1280 } });
 await page.goto(`http://127.0.0.1:${port}/${encodeURIComponent(entryName)}`, { waitUntil: 'load', timeout: 90000 });
 await page.waitForTimeout(4000);
 

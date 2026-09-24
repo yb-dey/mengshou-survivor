@@ -18417,15 +18417,22 @@ function strokeActorCanvas(src, ink, rim, offMul) {
   //   外沿保留原图 resample 后的台阶、又被位移放大成锯齿（敌人/道具/跟宠都走这条路径）。
   //   这里给外墨 mask 加一次约 1px 羽化；**填色 / 粗细(off) / 方位一律不动**，只在边缘做抗锯齿。
   //   ⚠ 不新增画布；stub 环境不支持 filter 时自动退化为原行为。
-  var _inkF = Math.max(0.8, Math.min(1.6, (half || 32) * 0.07 * 0.3));
+  // 【v1.210e 美术·外墨归一】羽化上限 1.6 → 0.9。羽化本意是给**最外沿**消台阶，但这里是
+  //   **先羽化、再按 8 向位移**：位移把这份软度整片复制到整条墨带 ⇒ 墨越宽越像「一圈暗晕」而不是一条线。
+  //   0.9px 仍够消台阶（实测外沿不再见阶梯），但不再把线糊成晕。
+  var _inkF = Math.max(0.6, Math.min(0.9, (half || 32) * 0.07 * 0.3));
   try { m.filter = "blur(" + _inkF.toFixed(2) + "px)"; } catch (e) { /* 忽略 */ }
   m.drawImage(src, 0, 0);
   try { m.filter = "none"; } catch (e) { /* 忽略 */ }
   m.globalCompositeOperation = "source-in";
   m.fillStyle = ink || "#1c1810";
   m.fillRect(0, 0, w, h);
+  // 【v1.210d 美术·外墨归一】上限 7 → 4。half=96 的立绘画布原本顶到 7px 墨宽（≈杂兵 half=22→2px 的 3.5 倍），
+  //   再叠下面那道 bakeOuterInk(9px) 后，384px 画布上出现 ~16px 的实心暗边；4× 放大实测就是「一圈暗晕」，
+  //   灰毛 / 橙领巾 / 护目镜全被吞掉 —— 与 v1.179「外墨加厚是为了可辨识度」的目的正好相反。
+  //   统一口径：墨宽跟**显示尺寸**走，不跟画布像素一起涨。杂兵 off=2 不变；主角/英雄 off=4（仍比杂兵厚一档）。
   off = Math.max(2, Math.round((half || 32) * 0.07 * (offMul || 1)));
-  if (off > 7) off = 7;
+  if (off > 4) off = 4;
   dirs = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
   for (i = 0; i < dirs.length; i++) c.drawImage(mask, dirs[i][0] * off, dirs[i][1] * off);
   c.drawImage(src, 0, 0);
@@ -24278,12 +24285,20 @@ function applySkinImage(target, img) {
   //   不再用近黑 #1c1810 —— 近黑压在亮绿草地上就是「黑框贴纸」，是「看着廉价」的主因之一。
   //   依据：v1.96「身份靠剪影形色，描边只走墨线」+ v1.182「绝不再用粗黑描边吞掉命名色」
   //   ⇒ 墨线本来就该是暖墨绿而不是纯黑。⚠ **只换墨色**，宽度 / 形状 / 左上受光一律不动。
-  var _heroInk = (target === "player" || target === "hero_shell" || target === "hero_grizz") ? "#2a3224" : rimSpec.ink;
+  // 【v1.210f 美术·外墨归一·墨色回统】主角专用暖墨绿 #2a3224 **撤销**，全角色回到同一支墨 #1c1810。
+  //   依据（本轮实测）：① 品红示踪证明屏幕上那圈「脏晕」就是外墨本身，与外墨**宽度**一起被放大；
+  //   ② v1.210c 判「近黑 = 黑框贴纸」是**误诊** —— 黑框的真因是第一道 7px + 第二道 9px 的 ~16px 墨宽，
+  //      宽度已按 v1.210d/e 收到 4px 一道；③ 更关键的是**对比度**：#2a3224 与大厅深橄榄面板底
+  //      (#3f4c36 附近) 几乎同明度 ⇒ 不读作「描边」而读作「脏晕」；近黑在深面板与亮草地上**两头都立得住**。
+  //   ⚠ 与 v1.182「绝不再用粗黑描边吞掉命名色」不冲突：那条禁的是**粗**黑边，当前是 4px(立绘)/2px(杂兵) 的细线。
+  var _heroInk = rimSpec.ink;
   cv = strokeActorCanvas(cv, _heroInk, rimSpec.rim, rimSpec.offMul);
-  // 【v1.179】英雄立绘再叠一圈外墨, 星巅海军底上勾得住形; 不重采样糊 PNG(仍走 physResample 1:1 显示)
-  if (target === "player" || target === "hero_shell" || target === "hero_grizz") {
-    bakeOuterInk(cv, Math.max(5, Math.round((drawHalf || 55) * 0.09)), false, _heroInk);
-  }
+  // 【v1.179】英雄立绘外墨要比杂兵厚一档（星巅海军底上勾得住形）——这条裁决保留。
+  // 【v1.210e 美术·外墨归一】但实现改为**只靠上面 strokeActorCanvas 那一道**（立绘 off=4 / 杂兵 off=2 = 2 倍），
+  //   不再叠第二道 bakeOuterInk：v1.179 加它时第一道是 7px、叠完 ~16px；第一道按 v1.210d 收到 4px 之后，
+  //   第二道只会在剪影外沿糊出一圈暗晕（大厅立绘 6× 放大实测：护目镜/灰毛被吞），而「厚一档」第一道已单独满足。
+  //   ⚠ 证据链：源贴图 `player` 自带外墨是干净细线（近墨 9.48%、最长暗带 23px @384px），
+  //     屏幕上那圈晕是**运行时**叠出来的 ⇒ 该改的是这里，不是素材。
   // 【v1.164】立绘按需降分辨率：原 cvSize = drawHalf*4，而实际显示只有 drawHalf*2 逻辑 px
   // （再乘 CSS 缩放比）→ 约 3.1 倍超采样。重采样到 1:1，肉眼看不出差别。
   SPRITES[target] = cacheSpriteBox(physResample(cv, null));
