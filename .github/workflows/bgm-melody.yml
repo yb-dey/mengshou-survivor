@@ -26,8 +26,11 @@ on:
       - '.github/workflows/bgm-melody.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
 jobs:
   melody:
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

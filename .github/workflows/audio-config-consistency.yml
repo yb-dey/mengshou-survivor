@@ -20,6 +20,8 @@ on:
       - 'ci/audio-config-consistency.mjs'
       - '.github/workflows/audio-config-consistency.yml'
 
+permissions:
+  contents: read
 jobs:
   consistency:
     runs-on: ubuntu-latest

@@ -19,6 +19,8 @@ on:
       - 'ci/bgm-lane-loudness.py'
       - 'ci/fix-bgm-lane-loudness.mjs'
       - '.github/workflows/bgm-lane-loudness.yml'
+permissions:
+  contents: read
 jobs:
   lane:
     runs-on: ubuntu-latest

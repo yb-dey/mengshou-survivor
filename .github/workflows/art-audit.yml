@@ -4,6 +4,8 @@ on:
   # 【第 49 轮】加 push 触发：这些只读审计此前只能手动跑，从没在代理提交上执行过
   push:
     branches: [main]
+permissions:
+  contents: read
 jobs:
   audit:
     runs-on: ubuntu-latest
