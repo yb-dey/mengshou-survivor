@@ -47,7 +47,7 @@
         "dominantPct": 11.9
       },
       "dup": false,
-      "hash": "23e8bfd56b4b",
+      "hash": "19120defa734",
       "dHome": 0,
       "sameAsHome": false,
       "state": "HOME",
@@ -111,7 +111,7 @@
         "dominantPct": 20.4
       },
       "dup": false,
-      "hash": "efe140dcfc00",
+      "hash": "e8b3c77e8c11",
       "dHome": 53.86,
       "sameAsHome": false,
       "state": "HOME",
@@ -127,7 +127,7 @@
         "dominantPct": 41.7
       },
       "dup": false,
-      "hash": "273c03cd1cfd",
+      "hash": "13859768a586",
       "dHome": 61.47,
       "sameAsHome": false,
       "state": "BEAST",
@@ -143,8 +143,8 @@
         "dominantPct": 35.2
       },
       "dup": false,
-      "hash": "3e5bb726bf75",
-      "dHome": 54.54,
+      "hash": "34324c82eb47",
+      "dHome": 54.53,
       "sameAsHome": false,
       "state": "BEAST",
       "stateOk": true
@@ -159,7 +159,7 @@
         "dominantPct": 36.7
       },
       "dup": false,
-      "hash": "98d536a62f93",
+      "hash": "c9b419f3c677",
       "dHome": 74.68,
       "sameAsHome": false,
       "state": "SETTINGS",
@@ -175,7 +175,7 @@
         "dominantPct": 41.8
       },
       "dup": false,
-      "hash": "e98bf3b08e8e",
+      "hash": "b6b9bd1ef2f7",
       "dHome": 79.4,
       "sameAsHome": false,
       "state": "ABOUT",
@@ -191,7 +191,7 @@
         "dominantPct": 20.5
       },
       "dup": false,
-      "hash": "b1a42185bc90",
+      "hash": "7575741b4ffd",
       "dHome": 76.25,
       "sameAsHome": false,
       "state": "HOME",
@@ -200,22 +200,22 @@
     {
       "name": "11-battle",
       "hook": "mouse",
-      "hash": "1bf9aa0fd445",
-      "dHome": 43.79,
+      "hash": "2181c015ef1e",
+      "dHome": 43.68,
       "state": "PLAYING",
       "stateOk": true
     },
     {
       "name": "12-levelup",
       "hook": "轮询 cards.length>0 (3 张)",
-      "hash": "55b13ce563a3",
-      "dHome": 63.02
+      "hash": "3311c322d037",
+      "dHome": 63.17
     },
     {
       "name": "13-pause",
       "hook": "pause(true) 轮询成功",
-      "hash": "2d0f1159c201",
-      "dHome": 63.52,
+      "hash": "171031ab99c8",
+      "dHome": 63.58,
       "state": "PAUSED_MENU",
       "stateOk": true
     }
