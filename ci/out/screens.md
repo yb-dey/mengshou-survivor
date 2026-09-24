@@ -15,17 +15,17 @@
 | 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 56.01 | BEAST |  |
 | 07b-codex-fork | codexTab | 720×1280 | 1113 | 40.5% | 61.85 | BEAST |  |
 | 07c-codex-item | codexTab | 720×1280 | 597 | 25.8% | 72.11 | BEAST |  |
-| 08-settings | openSettings | 720×1280 | 542 | 36.6% | 74.65 | SETTINGS |  |
+| 08-settings | openSettings | 720×1280 | 542 | 36.6% | 74.64 | SETTINGS |  |
 | 09-about | about | 720×1280 | 527 | 41.8% | 80.18 | ABOUT |  |
 | 10-daily | dailyPick | 720×1280 | 544 | 20.2% | 77.19 | HOME |  |
-| 10b-guide | openGuide | 720×1280 | 600 | 63.2% | 71.07 | GUIDE |  |
-| 11a-entrance | 轮询 enterCine().live | 720×1280 | 680 | 35.9% | 78.72608307756714 | chapter | 过场 t=**1.703**/1.72 · kind=chapter · 首见=是 |
-| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 713 | 23.1% | 44.18 | PLAYING | 同屏怪 **10** 只（峰值 10，采样目标 10 / 报警下限 8） |
-| 11b-revive | die() + 轮询「面板真的可见」 | 720×1280 | 451 | 29% | 63.081744114467135 | REVIVE_MODAL | 死因行=「调试击倒(模拟)」（**模拟触发**，不代表真实战况） |
-| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 683 | 41.2% | 64.84 | LEVELUP_MODAL |  |
-| 13-pause | pause(true) 轮询成功 | 720×1280 | 755 | 33.7% | 64.91 | PAUSED_MENU |  |
-| 14-result-win | win() | 720×1280 | 640 | 33.3% | 59.83890591692249 | RESULT_WIN | 结算卡带 **5** 条 · 压住=否 |
-| 15-result-lose | lose() | 720×1280 | 620 | 34.1% | 62.17645903669093 | RESULT_LOSE | 结算卡带 **2** 条 · 压住=否 |
+| 10b-guide | openGuide | 720×1280 | 600 | 63.2% | 71.06 | GUIDE |  |
+| 11a-entrance | 轮询 enterCine().live | 720×1280 | 680 | 35.9% | 78.73419602922728 | chapter | 过场 t=**1.703**/1.72 · kind=chapter · 首见=是 |
+| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 567 | 41.3% | 69.42 | LEVELUP_MODAL | 同屏怪 **10** 只（峰值 10，采样目标 10 / 报警下限 8） |
+| 11b-revive | die() + 轮询「面板真的可见」 | 720×1280 | 452 | 29% | 62.71236243547719 | REVIVE_MODAL | 死因行=「调试击倒(模拟)」（**模拟触发**，不代表真实战况） |
+| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 666 | 40.8% | 64.55 | LEVELUP_MODAL |  |
+| 13-pause | pause(true) 轮询成功 | 720×1280 | 747 | 36.8% | 64.94 | PAUSED_MENU |  |
+| 14-result-win | win() | 720×1280 | 623 | 32.9% | 59.90338753662113 | RESULT_WIN | 结算卡带 **6** 条 · 压住=否 |
+| 15-result-lose | lose() | 720×1280 | 620 | 34.1% | 62.17694737200063 | RESULT_LOSE | 结算卡带 **2** 条 · 压住=否 |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**⚠ 它不等于"画面空"**（第 133 轮实测更正）：
 > 一条平底面板（如帮助页）主色占比可以到 **63%**，但用 `_qc/_imgstat.mjs --inkrows 32` 量它的
