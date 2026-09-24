@@ -389,6 +389,15 @@ try {
   //   ⇒ 改成：只要 `PLAYING` 且怪数刷新新高就立刻拍一张覆盖上去 ⇒ 磁盘上永远是本次最密的那帧，
   //     并且**记录的 bShotEnemy 就是这张图自己的怪数**。
   let bBestShot = -1;
+  // 【第 143 轮】**帧出身**：这一帧被拍下来的**那一刻**是不是 PLAYING（且有怪）。
+  //   为什么必须单独记它：下面 L438 的断言原来读的是「清场 + 强回 PLAYING 之后 400ms 的 state」，
+  //   而**战斗中 XP 还在涨**（母版 L22332 `run.pendingLevels++`）⇒ 母版 L4332 / L6838 会**合法地**
+  //   再次 `openLevelUp()` ⇒ 那一读时常是 LEVELUP_MODAL ⇒ 断言红。第 143 轮实测就是这样：
+  //   `::error::11-battle 目标屏断言不通过：实测 state=LEVELUP_MODAL / 期望 PLAYING`，
+  //   而磁盘上那张图**确实是**「PLAYING 且有怪」的帧（同一母版代码在上一批是绿的）。
+  //   ⇒ 这是 P1：**断言量与结论说的不是同一个对象**（结论说的是那张图，量的是 400ms 后的状态）。
+  //   修法：判据改成「对**产物**成立的性质」—— 磁盘上这张图是不是在 PLAYING 且有怪时拍的。
+  let bShotPlaying = false;
   {
     const t0 = Date.now();
     while (Date.now() - t0 < BATTLE_WAIT_MS) {
@@ -400,6 +409,7 @@ try {
       if (bState === 'PLAYING' && bEnemy > bBestShot && bEnemy >= 1) {
         await page.screenshot({ path: battlePath });
         bBestShot = bEnemy;
+        bShotPlaying = true;        // 这一帧的出身：拍它的那一刻 state=PLAYING 且场上有怪
       }
       if (bState === 'PLAYING' && bEnemy >= BATTLE_MIN_ENEMY) { bReached = true; bWhy = '达到 ' + BATTLE_MIN_ENEMY + ' 只'; break; }
       if (bState === 'LEVELUP_MODAL') {
@@ -436,12 +446,20 @@ try {
     const dens = await measureDens();
     // 【v1.167】战斗是**最容易假成功**的一屏（此前拍到的是没关掉的每日面板）→ 硬断言 PLAYING
     const st = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.state(); } catch (e) { return null; } });
-    const stateOk = !!(st && st.playing === true);
-    if (!stateOk) console.log('::error::11-battle 目标屏断言不通过：实测 state=' + (st ? st.name : 'null') + ' / 期望 PLAYING');
+    // 【第 143 轮修】判据 = **产物**的出身（bShotPlaying），而不是「之后的状态」。
+    //   两条路分别判，别拿后者去否定前者：
+    //     · 取到过「PLAYING 且有怪」的帧（bShotPlaying）⇒ 这张图合格，之后开不开弹窗与它无关；
+    //     · 只有回退补拍帧（bBestShot < 1，L430 那张「清场后补拍」）⇒ 没有出身，仍按当前 state 判 ——
+    //       那种图本来就该被点出来（它就是「没拍到真战斗」的兜底）。
+    const stateOk = bShotPlaying || (bBestShot < 1 && !!(st && st.playing === true));
+    if (!stateOk) console.log('::error::11-battle 目标屏断言不通过：这张图不是在 PLAYING 且有怪时拍的（帧出身 bShotPlaying=' +
+      bShotPlaying + ' / 补拍帧 bBestShot=' + bBestShot + ' / 报告时 state=' + (st ? st.name : 'null') + ' / 期望 PLAYING）');
+    else console.log('::notice::11-battle 帧出身 bShotPlaying=' + bShotPlaying + ' · 报告时 state=' + (st ? st.name : 'null') +
+      '（两者可以不同：战斗中 XP 涨到会合法地再开升级弹窗，那不是这张图的问题）');
     if (!bReached) console.log('::warning::11-battle 未达密度阈值 ' + BATTLE_MIN_ENEMY + '：' + bWhy + '（这张图实测 ' + bBestShot + ' 只，峰值 ' + bPeak + '）—— 评审前先看这个数');
     console.log('::notice::11-battle 采样密度 这张图同屏怪=' + bBestShot + ' 峰值=' + bPeak + ' 目标=' + BATTLE_MIN_ENEMY + ' 轮询=' + bTries + ' 结束=' + bWhy);
     shots.push({ name: '11-battle', hook: 'mouse+轮询怪数（取本次最密帧）', hash: prevHash, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
-      dens, state: st ? st.name : null, stateOk,
+      dens, state: st ? st.name : null, stateOk, shotPlaying: bShotPlaying,
       battleEnemy: bBestShot, battlePeak: bPeak, battleTries: bTries, battleReached: bReached, battleWhy: bWhy });
   }
 
