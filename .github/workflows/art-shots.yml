@@ -67,7 +67,15 @@ jobs:
         continue-on-error: true
         run: |
           cp -f ci/out/*.png _shots/v1210/ 2>/dev/null || true
-          node -e "const fs=require('fs');const f=fs.existsSync('ci/out')?fs.readdirSync('ci/out').filter(x=>x.endsWith('.png')):[];fs.writeFileSync('_shots/index.json',JSON.stringify({at:new Date().toISOString(),count:f.length,files:f},null,2));console.log('shots',f.length);"
+          # 【第 142 轮】批次必须**自证它渲染的是哪个构建**。
+          #   本轮实测踩到：run A(2a66a5b) 的 7d 先 `git pull --rebase` 再 push，
+          #   于是它的截图提交 **rebase 到了更新的 31334bd 上** —— 提交的**父 SHA 成了 31334bd**，
+          #   而图其实是照 **2a66a5b（改前）** 渲的。我拿「父提交 = 我看的那版」当证据去验，
+          #   量到的却是改前的像素（P1 探针不对位复发）。
+          #   修法：把 renderedSha + 入口文件 sha256 写进 index.json 并打印 ⇒ 任何一批图的出身一眼可查，
+          #   不再靠 git 拓扑去猜。（7b′ 会拿它和检出 HEAD 对账。）
+          SHA=$(git rev-parse HEAD); export SHA
+          node -e "const fs=require('fs'),cr=require('crypto');const f=fs.existsSync('ci/out')?fs.readdirSync('ci/out').filter(x=>x.endsWith('.png')):[];const gd=fs.readdirSync('game').filter(x=>x.toLowerCase().endsWith('.html')&&!x.startsWith('_')).sort()[0];const eh=cr.createHash('sha256').update(fs.readFileSync('game/'+gd)).digest('hex').slice(0,16);fs.writeFileSync('_shots/index.json',JSON.stringify({at:new Date().toISOString(),renderedSha:(process.env.SHA||''),entry:gd,entrySha256_16:eh,count:f.length,files:f},null,2));console.log('shots',f.length,'· rendered',(process.env.SHA||'').slice(0,7),'· entry',gd,eh);"
           echo "7b ok"
 
       # ✅【第 137 轮补的**收口**】本 workflow 每一步都 `exit 0` / `|| true` **且**带 continue-on-error
@@ -96,6 +104,17 @@ jobs:
           # **增删屏时必须同步改这个数**：屏数变了就该有人确认一次，而不是静默地少几张。
           # （这条注释就是机制的一部分 —— 第 137 轮加屏时若不改，本步会红。）
           if [ "${n:-0}" -lt 21 ]; then echo "::error::只产出 $n 张截图（< 21）"; bad=1; fi
+          # 【第 142 轮】出身对账：批次声明的 renderedSha 必须等于**检出 HEAD**。
+          #   7b′ 跑在 7c/7d **之前** ⇒ 此刻 HEAD 还没被 7d 的 rebase 动过，正是巡检真正渲染的那个 sha。
+          #   这一条直接把「图是改前的、提交却挂在改后的父上」这种错位变成红。
+          rsha=$(node -e "try{process.stdout.write(require('./_shots/index.json').renderedSha||'')}catch(e){process.stdout.write('')}")
+          head=$(git rev-parse HEAD)
+          echo "声明渲染=${rsha:-读不到} · 检出 HEAD=$head"
+          if [ -z "$rsha" ]; then
+            echo "::error::index.json 里没有 renderedSha ⇒ 这批图没自证出身（7b 的写入没成功）"; bad=1
+          elif [ "$rsha" != "$head" ]; then
+            echo "::error::index.json 声明渲染 $rsha ≠ 检出 HEAD $head ⇒ 这批图不是照检出内容渲的"; bad=1
+          fi
           exit $bad
 
       - name: 7c git add + commit
@@ -106,7 +125,12 @@ jobs:
           git config user.email "shots-bot@users.noreply.github.com"
           git add -f -A _shots ci/out
           git status --short | head -20
-          git diff --cached --quiet && echo "7c 无变化" || git commit -m "art-shots: 截图 + 日志（$(date -u '+%Y-%m-%d %H:%M') UTC）"
+          # 【第 142 轮】「7c 无变化」以前是一句没有信息量的话：分不清「这次真没变」
+          #   和「巡检压根没换图」。现在把**本次真正渲染的 sha** 报出来，并和 index.json 的
+          #   声明对账；同时把 rendered 写进提交标题 ⇒ 出身随提交本身走，`git log` 就能读。
+          declared=$(node -e "try{process.stdout.write(require('./_shots/index.json').renderedSha||'-')}catch(e){process.stdout.write('-')}")
+          echo "7c 本次渲染 sha=$(git rev-parse HEAD) · index.json 声明=$declared"
+          git diff --cached --quiet && echo "7c 无变化（_shots/ci-out 与检出内容逐字节相同）" || git commit -m "art-shots: 截图 + 日志（$(date -u '+%Y-%m-%d %H:%M') UTC · rendered $(git rev-parse HEAD | cut -c1-7)）"
           echo "7c ok"
 
       - name: 7d push（rebase + 重试）
