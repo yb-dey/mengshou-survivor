@@ -5,7 +5,7 @@
 
 | 截图 | 钩子 | 画布 | 独特色数 | 主色占比 | 与大厅Δ | 实测状态 | 备注 |
 |---|---|---|---|---|---|---|---|
-| 01-home | hall | 720×1280 | 803 | 11.9% | 0 | HOME |  |
+| 01-home | hall | 720×1280 | 804 | 11.9% | 0 | HOME |  |
 | 02-chapters | openChapters | 720×1280 | 766 | 21.1% | 77.49 | HOME |  |
 | 03-gear | openGear | 720×1280 | 738 | 22.7% | 65.59 | ARMORY |  |
 | 04-upgrade | openUp | 720×1280 | 615 | 24.7% | 61.16 | HOME |  |
@@ -15,8 +15,8 @@
 | 08-settings | openSettings | 720×1280 | 537 | 36.7% | 74.23 | SETTINGS |  |
 | 09-about | about | 720×1280 | 524 | 41.8% | 80.18 | ABOUT |  |
 | 10-daily | dailyPick | 720×1280 | 536 | 20.5% | 76.88 | HOME |  |
-| 11-battle | mouse | - | - | - | 43.44 | PLAYING |  |
-| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 63.55 | - |  |
+| 11-battle | mouse | - | - | - | 43.5 | PLAYING |  |
+| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 63.73 | - |  |
 | 13-pause | pause(true) 轮询成功 | - | - | - | 63.48 | PAUSED_MENU |  |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
