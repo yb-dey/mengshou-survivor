@@ -29682,7 +29682,10 @@ function drawDailyPickPanel(ctx, m) {
   ctx.fillStyle = "#f4f7ec";
   ctx.fillText(dishSub, CONFIG.viewW / 2, py + 81);
   ctx.fillStyle = "#3a4626";
-  ctx.font = "bold 15px " + FONT_STACK;
+  // 【v1.210w】15→18px：本面板的分区提示句。判据见 `_qc/_type-candidates.mjs` ——
+  //   整句字面量（尾部没有 `+` 拼接）、不走 hudFitText、18px 下宽约 324px（= 画布 45%）、
+  //   上距芯片行 py+96 有 20px、下距「今日最佳」py+618 有 480px ⇒ 抬字号无碰撞风险。
+  ctx.font = "bold 18px " + FONT_STACK;
   ctx.fillText("三种短局 · 后置加菜 · 不冲正片主桌", CONFIG.viewW / 2, py + 116);
   /* 【v1.194】今日最佳行: 原缺陷——saveData.dailyBest 五字段全写盘 + clamp 携带 + 注释声明,
      却零渲染点, 玩家"今天加菜的最好成绩"永久不可见。
@@ -29722,7 +29725,9 @@ function drawDailyPickPanel(ctx, m) {
     }
   })();
   ctx.fillStyle = "#6a6a5a";
-  ctx.font = "bold 14px " + FONT_STACK;
+  // 【v1.210w】14→18px：面板底部说明句。同样满足判据（整句字面量 / 非 fitText / 18px 下宽约 378px = 52% 画布）；
+  //   它在 py+panelH-118，距返回钮顶（668）约 30px，抬高 4px 只让字高上下各长 ~2.5px ⇒ 不会压到按钮。
+  ctx.font = "bold 18px " + FONT_STACK;
   ctx.fillText("正片出击仍在大厅主钮 · 加菜不发锻纹/章礼", CONFIG.viewW / 2, py + m.panelH - 118);
 }
 function drawForgeMarkIcon(ctx, x, y, s) {
