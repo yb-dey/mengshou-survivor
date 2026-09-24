@@ -89,7 +89,17 @@ const info = await page.evaluate(() => {
   }
   const D = window.MENGSHOU_DEBUG || {};
   const artHooks = Object.keys(D).filter((k) => /art|sprite|skin|ready/i.test(k));
-  return { count: keys.length, keys, stats, artHooks };
+  // 【第 132 轮修】把**环境参数**一起带回来：贴图该多大是**设备相关**的
+  //   （`aiArtPhysSize` = 逻辑 × dpr × cssW/viewW × 0.95），所以判定必须知道本机 dpr 与 cssW。
+  //   ⚠ 第一版我直接拿 `画布 ÷ 2half` 跟写死的 1 比 ⇒ 云端报 **159/229 张 ratio<1**，
+  //     而最差的一批全是 **0.95** —— 那正是**游戏自己的安全余量**（CI 里 dpr=1、cssW=viewW=720
+  //     ⇒ 该公式恰好给出 0.95）⇒ **判据拿设备相关的量去比设备无关的线 = 假警报**（P8）。
+  let env = { dpr: 1, cssW: 0, viewW: 0 };
+  try {
+    const c = document.querySelector('canvas');
+    env = { dpr: window.devicePixelRatio || 1, cssW: (c && c.getBoundingClientRect().width) || 0, viewW: window.CONFIG ? CONFIG.viewW : 0 };
+  } catch (e) { /* 读不到就保持默认，下面按"读不到"处理 */ }
+  return { count: keys.length, keys, stats, artHooks, env };
 });
 
 // 疑似「程序化回退」= 颜色极少（<=4）且不透明占比正常
@@ -253,15 +263,25 @@ fs.writeFileSync(path.join(OUT, 'art-audit.json'), JSON.stringify(report, null, 
 const ratioRows = Object.entries(info.stats)
   .filter(([, v]) => typeof v.ratio === 'number')
   .sort((a, b) => a[1].ratio - b[1].ratio);
-const under = ratioRows.filter(([, v]) => v.ratio < 1);
+// **本机需要多少**：游戏自己的公式 `逻辑 × dpr × cssW/viewW`，再乘它自己留的 0.95 安全余量。
+//   ⇒ 底线里的 0.95 **不是我想的数，是母版 `aiArtPhysSize` 里写着的那个**（可溯源）。
+//   再降到 0.9 是为了吸收**画布尺寸必须取整**：目标 T=logical×0.95，取整后可能少 0.5px，
+//   相对误差 = 0.5/logical ⇒ logical=16 时约 3%、logical=32 时约 1.6% ⇒ 0.9 能罩住常见尺寸。
+//   （实测云端最差一批恰好是 **0.950** —— 正是这个余量本身，不是缺陷。）
+const e2 = info.env || {};
+const need = (e2.dpr || 1) * ((e2.cssW && e2.viewW) ? (e2.cssW / e2.viewW) : 1);
+const floor = need * 0.9;
+const under = ratioRows.filter(([, v]) => v.ratio < floor);
 const minR = ratioRows.length ? ratioRows[0][1].ratio : null;
 if (under.length) {
   console.log('::warning::贴图分辨率充足度：**' + under.length + '/' + ratioRows.length +
-    ' 张画布小于显示尺寸**（ratio<1，连 dpr=1 都在放大）→ 真机必糊。最差：' +
+    ' 张低于本机所需**（本机 need=' + need.toFixed(2) + '，底线 ' + floor.toFixed(2) + '）。最差：' +
     under.slice(0, 5).map(([k, v]) => k + '=' + v.ratio).join(', '));
 } else {
-  console.log('::notice::贴图分辨率充足度：' + ratioRows.length + ' 张全部 ratio ≥ 1 ✓（最小 ' + minR +
-    '；程序化路径固定 2×，AI 路径按 逻辑×dpr×cssW/viewW 自适应）');
+  console.log('::notice::贴图分辨率充足度：' + ratioRows.length + ' 张全部达标 ✓（最小 ratio ' + minR +
+    ' vs 本机底线 ' + floor.toFixed(2) + '；dpr=' + (e2.dpr || '?') + ' cssW/viewW=' +
+    (e2.cssW && e2.viewW ? (e2.cssW / e2.viewW).toFixed(2) : '?') +
+    '。⚠ 这是**本机**达标：真机 dpr 更高时 need 会更大，同一张图可能不够）');
 }
 
 const md = [
@@ -304,9 +324,11 @@ const md = [
     (typeof v.ratio === 'number' ? ((v.ratio < 1 ? '⚠ ' : '') + v.ratio.toFixed(2)) : '-') + ' | ' + (v.fillPct ?? v.err ?? '-') + ' | ' + (v.colors ?? '-') + ' |'),
   '',
   '> **分辨率比** = 贴图画布像素 ÷ 它显示的逻辑像素（= 2×half）。**dpr 封顶 2**（`CONFIG.dprCap`），',
-  '> 而 canvas 的后台缓冲 = 逻辑 × dpr ⇒ 比 <1 表示**连 dpr=1 都在放大**（真机必糊），=1 逻辑 1:1，≥2 后台缓冲 1:1。',
-  '> ⚠ 目标值**随设备变**（`aiArtPhysSize()` 算的是 `逻辑 × dpr × cssW/viewW`，小屏走 CSS 下采样），',
-  '> 所以这里只判**与设备无关的硬底线 ≥1**，不写死 2。',
+  '> 而 canvas 的后台缓冲 = 逻辑 × dpr ⇒ 比 <1 表示**逻辑上就在放大**，=1 逻辑 1:1，≥2 后台缓冲 1:1。',
+  '> ⚠ **该多大是设备相关的**：母版 `aiArtPhysSize()` 算的是 `逻辑 × dpr × cssW/viewW`，',
+  '> 再乘它自己留的 **0.95** 安全余量。所以判定用**本机 need**（上面注解里会报）而不是写死的 1 ——',
+  '> 第一版拿写死的 1 去比，把游戏自己的 0.95 余量误报成了 **159/229 张不合格**（假警报，P8）。',
+  '> ⚠ 本机（CI）dpr=1、cssW=viewW ⇒ need≈1；**真机 dpr 更高时 need 更大**，同一张图可能就不够了。',
   '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'report.md'), md);
