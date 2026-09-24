@@ -33700,11 +33700,19 @@ function makeBeastCell(idx, x, y, w, h) {
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
       ctx.fillStyle = "#3a5a20";
+      // 【v1.211t】三行文字整体下移 13px —— 这是**上一轮删行后自己留下的几何后果**，不是新审美：
+      //   删掉第 4 行后墨迹只到 80，块中心 45.5 而卡片中心 59 ⇒ **偏上 13.5px**，
+      //   上留白 11 / 下留白 38：看起来像「删漏了一行」，而不像有意排的。
+      //   下移后墨迹 24..93.5（中心 58.75）⇒ 上 24 / 下 24.5，并与图盘(8..110)、右签(36..80，中心 58)
+      //   三者的中心对齐。⚠ 只改这三个 y，**几何/行高/条目数一律不碰**。
       ctx.font = "bold 22px " + FONT_STACK;
-      ctx.fillText(d.name + " · " + d.tagline, r.x + 162, r.y + 22);
+      ctx.fillText(d.name + " · " + d.tagline, r.x + 162, r.y + 35);
       ctx.fillStyle = "#5a6a40";
-      ctx.font = "bold 15px " + FONT_STACK;
-      ctx.fillText(d.desc + (clash ? (" · " + clash) : ""), r.x + 118, r.y + 52);
+      // 【v1.211t】接上一轮实测记下的余量（可用宽 396 / 最坏 ≈322px@15px）：**先补宽度兜底再抬字**，
+      //   两件事必须同批做 —— v1.211s 只抬下面那行，唯一原因就是这行当时没有兜底。
+      //   抬 15→**17px**（1.42→1.60mm）。兜底是安全网（最坏 365px < 396px），正常档位不会触发省略号。
+      ctx.font = "bold 17px " + FONT_STACK;
+      ctx.fillText(hudFitText(ctx, d.desc + (clash ? (" · " + clash) : ""), 396), r.x + 118, r.y + 65);
       ctx.fillStyle = "#8a5a10";
       // 【v1.211s】O27 样板：删掉下面那行**重复**信息后，把腾出的空间给字号 —— 14→**16px**（1.32→1.51mm）。
       //   ⚠ 只抬这一行：上面那行 `desc + clash` **没有走 hudFitText**、且 clash 可能很长，
@@ -33715,7 +33723,8 @@ function makeBeastCell(idx, x, y, w, h) {
       //     ⇒ 抬到 17px ≈ 365px（余 31px，可行）；18px ≈ 386px（余 10px，太险）。
       //     ⚠ 但**真正宽的是下面那行 stats**（`petCodexStars` 展开后 ≈263px @14px，见本批实测图）。
       ctx.font = "bold 16px " + FONT_STACK;
-      ctx.fillText("伤" + d.petDmg + " / " + d.interval + "s · " + petCodexStars(d), r.x + 118, r.y + 72);
+      // 【v1.211t】随上面两行一起下移 13px（72→85）保持整块居中；字号沿用上一轮已在渲染图里验过的 16px。
+      ctx.fillText("伤" + d.petDmg + " / " + d.interval + "s · " + petCodexStars(d), r.x + 118, r.y + 85);
       // 【v1.211s】这一行原为 13px 的 `petUnlockStep(d)`，内容是「进度解锁 · 差N金」——
       //   而**同一张卡右侧的签**（L33716）在金币不足时画的正是「差N金」，
       //   **页面头部**（L33467 的 `obtain`）又画了一次同一条 ⇒ 同一信息在**一屏里出现三次**。
