@@ -47,7 +47,7 @@
         "dominantPct": 10.1
       },
       "dup": false,
-      "hash": "05257e73f4dd",
+      "hash": "a8fc81c648b3",
       "dHome": 0,
       "sameAsHome": false,
       "state": "HOME",
@@ -95,7 +95,7 @@
         "dominantPct": 24.7
       },
       "dup": false,
-      "hash": "37d88b7c3a0f",
+      "hash": "d48488376c05",
       "dHome": 61.53,
       "sameAsHome": false,
       "state": "HOME",
@@ -128,7 +128,7 @@
       },
       "dup": false,
       "hash": "d9f4bd79ff8a",
-      "dHome": 62.58,
+      "dHome": 62.57,
       "sameAsHome": false,
       "state": "BEAST",
       "stateOk": true
@@ -159,7 +159,7 @@
         "dominantPct": 36.7
       },
       "dup": false,
-      "hash": "41a512f727bb",
+      "hash": "aafbc4439755",
       "dHome": 74.08,
       "sameAsHome": false,
       "state": "SETTINGS",
@@ -171,11 +171,11 @@
       "dens": {
         "w": 720,
         "h": 1280,
-        "distinct": 525,
+        "distinct": 524,
         "dominantPct": 41.8
       },
       "dup": false,
-      "hash": "7254d04d26b8",
+      "hash": "ba47376718fb",
       "dHome": 80.04,
       "sameAsHome": false,
       "state": "ABOUT",
@@ -191,7 +191,7 @@
         "dominantPct": 20.5
       },
       "dup": false,
-      "hash": "94786aa6b916",
+      "hash": "04270ee4f408",
       "dHome": 76.75,
       "sameAsHome": false,
       "state": "HOME",
@@ -200,22 +200,22 @@
     {
       "name": "11-battle",
       "hook": "mouse",
-      "hash": "7a8ecd0efca8",
-      "dHome": 43.42,
+      "hash": "fb39a61e3da1",
+      "dHome": 43.28,
       "state": "PLAYING",
       "stateOk": true
     },
     {
       "name": "12-levelup",
       "hook": "轮询 cards.length>0 (3 张)",
-      "hash": "bf577f93bf3b",
-      "dHome": 64.33
+      "hash": "c151edbf78f0",
+      "dHome": 64.37
     },
     {
       "name": "13-pause",
       "hook": "pause(true) 轮询成功",
-      "hash": "9ab2d86067a1",
-      "dHome": 63.54,
+      "hash": "1110eca222a3",
+      "dHome": 63.39,
       "state": "PAUSED_MENU",
       "stateOk": true
     }
