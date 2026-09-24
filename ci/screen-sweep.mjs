@@ -430,6 +430,59 @@ try {
     console.log('  ⚠ 13-pause 轮询 17s 仍未进入暂停态');
     shots.push({ name: '13-pause', hook: 'pause(true) 轮询超时', dup: true });
   }
+
+  // ── 【第 128 轮】补两屏**每个玩家每局都会看到、但这套巡检从来没拍过**的：结算（胜/负）──────
+  //   发现方式与第 126 轮同源：不是"看着不对"，而是**数一数哪些屏根本没被拍过**。
+  //   13 屏里没有结算页，而 `MENGSHOU_DEBUG` 早就给了 `win()` / `lose()` / `resultBuild()` 三个钩子
+  //   （母版 L39150 / L39155 / L39015）却没人用 ⇒ 玩家必看的两屏**从未进过美术评审**。
+  //   ⚠ 钩子有前置条件（读源码确认，不猜）：`win()` 只在 PLAYING / LEVELUP_MODAL 生效；
+  //     `lose()` 在 HOME / RESULT_WIN / RESULT_LOSE 会被早退 ⇒ 必须**先真的回到 PLAYING**。
+  //   ⚠ 顺带把 `resultBuild()` 当**探针**用：它返回面板的 chips 数与 **overlap**（卡带互相压住）——
+  //     "结算页排版有没有压字"从此有读数，而不是靠眼睛。
+  async function toPlaying() {
+    await page.evaluate(() => {
+      const D = window.MENGSHOU_DEBUG || {};
+      try { if (typeof window.closePauseUi === 'function') window.closePauseUi(); } catch (e) { void e; }
+      try { if (window.run) window.run.pendingLevels = 0; } catch (e) { void e; }
+      try { if (typeof window.closeLevelupUi === 'function') window.closeLevelupUi(); } catch (e) { void e; }
+      try { if (window.GAME && window.GAME.flow) window.GAME.setState(window.GAME.flow.PLAYING); } catch (e) { void e; }
+      void D;
+    });
+    await page.waitForTimeout(300);
+  }
+  async function shootResult(outName, hookName, expectName) {
+    await page.evaluate((h) => { try { window.MENGSHOU_DEBUG[h](); } catch (e) { void e; } }, hookName);
+    await page.waitForTimeout(900);
+    const p = path.join(OUT, outName + '.png');
+    await page.screenshot({ path: p });
+    const h = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 12);
+    prevHash = h;
+    const st = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.state(); } catch (e) { return null; } });
+    const ok = !!(st && st.name === expectName);
+    if (!ok) console.log('  ⚠ ' + outName + ' 目标屏断言不通过：实测 state=' + (st ? st.name : 'null') + ' / 期望 ' + expectName);
+    // resultBuild() 只对结算页有意义；读不到就如实留 null，**不当成 0**
+    let rb = null;
+    try { rb = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.resultBuild(); } catch (e) { return null; } }); } catch (e) { rb = null; }
+    // ⚠ 字段名以母版为准（`resultBuild()` 返回 `v.chipN` / `v.overlap`）——
+    //   我第一版按印象写成 `rb.chips`，那会**静默变成 null**（读不到 ≠ 没有），
+    //   所以这里逐个字段确认过再取。`overlap` = `overlap || (bottom > hookY+1)`：卡带压住或正文越界都算。
+    const chips = rb && typeof rb.chipN === 'number' ? rb.chipN : null;
+    const overlap = rb && typeof rb.overlap === 'boolean' ? rb.overlap : null;
+    if (overlap === true) console.log('::warning::' + outName + ' 结算页 resultBuild().overlap = true ⇒ **有卡带互相压住**，评审时先看这一条');
+    console.log('::notice::' + outName + ' 采样 state=' + (st ? st.name : 'null') + ' chips=' + chips + ' overlap=' + overlap);
+    shots.push({ name: outName, hook: hookName + '()', hash: h, dHome: sigDiff(await screenSig(), homeSig),
+      dens: await measureDens(), state: st ? st.name : null, stateOk: ok, resultChips: chips, resultOverlap: overlap });
+  }
+  await toPlaying();
+  await shootResult('14-result-win', 'win', 'RESULT_WIN');
+  // 胜负两屏要分别进：`lose()` 在 RESULT_WIN 会被早退 ⇒ 先回大厅、重新开一局、再判负
+  await page.evaluate(() => { const D = window.MENGSHOU_DEBUG || {}; try { if (D.goHome) D.goHome(); } catch (e) { void e; } });
+  await page.waitForTimeout(700);
+  await page.evaluate(() => { if (window.MENGSHOU_DEBUG.hall) window.MENGSHOU_DEBUG.hall(); });
+  await page.waitForTimeout(700);
+  await page.mouse.click(geom.l + (316 / geom.cw) * geom.w, geom.t + (617 / geom.ch) * geom.h);
+  await page.waitForTimeout(3500);
+  await shootResult('15-result-lose', 'lose', 'RESULT_LOSE');
 } catch (e) { shots.push({ name: 'battle-series', error: String(e).slice(0, 150) }); }
 
 const md = [
@@ -452,14 +505,24 @@ const md = [
     + (s.battleEnemy !== undefined
       ? (s.battleEnemy !== null ? (s.battleEnemy >= +(process.env.BATTLE_MIN_ENEMY || 10) ? '' : '⚠ ') +
         '同屏怪 **' + s.battleEnemy + '** 只（峰值 ' + s.battlePeak + '，目标 ' + (+(process.env.BATTLE_MIN_ENEMY || 10)) + '）' : '')
+      : '')
+    // 【第 128 轮】结算页也**自带读数**：卡带数 + 有没有压住（`resultBuild().overlap`）
+    + (s.resultChips !== undefined && s.resultChips !== null
+      ? (s.resultOverlap === true ? '⚠ ' : '') + '结算卡带 **' + s.resultChips + '** 条 · 压住=' + (s.resultOverlap === true ? '**是**' : '否')
       : '') + ' |'),
   '',
   '> 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。',
   '',
   '> ⚠ **11-battle 自带密度标签（第 126 轮新增）**：这一屏原来固定在"进战斗后第 7 秒"拍，',
-  '> 那个时点几乎没怪 —— 实测 13 屏里它的局部对比 edgePct=4.37% 是**全场最低**，',
-  '> 而玩家 90% 的时间恰恰花在这一屏。现在改成：`seek()` 跳到潮期 → 轮询到 `enemyCount ≥ 目标` 才拍，',
-  '> 并把**实测同屏怪数**写进备注列。**没有这个数，就不该拿这一屏下美术结论。**',
+  '> 那个时点几乎没怪，而玩家 90% 的时间恰恰花在这一屏。现在改成：轮询到 `enemyCount ≥ 目标` 才拍，',
+  '> 并取**本次跑里最密的那一帧**（超时也不退回空场），把**实测同屏怪数**写进备注列。',
+  '> **没有这个数，就不该拿这一屏下美术结论。**⛔ 不用 `seek()` 跳潮期：`debugSeekRunTime` 只推',
+  '> runTime 与刷怪调度器、**不动玩家等级** ⇒ 会让 1 级玩家面对 92 秒的压力，拍到的是复活盘。',
+  '',
+  '> ⚠ **14/15 结算（胜/负）是第 128 轮新补的两屏**：它们**每个玩家每局都会看到**，',
+  '> 但这套巡检此前**从来没拍过**（13 屏里没有结算页），而 `win()`/`lose()`/`resultBuild()`',
+  '> 三个钩子母版早就给了。现在两屏都拍 + 断言 `RESULT_WIN`/`RESULT_LOSE`，',
+  '> 并用 `resultBuild()` 当探针把「卡带数 / 有没有压住」写进备注列。',
   '',
   '> ⚠ 备注列标 `与上一屏完全相同` 的，表示**该界面没有被真正打开**（截图与上一屏字节相同）。',
   '> 这类条目**不能当作"已巡检"** —— 修法：先复位到大厅，或换一个能生效的钩子。',
