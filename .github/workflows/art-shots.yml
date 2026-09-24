@@ -67,4 +67,9 @@ jobs:
           node -e "const fs=require('fs');const f=fs.existsSync('ci/out')?fs.readdirSync('ci/out').filter(x=>x.endsWith('.png')):[];fs.writeFileSync('_shots/index.json',JSON.stringify({at:new Date().toISOString(),count:f.length,files:f},null,2));console.log('shots',f.length);"
           git add -A _shots ci/out
           git diff --cached --quiet && echo "无变化" || git commit -m "art-shots: 18 屏截图 + 运行日志（$(date -u '+%Y-%m-%d %H:%M') UTC）"
-          git push
+          # 第 7 步曾因 push 被并发工作流（art-gen）顶掉而失败（诊断：步骤 1-6 成功、7 失败）
+          # ⇒ 推之前先 rebase，并最多重试 3 次。
+          for i in 1 2 3; do
+            git pull --rebase origin main >/dev/null 2>&1 || true
+            git push origin HEAD:main && break || sleep 8
+          done
