@@ -29560,14 +29560,35 @@ function drawLevelupCard(ctx, card) {
   //   **末端 / 成档 / 进化那几类卡的 `desc3` 是有内容的**（母版 L31348 等卡片构建器会给它），
   //   删绘制＝**吞掉玩家的信息**（「不占武器槽 · 跟宠开火」「点了才合成 · 可略过」这类**可操作性**文案）。
   //   改成按行数选档，信息一行不少：
-  //     · 两行（常态；真机图里三张卡都是）⇒ **19px / 行距 26**（y 112/138，1.42→1.80mm）
-  //     · 三行（少数卡）⇒ **17px / 行距 21**（y 110/131/152；末行墨迹 ≈162 < 按钮上沿 r.h−42≈168）
-  //   两档都比原来的 15px 大，且都守着 v1.153 的本意（常规体重、不与标题抢层级）。
-  var descFs = card.desc3 ? 17 : 19, descTop = card.desc3 ? 110 : 112, descPit = card.desc3 ? 21 : 26;
-  ctx.font = descFs + "px " + FONT_STACK;
-  ctx.fillText(hudFitText(ctx, card.desc1 || "", r.x + r.w - tx - 14), tx, r.y + descTop);
-  ctx.fillText(hudFitText(ctx, card.desc2 || "", r.x + r.w - tx - 14), tx, r.y + descTop + descPit);
-  if (card.desc3) ctx.fillText(hudFitText(ctx, card.desc3, r.x + r.w - tx - 14), tx, r.y + descTop + descPit * 2);
+  //     · 两行（常态；真机图里三张卡都是）⇒ 19px 起 / 行距 26（y 112/138，1.42→1.80mm）
+  //     · 三行（少数卡）⇒ 17px 起 / 行距 21（y 110/131/152）
+  // 【v1.211u-fit】但"行数"只是第一刀 —— `hudFitText` 是**截断**（加省略号）而不是缩字，
+  //   而可用宽（有图标时 = r.w - tx - 14 = **414px**）在 19px 下只够 ~21.8 个中文字。
+  //   用真实字体度量（headless Edge canvas measureText）把游戏能产出的 96 条说明行逐一量过：
+  //   **固定 19/17px 会新造 3 条截断**（15px 时都放得下，改后 418/437/453px 越线 —— 例：
+  //   被动分叉提示「满星后 → 蜂群环体→八只近卫/咕噜石→四岩远砸」330→418px、战斗炸弹
+  //   「已进化 爆震核心 · 小怪清场 · 精英/BOSS削血 · 身边有」357→453px）。
+  //   ⇒ 改成**按放得下与否换档**，下限 15px 正是改动前的字号 ⇒ **永远不会比改动前更差**：
+  //   放得下就用 19（本轮的可读性收益全保留），放不下才降，降到 15 还放不下才交给 hudFitText。
+  //   量具与阴性对照：`_qc/_r145/_desc-fit.mjs`（改前就截断的 5 条与本改动无关，仍是 5 条）。
+  var descW = r.x + r.w - tx - 14;
+  var dLines = card.desc3 ? [card.desc1 || "", card.desc2 || "", card.desc3] : [card.desc1 || "", card.desc2 || ""];
+  var dTiers = card.desc3
+    ? [[17, 110, 21], [16, 111, 20], [15, 114, 20]]
+    : [[19, 112, 26], [18, 112, 25], [17, 112, 23], [16, 113, 21], [15, 114, 20]];
+  var dT = dTiers[dTiers.length - 1], dTi, dLi, dFits;
+  for (dTi = 0; dTi < dTiers.length; dTi++) {
+    ctx.font = dTiers[dTi][0] + "px " + FONT_STACK;
+    dFits = true;
+    for (dLi = 0; dLi < dLines.length; dLi++) {
+      if (dLines[dLi] && ctx.measureText(dLines[dLi]).width > descW) { dFits = false; break; }
+    }
+    if (dFits) { dT = dTiers[dTi]; break; }
+  }
+  ctx.font = dT[0] + "px " + FONT_STACK;
+  ctx.fillText(hudFitText(ctx, dLines[0], descW), tx, r.y + dT[1]);
+  ctx.fillText(hudFitText(ctx, dLines[1], descW), tx, r.y + dT[1] + dT[2]);
+  if (dLines[2]) ctx.fillText(hudFitText(ctx, dLines[2], descW), tx, r.y + dT[1] + dT[2] * 2);
   cue = levelupCardCue(card.idx, card.opt);
   cueH = 32;
   cueY = r.y + r.h - cueH - 10;
