@@ -212,7 +212,11 @@ for (const s of STEPS) {
       if (EXPECT[s.name]) stateOk = (stGot.name === EXPECT[s.name]);
       else if (FLAGS[s.name]) stateOk = (stGot[FLAGS[s.name]] === true);
       else if (VALUES[s.name]) stateOk = (stGot[VALUES[s.name][0]] === VALUES[s.name][1]);
-      if (!stateOk) console.log('  ⚠ ' + s.name + ' 目标屏断言不通过：实测 state=' + stGot.name +
+      // 【第 129 轮】断言失败**必须发注解**，不能只 `console.log`：
+      //   断言失败 ⇒ 进 dupList ⇒ sweep 退 2 ⇒ 我能看到"红"，但**读不到是哪一屏、差在哪**
+      //   （workflow 日志要鉴权）—— 那正是 P13「只建主路不建回读路」。
+      //   ⇒ 改成 `::error::`，匿名可读。
+      if (!stateOk) console.log('::error::' + s.name + ' 目标屏断言不通过：实测 state=' + stGot.name +
         (VALUES[s.name] ? (' / ' + VALUES[s.name][0] + '=' + JSON.stringify(stGot[VALUES[s.name][0]]) + ' 期望 ' + JSON.stringify(VALUES[s.name][1]))
           : (' / 期望 ' + (EXPECT[s.name] || FLAGS[s.name] + '=true'))));
     }
@@ -355,7 +359,7 @@ try {
     // 【v1.167】战斗是**最容易假成功**的一屏（此前拍到的是没关掉的每日面板）→ 硬断言 PLAYING
     const st = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.state(); } catch (e) { return null; } });
     const stateOk = !!(st && st.playing === true);
-    if (!stateOk) console.log('  ⚠ 11-battle 目标屏断言不通过：实测 state=' + (st ? st.name : 'null') + ' / 期望 PLAYING');
+    if (!stateOk) console.log('::error::11-battle 目标屏断言不通过：实测 state=' + (st ? st.name : 'null') + ' / 期望 PLAYING');
     if (!bReached) console.log('::warning::11-battle 未达密度阈值 ' + BATTLE_MIN_ENEMY + '：' + bWhy + '（这张图实测 ' + bBestShot + ' 只，峰值 ' + bPeak + '）—— 评审前先看这个数');
     console.log('::notice::11-battle 采样密度 这张图同屏怪=' + bBestShot + ' 峰值=' + bPeak + ' 目标=' + BATTLE_MIN_ENEMY + ' 轮询=' + bTries + ' 结束=' + bWhy);
     shots.push({ name: '11-battle', hook: 'mouse+轮询怪数（取本次最密帧）', hash: prevHash, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
@@ -436,7 +440,7 @@ try {
       const dHome = sigDiff(await screenSig(), homeSig);
       const st2 = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.state(); } catch (e) { return null; } });
       const ok2 = !!(st2 && st2.pause === true);
-      if (!ok2) console.log('  ⚠ 13-pause 目标屏断言不通过：实测 state=' + (st2 ? st2.name : 'null') + ' / 期望 PAUSED_MENU');
+      if (!ok2) console.log('::error::13-pause 目标屏断言不通过：实测 state=' + (st2 ? st2.name : 'null') + ' / 期望 PAUSED_MENU');
       shots.push({ name: '13-pause', hook: 'pause(true) 轮询成功', hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
         dens: await measureDens(),
         state: st2 ? st2.name : null, stateOk: ok2 });
@@ -476,7 +480,7 @@ try {
     prevHash = h;
     const st = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.state(); } catch (e) { return null; } });
     const ok = !!(st && st.name === expectName);
-    if (!ok) console.log('  ⚠ ' + outName + ' 目标屏断言不通过：实测 state=' + (st ? st.name : 'null') + ' / 期望 ' + expectName);
+    if (!ok) console.log('::error::' + outName + ' 目标屏断言不通过：实测 state=' + (st ? st.name : 'null') + ' / 期望 ' + expectName);
     // resultBuild() 只对结算页有意义；读不到就如实留 null，**不当成 0**
     let rb = null;
     try { rb = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.resultBuild(); } catch (e) { return null; } }); } catch (e) { rb = null; }
