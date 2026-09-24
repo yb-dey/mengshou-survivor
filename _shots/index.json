@@ -1,6 +1,6 @@
 {
-  "at": "2026-09-24T20:33:21.552Z",
-  "count": 19,
+  "at": "2026-09-24T20:39:18.558Z",
+  "count": 21,
   "files": [
     "01-home.png",
     "02-chapters.png",
@@ -10,6 +10,8 @@
     "05b-vault-talent.png",
     "06-beast.png",
     "07-codex-enemy.png",
+    "07b-codex-fork.png",
+    "07c-codex-item.png",
     "08-settings.png",
     "09-about.png",
     "10-daily.png",
