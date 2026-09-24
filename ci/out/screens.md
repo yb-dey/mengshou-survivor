@@ -5,27 +5,27 @@
 
 | 截图 | 钩子 | 画布 | 独特色数 | 主色占比 | 与大厅Δ | 实测状态 | 备注 |
 |---|---|---|---|---|---|---|---|
-| 01-home | hall | 720×1280 | 805 | 9.7% | 0 | HOME |  |
-| 02-chapters | openChapters | 720×1280 | 768 | 21.1% | 77.03 | HOME |  |
-| 03-gear | openGear | 720×1280 | 738 | 22.7% | 66.52 | ARMORY |  |
-| 04-upgrade | openUp | 720×1280 | 615 | 24.7% | 62.05 | HOME |  |
-| 05-vault | openVault | 720×1280 | 611 | 20.4% | 55.32 | HOME |  |
-| 05b-vault-talent | vaultTapTalent | 720×1280 | 785 | 18.8% | 55.79 | HOME |  |
-| 06-beast | openBeast | 720×1280 | 648 | 37.4% | 55.27 | BEAST |  |
-| 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 55.44 | BEAST |  |
-| 07b-codex-fork | codexTab | 720×1280 | 1113 | 40.5% | 61.28 | BEAST |  |
-| 07c-codex-item | codexTab | 720×1280 | 597 | 25.8% | 72.43 | BEAST |  |
-| 08-settings | openSettings | 720×1280 | 538 | 36.6% | 74.85 | SETTINGS |  |
-| 09-about | about | 720×1280 | 524 | 41.8% | 80.38 | ABOUT |  |
-| 10-daily | dailyPick | 720×1280 | 541 | 20.2% | 77.4 | HOME |  |
-| 10b-guide | openGuide | 720×1280 | 600 | 63.2% | 70.51 | GUIDE |  |
-| 11a-entrance | 轮询 enterCine().live | 720×1280 | 680 | 35.9% | 78.1687839146207 | chapter | 过场 t=**1.703**/1.72 · kind=chapter · 首见=是 |
-| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 723 | 23.4% | 43.25 | PLAYING | ⚠ 同屏怪 **8** 只（峰值 8，目标 10） |
-| 11b-revive | die() + 轮询「面板真的可见」 | 720×1280 | 468 | 29% | 62.92300428815576 | REVIVE_MODAL | 死因行=「调试击倒(模拟)」（**模拟触发**，不代表真实战况） |
-| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 627 | 41.4% | 61.72 | LEVELUP_MODAL |  |
-| 13-pause | pause(true) 轮询成功 | 720×1280 | 757 | 34.9% | 67.67 | PAUSED_MENU |  |
-| 14-result-win | win() | 720×1280 | 640 | 33.1% | 59.236894086565314 | RESULT_WIN | 结算卡带 **6** 条 · 压住=否 |
-| 15-result-lose | lose() | 720×1280 | 620 | 34.1% | 61.59570000174393 | RESULT_LOSE | 结算卡带 **2** 条 · 压住=否 |
+| 01-home | hall | 720×1280 | 807 | 9.7% | 0 | HOME |  |
+| 02-chapters | openChapters | 720×1280 | 768 | 21.1% | 77.55 | HOME |  |
+| 03-gear | openGear | 720×1280 | 738 | 22.7% | 67.05 | ARMORY |  |
+| 04-upgrade | openUp | 720×1280 | 615 | 24.7% | 62.58 | HOME |  |
+| 05-vault | openVault | 720×1280 | 611 | 20.4% | 55.84 | HOME |  |
+| 05b-vault-talent | vaultTapTalent | 720×1280 | 785 | 18.8% | 56.32 | HOME |  |
+| 06-beast | openBeast | 720×1280 | 648 | 37.4% | 55.79 | BEAST |  |
+| 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 55.97 | BEAST |  |
+| 07b-codex-fork | codexTab | 720×1280 | 1113 | 40.5% | 61.8 | BEAST |  |
+| 07c-codex-item | codexTab | 720×1280 | 597 | 25.8% | 72.12 | BEAST |  |
+| 08-settings | openSettings | 720×1280 | 541 | 36.6% | 74.67 | SETTINGS |  |
+| 09-about | about | 720×1280 | 527 | 41.8% | 80.2 | ABOUT |  |
+| 10-daily | dailyPick | 720×1280 | 544 | 20.2% | 77.22 | HOME |  |
+| 10b-guide | openGuide | 720×1280 | 600 | 63.2% | 71.03 | GUIDE |  |
+| 11a-entrance | 轮询 enterCine().live | 720×1280 | 680 | 35.9% | 83.59875960344584 | chapter | 过场 t=**1.687**/1.72 · kind=chapter · 首见=是 |
+| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 788 | 21.2% | 43.85 | PLAYING | 同屏怪 **10** 只（峰值 10，目标 10） |
+| 11b-revive | die() + 轮询「面板真的可见」 | 720×1280 | 460 | 29% | 62.74708470110218 | REVIVE_MODAL | 死因行=「调试击倒(模拟)」（**模拟触发**，不代表真实战况） |
+| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 677 | 41.1% | 65.16 | LEVELUP_MODAL |  |
+| 13-pause | pause(true) 轮询成功 | 720×1280 | 754 | 36.5% | 65.09 | PAUSED_MENU |  |
+| 14-result-win | win() | 720×1280 | 654 | 32.9% | 59.49423315429695 | RESULT_WIN | 结算卡带 **6** 条 · 压住=否 |
+| 15-result-lose | lose() | 720×1280 | 622 | 34.1% | 62.076836406598865 | RESULT_LOSE | 结算卡带 **2** 条 · 压住=否 |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**⚠ 它不等于"画面空"**（第 133 轮实测更正）：
 > 一条平底面板（如帮助页）主色占比可以到 **63%**，但用 `_qc/_imgstat.mjs --inkrows 32` 量它的
