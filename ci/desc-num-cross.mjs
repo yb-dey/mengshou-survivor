@@ -125,6 +125,7 @@ const TABLE_EXPECT = {
   DATA_HALL_UNLOCK: 6,
   DATA_RUNES: 5,
   DATA_SUPER: 20,
+  DATA_DAILY: 3,   // 【第 92 轮】加菜规则池（d_tide / d_elite / d_ban）—— 本轮补判据 E 时才纳入
 };
 function parseTable(src, name) {
   const { body } = cutBody(src, name);
@@ -383,6 +384,27 @@ function checkCrossNames(src) {
   if (!quotedSeen) note('C', '全文未发现引号包裹的兄弟名引用，判据 C 空跑（不构成通过）');
 }
 
+// ---------- 判据 E: DATA_DAILY.rule 的「约N分钟」× durMin（第 92 轮补）----------
+//   为什么补：这张表**原先不在**任何判据的覆盖里（A/A2/A3/A4/B/C 都只针对别的表），
+//   而它的 rule 文案恰好写着「加菜约5分钟 / 约6分钟」—— 与 DATA_HALL_UNLOCK.condText 抄 boss 时刻
+//   是同一类病根（文案写死一个会随数值字段变化的量）。
+//   本轮先逐条手核过三处（5↔5、6↔6、5↔5 一致），再把它变成判据，免得下次改数值时又漏。
+function checkDaily(src) {
+  const items = parseTable(src, 'DATA_DAILY');
+  let checked = 0;
+  for (const it of items) {
+    const id = idField(it.text);
+    const rule = strField(it.text, 'rule');
+    const durM = it.text.match(/durMin\s*:\s*(\d+)/);
+    if (!id || !rule || !durM) { if (id) note('E', `${id}: rule/durMin 缺失，跳过`); continue; }
+    const m = /约\s*(\d+)\s*分钟/.exec(rule);
+    if (!m) { note('E', `${id}: rule 未写「约N分钟」（不构成通过）`); continue; }
+    checked++;
+    if (Number(m[1]) !== Number(durM[1])) fail('E', id, `rule 写「约${m[1]}分钟」但 durMin=${durM[1]}`);
+  }
+  if (!checked) note('E', 'DATA_DAILY 无一条 rule 含「约N分钟」，判据 E 空跑（不构成通过）');
+}
+
 function run(src) {
   FAILS.length = 0; NOTES.length = 0;
   checkTalent(src);
@@ -390,6 +412,7 @@ function run(src) {
   checkRunes(src);
   checkSuper(src);
   checkAchieve(src);
+  checkDaily(src);
   checkCrossNames(src);
   return { fails: FAILS.slice(), notes: NOTES.slice() };
 }
@@ -496,6 +519,14 @@ if (process.argv.includes('--selftest')) {
   const ok9 = inj9 && r9.fails.some((f) => f.cat === 'A4' && f.id === 'mapletornado');
   if (!inj9) console.log('  ⚠ 阴性对照 9 的替换**未生效**（anchor 未命中）→ 视为漏检，不得算通过');
 
+  // 阴性对照 10（第 92 轮）：DATA_DAILY.rule 写「约5分钟」但 durMin 漂移 → 必须报错
+  const mutD = src.replace('chapterIdx: 1, durMin: 5, giftCoins: 42', 'chapterIdx: 1, durMin: 7, giftCoins: 42');
+  const injD = mutD !== src;
+  const rD = run(mutD);
+  report('阴性对照 10: DATA_DAILY.d_tide durMin 5→7（rule 仍写「约5分钟」）', rD);
+  const ok10 = injD && rD.fails.some((f) => f.cat === 'E' && f.id === 'd_tide');
+  if (!injD) console.log('  ⚠ 阴性对照 10 的替换**未生效**（anchor 未命中）→ 视为漏检，不得算通过');
+
   const all = ok1 && ok2 && ok3;
   console.log('\n--- selftest ---');
   console.log(`  阴性对照 A(per 漂移): ${ok1 ? '检出 ✅' : '漏检 ❌'}`);
@@ -516,10 +547,11 @@ if (process.argv.includes('--selftest')) {
   console.log(`  阴性对照 G(DATA_RUNES ×N 漂移): ${ok7 ? '检出 ✅' : '漏检 ❌'}`);
   console.log(`  阴性对照 H(DATA_SUPER 阿拉伯数字漂移): ${ok8 ? '检出 ✅' : '漏检 ❌'}`);
   console.log(`  阴性对照 I(DATA_SUPER 中文数字漂移): ${ok9 ? '检出 ✅' : '漏检 ❌'}`);
+  console.log(`  阴性对照 J(DATA_DAILY 分钟数漂移): ${ok10 ? '检出 ✅' : '漏检 ❌'}`);
 
-  const n = (ok1?1:0)+(ok2?1:0)+(ok3?1:0)+(ok4?1:0)+(ok5?1:0)+(ok6?1:0)+(ok7?1:0)+(ok8?1:0)+(ok9?1:0);
-  console.log(`  selftest ${n}/9 ${n === 9 ? '✅' : '❌'}`);
-  process.exit(n === 9 ? 0 : 1);
+  const n = (ok1?1:0)+(ok2?1:0)+(ok3?1:0)+(ok4?1:0)+(ok5?1:0)+(ok6?1:0)+(ok7?1:0)+(ok8?1:0)+(ok9?1:0)+(ok10?1:0);
+  console.log(`  selftest ${n}/10 ${n === 10 ? '✅' : '❌'}`);
+  process.exit(n === 10 ? 0 : 1);
 }
 
 const real = run(src);
