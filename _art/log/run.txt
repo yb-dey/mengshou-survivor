@@ -9,22 +9,25 @@
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.
   deprecate("torch_dtype", "1.0.0", _TORCH_DTYPE_DEPRECATION_MESSAGE)
-Fetching 18 files:   0%|          | 0/18 [00:00<?, ?it/s]Fetching 18 files:  11%|█         | 2/18 [00:00<00:01,  9.09it/s]Fetching 18 files:  17%|█▋        | 3/18 [00:00<00:02,  5.69it/s]Fetching 18 files:  44%|████▍     | 8/18 [00:00<00:00, 16.38it/s]Fetching 18 files:  61%|██████    | 11/18 [00:00<00:00, 16.58it/s]Fetching 18 files:  78%|███████▊  | 14/18 [00:00<00:00, 18.46it/s]Fetching 18 files:  89%|████████▉ | 16/18 [00:19<00:00, 18.46it/s]Fetching 18 files:  94%|█████████▍| 17/18 [00:20<00:02,  2.19s/it]Fetching 18 files: 100%|██████████| 18/18 [00:39<00:00,  4.63s/it]Fetching 18 files: 100%|██████████| 18/18 [00:39<00:00,  2.21s/it]
+Fetching 18 files:   0%|          | 0/18 [00:00<?, ?it/s]Fetching 18 files:  11%|█         | 2/18 [00:00<00:01,  8.62it/s]Fetching 18 files:  17%|█▋        | 3/18 [00:00<00:02,  6.25it/s]Fetching 18 files:  50%|█████     | 9/18 [00:00<00:00, 15.70it/s]Fetching 18 files:  78%|███████▊  | 14/18 [00:00<00:00, 17.82it/s]Fetching 18 files:  89%|████████▉ | 16/18 [00:08<00:01,  1.11it/s]Fetching 18 files:  94%|█████████▍| 17/18 [00:18<00:00,  1.11it/s]Fetching 18 files: 100%|██████████| 18/18 [00:38<00:00,  4.17s/it]Fetching 18 files: 100%|██████████| 18/18 [00:38<00:00,  2.13s/it]
 Keyword arguments {'safety_checker': None, 'requires_safety_checker': False} are not expected by StableDiffusionXLImg2ImgPipeline and will be ignored.
-Loading pipeline components...:   0%|          | 0/7 [00:00<?, ?it/s]Loading pipeline components...:  14%|█▍        | 1/7 [00:00<00:01,  5.92it/s]Loading pipeline components...:  71%|███████▏  | 5/7 [00:00<00:00,  9.46it/s]
-Loading weights:   0%|          | 0/196 [00:00<?, ?it/s][ALoading weights: 100%|██████████| 196/196 [00:00<00:00, 2223.21it/s]
-Loading pipeline components...:  86%|████████▌ | 6/7 [00:00<00:00,  7.98it/s]
+Loading pipeline components...:   0%|          | 0/7 [00:00<?, ?it/s]
 Loading weights:   0%|          | 0/517 [00:00<?, ?it/s][A
-Loading weights:  96%|█████████▌| 494/517 [00:00<00:00, 4851.44it/s][ALoading weights: 100%|██████████| 517/517 [00:00<00:00, 5019.48it/s]
-Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00,  6.40it/s]Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00,  7.09it/s]
-模型加载完成 42.3s
+Loading weights:  73%|███████▎  | 379/517 [00:00<00:00, 3789.27it/s][ALoading weights: 100%|██████████| 517/517 [00:00<00:00, 3943.40it/s]
+Loading pipeline components...:  29%|██▊       | 2/7 [00:00<00:00,  5.42it/s]Loading pipeline components...:  43%|████▎     | 3/7 [00:00<00:00,  4.40it/s]
+Loading weights:   0%|          | 0/196 [00:00<?, ?it/s][ALoading weights: 100%|██████████| 196/196 [00:00<00:00, 5066.96it/s]
+Loading pipeline components...:  57%|█████▋    | 4/7 [00:00<00:00,  4.55it/s]Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00,  7.37it/s]
+已启用 enable_attention_slicing
+跳过 enable_vae_slicing: 'StableDiffusionXLImg2ImgPipeline' object has no attribute 'enable_vae_slicing'
+跳过 enable_vae_tiling: 'StableDiffusionXLImg2ImgPipeline' object has no attribute 'enable_vae_tiling'
+模型加载完成 41.0s
 There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
 There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
 0it [00:00, ?it/s]0it [00:00, ?it/s]
 Traceback (most recent call last):
-  File "/home/runner/work/mengshou-survivor/mengshou-survivor/_art/gen.py", line 93, in <module>
+  File "/home/runner/work/mengshou-survivor/mengshou-survivor/_art/gen.py", line 101, in <module>
     main()
-  File "/home/runner/work/mengshou-survivor/mengshou-survivor/_art/gen.py", line 80, in main
+  File "/home/runner/work/mengshou-survivor/mengshou-survivor/_art/gen.py", line 88, in main
     out = pipe(prompt=t["prompt"], image=img, strength=t["strength"],
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
