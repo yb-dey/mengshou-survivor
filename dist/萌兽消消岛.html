@@ -10664,11 +10664,17 @@ var DATA_CODEX_TAB = [
   { id: "fork", name: "配方", sub: "分叉 · 成档 · 进化" },
   { id: "item", name: "道具", sub: "回血 · 清屏 · 吸取" }
 ];
+// 【v1.210n 可读性】每组加两个**只给文字用**的字段（图形仍用 tint；填充 / 侧签 / 框一律不动）：
+//   · text    压在浅底（苔纸 #e8f0d4 / 选中苔盘 #c8ecc8）上的字色
+//   · chipInk 压在该组**自己的 tint 填充**上的字色
+//   为什么必须分开：中明度填充（#6faf4f L≈0.35）**两个方向都带不动 AA 正文** —— 奶油字 2.48:1、
+//   深墨字 2.67–2.99:1，只能按每组填充各选一个方向（绿/橙走深墨，红/紫走奶油）。
+//   实测 `_qc/_contrast.mjs`：text 4.95–7.61:1；chipInk 绿/橙 2.48/2.81 → **5.47 / 4.83**，红/紫维持 5.08 / 4.54。
 var DATA_CODEX_GROUP = [
-  { id: "trash", name: "杂兵", tint: "#6faf4f" },
-  { id: "behave", name: "行为", tint: "#e07a2a" },
-  { id: "elite", name: "精英", tint: "#c0392b" },
-  { id: "boss", name: "BOSS", tint: "#8a5ac2" }
+  { id: "trash", name: "杂兵", tint: "#6faf4f", text: "#376b26", chipInk: "#1b2e14" },
+  { id: "behave", name: "行为", tint: "#e07a2a", text: "#8a4a10", chipInk: "#1b2e14" },
+  { id: "elite", name: "精英", tint: "#c0392b", text: "#8a2418" },
+  { id: "boss", name: "BOSS", tint: "#8a5ac2", text: "#5a3a86" }
 ];
 var DATA_CODEX_ENEMY = [
   { id: "rabbit", group: "trash", tell: "直线追人", where: "全章开局杂兵", hint: "最常见, 拉开风筝", knife: "直着冲不是莽，是认准了这边还有热气。" },
@@ -33299,7 +33305,7 @@ function drawCodexEnemyDetail(ctx, py) {
   if (codexTabId() !== "enemy") return;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillStyle = grp.tint;
+  ctx.fillStyle = grp.text || grp.tint;   // 【v1.210n】原 tint 压苔纸 2.25:1（16px 小字要 4.5:1）
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText((def ? def.name : entry.id) + " · " + entry.tell + " · " + entry.hint,
     CONFIG.viewW / 2, codexPy() + (GAME.codexMsgY || 1004));
@@ -33473,7 +33479,7 @@ function makeCodexEnemyGroup(idx, x, y, w, h) {
       ctx.fillStyle = "#2e3c1c";
       ctx.font = "bold 20px " + FONT_STACK;
       ctx.fillText(g.name, r.x + r.w / 2, r.y + 18);
-      ctx.fillStyle = on ? g.tint : "#55603c";
+      ctx.fillStyle = on ? (g.text || g.tint) : "#55603c";   // 【v1.210n】选中态原 tint 压 #c8ecc8 2.06:1
       ctx.font = "bold 13px " + FONT_STACK;
       ctx.fillText(n + " 种", r.x + r.w / 2, r.y + 38);
     }
@@ -33536,19 +33542,19 @@ function makeCodexEnemyCell(idx, x, y, w, h) {
         ctx.lineWidth = 1;
       }
       glyph = enemyTellGlyph(def);
-      drawCodexChip(ctx, r.x + 112, r.y + 10, 36, 24, glyph, grp.tint, "#fff7e0");
+      drawCodexChip(ctx, r.x + 112, r.y + 10, 36, 24, glyph, grp.tint, grp.chipInk || "#fff7e0");   // 【v1.210n】绿/橙组改深墨字
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
       ctx.fillStyle = "#3a5a20";
       ctx.font = "bold 22px " + FONT_STACK;
       ctx.fillText(def ? def.name : entry.id, r.x + 156, r.y + 22);
-      ctx.fillStyle = grp.tint;
+      ctx.fillStyle = grp.text || grp.tint;   // 【v1.210n】「读招·」行同因：原 tint 压苔盘 2.06:1
       ctx.font = "bold 16px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, "读招·" + entry.tell, r.w - 140), r.x + 112, r.y + 52);
       ctx.fillStyle = "#8a5a10";
       ctx.font = "bold 14px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, "出处·" + entry.where + " → 击破入册" + (def ? (" · HP" + def.hp) : ""), r.w - 230), r.x + 112, r.y + 80);
-      drawCodexChip(ctx, r.x + r.w - 100, r.y + 32, 84, 40, grp.name, selected ? grp.tint : "rgba(222,232,198,0.90)", selected ? "#fff7e0" : "#3a4626");
+      drawCodexChip(ctx, r.x + r.w - 100, r.y + 32, 84, 40, grp.name, selected ? grp.tint : "rgba(222,232,198,0.90)", selected ? (grp.chipInk || "#fff7e0") : "#3a4626");   // 【v1.210n】选中态字色按组选（绿/橙→深墨 5.47/4.83）
     }
   });
 }
