@@ -28197,12 +28197,28 @@ function drawHomeBase(ctx) {
   //   与右上预览面板 488 起仍不相犯）；② 副标按 " · " 拆成三行 13px，落在舞台左侧空白列（x 112..244）。
   //   ⚠ 文案**一字未改**（只改换行与字号）；标题 `fillText(gameName, 110, 96)` 与苔白细划坐标不动。
   ctx.font = "bold 13px " + FONT_STACK;
-  ctx.fillStyle = "#d4e0b8";
+  // 【v1.210n 可读性】报头三行压在**随章主题变化**的场景底上。实测（画布直读像素，取「总部基地」那一行）：
+  //   底是中性灰绿 rgb(144,160,144) 一带，字 #d8e8b8 —— **2.34:1**（13px 小字要 4.5:1）。
+  //   为什么不直接把字换深：这块底**每章不同**（原野是中明度、星巅是深海军蓝）——
+  //   深字在原野 5.5:1 达标，到星巅就压没了；苔白反之。单一字色必然有一章不达标。
+  //   ⇒ 沿用项目自己对「压在不定底上的字」的既有做法（v1.153「数字先细墨边后填色」）：
+  //   先描一圈墨边再填苔白。**字色 / 字号 / 坐标 / 分三行的版式一律不动**（v1.157 苔白副标保留）。
   var hallSubLines = (guideTipsPending()
     ? "总部基地 · 点角色看出血压速 · 提示可跳过"
     : "总部基地 · 出击最大 · 仓库次之 · 加菜后置").split(" · ");
   var hallSubLineY = 130;
-  for (var hallSubI = 0; hallSubI < hallSubLines.length; hallSubI++) {
+  var hallSubI;
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "rgba(22,30,16,0.62)";
+  ctx.lineWidth = 2.6;
+  for (hallSubI = 0; hallSubI < hallSubLines.length; hallSubI++) {
+    ctx.strokeText(hallSubLines[hallSubI], 112, hallSubLineY);
+    hallSubLineY += 18;
+  }
+  ctx.lineWidth = 1;
+  ctx.fillStyle = "#d4e0b8";
+  hallSubLineY = 130;
+  for (hallSubI = 0; hallSubI < hallSubLines.length; hallSubI++) {
     ctx.fillText(hallSubLines[hallSubI], 112, hallSubLineY);
     hallSubLineY += 18;
   }
