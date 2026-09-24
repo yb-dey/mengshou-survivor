@@ -29144,7 +29144,18 @@ function bindResultBuildChips() {
   chipH = CONFIG.resultChipH || 81;
   lay = resultActionLayout();
   hookY = lay.hookY;
-  y = panel.y + (CONFIG.resultRoomY || 556) + (CONFIG.resultRoomH || 108) + (CONFIG.resultBuildGap || 12);
+  // 【v1.211e 结算页·挑战失败留白】三格没画，就不该占三格的高度。
+  //   根因：drawResultPanel 在 runSummary.roomClears 为 0 时只画一行「房回礼 · 未走进」(L32109)，
+  //   而这里**无条件**按 resultRoomH(108) 预留 ⇒ 实测那一屏在此处留下 85 逻辑px 纯空条
+  //   （裁 60,560,600x170 → `_qc/_imgstat --inkrows`：最长连续空条 255/600 @3× = 43%）。
+  //   CONFIG.resultBuildGap 的注释本就写着「房回礼到本局构筑的缝 = 12」——作者要的是 12px，实到约 85px。
+  //   未走进时改按"一行"预留：22（行位，与 draw 里 roomY + 22 同）+ 18（本文件通用的单行高，
+  //   见 laneNeed 的 n += 18）= 40；缝仍取 resultBuildGap，与"走进过"分支同一口径。
+  //   ⚠ 安全边界：budgetBottom = y + avail = hookY - 8 - unlitH，**与 y 无关** ⇒ v1.207b 的
+  //   「不许溢出到动作钮」守卫原样成立；让出的 68px 只进本局构筑的可用预算。
+  y = panel.y + (CONFIG.resultRoomY || 556)
+    + (runSummary.roomClears ? (CONFIG.resultRoomH || 108) : 40)
+    + (CONFIG.resultBuildGap || 12);
   GAME.resultLayout = [];
   chipI = 0;
   GAME.resultLayout.push({ kind: "title", y: y, text: "本局构筑" });
