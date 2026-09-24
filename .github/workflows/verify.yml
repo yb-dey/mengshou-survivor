@@ -362,7 +362,15 @@ jobs:
       - name: 卡道配色锁（GATE · 改色必须重跑色觉审查）
         run: |
           node ci/color-palette-lock.mjs --selftest
-          node ci/color-palette-lock.mjs
+          node ci/color-palette-lock.mjs      # 【第 75 轮】卡道文字通道（GATE）：§17.4 曾建议"给四类各加短标签"，但那条建议的**前提是错的** ——
+      #   升级选项构造器早就在写「武器·升星 / 战斗·进化 / 被动·新 / 跟宠·满星」，卡面用 bold 18px 画在左上角
+      #   （L29132-29136），出图复核肉眼可见。⇒ 缺口已被既有通道缓解，不需要动视觉、更不必重出备案截图。
+      #   本步骤把它**锁住**：四道覆盖 + 每条标签必须有类型前缀 + 卡面字号 ≥14px，任一破坏即红。
+      - name: 卡道文字通道（GATE · 类型不得只靠颜色）
+        run: |
+          node ci/lane-tag-channel.mjs --selftest
+          node ci/lane-tag-channel.mjs
+
       # 【v1.206 期】触控目标锁（第 69 轮）：逻辑画布 720 宽映射到 390pt 手机 ⇒ ×0.5417，
       #   通行下限 44 CSS px（iOS HIG）/ 48dp（Android）⇒ 取 **81 逻辑px**。
       #   实测 **39 个可解析调用**里只有 **9 个**达标（最紧 homeabout 100×44 ⇒ 23.8 CSS px）。
