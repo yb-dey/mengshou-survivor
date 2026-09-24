@@ -43,11 +43,11 @@
       "dens": {
         "w": 720,
         "h": 1280,
-        "distinct": 804,
-        "dominantPct": 11.9
+        "distinct": 805,
+        "dominantPct": 10.1
       },
       "dup": false,
-      "hash": "116fc5139c94",
+      "hash": "5b9f07628ede",
       "dHome": 0,
       "sameAsHome": false,
       "state": "HOME",
@@ -63,8 +63,8 @@
         "dominantPct": 21.1
       },
       "dup": false,
-      "hash": "ecb8a4ccabb7",
-      "dHome": 77.49,
+      "hash": "b036934ad23b",
+      "dHome": 77.73,
       "sameAsHome": false,
       "state": "HOME",
       "stateOk": true
@@ -79,8 +79,8 @@
         "dominantPct": 22.7
       },
       "dup": false,
-      "hash": "9a4e3b8e6ef2",
-      "dHome": 65.59,
+      "hash": "5c9a311883da",
+      "dHome": 65.95,
       "sameAsHome": false,
       "state": "ARMORY",
       "stateOk": true
@@ -95,8 +95,8 @@
         "dominantPct": 24.7
       },
       "dup": false,
-      "hash": "7d3135965d44",
-      "dHome": 61.16,
+      "hash": "37d88b7c3a0f",
+      "dHome": 61.53,
       "sameAsHome": false,
       "state": "HOME",
       "stateOk": true
@@ -111,8 +111,8 @@
         "dominantPct": 20.4
       },
       "dup": false,
-      "hash": "1d6106e896e6",
-      "dHome": 54.56,
+      "hash": "5680c39c523d",
+      "dHome": 55.12,
       "sameAsHome": false,
       "state": "HOME",
       "stateOk": true
@@ -127,8 +127,8 @@
         "dominantPct": 41.7
       },
       "dup": false,
-      "hash": "427273e454d6",
-      "dHome": 62.43,
+      "hash": "d9f4bd79ff8a",
+      "dHome": 62.57,
       "sameAsHome": false,
       "state": "BEAST",
       "stateOk": true
@@ -143,8 +143,8 @@
         "dominantPct": 35.2
       },
       "dup": false,
-      "hash": "9b1cb0cebb9c",
-      "dHome": 55.19,
+      "hash": "8386ca32f6d4",
+      "dHome": 54.92,
       "sameAsHome": false,
       "state": "BEAST",
       "stateOk": true
@@ -159,8 +159,8 @@
         "dominantPct": 36.7
       },
       "dup": false,
-      "hash": "2f1e1f268a1e",
-      "dHome": 74.23,
+      "hash": "337c77026bf1",
+      "dHome": 74.08,
       "sameAsHome": false,
       "state": "SETTINGS",
       "stateOk": true
@@ -175,8 +175,8 @@
         "dominantPct": 41.8
       },
       "dup": false,
-      "hash": "2f9ffc600858",
-      "dHome": 80.18,
+      "hash": "d9798e298c50",
+      "dHome": 80.04,
       "sameAsHome": false,
       "state": "ABOUT",
       "stateOk": true
@@ -191,8 +191,8 @@
         "dominantPct": 20.5
       },
       "dup": false,
-      "hash": "9a2a540a8157",
-      "dHome": 76.88,
+      "hash": "03359e8084f0",
+      "dHome": 76.75,
       "sameAsHome": false,
       "state": "HOME",
       "stateOk": true
@@ -200,22 +200,22 @@
     {
       "name": "11-battle",
       "hook": "mouse",
-      "hash": "b01829a79170",
-      "dHome": 43.5,
+      "hash": "fb9dc85ea062",
+      "dHome": 44.02,
       "state": "PLAYING",
       "stateOk": true
     },
     {
       "name": "12-levelup",
       "hook": "轮询 cards.length>0 (3 张)",
-      "hash": "e78e513cd1a2",
-      "dHome": 63.73
+      "hash": "3c1aff897c1a",
+      "dHome": 64.11
     },
     {
       "name": "13-pause",
       "hook": "pause(true) 轮询成功",
-      "hash": "2346487c481b",
-      "dHome": 63.48,
+      "hash": "8efdbac2a8e2",
+      "dHome": 63.55,
       "state": "PAUSED_MENU",
       "stateOk": true
     }
