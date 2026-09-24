@@ -1,0 +1,22 @@
+/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+[transformers] `CLIPImageProcessor` requires torchvision (not installed); falling back to `CLIPImageProcessorPil` for backward compatibility. Install torchvision to use the default backend, or import `CLIPImageProcessorPil` directly to silence this warning.
+[transformers] `SiglipImageProcessor` requires torchvision (not installed); falling back to `SiglipImageProcessorPil` for backward compatibility. Install torchvision to use the default backend, or import `SiglipImageProcessorPil` directly to silence this warning.
+[transformers] `Siglip2ImageProcessorFast` is deprecated. The `Fast` suffix for image processors has been removed; use `Siglip2ImageProcessor` instead.
+Traceback (most recent call last):
+  File "/home/runner/work/mengshou-survivor/mengshou-survivor/_art/gen.py", line 85, in <module>
+    main()
+  File "/home/runner/work/mengshou-survivor/mengshou-survivor/_art/gen.py", line 50, in main
+    tasks = load_tasks()
+            ^^^^^^^^^^^^
+  File "/home/runner/work/mengshou-survivor/mengshou-survivor/_art/gen.py", line 41, in load_tasks
+    strength = float(parts[2]) if len(parts) > 2 else 0.55
+               ^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: 'strength'
+
+=== exit=1 ===
+---- 环境自述 ----
+python 3.11.16
+torch 2.14.0+cpu
+diffusers 0.40.0
+hf_endpoint https://hf-mirror.com
