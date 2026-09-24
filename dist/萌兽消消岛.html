@@ -16910,7 +16910,7 @@ function preloadAiArt() {
     img.src = AI_ART_TABLE[key];
   });
 }
-function bakeOuterInk(cv, px, cardinalOnly) {
+function bakeOuterInk(cv, px, cardinalOnly, ink) {
   // 【v1.177】叠怪外墨: 用剪影 alpha 扩一圈纯墨, 原图像素原样盖回。不模糊、不改填色。
   // 【v1.187】cardinalOnly 时只扩上下左右, 叠层加墨停在正好约 1px, 对角不再多出去。
   var w, h, src, mask, m, c, dirs, i;
@@ -16936,7 +16936,7 @@ function bakeOuterInk(cv, px, cardinalOnly) {
   m.drawImage(src, 0, 0);
   try { m.filter = "none"; } catch (e) { /* 忽略 */ }
   m.globalCompositeOperation = "source-in";
-  m.fillStyle = "#1c1810";
+  m.fillStyle = ink || "#1c1810";
   m.fillRect(0, 0, w, h);
   c = cv.getContext("2d");
   c.setTransform(1, 0, 0, 1, 0, 0);
@@ -24274,10 +24274,15 @@ function applySkinImage(target, img) {
   if (box.whiteBackdrop) punchNearWhite(cv);
   cv.half = drawHalf;
   var rimSpec = actorRimOf(target, DATA_ENEMY[target]);
-  cv = strokeActorCanvas(cv, rimSpec.ink, rimSpec.rim, rimSpec.offMul);
+  // 【v1.210c 美术·质量】主角/英雄的外墨改**暖墨绿**（#2a3224 = 程序化早波杂兵在用的那支软墨），
+  //   不再用近黑 #1c1810 —— 近黑压在亮绿草地上就是「黑框贴纸」，是「看着廉价」的主因之一。
+  //   依据：v1.96「身份靠剪影形色，描边只走墨线」+ v1.182「绝不再用粗黑描边吞掉命名色」
+  //   ⇒ 墨线本来就该是暖墨绿而不是纯黑。⚠ **只换墨色**，宽度 / 形状 / 左上受光一律不动。
+  var _heroInk = (target === "player" || target === "hero_shell" || target === "hero_grizz") ? "#2a3224" : rimSpec.ink;
+  cv = strokeActorCanvas(cv, _heroInk, rimSpec.rim, rimSpec.offMul);
   // 【v1.179】英雄立绘再叠一圈外墨, 星巅海军底上勾得住形; 不重采样糊 PNG(仍走 physResample 1:1 显示)
   if (target === "player" || target === "hero_shell" || target === "hero_grizz") {
-    bakeOuterInk(cv, Math.max(5, Math.round((drawHalf || 55) * 0.09)));
+    bakeOuterInk(cv, Math.max(5, Math.round((drawHalf || 55) * 0.09)), false, _heroInk);
   }
   // 【v1.164】立绘按需降分辨率：原 cvSize = drawHalf*4，而实际显示只有 drawHalf*2 逻辑 px
   // （再乘 CSS 缩放比）→ 约 3.1 倍超采样。重采样到 1:1，肉眼看不出差别。
