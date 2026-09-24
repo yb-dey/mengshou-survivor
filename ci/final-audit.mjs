@@ -23,7 +23,12 @@ const SRC_AUDIO = path.join(path.dirname(SRC_HTML), 'audio');
 const DIST = process.argv[3] || path.join(MENGSHOU, 'dist');
 // deploy/ 默认在仓库**外**的上一层（本地 D:/新建文件夹/方向3/deploy）；
 // 不存在则跳过相关检查，并**显式说明跳过**（不静默、也不误判为失败）。
-const DEPLOY = process.argv[4] || process.env.DEPLOY_DIR || path.resolve(MENGSHOU, '../..', 'deploy');
+// ⚠【2026-09-24 修】**原先写的是 `path.resolve(MENGSHOU, '../..', 'deploy')`，多退了一层** ——
+//   从仓库根跑出来是 `D:/新建文件夹/deploy`（不存在）⇒ `SKIP_DEPLOY=true`，
+//   **本地每次跑都在"跳过 deploy"却打印成「CI 环境正常」**，于是三形态同源从来没被这道门真正查过
+//   （我此前引用的"同源 ✓"来自另一支只比版本串的检查）。改成退一层 = `方向3/deploy`。
+//   CI 里仓库根是 /home/runner/work/<org>/<repo>，退一层仍不存在 ⇒ 云端行为不变（照旧跳过）。
+const DEPLOY = process.argv[4] || process.env.DEPLOY_DIR || path.resolve(MENGSHOU, '..', 'deploy');
 const SKIP_DEPLOY = process.env.SKIP_DEPLOY === '1' || !fs.existsSync(DEPLOY);
 
 const fail = [];
