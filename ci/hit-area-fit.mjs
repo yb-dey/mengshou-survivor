@@ -255,9 +255,9 @@ try {
             if (!got) await page.waitForTimeout(120);
           }
           if (!got) continue;
-          const before = await page.evaluate(() => { try { return ((MENGSHOU_DEBUG.build() || {}).lanes && 1) || 1; } catch (e) { return 1; } }).catch(() => 1);
-          void before;
-          await page.evaluate(() => { try { debugLevelupTap(0); } catch (e) { void e; } });
+          // ⚠ 第 73 轮实测：每次都选第 0 张 ⇒ 12 次只是把同一件升了 12 级，条目数不变（12/12 选卡成功、
+          //   结算页仍只有 2 条）⇒ 这两屏当时其实是「稀疏屏挂了满载的名字」。现在**轮换索引**，让构筑真的铺开。
+          await page.evaluate((n) => { try { debugLevelupTap(n); } catch (e) { void e; } }, i % 3);
           picks++;
           await page.evaluate(() => { try { closeCards(); } catch (e) { void e; } });
           await page.waitForTimeout(140);
