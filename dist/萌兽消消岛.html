@@ -33366,7 +33366,16 @@ function syncCodexFit() {
   //   修法：槽位确实没人画时，页脚收到 **cb+42**（= 双卡自己的上沿 footY-62，取梯子自己的数，不新造量），
   //     返回钮随之 cb+154→cb+92 ⇒ 面板矮 62px，正朝 v1.167 写的「底板跟随内容底」走。
   //   ⚠ 只对 **pet** 收紧：enemy/item 要画 msg/knife 必须留；fork 页我没核过，不动（宁可少改）。
-  var codexTight = codexTabId() === 'pet' && !(GAME.hallBeastLast && GAME.hallBeastLast.spent);
+  // 【v1.211k】把 v1.211j 的收紧**推广到所有"不画那两个槽位"的页**（原来只对 pet）。
+  //   判据不是我按页签名硬编码，而是照**画字的守卫**来：只有敌人页往 cb+40/cb+64 写字
+  //   （drawCodexEnemyDetail 开头 `if (codexTabId() !== 'enemy') return;`，L33507/L33523 同型），
+  //   而「花费收益双卡」只在 pet 页且刚解锁过跟宠时才画 ⇒ 其余页（pet 无卡时 / fork / item）
+  //   那两个槽位**恒空**，页脚没理由还留在 cb+104。
+  //   实测（补拍 fork/item 两屏后同一口径裁片 + `--inkrows 220`）：fork **69** 逻辑px、item **91** 逻辑px
+  //   的连续空条（pet 收紧前 95、收紧后 33，同一模型的另一次验证）。
+  var codexTabNow = codexTabId();
+  var codexDuo = codexTabNow === 'pet' && !!(GAME.hallBeastLast && GAME.hallBeastLast.spent);
+  var codexTight = codexTabNow !== 'enemy' && !codexDuo;
   GAME.codexMsgY = cb + 40;
   GAME.codexKnifeY = cb + 64;
   GAME.codexFootYFit = cb + (codexTight ? 42 : 104);
