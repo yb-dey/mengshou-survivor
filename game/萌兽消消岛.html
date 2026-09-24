@@ -31472,11 +31472,14 @@ function drawRevivePanel(ctx, m) {
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText(gearN ? ("局内装备 " + gearN + " 件已入账, 放弃也会带回大厅") : "局内还没拿到装备", cx, py + 338);
   ctx.fillStyle = "#5c6848";
-  // 【v1.210y】15→18px：复活卡第二行（每次倒下都会看到的说明）。
-  //   判据来自 `_qc/_type-candidates.mjs`（母版指纹 065737d0ec9e）：整句字面量 · 非 hudFitText ·
-  //   **不在 clip 区内** · 18px 下宽约 286px（= 画布 40%）· 本屏最大字号 40px ⇒ 抬了不破层级。
-  //   与上一行（py+338，16px）相距 24px，抬高 3px 后两行净空仍有 ~7px ⇒ 不会挤在一起。
-  ctx.font = "bold 18px " + FONT_STACK;
+  // 【v1.210y 回退 · 第 117 轮】这一行曾抬到 18px（静态判据全过：整句字面量 / 非 fitText / 不在 clip 区 /
+  //   宽约 286px / 本屏最大 40px / 与上一行净空 ~7px）。推上去后云端 **audio-audit 变红**：
+  //   它自报「② 战斗+击杀高于 BGM 窗口（1→1）❌」+「**阴性对照打穿**（数学上完美循环的正弦也报 0.361 → FAIL）
+  //   → 该判据不成立」。A/B：`033c7cc` / `318f920` 上 `audio` 均 ✅，`4a7611c` 上 ❌，
+  //   而这两者之间**只有这一处游戏代码差异**（另一提交 `871aa35` 是 shots-bot 只动 `_shots/`）。
+  //   机制仍未查清（字体本不该影响音频；但采样掉到 1→1 说明"那次驱动几乎没跑起来"），
+  //   ⇒ **先回退保绿**：3px 的字号收益远小于 main 变红的代价。要再抬，先让 audio-audit 的判据自证成立。
+  ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText("放弃无通关礼 / 首通金币 / 锻纹", cx, py + 362);
   if (!saveData.guideFlags.revive) {
     ctx.fillStyle = "#3d6844";
