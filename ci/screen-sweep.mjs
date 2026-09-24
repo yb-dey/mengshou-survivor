@@ -51,7 +51,10 @@ const available = await page.evaluate(() => {
     //   **母版里根本没有这个钩子**（`available` 会把它过滤掉 ⇒ 一直静默），故删除。
     // 【第 130 轮】`enterCine` 是**进场过场**的探针（时间驱动、无钩子可开）——
     //   把它列进 `want` 并真的调用，A 侧从此会盯住它；不列的话它就是"没人看着的那一屏"。
-    'vaultTapTalent', 'enterCine', 'openGuide'];
+    'vaultTapTalent', 'enterCine', 'openGuide',
+    // 【第 136 轮】`exclusive()` 是"这一刻到底画了什么"的探针（`revive`/`result` 面板可见性 + `cine` 定格窗），
+    //   11b-revive 的判据就靠它。**同样必须列进 want** —— 否则它又是一条没人看着的通道。
+    'exclusive'];
   return want.filter((k) => typeof D[k] === 'function');
 });
 
@@ -422,20 +425,30 @@ try {
   {
     const p = path.join(OUT, '11b-revive.png');
     await page.evaluate(() => { try { window.MENGSHOU_DEBUG.die(); } catch (e) { void e; } });
-    let rv = null, tries = 0;
-    for (let t = 0; t < 16; t++) {
+    // 【第 136 轮】**判据修正**：原来只等 `state === REVIVE_MODAL` 就拍 —— 而那张图拍的**不是复活盘**。
+    //   读源码才看清：死亡后有一段**定格窗** `GAME.deathCineT`（由 `rawDt` 推进），窗内**弹窗组是隐藏的**
+    //   （母版 L37741 注释原文「定格窗结束: 按当前态恢复**弹窗组可见**」）—— 而 `GAME.state` **已经**是
+    //   REVIVE_MODAL ⇒ 断言成立、图里却只有那张 300×112 的「倒下了」定格小卡 + 冻结的战场。
+    //   ⇒ 换成**"面板真的可见"**这个判据：`MENGSHOU_DEBUG.exclusive()` 已给出
+    //     `revive: !!(uiReviveModal && uiReviveModal.visible)` 与 `cine: GAME.deathCineT`（**无需改游戏代码**）。
+    //   ⚠ 这与第 126 轮 11-battle 是**同一类错**：**state 对 ≠ 画面是那一屏**。
+    //     凡是"状态断言"都要再问一句"这一刻画出来的到底是什么"。
+    let rv = null, ex = null, tries = 0;
+    for (let t = 0; t < 20; t++) {
       const s = await battleProbe();
-      if (s.st === 'REVIVE_MODAL') { rv = s; break; }
+      ex = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.exclusive(); } catch (e) { return null; } });
+      if (s.st === 'REVIVE_MODAL' && ex && ex.cine <= 0 && ex.revive === true) { rv = s; break; }
       tries++;
       await page.waitForTimeout(350);
     }
     await page.screenshot({ path: p });
     const h = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 12);
     prevHash = h;
-    const ok = !!(rv && rv.st === 'REVIVE_MODAL');
+    const ok = !!(rv && ex && ex.revive === true && ex.cine <= 0);
     if (!ok) {
       console.log('::error::11b-revive 目标屏断言不通过：实测 state=' + (rv ? rv.st : 'null') +
-        ' / 期望 REVIVE_MODAL（这张图不代表复活盘）');
+        ' cine=' + (ex ? ex.cine : '?') + ' 面板可见=' + (ex ? ex.revive : '?') +
+        ' / 期望 REVIVE_MODAL 且 cine<=0 且面板可见（否则图里是定格小卡，不是复活盘）');
     }
     // ⚠ 死因行**不要**去读 `summary().lastDamageSrc` —— 我第一版那么写，读了源码才发现
     //   `summary()` 返回的是 `runSummary`（`enterResult` 时刻**另起的一份快照**，字段表里**没有**
@@ -443,11 +456,13 @@ try {
     //   报告里显示空字符串，看起来"没有死因"而不是"我读错了对象"（P1/P15 同一类坑）。
     //   这里改成**由构造断言**：`die()` 未传 src ⇒ 钩子内 `run.lastDamageSrc = src || "调试击倒"`（母版 L39178）
     //   ⇒ 面板死因行必然是「调试击倒」。**这是读代码得出的，不是猜的**，并在下面如实标注为模拟触发。
-    console.log('::notice::11b-revive 采样 state=' + (rv ? rv.st : 'null') + ' 轮询=' + tries +
+    console.log('::notice::11b-revive 采样 state=' + (rv ? rv.st : 'null') + ' 定格窗剩余 cine=' +
+      (ex ? ex.cine : '?') + ' 面板可见=' + (ex ? ex.revive : '?') + ' 轮询=' + tries +
       ' 死因行=调试击倒（die() 未传 src ⇒ 模拟触发，这一行不代表真实战况）');
-    shots.push({ name: '11b-revive', hook: 'die() + 轮询 REVIVE_MODAL', hash: h,
+    shots.push({ name: '11b-revive', hook: 'die() + 轮询「面板真的可见」', hash: h,
       dHome: sigDiff(await screenSig(), homeSig), dens: await measureDens(),
-      state: rv ? rv.st : null, stateOk: ok, deathSrc: '调试击倒(模拟)' });
+      state: rv ? rv.st : null, stateOk: ok, deathSrc: '调试击倒(模拟)',
+      cineAtShot: ex ? ex.cine : null, reviveVisible: ex ? !!ex.revive : null });
     // 点复活把这一局续下去（与 stress-perf 同一套已验证钩子；顺手保证后面的 12/13 屏仍有得拍）
     await page.evaluate(() => { try { if (typeof window.onTapReviveBtn === 'function') window.onTapReviveBtn(); } catch (e) { void e; } });
     await page.waitForTimeout(900);
