@@ -37886,7 +37886,18 @@ function init() {
         vault: (typeof vaultUiOpen === "function") ? !!vaultUiOpen() : null,
         codex: tab, beast: (GAME.state === f.BEAST),
         settings: (GAME.state === f.SETTINGS), about: (GAME.state === f.ABOUT),
-        up: (GAME.state === (f.ARMORY || f.UPGRADE)), pause: (GAME.state === f.PAUSED_MENU)
+        // 【第 126 轮】`up` 原来是 `GAME.state === (f.ARMORY || f.UPGRADE)` ——
+        //   括号里先求值成**单个** flow 常量（ARMORY 真就取它）⇒ 该式只在 state===ARMORY 时为真，
+        //   永远覆盖不到 UPGRADE。实测无任何消费方（ci/ 与母版都 grep 不到 `.up`），属死字段，
+        //   仍按原意修好，避免以后有人拿它当"升级面板开着"的判据却被骗。
+        up: (GAME.state === f.ARMORY || GAME.state === f.UPGRADE), pause: (GAME.state === f.PAUSED_MENU),
+        // 【第 126 轮】补齐巡检缺的两屏（`ci/screen-sweep.mjs` 的 02-chapters / 04-upgrade
+        //   此前**没有任何目标屏断言**，只有"≠大厅/≠上一张"两道弱判据 ⇒ 面板开错也能过）。
+        //   两者都是"盖在 HOME 上的面板"，flow 状态不变，所以必须用各自的可见性开关来断言：
+        //   `chapterSelectOpen`（母版 L29543，openChapterSelect 置真）、`uiUpgradeModal.visible`（L32427）。
+        //   ⛔ 纯调试接口：不动任何表现/数值/布局，也不新增全局状态。
+        chapters: !!chapterSelectOpen,
+        upgrade: !!(uiUpgradeModal && uiUpgradeModal.visible)
       };
     },
     hitFlash: function () {

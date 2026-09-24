@@ -58,7 +58,8 @@ const available = await page.evaluate(() => {
 //   此前只证明"这一屏 ≠ 大厅"，结果两处假成功（拍到上一个弹窗 / 拍到普通战斗帧）都放过去了。
 //   EXPECT：flow 状态名必须等于该值（强断言）
 //   FLAGS ：该标志必须为真（弹窗类，用 `state()` 返回的开合标志）
-//   其余屏仅**记录**实测状态，留给下一轮收紧（不瞎猜）。
+//   其余屏仅**记录**实测状态。⚠ 第 126 轮起 02-chapters / 04-upgrade 也进了 FLAGS
+//   （此前它们是**空门**：只有"≠大厅/≠上一张"两道弱判据，面板开错也能过）。
 const EXPECT = {
   "01-home": "HOME",
   "08-settings": "SETTINGS",
@@ -69,6 +70,13 @@ const FLAGS = {
   "06-beast": "beast",
   "07-codex-enemy": "beast",
   "10-daily": "dailyPick",
+  // 【第 126 轮】补上此前**两道空门**的两屏：02-chapters / 04-upgrade 原来既不在 EXPECT
+  //   也不在 FLAGS ⇒ 只靠"≠大厅、≠上一张"两道弱判据，**面板开错也能过**。
+  //   两屏都是"盖在 HOME 上的面板"（flow 不变；实测 state 都是 HOME）⇒ 只能用可见性开关断言。
+  //   字段来自本轮给母版 `MENGSHOU_DEBUG.state()` 新增的 `chapters` / `upgrade`
+  //   （纯调试接口，不动表现/数值；同时修掉了 `up` 里 `(f.ARMORY || f.UPGRADE)` 那个写法错）。
+  "02-chapters": "chapters",
+  "04-upgrade": "upgrade",
 };
 const STEPS = [
   { name: '01-home', call: 'hall' },
