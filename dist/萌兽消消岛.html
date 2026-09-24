@@ -34626,14 +34626,20 @@ function drawSettingsPanel(ctx, m) {
   ctx.fillStyle = "rgba(42,58,24,0.55)";
   fillRoundRect(ctx, CONFIG.viewW / 2 - 72, py + 80, 144, 3, 1.5);
   ctx.fillStyle = c.cardDesc;
-  ctx.font = "bold 17px " + FONT_STACK;   // 【v1.206】15→17（手机上 8.1→9.2 CSS px）
+  // 【v1.210v】两处字阶抬到**本面板已在用的字号**（判据同第 111 轮帮助页那条）：
+  //   ① 操作提示 17→**18px**（1.60→1.70mm）。⚠ 本来想拆成两行抬到 20px，但**下面 py+130 有雷**：
+  //      `!Platform.Storage.available()` 时会用 24px 在 py+130 画「存储不可用…」——拆行的第二行正好撞上它。
+  //      撞的虽然是罕见分支，但"没存储时更糊"不可接受 ⇒ 本轮只做单行 18px，不动任何 y 坐标。
+  //      另记：这句**没走 hudFitText**，超宽是直接裁掉、不会出"…" ⇒ 抬字号必须在真机上看一眼才算数。
+  //   ② 「音频三档」分区小签 14→**18px**：只有 4 个字，横向余量充足（18px 也是本面板导出码在用的字号）。
+  ctx.font = "bold 18px " + FONT_STACK;
   // 【v1.201】触屏宿主（小游戏）没有键盘: 原句只讲键鼠 ⇒ 触屏玩家在设置页学不到任何操作（A5）
   ctx.fillText(touchOnlyHost()
     ? "拖动屏幕摇杆走位 · 右上角暂停 · 倒下可复活"
     : "局内 WASD / 方向键走位 · Esc 暂停 · 空格咆哮(过场则跳过)", CONFIG.viewW / 2, py + 106);
   ctx.textAlign = "left";
   ctx.fillStyle = "#55603c";
-  ctx.font = "bold 14px " + FONT_STACK;
+  ctx.font = "bold 18px " + FONT_STACK;
   ctx.fillText("音频三档", px + 30, py + 148);
   ctx.textAlign = "center";
   if (!Platform.Storage.available()) {
