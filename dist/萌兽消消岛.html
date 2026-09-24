@@ -33355,10 +33355,22 @@ function codexContentBottom() {
 function codexPy() { return (CONFIG.viewH - (GAME.codexFitH || CONFIG.viewH)) / 2; }
 function syncCodexFit() {
   var cb = codexContentBottom();
+  // 【v1.211j 图鉴·跟宠页的白留】同一件事：**给「可能不画的东西」无条件留位**（同 v1.211h）。
+  //   两处分别说清，免得下次又被当成「有意留白」：
+  //     ① 页脚之上那两个槽位（msg cb+40 / knife cb+64）**只有敌人页会画** ——
+  //        drawCodexEnemyDetail 开头就是 `if (codexTabId() !== 'enemy') return;`（L33495）。
+  //     ② 页脚上方的「花费收益双卡」也只在刚解锁跟宠后才画（L33487 的 hallBeastLast.spent 分支）。
+  //   两者都不画时，pet 页在内容底与页脚之间白留 **96 逻辑px**。实测（不是看出来的）：
+  //     裁 44,960,632,160 原生 + `--inkrows 160` ⇒ 最长连续空条 **95/160 = 59%**；
+  //     同一几何裁在卡片区（44,300,632,160）只有 **5/160** ⇒ 探针没坏、那块真的是空的。
+  //   修法：槽位确实没人画时，页脚收到 **cb+42**（= 双卡自己的上沿 footY-62，取梯子自己的数，不新造量），
+  //     返回钮随之 cb+154→cb+92 ⇒ 面板矮 62px，正朝 v1.167 写的「底板跟随内容底」走。
+  //   ⚠ 只对 **pet** 收紧：enemy/item 要画 msg/knife 必须留；fork 页我没核过，不动（宁可少改）。
+  var codexTight = codexTabId() === 'pet' && !(GAME.hallBeastLast && GAME.hallBeastLast.spent);
   GAME.codexMsgY = cb + 40;
   GAME.codexKnifeY = cb + 64;
-  GAME.codexFootYFit = cb + 104;
-  GAME.codexCloseY = cb + 154;
+  GAME.codexFootYFit = cb + (codexTight ? 42 : 104);
+  GAME.codexCloseY = cb + (codexTight ? 92 : 154);
   GAME.codexFitH = Math.min(CONFIG.viewH, GAME.codexCloseY + 64 + 40);
   codexShiftWidgets((CONFIG.viewH - (GAME.codexFitH || CONFIG.viewH)) / 2);   // 控件随面板平移
   // 【v1.185】「返回」按钮不得出屏。
