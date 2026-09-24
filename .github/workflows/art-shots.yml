@@ -76,7 +76,7 @@ jobs:
         run: |
           git config user.name  "shots-bot"
           git config user.email "shots-bot@users.noreply.github.com"
-          git add -A _shots ci/out
+          git add -f -A _shots ci/out
           git status --short | head -20
           git diff --cached --quiet && echo "7c 无变化" || git commit -m "art-shots: 截图 + 日志（$(date -u '+%Y-%m-%d %H:%M') UTC）"
           echo "7c ok"
