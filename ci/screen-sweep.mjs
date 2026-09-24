@@ -122,6 +122,37 @@ function sigDiff(a, b) {
   for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]);
   return s / a.length;
 }
+/** 画布「空不空」的两项读数：独特色数 + 主色占比（越高越空/越平）。
+ *  【第 126 轮】原来这段**只写在 STEPS 循环里** ⇒ 11-battle / 12-levelup / 13-pause
+ *  三屏在报告里一直是 `-`（没有读数）。**最常玩的一屏量得最少** —— 抽成函数让四类屏共用。 */
+async function measureDens() {
+  return await page.evaluate(() => {
+    const c = document.querySelector('canvas');
+    if (!c) return null;
+    try {
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      const buckets = new Map();
+      let n = 0;
+      for (let i = 0; i < d.length; i += 16) {
+        n++;
+        const k = (d[i] >> 4) * 256 + (d[i + 1] >> 4) * 16 + (d[i + 2] >> 4);
+        buckets.set(k, (buckets.get(k) || 0) + 1);
+      }
+      let top = 0;
+      for (const v of buckets.values()) if (v > top) top = v;
+      return { w: c.width, h: c.height, distinct: buckets.size, dominantPct: +(top / n * 100).toFixed(1) };
+    } catch (e) { return { err: String(e).slice(0, 80) }; }
+  });
+}
+/** 读一次战斗态：流程状态名 + 应力快照（enemyCount 等）。读不到就如实回 null。 */
+async function battleProbe() {
+  return await page.evaluate(() => {
+    const D = window.MENGSHOU_DEBUG || {};
+    let st = ''; try { st = (D.state ? D.state() : {}).state || ''; } catch (e) { void e; }
+    let sk = null; try { sk = D.stress ? D.stress() : null; } catch (e) { void e; }
+    return { st, sk };
+  });
+}
 const HOME_DUP_MAX = 2.0;   // 与大厅基线平均差 < 2 亮度级 → 判定"这一屏根本没打开"
 let prevHash = '';
 let homeSig = null;
@@ -163,23 +194,7 @@ for (const s of STEPS) {
     if (dup) console.log('  ⚠ ' + s.name + ' 与上一屏截图完全相同 → 该界面未真正打开');
     if (sameAsHome) console.log('  ⚠ ' + s.name + ' 与大厅基线几乎无差异(Δ=' + dHome.toFixed(2) + ') → 该界面未真正打开');
     // 顺手量一下这一屏的「有效内容占比」：非背景色像素比例（越低越空）
-    const dens = await page.evaluate(() => {
-      const c = document.querySelector('canvas');
-      if (!c) return null;
-      try {
-        const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-        const buckets = new Map();
-        let n = 0;
-        for (let i = 0; i < d.length; i += 16) {
-          n++;
-          const k = (d[i] >> 4) * 256 + (d[i + 1] >> 4) * 16 + (d[i + 2] >> 4);
-          buckets.set(k, (buckets.get(k) || 0) + 1);
-        }
-        let top = 0;
-        for (const v of buckets.values()) if (v > top) top = v;
-        return { w: c.width, h: c.height, distinct: buckets.size, dominantPct: +(top / n * 100).toFixed(1) };
-      } catch (e) { return { err: String(e).slice(0, 80) }; }
-    });
+    const dens = await measureDens();
     shots.push({ name: s.name, hook: s.call, dens, dup, hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null, sameAsHome,
       state: stGot ? stGot.name : null, stateOk });
   } catch (e) {
@@ -233,12 +248,54 @@ try {
   await page.waitForTimeout(800);
   const geom = await page.evaluate(() => { const c = document.querySelector('canvas'); const r = c.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, cw: c.width, ch: c.height }; });
   await page.mouse.click(geom.l + (316 / geom.cw) * geom.w, geom.t + (617 / geom.ch) * geom.h);
-  await page.waitForTimeout(7000);
-  // 【第 53 轮修】7 s 无人操作足够升一级 ⇒「升级三选一」会整块盖住战场，state 变成 LEVELUP_MODAL，
-  //   下面那句 playing===true 的断言必然失败（云端实测：11-battle 判「LEVELUP_MODAL ❌」→ 整条 sweep 红）。
-  //   ⚠ 这不是游戏缺陷：升级弹窗本来就该拦住操作。是**探针**没清场 —— 与第 51 轮我在本机探针上
-  //     踩到的是同一个坑（弹窗抢屏：dh/err 全绿，只有看图/读 state 才发现）。
-  //   ⇒ 截图前先清掉待结算升级并显式回到 PLAYING；12-levelup 那一屏才是「该弹窗」的合法截图。
+  // 【第 126 轮】11-battle 必须拍到**真的在打仗**，而不是开场第 7 秒的空场。
+  //   发现过程（量出来的，不是看出来的）：`_qc/_imgstat.mjs` 对 13 屏量局部对比，
+  //   11-battle 的 edgePct = **4.37%**，是**全场最低**；而同一份报告里 11-battle 连
+  //   「独特色数/主色占比」都是 `-`（那段量只写在 STEPS 循环里）。
+  //   ⇒ **玩家花 90% 时间的那一屏，恰好是这套巡检量得最少的一屏。**
+  //   根因：原来的固定 `waitForTimeout(7000)` 不是为了"拍战斗"，而是为了让无人操作的玩家
+  //   **攒出一个升级弹窗**给下一屏（12-levelup）—— 它顺便定义了 11-battle 的画面 =
+  //   开局第 7 秒、几乎没怪。而 `stress-perf.mjs` 实测真实战斗中同屏怪可达 **45+**。
+  //   ⇒ 改法：**别再钉死秒数**，改成"轮询到真的有怪才拍"（自然推进，不 seek）。
+  //   ⛔ **为什么不用 `seek()` 跳到潮期**（我第一版就是那么写的，读了源码后撤回）：
+  //     `debugSeekRunTime(t)` 只把 `GAME.runTime` 与刷怪调度器推到 t，**不动玩家的等级/强化** ⇒
+  //     seek(92) 等于"让 1 级玩家面对 92 秒的压力" ⇒ 他会被淹死，拍到的是复活盘而不是战斗。
+  //     （stress-perf 之所以敢 seek，正是因为它**要**玩家弱、并且反复点复活盘续命；
+  //       那一套的目的是量帧时间，不是拍一张代表常态的图。）
+  //   ⚠ 取卡策略也因此与 stress-perf 相反：那边**故意不选卡**把密度堆到 45+（极端态），
+  //     这里要的是**常态战斗** ⇒ 正常选卡（玩家变强、活得下来、密度落在常态区间）。
+  //   ⚠ 阈值取 **10**：stress-perf 的轨迹原文是「选卡 21 次 ⇒ 同屏怪 **1–14** 震荡、峰值 14」，
+  //     14 是该区间上沿（拿它当阈值会几乎每次都报"未达阈值"——**永远会响的警告等于没有警告**）；
+  //     10 落在同一区间的偏高段，既证明"真的有怪"，又不掷骰子。**这个数来自那份实测记录，不是我拍的。**
+  //   ⚠ 到不了阈值**不算失败**：照拍，并把实测怪数原样写进报告（`⚠ 未达阈值`）。
+  //     不在这里硬判红，是因为本 workflow 的结论被 verify-dist 的「门禁收口」读走 ——
+  //     先让读数存在，再由人/后续门禁决定阈值（避免把一个绿色门禁改成掷骰子）。
+  const BATTLE_MIN_ENEMY = +(process.env.BATTLE_MIN_ENEMY || 10);
+  const BATTLE_WAIT_MS = +(process.env.BATTLE_WAIT_MS || 60000);
+  let bEnemy = 0, bPeak = 0, bState = '', bTries = 0, bWhy = '', bReached = false;
+  {
+    const t0 = Date.now();
+    while (Date.now() - t0 < BATTLE_WAIT_MS) {
+      bTries++;
+      const s = await battleProbe();
+      bState = s.st;
+      bEnemy = s.sk ? (s.sk.enemyCount | 0) : 0;
+      if (bEnemy > bPeak) bPeak = bEnemy;
+      if (bState === 'PLAYING' && bEnemy >= BATTLE_MIN_ENEMY) { bReached = true; bWhy = '达到 ' + BATTLE_MIN_ENEMY + ' 只'; break; }
+      if (bState === 'LEVELUP_MODAL') {
+        // 正常选卡（与 stress-perf 的"清场不选"相反，理由见上）
+        await page.evaluate(() => { try { window.MENGSHOU_DEBUG.levelupTap(); } catch (e) { void e; } });
+      } else if (bState === 'REVIVE_MODAL') {
+        // 与 stress-perf 同一套已验证钩子（点画面中央实测点不掉）
+        await page.evaluate(() => { try { if (typeof window.onTapReviveBtn === 'function') window.onTapReviveBtn(); } catch (e) { void e; } });
+      } else if (bState === 'RESULT_LOSE' || bState === 'RESULT_WIN') {
+        bWhy = '本局已结算（' + bState + '），不再硬闯'; break;
+      }
+      await page.waitForTimeout(400);
+    }
+    if (!bWhy) bWhy = '等满 ' + Math.round(BATTLE_WAIT_MS / 1000) + 's 未达阈值（峰值 ' + bPeak + '）';
+  }
+  // 清掉待结算升级并显式回到 PLAYING（保住 11-battle 的硬断言与 12-levelup 的前置）
   await page.evaluate(() => {
     try {
       if (window.run) window.run.pendingLevels = 0;
@@ -252,12 +309,16 @@ try {
   prevHash = crypto.createHash('sha1').update(fs.readFileSync(path.join(OUT, '11-battle.png'))).digest('hex').slice(0, 12);
   {
     const dHome = sigDiff(await screenSig(), homeSig);
+    const dens = await measureDens();
     // 【v1.167】战斗是**最容易假成功**的一屏（此前拍到的是没关掉的每日面板）→ 硬断言 PLAYING
     const st = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.state(); } catch (e) { return null; } });
     const stateOk = !!(st && st.playing === true);
     if (!stateOk) console.log('  ⚠ 11-battle 目标屏断言不通过：实测 state=' + (st ? st.name : 'null') + ' / 期望 PLAYING');
-    shots.push({ name: '11-battle', hook: 'mouse', hash: prevHash, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
-      state: st ? st.name : null, stateOk });
+    if (!bReached) console.log('::warning::11-battle 未达密度阈值 ' + BATTLE_MIN_ENEMY + '：' + bWhy + '（实测 ' + bEnemy + '，峰值 ' + bPeak + '）—— 这张图不代表常态战斗，评审前先看这个数');
+    console.log('::notice::11-battle 采样密度 同屏怪=' + bEnemy + ' 峰值=' + bPeak + ' 目标=' + BATTLE_MIN_ENEMY + ' 轮询=' + bTries + ' 结束=' + bWhy);
+    shots.push({ name: '11-battle', hook: 'mouse+轮询怪数', hash: prevHash, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
+      dens, state: st ? st.name : null, stateOk,
+      battleEnemy: bEnemy, battlePeak: bPeak, battleTries: bTries, battleReached: bReached, battleWhy: bWhy });
   }
   // ⚠ 已知坑：
   //  · `levelup` 是**快照查询**（返回 {ready,armed,state,cards}）→ 不能用来"打开升级"，
@@ -271,6 +332,18 @@ try {
   for (let t = 0; t < 70; t++) {
     lu = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.levelup(); } catch (e) { return null; } });
     if (lu && lu.cards && lu.cards.length > 0) break;
+    // 【第 126 轮】战斗现在是从**潮期**开始的（11-battle 改成轮询到真的有怪），玩家可能在这一段里倒下 ⇒
+    //   原实现只干等 35s，人死了就永远等不到卡（12-levelup 判 dup ⇒ 整条 sweep 红）。
+    //   这里补上 stress-perf 已验证的两个钩子：复活盘点掉、结算则如实放弃（不假装成功）。
+    if (t % 4 === 3) {
+      const pr = await battleProbe();
+      if (pr.st === 'REVIVE_MODAL') {
+        await page.evaluate(() => { try { if (typeof window.onTapReviveBtn === 'function') window.onTapReviveBtn(); } catch (e) { void e; } });
+      } else if (pr.st === 'RESULT_LOSE' || pr.st === 'RESULT_WIN') {
+        console.log('  ⚠ 12-levelup 等待期间本局已结算（' + pr.st + '）⇒ 等不到升级卡');
+        break;
+      }
+    }
     await page.waitForTimeout(500);
   }
   const cardsVis = !!(lu && lu.cards && lu.cards.length > 0);
@@ -280,7 +353,8 @@ try {
     const h = crypto.createHash('sha1').update(fs.readFileSync(path.join(OUT, '12-levelup.png'))).digest('hex').slice(0, 12);
     prevHash = h;
     const dHome = sigDiff(await screenSig(), homeSig);
-    shots.push({ name: '12-levelup', hook: '轮询 cards.length>0 (' + lu.cards.length + ' 张)', hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null });
+    shots.push({ name: '12-levelup', hook: '轮询 cards.length>0 (' + lu.cards.length + ' 张)', hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
+      dens: await measureDens() });
   } else {
     console.log('  ⚠ 12-levelup 等待超时：35s 内没有出现升级三选一（战斗可能未进入/时间不够）');
     shots.push({ name: '12-levelup', hook: '轮询 cards.length>0 超时', dup: true });
@@ -294,6 +368,22 @@ try {
   let paused = false;
   for (let t = 0; t < 24 && !paused; t++) {
     const before = prevHash;
+    // 【第 126 轮】`pause(true)` 只在 PLAYING 生效（见本文件上方已知坑）。战斗现在从潮期开始、
+    //   玩家可能已倒下 ⇒ 先确认状态并点掉复活盘/升级卡，否则这一屏会以"轮询超时"收场 ⇒ dup ⇒ sweep 退 2。
+    const pre = await battleProbe();
+    if (pre.st === 'REVIVE_MODAL') {
+      await page.evaluate(() => { try { if (typeof window.onTapReviveBtn === 'function') window.onTapReviveBtn(); } catch (e) { void e; } });
+      await page.waitForTimeout(300);
+    } else if (pre.st === 'LEVELUP_MODAL') {
+      await page.evaluate(() => {
+        try {
+          if (window.run) window.run.pendingLevels = 0;
+          if (typeof window.closeLevelupUi === 'function') window.closeLevelupUi();
+          if (window.GAME && window.GAME.flow) window.GAME.setState(window.GAME.flow.PLAYING);
+        } catch (e) { void e; }
+      });
+      await page.waitForTimeout(300);
+    }
     await page.evaluate(() => { try { window.MENGSHOU_DEBUG.pause(true); } catch (e) { void e; } });
     await page.waitForTimeout(700);
     const p = path.join(OUT, '13-pause.png');
@@ -306,6 +396,7 @@ try {
       const ok2 = !!(st2 && st2.pause === true);
       if (!ok2) console.log('  ⚠ 13-pause 目标屏断言不通过：实测 state=' + (st2 ? st2.name : 'null') + ' / 期望 PAUSED_MENU');
       shots.push({ name: '13-pause', hook: 'pause(true) 轮询成功', hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
+        dens: await measureDens(),
         state: st2 ? st2.name : null, stateOk: ok2 });
       paused = true;
     }
@@ -331,9 +422,19 @@ const md = [
     (s.state || '-') + (s.stateOk === false ? ' ❌' : '') + ' | ' +
     (s.dup ? '⚠ **与上一屏完全相同（未真正打开）**'
       : (s.sameAsHome ? '⚠ **仍是大厅（与大厅基线 Δ=' + s.dHome + '，未真正打开）**'
-        : (s.skipped || s.error || ''))) + ' |'),
+        : (s.skipped || s.error || '')))
+    // 【第 126 轮】战斗屏**自带密度标签**：不写清楚这一张是"几只怪"的那一刻，评审者没法判断它代不代表常态
+    + (s.battleEnemy !== undefined
+      ? (s.battleEnemy !== null ? (s.battleEnemy >= +(process.env.BATTLE_MIN_ENEMY || 10) ? '' : '⚠ ') +
+        '同屏怪 **' + s.battleEnemy + '** 只（峰值 ' + s.battlePeak + '，目标 ' + (+(process.env.BATTLE_MIN_ENEMY || 10)) + '）' : '')
+      : '') + ' |'),
   '',
   '> 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。',
+  '',
+  '> ⚠ **11-battle 自带密度标签（第 126 轮新增）**：这一屏原来固定在"进战斗后第 7 秒"拍，',
+  '> 那个时点几乎没怪 —— 实测 13 屏里它的局部对比 edgePct=4.37% 是**全场最低**，',
+  '> 而玩家 90% 的时间恰恰花在这一屏。现在改成：`seek()` 跳到潮期 → 轮询到 `enemyCount ≥ 目标` 才拍，',
+  '> 并把**实测同屏怪数**写进备注列。**没有这个数，就不该拿这一屏下美术结论。**',
   '',
   '> ⚠ 备注列标 `与上一屏完全相同` 的，表示**该界面没有被真正打开**（截图与上一屏字节相同）。',
   '> 这类条目**不能当作"已巡检"** —— 修法：先复位到大厅，或换一个能生效的钩子。',
