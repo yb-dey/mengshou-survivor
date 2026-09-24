@@ -108,9 +108,24 @@ const LOAD_TARGET = +(process.env.LOAD_TARGET || 45);
 // 【第 54 轮修④】窗口 55s → 85s：轨迹实测（清卡 + 确定性复活都修好之后）同屏怪数一秒约 +1.3 只，
 //   到 55s 窗口结束时才 **40** 且仍在爬 ⇒ 缺的是时间，不是"怪堆不起来"。可用 LOAD_WAIT_MS 覆盖。
 const WAIT_MS = +(process.env.LOAD_WAIT_MS || 85000);
+// 【第 118 轮】不再"到点就收"：**只要峰值还在爬，就再给它时间**（到 HARD_CAP 为止）。
+//   依据就是本文件自己的历史轨迹（上面第 54 轮那条）："到 55s 才 40 且仍在爬 ⇒ **缺的是时间**，不是怪堆不起来"。
+//   2026-09-25 又栽在同一个"差一点点"上：一次 verify-dist 因峰值 **40 < 45** 判样本无效而红，
+//   而那份提交**只改了 `ci/audio-audit.mjs`**（CI 专用文件，不可能影响刷怪）⇒ 同一个真因，不是游戏变慢。
+//   ⚠ 判据（目标 45）**一个数字都没动** —— 改的只是"别在怪还在爬的时候收工"，所以真回归照样红。
+const HARD_CAP_MS = +(process.env.LOAD_HARD_CAP_MS || 150000);
+let lastGainAt = Date.now(), lastPeak = 0;
 let polls = 0, seeks = 0, lvTaps = 0, reviveTaps = 0, exitWhy = '超时 ' + Math.round(WAIT_MS / 1000) + 's（没到目标）';
 const tWait0 = Date.now();
-while (Date.now() - tWait0 < WAIT_MS) {
+while (true) {
+  const elapsed = Date.now() - tWait0;
+  if (elapsed >= HARD_CAP_MS) { exitWhy = '硬上限 ' + Math.round(HARD_CAP_MS / 1000) + 's（没到目标）'; break; }
+  if (elapsed >= WAIT_MS && (peak.enemyCount >= LOAD_TARGET || Date.now() - lastGainAt > 10000)) {
+    exitWhy = peak.enemyCount >= LOAD_TARGET
+      ? '达到目标（' + Math.round(elapsed / 1000) + 's）'
+      : '窗口 ' + Math.round(WAIT_MS / 1000) + 's + 续等到 ' + Math.round(elapsed / 1000) + 's（峰值 ' + peak.enemyCount + ' 已不再爬升）';
+    break;
+  }
   const s = await page.evaluate(() => {
     const D = window.MENGSHOU_DEBUG || {};
     let st = ''; try { st = (D.state ? D.state() : {}).state || ''; } catch (e) {}
@@ -120,6 +135,8 @@ while (Date.now() - tWait0 < WAIT_MS) {
   polls++;
   if (s.sk) {
     if (s.sk.enemyCount > peak.enemyCount) peak = s.sk;
+    // 【第 118 轮】记录"还在爬"的时刻：超过 10s 没再刷新峰值 ⇒ 认定灌怪已停，可以收工（不必等满硬上限）。
+    if (peak.enemyCount > lastPeak) { lastPeak = peak.enemyCount; lastGainAt = Date.now(); }
     if (peak.enemyCount >= LOAD_TARGET) { exitWhy = '达到目标'; break; }
   }
   // 轨迹（每 12 次轮询 ≈ 6s 一条；step 的注解条数有上限，别发太密）
