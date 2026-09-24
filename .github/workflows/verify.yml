@@ -370,6 +370,13 @@ jobs:
         run: |
           node ci/lane-tag-channel.mjs --selftest
           node ci/lane-tag-channel.mjs
+      # 【第 78 轮】音效字面量接线（GATE）：assert-audio-map 锁的是「表与表」（gains ↔ sfxFiles ↔ 文件 ↔ DATA_SFX 引用），
+      #   但母版还有 159 处**直接传字符串**的 Audio.play（57 个去重 id）。这类字面量拼错就是**静默无声**，
+      #   与「dist 音频 0 个却全绿」同族。本轮实测 57/57 全部命中 ⇒ 没有这种缺陷；本判据把它锁住。
+      - name: 音效字面量接线（GATE · 不许有静默无声的调用点）
+        run: |
+          node ci/sfx-literal-wiring.mjs --selftest
+          node ci/sfx-literal-wiring.mjs
 
       # 【v1.206 期】触控目标锁（第 69 轮）：逻辑画布 720 宽映射到 390pt 手机 ⇒ ×0.5417，
       #   通行下限 44 CSS px（iOS HIG）/ 48dp（Android）⇒ 取 **81 逻辑px**。
