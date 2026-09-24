@@ -49,7 +49,7 @@ const ALLOW_OVERLAP = [];   // 允许的重叠（当前为空：任何同屏重�
 //   首跑实测「复活/死亡 0/0/0」：state 轮询说到了 REVIVE_MODAL，扫描却一个可点节点都没有 ——
 //   这种「没量到」绝不能长得像「量过且没问题」（本工作区反复踩的同一个坑）。低于下限 ⇒ FAIL。
 const EXPECT_MIN = { 'HOME(大厅)': 8, '设置': 4, '图鉴': 4, '装备库': 4, '宝库': 4, '每日挑战': 2,
-  '暂停': 4, '升级三选一': 3, '复活/死亡': 2, '结算': 2 };
+  '暂停': 4, '升级三选一': 3, '复活/死亡': 2, '结算': 2, '结算-满载': 4, '暂停-满载': 6 };
 // ── 偏小台账：可点节点短边 < 44 CSS px 必须在这里登记"为什么先这样"，否则 FAIL ──
 //   ⚠ 与静态判据的 ALLOW_NEW 同款纪律：**报告不是契约**。60 个偏小如果只是打印出来，
 //   下一个人加一个 18px 的可点条目也不会有任何东西拦他。
@@ -214,6 +214,17 @@ try {
       await page.evaluate(() => { try { window.MENGSHOU_DEBUG.giveUp(); } catch (e) { void e; } });
       if (await pollFor('(' + NODES + ') >= 2 && /RESULT_(WIN|LOSE)/.test(MENGSHOU_DEBUG.state().name)', 24, 500)) await scan('结算', '');
       else { console.log('SKIP [结算] 未进入 RESULT_*'); report.cases.push({ label: '结算', skipped: true }); }
+      // ── 满载构筑两屏：暴露"条目变多 ⇒ 布局自动缩高"这条隐藏路径（result floor 22 / pause floor 32）──
+      //   做法：连续 12 次「掷卡→选第一张」，把武器/被动/战斗/进化各道都填满，再看面板怎么排。
+      //   debugBindOptions / rollUpgradeOptions / debugLevelupTap 都是脚本顶层函数（经典 script ⇒ 全局可调）。
+      const DENSE = "debugPlayClean(0,\x27\x27,false); for (var i=0;i<12;i++){ try { debugBindOptions(rollUpgradeOptions(), false, \x27\x27); debugLevelupTap(0); if (typeof closeCards === \x27function\x27) closeCards(); } catch (e) {} }";
+      const runDense = async (tail) => { await page.evaluate((code) => { try { (new Function(code))(); } catch (e) { void e; } }, DENSE + " " + tail); };
+      await runDense("MENGSHOU_DEBUG.win();");
+      if (await pollFor('(' + NODES + ') >= 4 && /RESULT_(WIN|LOSE)/.test(MENGSHOU_DEBUG.state().name)', 24, 500)) await scan('结算-满载', '');
+      else { console.log('SKIP [结算-满载] 未进入 RESULT_*（或构筑未铺开）'); report.cases.push({ label: '结算-满载', skipped: true }); }
+      await runDense("try{closeCards();}catch(e){} MENGSHOU_DEBUG.pause(true);");
+      if (await pollFor('(' + NODES + ') >= 6 && MENGSHOU_DEBUG.state().name === "PAUSED_MENU"', 24, 500)) await scan('暂停-满载', '');
+      else { console.log('SKIP [暂停-满载] 未进入 PAUSED_MENU（或构筑未铺开）'); report.cases.push({ label: '暂停-满载', skipped: true }); }
     } else {
       console.log('SKIP [战斗相关四屏] start(0) 与点 CTA 都没进 PLAYING');
       for (const l of ['暂停', '升级三选一', '复活/死亡', '结算']) report.cases.push({ label: l, skipped: true });
