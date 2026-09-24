@@ -37,15 +37,15 @@ Version 1.63.0
 | 02-chapters | openChapters | 720×1280 | 767 | 21.1% | 77.08 | HOME |  |
 | 03-gear | openGear | 720×1280 | 738 | 22.7% | 66.52 | ARMORY |  |
 | 04-upgrade | openUp | 720×1280 | 615 | 24.7% | 62.06 | HOME |  |
-| 05-vault | openVault | 720×1280 | 611 | 20.4% | 55.32 | HOME |  |
+| 05-vault | openVault | 720×1280 | 611 | 20.4% | 55.31 | HOME |  |
 | 06-beast | openBeast | 720×1280 | 635 | 41.7% | 63.17 | BEAST |  |
-| 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 55.44 | BEAST |  |
+| 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 55.45 | BEAST |  |
 | 08-settings | openSettings | 720×1280 | 538 | 36.6% | 74.85 | SETTINGS |  |
 | 09-about | about | 720×1280 | 524 | 41.8% | 80.38 | ABOUT |  |
 | 10-daily | dailyPick | 720×1280 | 541 | 20.2% | 77.4 | HOME |  |
-| 11-battle | mouse | - | - | - | 42.93 | PLAYING |  |
-| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 64.74 | - |  |
-| 13-pause | pause(true) 轮询成功 | - | - | - | 63.43 | PAUSED_MENU |  |
+| 11-battle | mouse | - | - | - | 43.13 | PLAYING |  |
+| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 64.14 | - |  |
+| 13-pause | pause(true) 轮询成功 | - | - | - | 63.66 | PAUSED_MENU |  |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
 
@@ -58,21 +58,21 @@ Version 1.63.0
 
 === exit=0 ===
 === ci/out ===
-total 4516
-drwxr-xr-x 2 runner runner   4096 Sep 24 17:52 .
-drwxr-xr-x 7 runner runner   4096 Sep 24 17:52 ..
--rw-r--r-- 1 runner runner 482918 Sep 24 17:53 01-home.png
--rw-r--r-- 1 runner runner 308804 Sep 24 17:53 02-chapters.png
--rw-r--r-- 1 runner runner 285415 Sep 24 17:53 03-gear.png
--rw-r--r-- 1 runner runner 402076 Sep 24 17:53 04-upgrade.png
--rw-r--r-- 1 runner runner 364529 Sep 24 17:53 05-vault.png
--rw-r--r-- 1 runner runner 477426 Sep 24 17:53 06-beast.png
--rw-r--r-- 1 runner runner 415522 Sep 24 17:53 07-codex-enemy.png
--rw-r--r-- 1 runner runner 227057 Sep 24 17:53 08-settings.png
--rw-r--r-- 1 runner runner 251576 Sep 24 17:53 09-about.png
--rw-r--r-- 1 runner runner 264180 Sep 24 17:53 10-daily.png
--rw-r--r-- 1 runner runner 446758 Sep 24 17:54 11-battle.png
--rw-r--r-- 1 runner runner 300938 Sep 24 17:54 12-levelup.png
--rw-r--r-- 1 runner runner 350630 Sep 24 17:54 13-pause.png
--rw-r--r-- 1 runner runner   4414 Sep 24 17:54 screens.json
--rw-r--r-- 1 runner runner   1497 Sep 24 17:54 screens.md
+total 4536
+drwxr-xr-x 2 runner runner   4096 Sep 24 17:58 .
+drwxr-xr-x 7 runner runner   4096 Sep 24 17:58 ..
+-rw-r--r-- 1 runner runner 483152 Sep 24 17:58 01-home.png
+-rw-r--r-- 1 runner runner 308804 Sep 24 17:58 02-chapters.png
+-rw-r--r-- 1 runner runner 285300 Sep 24 17:58 03-gear.png
+-rw-r--r-- 1 runner runner 401920 Sep 24 17:59 04-upgrade.png
+-rw-r--r-- 1 runner runner 364529 Sep 24 17:59 05-vault.png
+-rw-r--r-- 1 runner runner 477497 Sep 24 17:59 06-beast.png
+-rw-r--r-- 1 runner runner 415449 Sep 24 17:59 07-codex-enemy.png
+-rw-r--r-- 1 runner runner 227233 Sep 24 17:59 08-settings.png
+-rw-r--r-- 1 runner runner 251495 Sep 24 17:59 09-about.png
+-rw-r--r-- 1 runner runner 264268 Sep 24 17:59 10-daily.png
+-rw-r--r-- 1 runner runner 445952 Sep 24 17:59 11-battle.png
+-rw-r--r-- 1 runner runner 316288 Sep 24 17:59 12-levelup.png
+-rw-r--r-- 1 runner runner 357705 Sep 24 17:59 13-pause.png
+-rw-r--r-- 1 runner runner   4414 Sep 24 17:59 screens.json
+-rw-r--r-- 1 runner runner   1497 Sep 24 17:59 screens.md
