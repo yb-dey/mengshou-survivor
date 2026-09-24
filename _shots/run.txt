@@ -33,19 +33,19 @@ Version 1.63.0
 
 | 截图 | 钩子 | 画布 | 独特色数 | 主色占比 | 与大厅Δ | 实测状态 | 备注 |
 |---|---|---|---|---|---|---|---|
-| 01-home | hall | 720×1280 | 804 | 10% | 0 | HOME |  |
-| 02-chapters | openChapters | 720×1280 | 767 | 21.1% | 77.72 | HOME |  |
-| 03-gear | openGear | 720×1280 | 738 | 22.7% | 65.95 | ARMORY |  |
-| 04-upgrade | openUp | 720×1280 | 615 | 24.7% | 61.53 | HOME |  |
-| 05-vault | openVault | 720×1280 | 611 | 20.4% | 55.12 | HOME |  |
-| 06-beast | openBeast | 720×1280 | 635 | 41.7% | 62.58 | BEAST |  |
-| 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 54.92 | BEAST |  |
-| 08-settings | openSettings | 720×1280 | 538 | 36.6% | 74.02 | SETTINGS |  |
-| 09-about | about | 720×1280 | 524 | 41.8% | 80.04 | ABOUT |  |
-| 10-daily | dailyPick | 720×1280 | 541 | 20.2% | 76.61 | HOME |  |
-| 11-battle | mouse | - | - | - | 43.43 | PLAYING |  |
-| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 64.18 | - |  |
-| 13-pause | pause(true) 轮询成功 | - | - | - | 63.62 | PAUSED_MENU |  |
+| 01-home | hall | 720×1280 | 805 | 10% | 0 | HOME |  |
+| 02-chapters | openChapters | 720×1280 | 767 | 21.1% | 77.71 | HOME |  |
+| 03-gear | openGear | 720×1280 | 738 | 22.7% | 66.11 | ARMORY |  |
+| 04-upgrade | openUp | 720×1280 | 615 | 24.7% | 61.62 | HOME |  |
+| 05-vault | openVault | 720×1280 | 611 | 20.4% | 55.22 | HOME |  |
+| 06-beast | openBeast | 720×1280 | 635 | 41.7% | 62.78 | BEAST |  |
+| 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 55.07 | BEAST |  |
+| 08-settings | openSettings | 720×1280 | 538 | 36.6% | 74.17 | SETTINGS |  |
+| 09-about | about | 720×1280 | 524 | 41.8% | 80.03 | ABOUT |  |
+| 10-daily | dailyPick | 720×1280 | 541 | 20.2% | 76.76 | HOME |  |
+| 11-battle | mouse | - | - | - | 43.85 | PLAYING |  |
+| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 64.57 | - |  |
+| 13-pause | pause(true) 轮询成功 | - | - | - | 63.45 | PAUSED_MENU |  |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
 
@@ -58,21 +58,21 @@ Version 1.63.0
 
 === exit=0 ===
 === ci/out ===
-total 4488
-drwxr-xr-x 2 runner runner   4096 Sep 24 17:14 .
-drwxr-xr-x 7 runner runner   4096 Sep 24 17:14 ..
--rw-r--r-- 1 runner runner 467719 Sep 24 17:14 01-home.png
--rw-r--r-- 1 runner runner 307146 Sep 24 17:14 02-chapters.png
--rw-r--r-- 1 runner runner 283561 Sep 24 17:14 03-gear.png
--rw-r--r-- 1 runner runner 398015 Sep 24 17:14 04-upgrade.png
--rw-r--r-- 1 runner runner 362827 Sep 24 17:14 05-vault.png
--rw-r--r-- 1 runner runner 475409 Sep 24 17:14 06-beast.png
--rw-r--r-- 1 runner runner 413496 Sep 24 17:14 07-codex-enemy.png
--rw-r--r-- 1 runner runner 224205 Sep 24 17:14 08-settings.png
--rw-r--r-- 1 runner runner 249259 Sep 24 17:14 09-about.png
--rw-r--r-- 1 runner runner 261672 Sep 24 17:14 10-daily.png
--rw-r--r-- 1 runner runner 438666 Sep 24 17:15 11-battle.png
--rw-r--r-- 1 runner runner 314297 Sep 24 17:15 12-levelup.png
--rw-r--r-- 1 runner runner 356194 Sep 24 17:15 13-pause.png
--rw-r--r-- 1 runner runner   4414 Sep 24 17:15 screens.json
--rw-r--r-- 1 runner runner   1497 Sep 24 17:15 screens.md
+total 4532
+drwxr-xr-x 2 runner runner   4096 Sep 24 17:48 .
+drwxr-xr-x 7 runner runner   4096 Sep 24 17:48 ..
+-rw-r--r-- 1 runner runner 469439 Sep 24 17:49 01-home.png
+-rw-r--r-- 1 runner runner 308325 Sep 24 17:49 02-chapters.png
+-rw-r--r-- 1 runner runner 284360 Sep 24 17:49 03-gear.png
+-rw-r--r-- 1 runner runner 399836 Sep 24 17:49 04-upgrade.png
+-rw-r--r-- 1 runner runner 363562 Sep 24 17:49 05-vault.png
+-rw-r--r-- 1 runner runner 476309 Sep 24 17:49 06-beast.png
+-rw-r--r-- 1 runner runner 414453 Sep 24 17:49 07-codex-enemy.png
+-rw-r--r-- 1 runner runner 225873 Sep 24 17:49 08-settings.png
+-rw-r--r-- 1 runner runner 250348 Sep 24 17:49 09-about.png
+-rw-r--r-- 1 runner runner 263552 Sep 24 17:49 10-daily.png
+-rw-r--r-- 1 runner runner 469507 Sep 24 17:49 11-battle.png
+-rw-r--r-- 1 runner runner 309525 Sep 24 17:49 12-levelup.png
+-rw-r--r-- 1 runner runner 353230 Sep 24 17:49 13-pause.png
+-rw-r--r-- 1 runner runner   4414 Sep 24 17:49 screens.json
+-rw-r--r-- 1 runner runner   1497 Sep 24 17:49 screens.md
