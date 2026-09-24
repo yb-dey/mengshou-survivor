@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>设计尺寸 vs 真机 —— 字号体检</title>
+<style>
+  body { margin:0; padding:20px 24px; background:#14170f; color:#e8f0d4;
+         font:14px/1.7 system-ui,-apple-system,"Microsoft YaHei",sans-serif; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  .lead { color:#b9c8a4; max-width:1180px; }
+  .lead b { color:#ffe082; }
+  table { border-collapse:collapse; margin:14px 0 22px; font-size:13px; }
+  th,td { border:1px solid #3a4a2c; padding:4px 10px; text-align:right; }
+  th:first-child,td:first-child { text-align:left; }
+  .bad { color:#ff9a8a; }
+  .ok { color:#9ede7a; }
+  .row { display:flex; gap:18px; align-items:flex-start; padding:14px 0 22px; border-top:1px solid #2a3220; }
+  .cell { flex:0 0 auto; }
+  .cap { font-size:12px; color:#9aab84; margin-bottom:4px; }
+  .cell img { display:block; border:1px solid #3a4a2c; background:#000; }
+  .zoom img { image-rendering:pixelated; }
+  .note { color:#8fa07a; max-width:1180px; }
+  code { background:#232b1a; padding:1px 5px; border-radius:3px; }
+</style>
+</head>
+<body>
+<h1>设计尺寸 720×1280 ≠ 玩家看到的尺寸</h1>
+<p class="lead">
+  游戏每一张巡检图、每一个评审页都是 <b>720×1280 的 1:1</b> —— 那是<b>设计尺寸</b>。
+  源码实测（<code>resizeCanvas</code>）：画布内部恒为 720×1280(×dpr)，CSS 尺寸按窗口 letterbox
+  ⇒ <b>一个逻辑 px = cssW/720 个 CSS px</b>。手机 CSS 宽 360 时整幅缩到 <b>0.5</b>，
+  于是 <b>12px 逻辑字只剩 6 CSS px</b>；按参考机（1080p / 6.1" / DPR3 / dprCap2）折成物理长度是
+  <b>1.13mm</b>，而中文可读下限约 <b>2.5mm</b>。
+</p>
+<table>
+  <tr><th>逻辑 px</th><th>出现次数</th><th>@360 CSS 宽</th><th>物理 mm</th><th>判定</th></tr>
+  <tr><td>9–13（标签 / 说明 / 章节名 / 数值）</td><td>101</td><td>4.5–6.5 px</td><td>0.85–1.23</td><td class="bad">✗ 真机必糊</td></tr>
+  <tr><td>14–20（卡片正文 / 行说明）</td><td>162</td><td>7.0–10.0 px</td><td>1.32–1.89</td><td class="bad">✗ 低于可读下限</td></tr>
+  <tr><td>22–26（次要标题 / 底栏图标名）</td><td>32</td><td>11.0–13.0 px</td><td>2.08–2.45</td><td class="bad">✗ 临界</td></tr>
+  <tr><td>28 以上（主标题 / 主 CTA）</td><td>25</td><td>14.0 px 以上</td><td>2.64 以上</td><td class="ok">✓</td></tr>
+</table>
+<p class="lead">
+  合计 <b>307 / 332 处 font 赋值（92%）低于中文可读下限</b>。
+  行业常规最小正文 = 750 设计稿 24px ≈ 本作 <b>23–24 逻辑 px</b> —— 也就是说这份字号表的下半段
+  整体只有常规的一半。（量具：<code>_qc/_type-audit.mjs</code>，--selftest 8/8；
+  真机图：<code>_qc/_phone-view.mjs</code>，--selftest 4/4。）
+</p>
+<p class="note">
+  下面每屏三格：<b>左＝设计尺寸 720（我一直在看的）</b> ·
+  <b>中＝真机 360 原大（玩家真正看到的）</b> · <b>右＝真机再放大 2× 并保持像素颗粒（用来看清损失）</b>。
+</p>
+
+<ul id="list" style="list-style:none;padding:0;margin:18px 0 0"></ul>
+<script>
+var files = ["01-home","02-chapters","03-gear","04-upgrade","05-vault","06-beast","07-codex-enemy",
+  "08-settings","09-about","10-daily","11-battle","12-levelup","13-pause"];
+var ul = document.getElementById('list');
+files.forEach(function (f) {
+  var li = document.createElement('li');
+  li.className = 'row';
+  li.innerHTML =
+    '<div class="cell"><div class="cap">设计 720（1:1）</div><img src="v1210/' + f + '.png" width="432" alt="' + f + ' 设计尺寸"></div>' +
+    '<div class="cell"><div class="cap">真机 360（原大）</div><img src="v1210-phone/' + f + '.png" width="360" alt="' + f + ' 真机"></div>' +
+    '<div class="cell zoom"><div class="cap">真机 360 放大 2×（看损失）</div><img src="v1210-phone/' + f + '.png" width="720" alt="' + f + ' 真机放大"></div>';
+  ul.appendChild(li);
+});
+</script>
+</body>
+</html>
