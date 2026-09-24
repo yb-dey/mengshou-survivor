@@ -262,8 +262,12 @@ if (process.argv.includes('--selftest')) {
 }
 
 if (!fs.existsSync(FILE)) {
-  console.log('⚠ 找不到 ' + FILE + '（GAME_HTML 可覆盖）→ 结构级检查跳过，视为 SKIP');
-  process.exit(0);
+  // 【第 109 轮】原来是「视为 SKIP」+ exit 0 —— 那就是"没读到输入却报成功"。
+  //   空转探针 `_qc/_gate-vacuity.mjs` 在空目录里跑它时抓到：exit 0，而它一个判据都没算过。
+  //   门禁的底线：**验证不了就必须失败**——否则母版被改名/移走时，这条门禁在 CI 里等于不存在。
+  console.log('❌ 找不到 ' + FILE + '（GAME_HTML 可覆盖）—— 本门禁**无法验证任何判据**，按失败处理');
+  console.log('   （旧行为是"视为 SKIP" + exit 0，第 109 轮废除：那会把"没查"报成"通过"）');
+  process.exit(1);
 }
 const html = fs.readFileSync(FILE, 'utf8');
 

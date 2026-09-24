@@ -18,7 +18,13 @@ const ROOT = process.argv[2] || process.cwd();
 const TARGET = path.join(ROOT, "game/萌兽消消岛.html");
 const FALLBACK = path.join(ROOT, ".workbuddy/v1.162/mengshou/game/萌兽消消岛.html");
 const HTML = fs.existsSync(TARGET) ? TARGET : FALLBACK;
-if (!fs.existsSync(HTML)) { console.log("SKIP 找不到游戏母版: " + HTML); process.exit(0); }
+// 【第 109 轮】退出码契约细分（**不动文件头那条"退出码恒 0（只报不拦）"的裁决**：查出 FAIL 仍然 exit 0）：
+//   0 = 跑完了（有 FAIL 行也只报不拦）· 3 = **没能跑**（找不到母版 / 数据抽取失败）。
+//   为什么要加 3：空转探针 `_qc/_gate-vacuity.mjs` 在空目录里跑它时，它印「SKIP 找不到游戏母版」然后 exit 0
+//   —— 这与"跑完且没问题"在调用方看来一模一样。**"没查"和"查过"必须能被区分开。**
+const SKIP = (why) => { console.log("SKIP " + why); process.exit(3); };
+console.log("入口: " + HTML + (HTML === FALLBACK ? "（**走的是 v1.162 旧路径兜底**，不是 game/ 下的母版）" : ""));
+if (!fs.existsSync(HTML)) SKIP("找不到游戏母版: " + HTML);
 const src = fs.readFileSync(HTML, "utf8");
 
 // ---- 1. 抽数据 ----
@@ -37,7 +43,7 @@ function cutObj(startMark) {
   return src.slice(i, j + 4);
 }
 const pairBlock = cut("var DATA_CODEX_PAIR");
-if (!pairBlock) { console.log("SKIP 找不到 DATA_CODEX_PAIR"); process.exit(0); }
+if (!pairBlock) SKIP("找不到 DATA_CODEX_PAIR（母版里没有这张表）");
 // 依赖：pairCodexOf 用的是 aName/bName/effect/contrast/tag/name —— 从 DATA_PASSIVE 取名字
 const passiveBlock = cutObj("var DATA_PASSIVE");
 // flowNameOf 依赖的流派词表 DATA_FLOW（对象，不是数组）
@@ -51,7 +57,7 @@ fs.writeFileSync(tmpJs,
   "\nexport {DATA_PASSIVE, DATA_CODEX_PAIR, DATA_FLOW};\n");
 let mod;
 try { mod = await import("file:///" + tmpJs.replace(/\\/g, "/")); }
-catch (e) { console.log("SKIP 数据抽取失败: " + e.message); process.exit(0); }
+catch (e) { SKIP("数据抽取失败: " + e.message); }
 
 // DATA_PASSIVE 是对象（id→def），归一成数组便于查找
 const PASS = Array.isArray(mod.DATA_PASSIVE)
