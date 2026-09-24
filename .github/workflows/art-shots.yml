@@ -1,10 +1,9 @@
 name: art-shots
 
-# 18 屏巡检截图**自动落回仓库**（不是 artifact —— artifact 下载要鉴权，本机没有 token）。
-# 背景（台账 O1/O3）：用户"看不到我改了哪里"的根因之一是**取像形态不一致**；
-#   而 CI 的 screen-sweep 产物只在 artifact 里，我读不到 ⇒ 只能凭空猜画面。
-# 本流水线复用仓库里已测过的 `ci/screen-sweep.mjs`（在 game/ 上起 http 服务、按 18 个界面钩子逐屏截图），
-#   再把 `ci/out/*.png` 提交回仓库 ⇒ 我用 pull/raw 就能拿到与 CI 同源的实机画面。
+# 18 屏巡检截图**自动落回仓库**（artifact 下载要鉴权，本机没有 token ⇒ 走 commit）。
+# 【第二次提交的修正】第一版失败，而 **Actions 日志要鉴权**，我读不到原因 ——
+#   这正是 P13「只建主路不建回读路」的复发：新建管道时必须同时建回读通道。
+#   本版把 stdout/stderr 写进 `_shots/run.txt` 并**无论成败都 commit**，错因会落进仓库。
 on:
   push:
     paths:
@@ -26,23 +25,46 @@ jobs:
         with:
           node-version: '22'
 
-      - name: 安装 playwright（chromium）
+      - name: 准备目录
+        run: mkdir -p _shots ci/out
+
+      - name: 安装 playwright（chromium）— 输出留档
+        continue-on-error: true
         run: |
-          npm init -y >/dev/null 2>&1 || true
-          npm i --no-audit --no-fund playwright@1.49.1
-          npx playwright install --with-deps chromium
+          set +e
+          {
+            echo "=== node ==="; node -v
+            echo "=== npm init ==="; npm init -y 2>&1 | tail -3
+            echo "=== npm i playwright ==="; npm i --no-audit --no-fund playwright 2>&1 | tail -8
+            echo "=== playwright install --with-deps chromium ==="; npx playwright install --with-deps chromium 2>&1 | tail -14
+            echo "=== playwright version ==="; npx playwright --version 2>&1
+          } > _shots/run.txt 2>&1
+          tail -40 _shots/run.txt
+          exit 0
 
-      - name: 跑 18 屏巡检（输出 ci/out）
-        run: node ci/screen-sweep.mjs
+      - name: 跑 18 屏巡检 — 输出追加同一日志
+        continue-on-error: true
+        run: |
+          set +e
+          {
+            echo ""
+            echo "=== node ci/screen-sweep.mjs ==="
+            node ci/screen-sweep.mjs 2>&1
+            echo "=== exit=$? ==="
+            echo "=== ci/out ==="
+            ls -la ci/out 2>&1 | head -30
+          } >> _shots/run.txt 2>&1
+          tail -60 _shots/run.txt
+          exit 0
 
-      - name: 截图与清单提交回仓库
+      - name: 截图与日志提交回仓库（无论成败）
         if: always()
         run: |
           git config user.name  "shots-bot"
           git config user.email "shots-bot@users.noreply.github.com"
           mkdir -p _shots/v1210
           cp -f ci/out/*.png _shots/v1210/ 2>/dev/null || true
-          node -e "const fs=require('fs');const d='ci/out';const f=fs.existsSync(d)?fs.readdirSync(d).filter(x=>x.endsWith('.png')):[];fs.writeFileSync('_shots/index.json',JSON.stringify({at:new Date().toISOString(),count:f.length,files:f},null,2));console.log('shots',f.length);"
+          node -e "const fs=require('fs');const f=fs.existsSync('ci/out')?fs.readdirSync('ci/out').filter(x=>x.endsWith('.png')):[];fs.writeFileSync('_shots/index.json',JSON.stringify({at:new Date().toISOString(),count:f.length,files:f},null,2));console.log('shots',f.length);"
           git add -A _shots ci/out
-          git diff --cached --quiet && echo "无截图变化" || git commit -m "art-shots: 18 屏巡检截图（$(date -u '+%Y-%m-%d %H:%M') UTC）"
+          git diff --cached --quiet && echo "无变化" || git commit -m "art-shots: 18 屏截图 + 运行日志（$(date -u '+%Y-%m-%d %H:%M') UTC）"
           git push
