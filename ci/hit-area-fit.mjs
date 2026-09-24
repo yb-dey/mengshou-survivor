@@ -251,7 +251,9 @@ try {
           // ⚠ 第一版固定等 420ms 就点 ⇒ 卡还没"就位"（弹出动画未完）⇒ 一张也选不上。改为轮询卡片出现。
           let got = false;
           for (let t = 0; t < 14 && !got; t++) {
-            got = await page.evaluate(() => { try { const c = (MENGSHOU_DEBUG.levelup() || {}).cards || []; return c.length > 0; } catch (e) { return false; } }).catch(() => false);
+            // ⚠ 第 82 轮实测：只等 cards 出现不够 —— 选卡要等它「就位」(armed)，否则点了等于没点。
+            //   与「12/12 选卡成功却只有 2 条构筑」这个矛盾对上了：我此前数的是**点击次数**，不是生效次数。
+            got = await page.evaluate(() => { try { const s = MENGSHOU_DEBUG.levelup() || {}; const c = s.cards || []; return c.length > 0 && !!s.armed; } catch (e) { return false; } }).catch(() => false);
             if (!got) await page.waitForTimeout(120);
           }
           if (!got) continue;
@@ -262,9 +264,17 @@ try {
           await page.evaluate(() => { try { closeCards(); } catch (e) { void e; } });
           await page.waitForTimeout(140);
         }
-        return picks;
+        // 权威口径：直接问"这一局的构筑现在有几条"（与结算面板同一份 view），
+        //   免得再拿"点击次数"当"生效次数"。
+        const build = await page.evaluate(() => { try {
+          const v = resultBuildView() || {};
+          return ((v.weapons || []).length + (v.combat || []).length + (v.passives || []).length + (v.evos || []).length + (v.pairs || []).length);
+        } catch (e) { return -1; } }).catch(() => -1);
+        return { picks, build };
       };
-      report.denseChips = await denseBuild();
+      const dense = await denseBuild();
+      report.denseChips = dense.picks;
+      report.denseBuild = dense.build;
       await page.evaluate(() => { try { MENGSHOU_DEBUG.win(); } catch (e) { void e; } });
       await page.waitForTimeout(300);
       if (await pollFor('(' + NODES + ') >= 4 && /RESULT_(WIN|LOSE)/.test(MENGSHOU_DEBUG.state().name)', 24, 500)) await scan('结算-满载', '');
@@ -323,7 +333,7 @@ console.log(`::notice::⑲ 命中区逐屏（可点/偏小/重叠[+已声明]）
   + (skipped ? ` · ⚠ 跳过 ${skipped} 屏（未量到）` : ' · 10 屏全覆盖'));
 console.log(`::notice::⑲ 偏小 id 摘要（台账用）::` + digest + ` · 未登记 ${unlisted.length} 个`);
   const denseN = (lbl) => { const c = ok.filter((x) => x.label === lbl)[0]; return c ? c.n : '—'; };
-  console.log(`::notice::⑲ 满载注入（诊断）::选卡成功 ${report.denseChips == null ? '—' : report.denseChips}/12 · 结算-满载 ${denseN('结算-满载')} 个可点节点 · 暂停-满载 ${denseN('暂停-满载')} 个`);
+  console.log(`::notice::⑲ 满载注入（诊断）::生效 ${report.denseChips == null ? '—' : report.denseChips}/12 · 构筑条目 ${report.denseBuild == null ? '—' : report.denseBuild} · 结算-满载 ${denseN('结算-满载')} 个可点节点 · 暂停-满载 ${denseN('暂停-满载')} 个`);
 // B 类候选（具名、准备补 hitPad 的）—— 打印**运行时**两轴间距，用来定 pad 值：
 //   `v` = 竖直向最近邻居间距，`h` = 水平向；对称 pad 必须 ≤ ½×min(v,h)，单轴 pad 只需看对应轴。
 const PAD_CAND = ['homeguide', 'homeabout', 'homedaily', 'homevault', 'settheme', 'setbgm', 'setexport', 'setimport', 'setclose',
