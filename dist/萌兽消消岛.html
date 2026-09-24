@@ -28208,14 +28208,23 @@ function drawHomeBase(ctx) {
     : "总部基地 · 出击最大 · 仓库次之 · 加菜后置").split(" · ");
   var hallSubLineY = 130;
   var hallSubI;
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = "rgba(22,30,16,0.62)";
-  ctx.lineWidth = 2.6;
-  for (hallSubI = 0; hallSubI < hallSubLines.length; hallSubI++) {
-    ctx.strokeText(hallSubLines[hallSubI], 112, hallSubLineY);
-    hallSubLineY += 18;
+  // 【v1.210o 真机】墨边只在**显示比例足够大**时才描（v1.210n 的回修）：
+  //   真机缩放 = cssW/720（手机 CSS 宽 360 ⇒ 0.5）。13px 的字在真机上只有 6.5 CSS px，
+  //   而 2.6px 墨边 ≈ 1.3 CSS px —— 与笔画本身同宽 ⇒ 笔画与边糊成一坨，
+  //   比不描更难读（实测：360 宽真机图上这三行变成一道深色糊痕）。
+  //   ⇒ 缩放 ≥0.9（桌面/大屏 = 我 1:1 评审的那一档）才描边；更小时退回原来的苔白字
+  //     （真机上那个尺寸本来就读不出，至少不要糊成块）。字色 / 字号 / 坐标 / 版式一律不动。
+  var _uiScale = ((typeof CANVAS !== "undefined" && CANVAS.cssW) ? CANVAS.cssW : CONFIG.viewW) / CONFIG.viewW;
+  if (_uiScale >= 0.9) {
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "rgba(22,30,16,0.62)";
+    ctx.lineWidth = 2.6;
+    for (hallSubI = 0; hallSubI < hallSubLines.length; hallSubI++) {
+      ctx.strokeText(hallSubLines[hallSubI], 112, hallSubLineY);
+      hallSubLineY += 18;
+    }
+    ctx.lineWidth = 1;
   }
-  ctx.lineWidth = 1;
   ctx.fillStyle = "#d4e0b8";
   hallSubLineY = 130;
   for (hallSubI = 0; hallSubI < hallSubLines.length; hallSubI++) {
