@@ -37917,6 +37917,21 @@ function init() {
         vaultTab: GAME.hallVaultTab || ''
       };
     },
+    // 【第 130 轮】进场过场的探针。为什么需要它：
+    //   `_qc/_shot-coverage.mjs` 只能查出**有钩子的**盲区 —— 而"进场过场"是**时间驱动**的
+    //   （`GAME.enterCine`，首次进章 1.72s / 重复 0.88s，见 CONFIG.enterCine*Sec），
+    //   没有任何钩子能打开它 ⇒ 这套检查看不见它，于是它**从来没被拍过**。
+    //   而它的版式恰好是"章题条 + 若干行文字"—— 正是 v1.211d 那个"条子压住文字上沿"的同型版式。
+    //   字段名逐个照 `makeEnterCine` 里 cine 对象的真实构造写（不凭印象）：t 是**倒计时**，从 dur 递减到 0。
+    enterCine: function () {
+      var c = GAME.enterCine;
+      if (!c) return { live: false, t: 0, dur: 0, kind: "", first: false, title: "" };
+      return {
+        live: c.t > 0, t: +(c.t || 0).toFixed(3), dur: c.dur || 0,
+        kind: c.kind || "", first: !!c.first, skipped: !!c.skipped,
+        title: c.title || "", land: c.land || "", goal: c.goal || ""
+      };
+    },
     hitFlash: function () {
       return { spawned: hitFlashSpawned, drawn: hitFlashDrawn,
                sec: CONFIG.hitFlashDur, sprite: !!(SPRITES && SPRITES.hitFlash) };

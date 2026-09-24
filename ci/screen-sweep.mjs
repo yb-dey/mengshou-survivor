@@ -49,7 +49,9 @@ const available = await page.evaluate(() => {
     // 【第 129 轮】`_qc/_shot-coverage.mjs` 的 A 侧就是拿这个数组当基准的 ⇒ 这里写进来的名字必须
     //   **真的在母版里存在**，否则它只是让清单看起来更长。原列表里的 `openPetCard` 已被查出
     //   **母版里根本没有这个钩子**（`available` 会把它过滤掉 ⇒ 一直静默），故删除。
-    'vaultTapTalent'];
+    // 【第 130 轮】`enterCine` 是**进场过场**的探针（时间驱动、无钩子可开）——
+    //   把它列进 `want` 并真的调用，A 侧从此会盯住它；不列的话它就是"没人看着的那一屏"。
+    'vaultTapTalent', 'enterCine'];
   return want.filter((k) => typeof D[k] === 'function');
 });
 
@@ -277,6 +279,41 @@ try {
   await page.waitForTimeout(800);
   const geom = await page.evaluate(() => { const c = document.querySelector('canvas'); const r = c.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, cw: c.width, ch: c.height }; });
   await page.mouse.click(geom.l + (316 / geom.cw) * geom.w, geom.t + (617 / geom.ch) * geom.h);
+
+  // ── 【第 130 轮】拍**进场过场**（每个玩家每局开头都会看到，此前从没被拍过）─────────────
+  //   为什么上一轮的覆盖检查没发现它：`_qc/_shot-coverage.mjs` 只能查"**有钩子**却没人用"的盲区，
+  //   而这一屏是**时间驱动**的（`GAME.enterCine`，`CONFIG.enterCineFirstSec`=1.72 / `RepeatSec`=0.88），
+  //   没有任何钩子能打开它 ⇒ 检查看不见它。
+  //   ⇒ 教训写进工具注释：**"有钩子的屏" ≠ "所有屏"**，检查的边界必须说清楚。
+  //   ⚠ 版式风险高：它就是"章题条 + 若干行文字"—— 正是 v1.211d「条子压住文字上沿」的同型版式。
+  //   ⚠ 窗口只有 0.88–1.72s ⇒ 点完立刻轮询 `enterCine().live`，一为真就拍；
+  //     断言 `live===true`（不通过发 `::error::` 且进 dupList ⇒ sweep 退 2，**会红不会静默**），
+  //     并把 t/dur/kind/first 写进报告 —— **截图自带采样时刻**，读的人才知道拍的是过场哪一段。
+  {
+    const p = path.join(OUT, '11a-entrance.png');
+    let ce = null, tries = 0;
+    for (let t = 0; t < 14; t++) {
+      ce = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.enterCine(); } catch (e) { return null; } });
+      if (ce && ce.live) break;
+      tries++;
+      await page.waitForTimeout(110);
+    }
+    await page.screenshot({ path: p });
+    const h = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 12);
+    prevHash = h;
+    const ok = !!(ce && ce.live === true);
+    if (!ok) {
+      console.log('::error::11a-entrance 目标屏断言不通过：实测 ' + JSON.stringify(ce) + ' / 期望 live=true' +
+        '（窗口只有 0.88–1.72s；拍到空场 ⇒ 这张图不代表过场）');
+    }
+    console.log('::notice::11a-entrance 采样 过场 t=' + (ce ? ce.t : '?') + '/' + (ce ? ce.dur : '?') +
+      ' kind=' + (ce ? ce.kind : '?') + ' first=' + (ce ? ce.first : '?') + ' 轮询=' + tries);
+    shots.push({ name: '11a-entrance', hook: '轮询 enterCine().live', hash: h,
+      dHome: sigDiff(await screenSig(), homeSig), dens: await measureDens(),
+      state: ce ? (ce.kind || 'cine') : null, stateOk: ok,
+      cineT: ce ? ce.t : null, cineDur: ce ? ce.dur : null, cineKind: ce ? ce.kind : null, cineFirst: ce ? !!ce.first : null });
+  }
+
   // 【第 126 轮】11-battle 必须拍到**真的在打仗**，而不是开场第 7 秒的空场。
   //   发现过程（量出来的，不是看出来的）：`_qc/_imgstat.mjs` 对 13 屏量局部对比，
   //   11-battle 的 edgePct = **4.37%**，是**全场最低**；而同一份报告里 11-battle 连
@@ -530,6 +567,12 @@ const md = [
     // 【第 128 轮】结算页也**自带读数**：卡带数 + 有没有压住（`resultBuild().overlap`）
     + (s.resultChips !== undefined && s.resultChips !== null
       ? (s.resultOverlap === true ? '⚠ ' : '') + '结算卡带 **' + s.resultChips + '** 条 · 压住=' + (s.resultOverlap === true ? '**是**' : '否')
+      : '')
+    // 【第 130 轮】进场过场**自带采样时刻**：不说清拍到的是"倒计时还剩多少"的那一刻，
+    //   读的人无法判断这张图代表过场的哪一段（过场只有 0.88–1.72s）。
+    + (s.cineDur
+      ? (s.cineKind === 'chapter' ? '' : '') + '过场 t=**' + s.cineT + '**/' + s.cineDur +
+        ' · kind=' + (s.cineKind || '?') + ' · 首见=' + (s.cineFirst ? '是' : '否')
       : '') + ' |'),
   '',
   '> 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。',
@@ -544,6 +587,11 @@ const md = [
   '> 但这套巡检此前**从来没拍过**（13 屏里没有结算页），而 `win()`/`lose()`/`resultBuild()`',
   '> 三个钩子母版早就给了。现在两屏都拍 + 断言 `RESULT_WIN`/`RESULT_LOSE`，',
   '> 并用 `resultBuild()` 当探针把「卡带数 / 有没有压住」写进备注列。',
+  '',
+  '> ⚠ **11a-entrance 是第 130 轮新补的进场过场**：每个玩家每局开头都会看到，此前从没被拍过。',
+  '> 覆盖检查查不到它 —— 它是**时间驱动**的（`GAME.enterCine`，0.88–1.72s），**没有钩子能打开它**',
+  '> ⇒ 教训：**"有钩子的屏" ≠ "所有屏"**，检查的边界必须说清楚。它已进 `want`，A 侧从此会盯住它。',
+  '> 备注列会给它**采样时刻**（`过场 t=?/dur`）——过场只有一秒多，不说清拍到哪一段，这张图没法判读。',
   '',
   '> ⚠ 备注列标 `与上一屏完全相同` 的，表示**该界面没有被真正打开**（截图与上一屏字节相同）。',
   '> 这类条目**不能当作"已巡检"** —— 修法：先复位到大厅，或换一个能生效的钩子。',
