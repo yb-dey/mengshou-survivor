@@ -75,6 +75,7 @@ const ALLOW_SMALL = [
   { re: /^themechip\d+$/, why: '大厅主题切换芯片 ×4 · 同族' },
   { re: /^codextab\d+$/, why: '图鉴页签 ×4 · 同族（页签条密度决定高度）' },
   { re: /^vaulttab\d+$/, why: '宝库页签 ×2（进度打造／天赋）· 同族' },
+  { re: /^(homeguide|homeabout)$/, why: '大厅右上并排入口（间隔仅 8px）· v1.208b 已补 hitPadY 9 到安全上限：44→62（33.6 CSS px）—— 下方 10px 是 sortiepreview 热区（⑲ 实测 padY19 重叠 9px）⇒ 要达标必须重排右上角（视觉版本）' },
   // ── B 类：具名控件，静态判据已算出安全 pad ⇒ **待随下次版本一起零像素补**（本轮不动母版）──
   { re: /^set(theme|bgm|export|import|close)$/, why: '设置页四钮（setclose 已达标）· v1.208b 已把 hitPadY 从 5 提到本屏上限 6 ⇒ 有效高 **76**（41.2 CSS px × 119+ CSS px 宽）：上下邻居仅隔 12px，再大必压邻居 ⇒ 要真达标需**加大行距**（视觉版本）' },
   // ── C 类：并排太近，扩命中区会抢邻居 ──

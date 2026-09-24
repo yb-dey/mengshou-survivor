@@ -30420,9 +30420,9 @@ function registerUi() {
   uiChapterCancel.skin = "sec";
   // HOME 功能入口(步骤10: 强化; 步骤11: 图鉴; 设置步骤12 排同排)
   uiHomeGuide = makeButton("homeguide", 496, 6, 100, 44, "怎么玩", onTapOpenGuide);
-  uiHomeGuide.hitPadY = 19;   // 【v1.208b】只扩纵向：横向与邻居仅隔 8px 不能扩，缺的是高度 ⇒ 44→82 逻辑px（54×44.4 CSS px）
+  uiHomeGuide.hitPadY = 9;   // 【v1.208b】只扩纵向到**安全上限**：下方 10px 就是 sortiepreview 热区（⑲ 实测 padY19 会重叠 9px）⇒ 44→62 逻辑px（33.6 CSS px）；要达标必须重排右上角（PM §18.15）
   uiHomeAbout = makeButton("homeabout", 604, 6, 100, 44, "关于", onTapOpenAbout);
-  uiHomeAbout.hitPadY = 19;   // 【v1.208b】只扩纵向：横向与邻居仅隔 8px 不能扩，缺的是高度 ⇒ 44→82 逻辑px（54×44.4 CSS px）
+  uiHomeAbout.hitPadY = 9;   // 【v1.208b】同上：只到安全上限 62 逻辑px（33.6 CSS px），残余差距见 PM §18.15
   uiHomeGuide.skin = "ghost";
   uiHomeAbout.skin = "ghost";
   uiThemeChips = [];
