@@ -311,7 +311,8 @@ const skipped = report.cases.filter((c) => c.skipped).length;
 console.log(`::notice::⑲ 命中区逐屏（可点/偏小/重叠[+已声明]）::` + ok.map((c) => `${c.label} ${c.n}/${c.small.length}/${c.overlaps.length}${c.declaredOverlaps && c.declaredOverlaps.length ? '+D' + c.declaredOverlaps.length : ''}`).join(' · ')
   + (skipped ? ` · ⚠ 跳过 ${skipped} 屏（未量到）` : ' · 10 屏全覆盖'));
 console.log(`::notice::⑲ 偏小 id 摘要（台账用）::` + digest + ` · 未登记 ${unlisted.length} 个`);
-console.log(`::notice::⑲ 满载注入（诊断）::选卡成功 ${report.denseChips == null ? '—' : report.denseChips}/12 · 结算-满载 ' + (ok.filter((c) => c.label === '结算-满载')[0] || {}).n + ' 个可点节点 · 暂停-满载 ' + (ok.filter((c) => c.label === '暂停-满载')[0] || {}).n + ' 个`);
+  const denseN = (lbl) => { const c = ok.filter((x) => x.label === lbl)[0]; return c ? c.n : '—'; };
+  console.log(`::notice::⑲ 满载注入（诊断）::选卡成功 ${report.denseChips == null ? '—' : report.denseChips}/12 · 结算-满载 ${denseN('结算-满载')} 个可点节点 · 暂停-满载 ${denseN('暂停-满载')} 个`);
 // B 类候选（具名、准备补 hitPad 的）—— 打印**运行时**两轴间距，用来定 pad 值：
 //   `v` = 竖直向最近邻居间距，`h` = 水平向；对称 pad 必须 ≤ ½×min(v,h)，单轴 pad 只需看对应轴。
 const PAD_CAND = ['homedaily', 'homevault', 'settheme', 'setbgm', 'setexport', 'setimport', 'setclose',
