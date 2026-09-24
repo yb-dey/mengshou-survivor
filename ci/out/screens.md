@@ -12,12 +12,12 @@
 | 05-vault | openVault | 720×1280 | 611 | 20.4% | 55.12 | HOME |  |
 | 06-beast | openBeast | 720×1280 | 635 | 41.7% | 62.57 | BEAST |  |
 | 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 54.92 | BEAST |  |
-| 08-settings | openSettings | 720×1280 | 537 | 36.7% | 74.08 | SETTINGS |  |
+| 08-settings | openSettings | 720×1280 | 538 | 36.6% | 74.02 | SETTINGS |  |
 | 09-about | about | 720×1280 | 524 | 41.8% | 80.04 | ABOUT |  |
 | 10-daily | dailyPick | 720×1280 | 536 | 20.5% | 76.75 | HOME |  |
-| 11-battle | mouse | - | - | - | 43.28 | PLAYING |  |
-| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 64.37 | - |  |
-| 13-pause | pause(true) 轮询成功 | - | - | - | 63.39 | PAUSED_MENU |  |
+| 11-battle | mouse | - | - | - | 43.85 | PLAYING |  |
+| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 64.15 | - |  |
+| 13-pause | pause(true) 轮询成功 | - | - | - | 63.58 | PAUSED_MENU |  |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
 
