@@ -378,6 +378,16 @@ try {
   //     不在这里硬判红，是因为本 workflow 的结论被 verify-dist 的「门禁收口」读走 ——
   //     先让读数存在，再由人/后续门禁决定阈值（避免把一个绿色门禁改成掷骰子）。
   const BATTLE_MIN_ENEMY = +(process.env.BATTLE_MIN_ENEMY || 10);
+  // 【第 143 轮】把「采样目标」与「报警」**分开** —— 此前是同一个数，于是报警每三批就喊一次。
+  //   实测依据（**不是我拍的**）：从 git 里读回最近 24 个批次的 `ci/out/screens.json`，
+  //   `11-battle` 的 peak 分布 = **8 只×2 · 9 只×6 · 10 只×16**（最小 8 / 中位 10 / 最大 **10**）。
+  //   ⇒ 阈值 10 正好压在分布**顶上**：只要这次采样落在 8–9（24 批里有 8 批）就喊「未达阈值」，
+  //     而那句话读起来像「出问题了」，其实只是「这次没摸到天花板」；喊多了就没人看（假黄，
+  //     与第 143 轮刚修掉的假红是同一个病的两侧）。
+  //   修法：`BATTLE_MIN_ENEMY` 继续当**采样目标**（决定等多久、保住批次可比 —— 不动它）；
+  //     另立 `BATTLE_FLOOR` 当**报警下限** = 历史最小值 8 ⇒ 只有「密度掉到从来没见过的水平」才喊。
+  //   量具：`_qc/_scan-warn-history.mjs`（读 git 历史，不重跑云端）。
+  const BATTLE_FLOOR = +(process.env.BATTLE_FLOOR || 8);
   const BATTLE_WAIT_MS = +(process.env.BATTLE_WAIT_MS || 60000);
   const battlePath = path.join(OUT, '11-battle.png');
   let bEnemy = 0, bPeak = 0, bState = '', bTries = 0, bWhy = '', bReached = false;
@@ -456,10 +466,13 @@ try {
       bShotPlaying + ' / 补拍帧 bBestShot=' + bBestShot + ' / 报告时 state=' + (st ? st.name : 'null') + ' / 期望 PLAYING）');
     else console.log('::notice::11-battle 帧出身 bShotPlaying=' + bShotPlaying + ' · 报告时 state=' + (st ? st.name : 'null') +
       '（两者可以不同：战斗中 XP 涨到会合法地再开升级弹窗，那不是这张图的问题）');
-    if (!bReached) console.log('::warning::11-battle 未达密度阈值 ' + BATTLE_MIN_ENEMY + '：' + bWhy + '（这张图实测 ' + bBestShot + ' 只，峰值 ' + bPeak + '）—— 评审前先看这个数');
-    console.log('::notice::11-battle 采样密度 这张图同屏怪=' + bBestShot + ' 峰值=' + bPeak + ' 目标=' + BATTLE_MIN_ENEMY + ' 轮询=' + bTries + ' 结束=' + bWhy);
+    // 【第 143 轮】报警只认「低于历史最小值」，不再把「没摸到采样天花板」当问题。
+    //   ⚠ 采样不足这件事**仍然每次都写进 notice**（读数一个都不少），只是不再冒充故障。
+    if (bPeak < BATTLE_FLOOR) console.log('::warning::11-battle 密度低于历史下限 ' + BATTLE_FLOOR + ' 只：峰值 ' + bPeak +
+      '（这张图 ' + bBestShot + ' 只；24 批历史最小=8，低于它才算异常）');
+    console.log('::notice::11-battle 采样密度 这张图同屏怪=' + bBestShot + ' 峰值=' + bPeak + ' 采样目标=' + BATTLE_MIN_ENEMY + ' 报警下限=' + BATTLE_FLOOR + ' 轮询=' + bTries + ' 结束=' + bWhy);
     shots.push({ name: '11-battle', hook: 'mouse+轮询怪数（取本次最密帧）', hash: prevHash, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
-      dens, state: st ? st.name : null, stateOk, shotPlaying: bShotPlaying,
+      dens, state: st ? st.name : null, stateOk, shotPlaying: bShotPlaying, battleFloor: BATTLE_FLOOR,
       battleEnemy: bBestShot, battlePeak: bPeak, battleTries: bTries, battleReached: bReached, battleWhy: bWhy });
   }
 
@@ -682,8 +695,11 @@ const md = [
         : (s.skipped || s.error || '')))
     // 【第 126 轮】战斗屏**自带密度标签**：不写清楚这一张是"几只怪"的那一刻，评审者没法判断它代不代表常态
     + (s.battleEnemy !== undefined
-      ? (s.battleEnemy !== null ? (s.battleEnemy >= +(process.env.BATTLE_MIN_ENEMY || 10) ? '' : '⚠ ') +
-        '同屏怪 **' + s.battleEnemy + '** 只（峰值 ' + s.battlePeak + '，目标 ' + (+(process.env.BATTLE_MIN_ENEMY || 10)) + '）' : '')
+      //   【第 143 轮】⚠ 只在「低于历史下限」时出现（原来按**采样目标**判 ⇒ 约 1/3 的批次挂 ⚠，看多了就麻木）；
+      //   两个数**都印出来**：采样目标说明这张图是不是「同屏最密的那一刻」，报警下限才是异常判据。
+      ? (s.battleEnemy !== null ? (s.battlePeak >= +(process.env.BATTLE_FLOOR || 8) ? '' : '⚠ ') +
+        '同屏怪 **' + s.battleEnemy + '** 只（峰值 ' + s.battlePeak + '，采样目标 ' + (+(process.env.BATTLE_MIN_ENEMY || 10)) +
+        ' / 报警下限 ' + (+(process.env.BATTLE_FLOOR || 8)) + '）' : '')
       : '')
     // 【第 128 轮】结算页也**自带读数**：卡带数 + 有没有压住（`resultBuild().overlap`）
     + (s.resultChips !== undefined && s.resultChips !== null
