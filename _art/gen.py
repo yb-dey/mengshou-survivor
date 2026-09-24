@@ -30,17 +30,25 @@ def load_tasks():
     if not f.exists():
         return []
     tasks = []
-    for line in f.read_text(encoding="utf-8").splitlines():
+    # utf-8-sig：吃掉 PowerShell `Set-Content -Encoding UTF8` 写出的 BOM。
+    # 本轮实测事故：带 BOM 时首行是 "\ufeff# …"，startswith("#") 判不出来 ⇒ 注释被当任务解析
+    # ⇒ `float('strength')` 直接崩（错因来自工作流自留档 _art/log/run.txt）。
+    for line in f.read_text(encoding="utf-8-sig").splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
         parts = [p.strip() for p in line.split("|")]
         if len(parts) < 2:
             continue
-        name, prompt = parts[0], parts[1]
-        strength = float(parts[2]) if len(parts) > 2 else 0.55
-        guidance = float(parts[3]) if len(parts) > 3 else 0.0
-        ref = parts[4] if len(parts) > 4 else "hero.png"
+        name, prompt = parts[0].lstrip("\ufeff").strip(), parts[1]
+        # 防御式解析：任何一个字段不合法就跳过该行并打印，而不是整条流水线崩掉。
+        try:
+            strength = float(parts[2]) if len(parts) > 2 and parts[2] else 0.55
+            guidance = float(parts[3]) if len(parts) > 3 and parts[3] else 0.0
+        except ValueError:
+            print(f"⚠ 跳过无法解析的行: {line[:70]}")
+            continue
+        ref = parts[4] if len(parts) > 4 and parts[4] else "hero.png"
         tasks.append({"name": name, "prompt": prompt, "strength": strength,
                       "guidance": guidance, "ref": ref})
     return tasks
