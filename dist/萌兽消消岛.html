@@ -5023,7 +5023,7 @@ function drawEventRuleChip(ctx, x, y) {
   if (!rule) return 0;
   compact = hudPlayCompact();
   w = hudToastW(x);
-  h = compact ? 34 : 58;
+  h = compact ? 40 : 58;
   edge = (rule.meta && rule.meta.color) || "#8a7ab8";
   a = rule.soon ? (0.84 + 0.16 * Math.abs(Math.sin(GAME.time * 8))) : 1;
   p = rule.max > 0.001 ? Math.max(0, Math.min(1, rule.remain / rule.max)) : 0;
@@ -5059,7 +5059,7 @@ function drawEventRuleChip(ctx, x, y) {
   ctx.fillText(rule.meta.glyph || "章", x + (compact ? 28 : 34), y + (compact ? 18 : 21));
   ctx.textAlign = "left";
   ctx.fillStyle = edge;
-  ctx.font = (compact ? "bold 13px " : "bold 18px ") + FONT_STACK;
+  ctx.font = (compact ? "bold 19px " : "bold 18px ") + FONT_STACK;
   ctx.fillText(hudFitText(ctx, line1, w - (compact ? 46 : 58)), x + (compact ? 42 : 50), y + (compact ? 17 : 18));
   if (!compact) {
     ctx.fillStyle = "#fff7e0";
@@ -5082,7 +5082,7 @@ function drawRoomRuleChip(ctx, x, y) {
   compact = hudPlayCompact();
   view = live === "fight" ? roomRewardView(GAME.roomFight.tierIdx, "fight") : roomRewardView(GAME.roomPortal.tierIdx, "portal");
   w = hudToastW(x);
-  headH = compact ? 36 : (CONFIG.roomChipHeadH || 40);
+  headH = compact ? 40 : (CONFIG.roomChipHeadH || 40);
   trioH = compact ? 0 : 90;
   h = headH + trioH + (compact ? 0 : 8);
   edge = view.color || "#e6c24a";
@@ -5125,7 +5125,7 @@ function drawRoomRuleChip(ctx, x, y) {
   ctx.fillText(view.roman || "房", x + (compact ? 28 : 34), y + (compact ? 19 : 19));
   ctx.textAlign = "left";
   ctx.fillStyle = edge;
-  ctx.font = (compact ? "bold 13px " : "bold 16px ") + FONT_STACK;
+  ctx.font = (compact ? "bold 19px " : "bold 16px ") + FONT_STACK;
   ctx.fillText(hudFitText(ctx, line1, w - (compact ? 46 : 58)), x + (compact ? 42 : 50), y + (compact ? 18 : 16));
   if (!compact) {
     barW = w - 58;
@@ -5148,7 +5148,7 @@ function drawRoomGiftToast(ctx, x, y) {
   hold = GAME.roomToastHold || (CONFIG.roomToastSec || 2.6);
   a = Math.min(1, GAME.roomToastT / 0.22);
   w = hudToastW(x);
-  headH = compact ? 36 : 40;
+  headH = compact ? 40 : 40;
   trioH = compact ? 0 : 90;
   h = headH + trioH + (compact ? 0 : 8);
   ctx.save();
@@ -7051,7 +7051,7 @@ function drawDropCueToast(ctx, x, y) {
   picked = !!(t.picked || (view && view.picked));
   a = Math.min(1, GAME.dropCueT / 0.22);
   w = hudToastW(x);
-  h = compact ? 34 : (CONFIG.dropCueBarH || 52);
+  h = compact ? 40 : (CONFIG.dropCueBarH || 52);
   edge = (view && view.color) || "#e6c24a";
   ctx.save();
   ctx.globalAlpha = a;
@@ -7066,11 +7066,11 @@ function drawDropCueToast(ctx, x, y) {
   fillRoundRect(ctx, x + 5, y + 8, 5, h - 12, 2);
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.font = (compact ? "bold 13px " : "bold 16px ") + FONT_STACK;
+  ctx.font = (compact ? "bold 19px " : "bold 16px ") + FONT_STACK;
   ctx.fillStyle = picked ? "#ffe082" : edge;
   ctx.fillText(hudFitText(ctx, t.line1 || (picked ? "捡到" : "掉落"), w - 36), x + 20, y + (compact ? 12 : 16));
   ctx.fillStyle = "#fff7e0";
-  ctx.font = (compact ? "bold 12px " : "bold 14px ") + FONT_STACK;
+  ctx.font = (compact ? "bold 18px " : "bold 14px ") + FONT_STACK;
   ctx.fillText(hudFitText(ctx, t.line2 || (picked ? pickCueSub(view) : eliteLootHeadSub(view)), w - 36), x + 20, y + (compact ? 26 : 36));
   ctx.restore();
   if (!GAME.hudSnap) GAME.hudSnap = {};
@@ -7091,7 +7091,7 @@ function drawBombCueToast(ctx, x, y) {
   a = Math.min(1, GAME.bombCueT / 0.22);
   if (GAME.bombCueT < 0.28) a = GAME.bombCueT / 0.28;
   w = hudToastW(x);
-  h = compact ? 34 : (CONFIG.bombCueBarH || 56);
+  h = compact ? 40 : (CONFIG.bombCueBarH || 56);
   edge = "#e05a2a";
   ctx.save();
   ctx.globalAlpha = a;
@@ -7106,10 +7106,10 @@ function drawBombCueToast(ctx, x, y) {
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#ffc070";
-  ctx.font = (compact ? "bold 12px " : "bold 15px ") + FONT_STACK;
+  ctx.font = (compact ? "bold 18px " : "bold 15px ") + FONT_STACK;
   ctx.fillText(hudFitText(ctx, t.line1 || "炸弹比例伤", w - 36), x + 22, y + (compact ? 12 : 16));
   ctx.fillStyle = "#fff7e0";
-  ctx.font = (compact ? "bold 13px " : "bold 16px ") + FONT_STACK;
+  ctx.font = (compact ? "bold 19px " : "bold 16px ") + FONT_STACK;
   ctx.fillText(hudFitText(ctx, t.line2 || t.result || bombRuleLine(), w - 36), x + 22, y + (compact ? 26 : 38));
   ctx.restore();
   if (!GAME.hudSnap) GAME.hudSnap = {};
@@ -8204,7 +8204,7 @@ function drawBeatHudCard(ctx, x, y) {
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = col;
-  ctx.font = (compact ? "bold 14px " : "bold 16px ") + FONT_STACK;
+  ctx.font = (compact ? "bold 19px " : "bold 16px ") + FONT_STACK;
   textW = w - (textX - x) - 10;
   ctx.fillText(hudFitText(ctx, info.line, textW), textX, lineY);
   if (info.after) {
@@ -26962,18 +26962,19 @@ function renderGame() {
   if (inPlay && fAlive) {
     var fAliveDef = DATA_FIELD[fAlive.kind] || DATA_FIELD.drumstick;
     var fPickW = hudToastW(CONFIG.uiLevelTextX || 12);
-    var fPickH = _hudCompact ? 28 : 32;
+    // 【v1.210s】28/32 → 40/32：与同一族的芯片对齐（局内字号抬到 19px 后 28px 高的盒子装不下）。
+    var fPickH = _hudCompact ? 40 : 32;
     drawHudClusterFrame(ctx, CONFIG.uiLevelTextX, hudChipY, fPickW, fPickH, "未捡", fAliveDef.color || "#e6c24a", false, _hudCompact);
     if (SPRITES[fAliveDef.spr] && SPRITES[fAliveDef.spr].width > 0) {
-      drawItemSprite(ctx, fAliveDef.spr, CONFIG.uiLevelTextX + (CONFIG.hudClusterPadX || 14), hudChipY + 8, 18);
+      drawItemSprite(ctx, fAliveDef.spr, CONFIG.uiLevelTextX + (CONFIG.hudClusterPadX || 14), hudChipY + 11, 22);
       ctx.fillStyle = "#fff7e0";
-      ctx.font = "bold 13px " + FONT_STACK;
+      ctx.font = "bold 19px " + FONT_STACK;
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillText(hudFitText(ctx, fAliveDef.name + " · 走近才捡", fPickW - 48), CONFIG.uiLevelTextX + 40, hudChipY + fPickH * 0.62);
+      ctx.fillText(hudFitText(ctx, fAliveDef.name + " · 走近才捡", fPickW - 48), CONFIG.uiLevelTextX + 44, hudChipY + fPickH * 0.62);
     } else {
       ctx.fillStyle = "#fff7e0";
-      ctx.font = "bold 13px " + FONT_STACK;
+      ctx.font = "bold 19px " + FONT_STACK;
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
       ctx.fillText(hudFitText(ctx, fAliveDef.name + " · 走近才捡", fPickW - 24), CONFIG.uiLevelTextX + (CONFIG.hudClusterPadX || 14), hudChipY + fPickH * 0.62);
@@ -29791,7 +29792,7 @@ function drawRoomGiftTrio(ctx, x, y, w, h, view) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = hot ? col.color : "#9aa08c";
-    ctx.font = (compact ? "bold 12px " : "bold 14px ") + FONT_STACK;
+    ctx.font = (compact ? "bold 18px " : "bold 14px ") + FONT_STACK;
     ctx.fillText(col.title, cx0 + colW / 2, y + (compact ? 11 : 16));
     iconS = compact ? 18 : 22;
     iconY = compact ? 18 : 26;
@@ -29819,7 +29820,7 @@ function drawRoomGiftTrio(ctx, x, y, w, h, view) {
     lineY = compact ? h - 24 : h - 32;
     subY = compact ? h - 10 : h - 14;
     ctx.fillStyle = hot ? "#fff7e0" : "#c4c8b8";
-    ctx.font = (compact ? "bold 13px " : "bold 15px ") + FONT_STACK;
+    ctx.font = (compact ? "bold 19px " : "bold 15px ") + FONT_STACK;
     ctx.fillText(hudFitText(ctx, col.line, colW - 12), cx0 + colW / 2, y + lineY);
     ctx.fillStyle = "#c9c0a8";
     ctx.font = (compact ? "bold 10px " : "bold 11px ") + FONT_STACK;
