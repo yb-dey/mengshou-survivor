@@ -76,9 +76,8 @@ const ALLOW_SMALL = [
   { re: /^codextab\d+$/, why: '图鉴页签 ×4 · 同族（页签条密度决定高度）' },
   { re: /^vaulttab\d+$/, why: '宝库页签 ×2（进度打造／天赋）· 同族' },
   // ── B 类：具名控件，静态判据已算出安全 pad ⇒ **待随下次版本一起零像素补**（本轮不动母版）──
-  { re: /^set(theme|bgm|export|import|close)$/, why: '设置页四钮（setclose 已达标）· v1.207 已补 hitPadY 5 ⇒ 有效高 **74**（40.1 CSS px × 119 CSS px 宽）：再补就要压上下邻居（剩余间距仅 2px）⇒ 严格达标需**加大行距**（视觉改动）' },
+  { re: /^set(theme|bgm|export|import|close)$/, why: '设置页四钮（setclose 已达标）· v1.208b 已把 hitPadY 从 5 提到本屏上限 6 ⇒ 有效高 **76**（41.2 CSS px × 119+ CSS px 宽）：上下邻居仅隔 12px，再大必压邻居 ⇒ 要真达标需**加大行距**（视觉版本）' },
   // ── C 类：并排太近，扩命中区会抢邻居 ──
-  { re: /^(homeguide|homeabout)$/, why: '大厅右上并排入口（间隔仅 8px）· 安全 pad 只有 4 ⇒ 需重排（PM §18.6 第 2 件）' },
 ];
 
 const scanExpr = (extra) => `
@@ -326,7 +325,7 @@ console.log(`::notice::⑲ 偏小 id 摘要（台账用）::` + digest + ` · �
   console.log(`::notice::⑲ 满载注入（诊断）::选卡成功 ${report.denseChips == null ? '—' : report.denseChips}/12 · 结算-满载 ${denseN('结算-满载')} 个可点节点 · 暂停-满载 ${denseN('暂停-满载')} 个`);
 // B 类候选（具名、准备补 hitPad 的）—— 打印**运行时**两轴间距，用来定 pad 值：
 //   `v` = 竖直向最近邻居间距，`h` = 水平向；对称 pad 必须 ≤ ½×min(v,h)，单轴 pad 只需看对应轴。
-const PAD_CAND = ['homedaily', 'homevault', 'settheme', 'setbgm', 'setexport', 'setimport', 'setclose',
+const PAD_CAND = ['homeguide', 'homeabout', 'homedaily', 'homevault', 'settheme', 'setbgm', 'setexport', 'setimport', 'setclose',
   'beastclose', 'vaultclose', 'gearclose', 'dailycancel', 'gearmerge', 'gearforge',
   'btnrevive', 'btngiveup', 'btnreroll', 'btndouble', 'resulthome'];
 console.log('::notice::⑲ B 类候选的运行时间距（v=竖直 h=水平 · 需=补到 44 CSS px 所需）::' +

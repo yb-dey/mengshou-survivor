@@ -30420,7 +30420,9 @@ function registerUi() {
   uiChapterCancel.skin = "sec";
   // HOME 功能入口(步骤10: 强化; 步骤11: 图鉴; 设置步骤12 排同排)
   uiHomeGuide = makeButton("homeguide", 496, 6, 100, 44, "怎么玩", onTapOpenGuide);
+  uiHomeGuide.hitPadY = 19;   // 【v1.208b】只扩纵向：横向与邻居仅隔 8px 不能扩，缺的是高度 ⇒ 44→82 逻辑px（54×44.4 CSS px）
   uiHomeAbout = makeButton("homeabout", 604, 6, 100, 44, "关于", onTapOpenAbout);
+  uiHomeAbout.hitPadY = 19;   // 【v1.208b】只扩纵向：横向与邻居仅隔 8px 不能扩，缺的是高度 ⇒ 44→82 逻辑px（54×44.4 CSS px）
   uiHomeGuide.skin = "ghost";
   uiHomeAbout.skin = "ghost";
   uiThemeChips = [];
@@ -30677,13 +30679,13 @@ function registerUi() {
   uiSetNodeSfx = makeButton("setnodesfx", setAudio.sfx.x, setAudio.sfx.y, setAudio.sfx.w, setAudio.sfx.h, "音效 开", onTapSetNodeSfx);
   uiSetMute = makeButton("setmute", setAudio.mute.x, setAudio.mute.y, setAudio.mute.w, setAudio.mute.h, "静音 关", onTapSetMute);
   uiSetTheme = makeButton("settheme", CONFIG.viewW / 2 - 160, sPy + 268, 320, 64, "主题: 灯笼港湾", onTapCycleTheme);
-  uiSetTheme.hitPadY = 5;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
+  uiSetTheme.hitPadY = 6;   // 【v1.208b】只扩纵向到本屏上限：上下邻居仅隔 12px ⇒ 64→76 逻辑px（41.2 CSS px）；要真达标需改行距（PM §18.15）
   uiSetBgm = makeButton("setbgm", CONFIG.viewW / 2 - 160, sPy + 344, 320, 64, "曲目: 跟主题", onTapCycleBgm);
-  uiSetBgm.hitPadY = 5;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
+  uiSetBgm.hitPadY = 6;   // 【v1.208b】只扩纵向到本屏上限：上下邻居仅隔 12px ⇒ 64→76 逻辑px（41.2 CSS px）；要真达标需改行距（PM §18.15）
   uiSetExport = makeButton("setexport", CONFIG.viewW / 2 - 160, sPy + 420, 320, 64, "导出存档", onTapSetExport);
-  uiSetExport.hitPadY = 5;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
+  uiSetExport.hitPadY = 6;   // 【v1.208b】只扩纵向到本屏上限：上下邻居仅隔 12px ⇒ 64→76 逻辑px（41.2 CSS px）；要真达标需改行距（PM §18.15）
   uiSetImport = makeButton("setimport", CONFIG.viewW / 2 - 160, sPy + 496, 320, 64, "导入存档", onTapSetImport);
-  uiSetImport.hitPadY = 5;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
+  uiSetImport.hitPadY = 6;   // 【v1.208b】只扩纵向到本屏上限：上下邻居仅隔 12px ⇒ 64→76 逻辑px（41.2 CSS px）；要真达标需改行距（PM §18.15）
   uiSetClose = makeButton("setclose", CONFIG.viewW / 2 - 110, sPy + 970, 220, 64, "返回", onTapCloseSettings);
   uiSetClose.hitPadY = 9;   // 【v1.207】只扩纵向：命中高度 64→82 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiGearModal = makeModal("gearmodal", 660, 1180, drawGearPanel);
