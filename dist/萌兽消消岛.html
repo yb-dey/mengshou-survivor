@@ -11,7 +11,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.207">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.208">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -650,7 +650,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.207",   // 【v1.207b】结算列表硬钳制（满载局不溢出）· 画面版本号不变，见 PM §18.13                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
+  version: "1.208",   // 【v1.208】结算构筑条目 34→81（= 44 CSS px 触控下限，提示行"点条目看怎么来的"才成立）· 【v1.207b】硬钳制（满载不溢出）                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
                                        //   前版 v1.205：killEnemy 加已死守卫（修 enemyCount 计数穿负）；
                                        //   前版 v1.204：触屏宿主文案收敛（走位/跳过/过场副标签统一走宿主开关）；
                                        //   前版 v1.203：修符文成就 dim 拼错前缀（5 条成就永不可解锁）+ 加成就接线判据；
@@ -1045,7 +1045,7 @@ var CONFIG = {
   resultPowerH: 132,                // 【v1.42】战力卡高(礼已在三格, 这里只写局内装)
   resultGiftFlyY: 214,              // 【v1.42】通关礼飞入落到回礼格
   resultBuildGap: 12,               // 【v1.56】房回礼到本局构筑的缝
-  resultChipH: 34,                  // 【v1.56】结算构筑芯高(略低于暂停 40, 防压钮)
+  resultChipH: 81,                  // 【v1.208】结算构筑芯高 34→81（= 44 CSS px 触控下限；暂停页仍 40/下界 32 保持密集总览）
   resultChipGap: 4,                 // 【v1.56】结算构筑芯间距
   resultChipN: 40,                  // 【v1.71】结算构筑芯池+进化条
   resultUnlitMax: 3,                // 【v1.56】未点亮成档一行最多列几条, 防信息墙
@@ -28576,10 +28576,12 @@ function drawBuildChip(ctx, r, row, hot) {
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#2e3c1c";
   ctx.font = "bold 12px " + FONT_STACK;
-  ctx.fillText(hudFitText(ctx, row.name || "", tw), textX, r.y + 12);
+  // 【v1.208】条目高抬到 81（44 CSS px）后，两行字必须**居中成块** —— 否则会被拉开成上下两截（31→57px 间距）。
+  var tyMid = (r.h >= 60) ? (r.y + r.h / 2) : 0;
+  ctx.fillText(hudFitText(ctx, row.name || "", tw), textX, tyMid ? (tyMid - 9) : (r.y + 12));
   ctx.fillStyle = "#55603c";
   ctx.font = "bold 12px " + FONT_STACK;
-  ctx.fillText(hudFitText(ctx, row.sub || "", tw), textX, r.y + r.h - 12);
+  ctx.fillText(hudFitText(ctx, row.sub || "", tw), textX, tyMid ? (tyMid + 9) : (r.y + r.h - 12));
   ctx.globalAlpha = 1;
   ctx.textBaseline = "alphabetic";
 }
@@ -28826,7 +28828,9 @@ function bindResultBuildChips() {
   x = panel.x + 18;
   innerW = panel.w - 36;
   gap = CONFIG.resultChipGap || 4;
-  chipH = CONFIG.resultChipH || 34;
+  // 【v1.208】结算条目固定 81 逻辑px（= 44 CSS px 触控下限）：这一屏的提示行明写「点条目看怎么来的」，
+  //   而被 prompt 的交互不该只有 18.4 CSS px。装不下的条目由 v1.207b 的硬钳制汇总成一行（PM §18.14）。
+  chipH = CONFIG.resultChipH || 81;
   lay = resultActionLayout();
   hookY = lay.hookY;
   y = panel.y + (CONFIG.resultRoomY || 556) + (CONFIG.resultRoomH || 108) + (CONFIG.resultBuildGap || 12);
@@ -28859,7 +28863,8 @@ function bindResultBuildChips() {
     return n;
   }
   needH = laneNeed(chipH);
-  while (needH > avail && chipH > 22) {
+  // 下界一并抬到 81：即"宁可不显示，也不缩小"。该循环现在是安全网（默认配置下不触发）。
+  while (needH > avail && chipH > (CONFIG.resultChipHFloor || 81)) {   // 下界=81 ⇒ 宁可不显示也不缩小
     chipH -= 1;
     needH = laneNeed(chipH);
   }
