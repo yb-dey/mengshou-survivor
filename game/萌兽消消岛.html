@@ -1642,7 +1642,13 @@ var CONFIG = {
     cardLaneCombat: "#c0392b",      // 【v1.22】战斗道具车道(赤)
     cardLanePassive: "#3a7bd5",     // 【v1.22】被动车道(青)
     btnBg: "#8aa85a",
-    btnText: "#ffffff",
+    // 【v1.210n 可读性】原 #ffffff 压在 #8aa85a 面上实测 **2.68:1** —— 连 AA 大字下限 3:1 都不到，
+    //   而这个默认皮肤是「返回 / 差N金 / 选章…」这些每屏都在的次级钮。项目自己已为同一类立过标准并修过三次
+    //   （v1.167 cardGold 2.13→5.18 / cardTagNew 2.41→4.66、v1.200 绿钮副标色），此处只是同一类的漏网。
+    //   改深苔墨字 **5.42:1**（只换字色，填充 #8aa85a / 尺寸 / 文案一律不动）。
+    //   tone 变体（ok/locked/done/poor/arm/idle）各自另设 fill+ink，不受本行影响。
+    //   回退：btnText: "#ffffff"
+    btnText: "#1b2e14",
     homeBg: "#e6efd8",             // 【v1.143】大厅纸面跟舞台鼠尾草一色, 不另开 1.139 改版
     titleText: "#3a5a20"
   }
@@ -28345,7 +28351,13 @@ function makeButton(id, x, y, w, h, label, onTap) {
         ctx.lineWidth = 2.5;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
         ctx.lineWidth = 1;
-        ctx.fillStyle = "#ffffff";
+        // 【v1.210n 可读性】主 CTA 字色 #ffffff 压在 #2fbf58 面上实测 **2.41:1**（38px 粗体按 AA 大字也只要求 3:1，
+        //   仍不达标；副标同为白字、18px 属小字，要求 4.5:1）。**薄荷绿面 / 尺寸 / 热区 / 文案一律不动**，
+        //   只把字色改深苔墨 **6.03:1**（副标同色，压在面上 6.03:1）。
+        //   与 v1.157「薄荷绿面 / 白字层级不动」的关系：那条讲的是**层级**（大厅一眼压过符文/主题）——
+        //   改字色不动层级（面仍是最亮的薄荷绿、仍是最大最重的钮），只在可读性上补齐。
+        //   回退：把下面这行改回 "#ffffff"
+        ctx.fillStyle = "#1b2e14";
         ctx.font = "bold 38px " + FONT_STACK;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
