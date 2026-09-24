@@ -34755,11 +34755,16 @@ function drawGuidePanel(ctx, m) {
   ctx.fillText("怎么玩（可跳过）", CONFIG.viewW / 2, py + 72);
   ctx.fillStyle = "rgba(30,42,20,0.72)";
   fillRoundRect(ctx, CONFIG.viewW / 2 - 88, py + 96, 176, 3.5, 1.5);
-  ctx.font = "bold 17px " + FONT_STACK;
+  // 【v1.210u】本页字号统一到 21px：v1.206 只把正文抬到 17/18/19，于是同一页里出现"正文 21、说明 17"的落差；
+  //   实测 17 逻辑 px 在参考机上只有 **1.60mm**（中文可读下限 2.5mm ≈ 27 逻辑 px），而这是首启唯一会被读完的文字页。
+  //   抬法有硬约束：**只抬到本面板已经用过的最大正文字号（21px），一像素都不上探** ⇒ 行宽/行距必然安全
+  //   （本页现有行距 42–46 逻辑 px，21px 字只要 ~26px；最长一行 ~26 字 × 21px ≈ 546 < 720 面板宽）。
+  //   面板高与所有 y 坐标一律不动（v1.209 填内容 / v1.167b 改面板高会撞控件的教训）。
+  ctx.font = "bold 21px " + FONT_STACK;
   ctx.fillStyle = "#3a4626";
   ctx.fillText("点出击就能玩 · 不必先看完本页", CONFIG.viewW / 2, py + 128);
   ctx.fillStyle = "#2a3818";
-  ctx.font = "bold 17px " + FONT_STACK;
+  ctx.font = "bold 21px " + FONT_STACK;
   ctx.fillText("上手四步 · 入袋 → 现在 → 开战", CONFIG.viewW / 2, py + 172);
   ctx.fillStyle = "#243218";
   ctx.font = "bold 21px " + FONT_STACK;
@@ -34771,7 +34776,7 @@ function drawGuidePanel(ctx, m) {
   ctx.font = "bold 21px " + FONT_STACK;
   ctx.fillText("没有抽卡, 没有广告, 也不卡关逼你花金币", CONFIG.viewW / 2, py + 442);
   ctx.fillStyle = "#3a4626";
-  ctx.font = "bold 18px " + FONT_STACK;
+  ctx.font = "bold 21px " + FONT_STACK;
   ctx.fillText("局内短条不盖血条, 点「跳过」一次收全部提示", CONFIG.viewW / 2, py + 492);
   ctx.fillText(guideTipsPending() ? "进局后还会出 1～2 条短提示, 随时可跳过" : "局内短提示已关掉。想再看就点重看", CONFIG.viewW / 2, py + 536);
   // 【v1.209】补「出局之后」三步 —— 原文到 py+536 就收尾，而按钮锚在 py+890 / py+962，
@@ -34782,16 +34787,16 @@ function drawGuidePanel(ctx, m) {
   //   面对「装备 / 强化 / 图鉴 / 仓库兑换」没有任何解释。
   //   ⚠ uiGuideMsg 由 py+596 下移到 py+774（否则与新分区标题同高）。
   ctx.fillStyle = "#1f6b3a";
-  ctx.font = "bold 17px " + FONT_STACK;
+  ctx.font = "bold 21px " + FONT_STACK;
   ctx.fillText("出局之后", CONFIG.viewW / 2, py + 596);
   ctx.fillStyle = "#243218";
-  ctx.font = "bold 19px " + FONT_STACK;
+  ctx.font = "bold 21px " + FONT_STACK;
   ctx.fillText("⑤ 回大厅花金币强化六部位, 装备好再出击", CONFIG.viewW / 2, py + 640);
   ctx.fillText("⑥ 图鉴看进化配方与收集, 仓库兑换把素材换装备", CONFIG.viewW / 2, py + 682);
   ctx.fillText("⑦ 想换口味点「后置加菜」, 短局 5～6 分钟不冲正片", CONFIG.viewW / 2, py + 724);
   if (uiGuideMsg) {
     ctx.fillStyle = "#1f6b3a";
-    ctx.font = "bold 18px " + FONT_STACK;
+    ctx.font = "bold 20px " + FONT_STACK;   // 动态状态行（导入结果/提示状态），留一档层级差
     ctx.fillText(uiGuideMsg, CONFIG.viewW / 2, py + 774);
   }
 }
