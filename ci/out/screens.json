@@ -47,7 +47,7 @@
         "dominantPct": 11.9
       },
       "dup": false,
-      "hash": "5970c0c8e6cc",
+      "hash": "f5cf9d77fdcf",
       "dHome": 0,
       "sameAsHome": false,
       "state": "HOME",
@@ -63,7 +63,7 @@
         "dominantPct": 21.1
       },
       "dup": false,
-      "hash": "0acf35fa8247",
+      "hash": "3cb75bef9824",
       "dHome": 77.5,
       "sameAsHome": false,
       "state": "HOME",
@@ -79,7 +79,7 @@
         "dominantPct": 22.7
       },
       "dup": false,
-      "hash": "35196c16bd0a",
+      "hash": "0009e3746dcd",
       "dHome": 65.61,
       "sameAsHome": false,
       "state": "ARMORY",
@@ -95,7 +95,7 @@
         "dominantPct": 24.7
       },
       "dup": false,
-      "hash": "d900d3680ca2",
+      "hash": "61ad9c9a2147",
       "dHome": 61.18,
       "sameAsHome": false,
       "state": "HOME",
@@ -111,7 +111,7 @@
         "dominantPct": 20.4
       },
       "dup": false,
-      "hash": "989d731906a8",
+      "hash": "d6f581cec4a5",
       "dHome": 54.58,
       "sameAsHome": false,
       "state": "HOME",
@@ -143,8 +143,8 @@
         "dominantPct": 35.2
       },
       "dup": false,
-      "hash": "bb2df4c8f751",
-      "dHome": 55.2,
+      "hash": "000036886bef",
+      "dHome": 55.21,
       "sameAsHome": false,
       "state": "BEAST",
       "stateOk": true
@@ -159,7 +159,7 @@
         "dominantPct": 36.7
       },
       "dup": false,
-      "hash": "738e90c989fc",
+      "hash": "a419e8bb8d8d",
       "dHome": 74.25,
       "sameAsHome": false,
       "state": "SETTINGS",
@@ -175,7 +175,7 @@
         "dominantPct": 41.8
       },
       "dup": false,
-      "hash": "c15561220686",
+      "hash": "89115acbc8bc",
       "dHome": 80.19,
       "sameAsHome": false,
       "state": "ABOUT",
@@ -191,7 +191,7 @@
         "dominantPct": 20.5
       },
       "dup": false,
-      "hash": "1215ef1446f1",
+      "hash": "495a0abab349",
       "dHome": 76.89,
       "sameAsHome": false,
       "state": "HOME",
@@ -200,22 +200,22 @@
     {
       "name": "11-battle",
       "hook": "mouse",
-      "hash": "499356abed72",
-      "dHome": 43.65,
+      "hash": "562399acd08d",
+      "dHome": 43.51,
       "state": "PLAYING",
       "stateOk": true
     },
     {
       "name": "12-levelup",
       "hook": "轮询 cards.length>0 (3 张)",
-      "hash": "521ae3291ed8",
-      "dHome": 63.99
+      "hash": "c54f8cf11a7b",
+      "dHome": 63.95
     },
     {
       "name": "13-pause",
       "hook": "pause(true) 轮询成功",
-      "hash": "6f8383d9c750",
-      "dHome": 63.6,
+      "hash": "59b1057f2944",
+      "dHome": 63.42,
       "state": "PAUSED_MENU",
       "stateOk": true
     }
