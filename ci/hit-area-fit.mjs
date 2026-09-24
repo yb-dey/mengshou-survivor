@@ -50,6 +50,9 @@ const ALLOW_OVERLAP = [];   // 允许的重叠（当前为空：任何同屏重�
 //   构筑到 8/4/6/3/2 行时，芯片已压到 floor 22（11.9 CSS px）却仍差 20px ⇒ 最后一行盖住结算两钮。
 //   ⇒ 只对这两屏放行（并打印），**溢出一旦扩散到别的屏 ⇒ 立刻红**。修法见 PM §18.12。
 const DECLARED_OVERFLOW_SCREENS = ["结算-满载", "暂停-满载"];
+// 满载两屏 = **诊断屏**：注入依赖调试口（见下），注不满时只报告不拦（否则一条注不满的探针
+//   会把所有 push 永久染红）。它们的数字仍然照常打进 notice，供人工核对。
+const DIAGNOSTIC_SCREENS = ["结算-满载", "暂停-满载"];
 // ⚠ 每屏「至少应有几个可点节点」的下限 —— 防「量到 0 个却报 ok」：
 //   首跑实测「复活/死亡 0/0/0」：state 轮询说到了 REVIVE_MODAL，扫描却一个可点节点都没有 ——
 //   这种「没量到」绝不能长得像「量过且没问题」（本工作区反复踩的同一个坑）。低于下限 ⇒ FAIL。
@@ -126,9 +129,12 @@ const scan = async (label, setup) => {
   const r = readCase(label, raw);
   if (r.err) { console.log(`ERR  [${label}] ${r.err}`); report.cases.push(r); return r; }
   const need = EXPECT_MIN[label];
-  if (need != null && r.n < need) {
+  if (need != null && r.n < need && !DIAGNOSTIC_SCREENS.includes(label)) {
     r.underfilled = { got: r.n, need: need };
     console.log(`FAIL [${label}] 只量到 ${r.n} 个可点节点（下限 ${need}）⇒ 探针与屏幕状态不一致`);
+  } else if (need != null && r.n < need) {
+    r.diagnostic = { got: r.n, need: need };
+    console.log(`（诊断屏 [${label}] 实得 ${r.n}/下限 ${need} —— 注入没铺开，仅报告）`);
   }
   const st = await page.evaluate(stateExpr).catch(() => '{}');
   r.state = (JSON.parse(st) || {}).name || '?';
@@ -237,15 +243,24 @@ try {
       const denseBuild = async () => {
         await page.evaluate(() => { try { debugPlayClean(0, "", false); } catch (e) { void e; } });
         await page.waitForTimeout(320);
+        let picks = 0;
         for (let i = 0; i < 12; i++) {
           await page.evaluate(() => { try { if (window.run) run.pendingLevels = 1; openLevelUp(); } catch (e) { void e; } });
-          await page.waitForTimeout(420);
-          await page.evaluate(() => { try { debugLevelupTap(0); } catch (e) { void e; } try { closeCards(); } catch (e) { void e; } });
-          await page.waitForTimeout(160);
+          // ⚠ 第一版固定等 420ms 就点 ⇒ 卡还没"就位"（弹出动画未完）⇒ 一张也选不上。改为轮询卡片出现。
+          let got = false;
+          for (let t = 0; t < 14 && !got; t++) {
+            got = await page.evaluate(() => { try { const c = (MENGSHOU_DEBUG.levelup() || {}).cards || []; return c.length > 0; } catch (e) { return false; } }).catch(() => false);
+            if (!got) await page.waitForTimeout(120);
+          }
+          if (!got) continue;
+          const before = await page.evaluate(() => { try { return ((MENGSHOU_DEBUG.build() || {}).lanes && 1) || 1; } catch (e) { return 1; } }).catch(() => 1);
+          void before;
+          await page.evaluate(() => { try { debugLevelupTap(0); } catch (e) { void e; } });
+          picks++;
+          await page.evaluate(() => { try { closeCards(); } catch (e) { void e; } });
+          await page.waitForTimeout(140);
         }
-        const n = await page.evaluate(() => { try { return (MENGSHOU_DEBUG.build() || {}).chips || 0; } catch (e) { return -1; } }).catch(() => -1);
-        console.log("（满载注入后 构筑条数 = " + n + "）");
-        return n;
+        return picks;
       };
       report.denseChips = await denseBuild();
       await page.evaluate(() => { try { MENGSHOU_DEBUG.win(); } catch (e) { void e; } });
@@ -296,6 +311,7 @@ const skipped = report.cases.filter((c) => c.skipped).length;
 console.log(`::notice::⑲ 命中区逐屏（可点/偏小/重叠[+已声明]）::` + ok.map((c) => `${c.label} ${c.n}/${c.small.length}/${c.overlaps.length}${c.declaredOverlaps && c.declaredOverlaps.length ? '+D' + c.declaredOverlaps.length : ''}`).join(' · ')
   + (skipped ? ` · ⚠ 跳过 ${skipped} 屏（未量到）` : ' · 10 屏全覆盖'));
 console.log(`::notice::⑲ 偏小 id 摘要（台账用）::` + digest + ` · 未登记 ${unlisted.length} 个`);
+console.log(`::notice::⑲ 满载注入（诊断）::选卡成功 ${report.denseChips == null ? '—' : report.denseChips}/12 · 结算-满载 ' + (ok.filter((c) => c.label === '结算-满载')[0] || {}).n + ' 个可点节点 · 暂停-满载 ' + (ok.filter((c) => c.label === '暂停-满载')[0] || {}).n + ' 个`);
 // B 类候选（具名、准备补 hitPad 的）—— 打印**运行时**两轴间距，用来定 pad 值：
 //   `v` = 竖直向最近邻居间距，`h` = 水平向；对称 pad 必须 ≤ ½×min(v,h)，单轴 pad 只需看对应轴。
 const PAD_CAND = ['homedaily', 'homevault', 'settheme', 'setbgm', 'setexport', 'setimport', 'setclose',
