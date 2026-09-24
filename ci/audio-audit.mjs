@@ -135,12 +135,22 @@ const t1 = await read();
 const bgm = delta(t0, t1);
 
 // ---- 2) 进战斗 + killDemo：SFX 应跳增 ----
+// 【第 118 轮】**先把"战斗真的开始了"证明出来，再去判音频**（O25）。
+//   实测那次红点里 ② 的计数是 `1→1` —— 真相是**驱动那一下没进战斗**，而老版本把它报成"音频不达标" ✗。
+//   与我们这一季反复踩的是同一类错：**把"没量到"当成"量到了不合格"**。
+//   现在：点不进去就重试；三次都进不去 ⇒ 判据②**无数据**，用独立退出码 6 报出来，与"音频真坏了"(2) 分开。
 await page.evaluate(() => { if (window.MENGSHOU_DEBUG.hall) window.MENGSHOU_DEBUG.hall(); });
 await page.waitForTimeout(600);
 const g = await page.evaluate(() => { const c = document.querySelector('canvas'); const r = c.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, cw: c.width, ch: c.height }; });
-await page.mouse.click(g.l + (316 / g.cw) * g.w, g.t + (617 / g.ch) * g.h);
-await page.waitForTimeout(6000);
+const isPlaying = async () => await page.evaluate(() => { try { return !!(window.MENGSHOU_DEBUG && MENGSHOU_DEBUG.state && MENGSHOU_DEBUG.state().playing); } catch (e) { return false; } });
+let entered = false, tries = 0;
+for (tries = 1; tries <= 3 && !entered; tries++) {
+  await page.mouse.click(g.l + (316 / g.cw) * g.w, g.t + (617 / g.ch) * g.h);
+  await page.waitForTimeout(2500);
+  entered = await isPlaying();
+}
 const t2 = await read();
+await page.waitForTimeout(entered ? 3500 : 6000);
 await page.evaluate(() => { try { window.MENGSHOU_DEBUG.killDemo(); } catch (e) { void e; } });
 await page.waitForTimeout(400);
 await page.evaluate(() => { try { window.MENGSHOU_DEBUG.cueSfx && window.MENGSHOU_DEBUG.cueSfx('hit'); } catch (e) { void e; } });
@@ -218,7 +228,11 @@ const rows = [
 //   窗口期（4s）内的"增量"会是 0 —— 那是**度量窗口问题，不是没声音**。
 //   → BGM 看**自加载以来的累计音源数**（t1.src），SFX/静音才看增量。
 const okBgm = t1.src > 0;
-const okBattle = battle.src > Math.max(bgm.src * 1.3, 0);
+// 【第 118 轮】判据②改成不依赖那个几乎恒为 1 的 `bgm.src × 1.3`（BGM 是"开机建一次 + loop"，
+//   4 秒窗口里的增量本来就是 0~1 ⇒ 老写法等于要求"窗口里至少 2 个 SFX"却把阈值伪装成比值）：
+//   直接要求 **窗口内 ≥2 个音源且多于 BGM 窗口**；再叠加"确实进了战斗"这个前置条件（见上）。
+const okBattle = battle.src >= 2 && battle.src > bgm.src;
+const battleData = entered && okBattle;
 const okMute = muted.src < Math.max(2, battle.src * 0.5);
 const md = [
   '# 音频专项体检（audio-audit）',
@@ -232,7 +246,8 @@ const md = [
   ...rows.map((r) => `| ${r.name} | ${r.osc} | ${r.buf} | ${r.src} |`),
   '',
   `- ① 有 BGM（**累计**音源 > 0）: **${okBgm ? '✅' : '❌'}**`,
-  `- ② 战斗+击杀高于 BGM 窗口（${bgm.src}→${battle.src}）: **${okBattle ? '✅' : '❌'}**`,
+  `- ② 战斗+击杀高于 BGM 窗口（${bgm.src}→${battle.src}）: **${battleData ? '✅' : (entered ? '❌' : '⚠ 无数据')}**` +
+    (entered ? '' : `（**驱动没能进入战斗**：点击重试 ${tries - 1} 次仍未 \`playing\` ⇒ 本条不作音频结论，见 O25）`),
   `- ③ 静音后显著下降（${battle.src}→${muted.src}）: **${okMute ? '✅' : '❌'}**`,
   '',
   '## 音质（把送进播放的 AudioBuffer 内容量出来）',
@@ -257,12 +272,14 @@ const md = [
   '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'audio-report.md'), md);
-fs.writeFileSync(path.join(OUT, 'audio-report.json'), JSON.stringify({ bgm, battle, muted, ctxMade: t1.ctxMade, quality: q, selftest, errs, ok: { okBgm, okBattle, okMute, okClip, okLoud, okSeam, okSelftest } }, null, 2));
+fs.writeFileSync(path.join(OUT, 'audio-report.json'), JSON.stringify({ bgm, battle, muted, ctxMade: t1.ctxMade, entered, tries: tries - 1, quality: q, selftest, errs, ok: { okBgm, okBattle, battleData, okMute, okClip, okLoud, okSeam, okSelftest } }, null, 2));
 console.log(md);
 
 await browser.close();
 server.close();
 if (errs.length) { console.error('❌ 有未捕获异常'); process.exit(3); }
+// 【第 118 轮】顺序很重要：**驱动都没进战斗**就先说清楚，别让它伪装成音频结论。
+if (!entered) { console.error('❌ 判据②无数据：驱动点击 ' + (tries - 1) + ' 次仍未进入战斗（这是驱动问题，不是音频结论；见 OPEN-ITEMS O25）'); process.exit(6); }
 if (!(okBgm && okBattle && okMute)) { console.error('❌ 音频体检未通过（BGM/SFX/静音）'); process.exit(2); }
 if (!okSelftest) { console.error('❌ 接缝判据自检失败（判据本身不可信，结论作废）'); process.exit(5); }
 if (!(okClip && okLoud && okSeam)) { console.error('❌ 音质体检未通过（削波/偏轻/循环接缝）'); process.exit(4); }
