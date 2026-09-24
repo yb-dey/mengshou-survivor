@@ -31,7 +31,7 @@
 //   node build-minigame.mjs            # 构建 + 体积闸门
 //   node build-minigame.mjs --selftest # 阴性对照：6 个构造用例 + 真跑一遍内联母版，全对才退出 0
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync, statSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync, statSync, existsSync, rmSync } from 'node:fs'
 import { join, dirname, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -39,9 +39,17 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 // 【第 55 轮】仓库位置**自动识别**：本工程现在同时存在于两处 ——
 //   仓库内 `mengshou-survivor/minigame/`（权威源，云端 CI 跑它）与工作区 `小游戏移植/`（本地副本）。
 //   两种布局下 dist/ 与 game/ 的相对位置不同 ⇒ 按"哪个目录里有 dist/萌兽消消岛.html"来选，避免写死路径。
-const REPO = [join(HERE, '..'), join(HERE, '..', 'mengshou-survivor')]
-  .find((d) => existsSync(join(d, 'dist', '萌兽消消岛.html')) || existsSync(join(d, 'game', '萌兽消消岛.html')))
-  || join(HERE, '..', 'mengshou-survivor')
+// ⚠ 【第 83 轮修】原来按 [HERE/.., HERE/../mengshou-survivor] 取**第一个**命中 —— 而工作区根
+//   目录 `方向3/` 下也躺着一份历史遗留的旧 `dist/萌兽消消岛.html`，于是从 `小游戏移植/` 里
+//   跑构建时**选错了源**：产物停在 v1.201，而母版早已 v1.208。⇒ 改成显式排序 + 环境变量覆盖。
+const CANDIDATES = [
+  process.env.MENGHSHOU_REPO,
+  join(HERE, '..'),
+  join(HERE, '..', 'mengshou-survivor'),
+].filter(Boolean)
+const REPO = CANDIDATES.find((d) => existsSync(join(d, 'game', '萌兽消消岛.html')))
+  || CANDIDATES.find((d) => existsSync(join(d, 'dist', '萌兽消消岛.html')))
+  || join(HERE, '..')
 const SELFTEST = process.argv.includes('--selftest')
 const MAIN_LIMIT = 4 * 1024 * 1024        // 平台线：主包 ≤ 4M
 const TOTAL_LIMIT = 30 * 1024 * 1024      // 平台线：主包+分包 ≤ 30M
@@ -103,17 +111,36 @@ const script = m[1]
 
 const inlineArt = (script.match(/data:image\//g) || []).length
 console.log(`源：${SRC.replace(REPO, 'mengshou-survivor')}`)
+// 【第 83 轮】把源的版本号打出来 —— 上次那次选错源若有这一行，一眼就能看见。
+console.log(`源版本：${(/version:\s*"([\d.]+)"/.exec(html) || [, '?'])[1]}（仓库根 ${REPO}）`)
 console.log(`  脚本 ${script.length} 字符；内嵌 data:image ${inlineArt} 处`)
 
 if (!SELFTEST) {
   writeFileSync(join(HERE, 'game.bundle.js'), script, 'utf8')
-  mkdirSync(join(HERE, 'assets'), { recursive: true })
+  // ⚠ 【第 83 轮修】原来只 copyFileSync 平铺一层，两个后果：
+  //   ① 目标 assets/ 里的**旧素材不会被清掉** —— 实测镜像里滞留了 3 个已从母版删除的
+  //      `hero_*.webp`（合计 217,766 B）：smoke ⑯a（game.json ↔ assets 一致性）报 181 ≠ 178，
+  //      而且游戏仍把它们载入预渲染 ⇒ 画布多 4.1 Mpx，顶破 55 Mpx 预算门禁
+  //      （修前 1131 张 / 55.7 Mpx ❌ → 清掉后 1110 张 / 51.6 Mpx ✅）。
+  //   ② 素材一旦出现子目录，copyFileSync 会在目录上抛 EPERM，构建直接死。
+  //   ⇒ 改成先整目录清空、再递归复制（并报出清掉多少旧文件）。
+  const DST = join(HERE, 'assets')
+  const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => {
+    const p = join(d, e.name)
+    return e.isDirectory() ? walk(p) : [p]
+  })
+  const oldCount = existsSync(DST) ? walk(DST).length : 0
+  rmSync(DST, { recursive: true, force: true })
+  mkdirSync(DST, { recursive: true })
   let n = 0
-  for (const f of readdirSync(ASSET_SRC)) {
-    copyFileSync(join(ASSET_SRC, f), join(HERE, 'assets', f))
+  for (const src of walk(ASSET_SRC)) {
+    const out = join(DST, relative(ASSET_SRC, src))
+    mkdirSync(dirname(out), { recursive: true })
+    copyFileSync(src, out)
     n++
   }
-  console.log(`  已写出 game.bundle.js 与 assets/（${n} 个文件）`)
+  const cleared = oldCount > n ? `；清掉旧文件 ${oldCount - n} 个` : ''
+  console.log(`  已写出 game.bundle.js 与 assets/（${n} 个文件${cleared}）`)
 }
 
 // ── 体积口径：主包 = 目录下所有文件 **减去** 已声明的分包目录 ────────────────
