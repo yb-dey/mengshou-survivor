@@ -6,7 +6,7 @@ v22.23.2
 
 === npm i playwright ===
 
-added 2 packages in 2s
+added 2 packages in 1s
 === playwright install --with-deps chromium ===
 FFmpeg (playwright ffmpeg v1011) downloaded to /home/runner/.cache/ms-playwright/ffmpeg-1011
 Downloading Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) from https://cdn.playwright.dev/builds/cft/153.0.8010.12/linux64/chrome-headless-shell-linux64.zip
@@ -26,8 +26,7 @@ Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) d
 Version 1.63.0
 
 === node ci/screen-sweep.mjs ===
-::warning::11-battle 未达密度阈值 10：等满 60s 未达阈值（峰值 9）（实测 1，峰值 9）—— 这张图不代表常态战斗，评审前先看这个数
-::notice::11-battle 采样密度 同屏怪=1 峰值=9 目标=10 轮询=145 结束=等满 60s 未达阈值（峰值 9）
+::notice::11-battle 采样密度 这张图同屏怪=10 峰值=10 目标=10 轮询=59 结束=达到 10 只
 # 全界面巡检
 
 - 可用界面钩子: 35 个
@@ -35,7 +34,7 @@ Version 1.63.0
 
 | 截图 | 钩子 | 画布 | 独特色数 | 主色占比 | 与大厅Δ | 实测状态 | 备注 |
 |---|---|---|---|---|---|---|---|
-| 01-home | hall | 720×1280 | 806 | 9.7% | 0 | HOME |  |
+| 01-home | hall | 720×1280 | 805 | 9.7% | 0 | HOME |  |
 | 02-chapters | openChapters | 720×1280 | 767 | 21.1% | 77.08 | HOME |  |
 | 03-gear | openGear | 720×1280 | 738 | 22.7% | 66.52 | ARMORY |  |
 | 04-upgrade | openUp | 720×1280 | 615 | 24.7% | 62.06 | HOME |  |
@@ -45,9 +44,9 @@ Version 1.63.0
 | 08-settings | openSettings | 720×1280 | 538 | 36.6% | 74.85 | SETTINGS |  |
 | 09-about | about | 720×1280 | 524 | 41.8% | 80.38 | ABOUT |  |
 | 10-daily | dailyPick | 720×1280 | 541 | 20.2% | 77.4 | HOME |  |
-| 11-battle | mouse+轮询怪数 | 720×1280 | 710 | 20.9% | 46.34 | PLAYING | ⚠ 同屏怪 **1** 只（峰值 9，目标 10） |
-| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 621 | 41.3% | 62 | - |  |
-| 13-pause | pause(true) 轮询成功 | 720×1280 | 735 | 37.2% | 64.2 | PAUSED_MENU |  |
+| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 763 | 20.6% | 43.93 | PLAYING | 同屏怪 **10** 只（峰值 10，目标 10） |
+| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 656 | 41.2% | 64.2 | - |  |
+| 13-pause | pause(true) 轮询成功 | 720×1280 | 760 | 36.6% | 65.35 | PAUSED_MENU |  |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
 
@@ -65,21 +64,21 @@ Version 1.63.0
 
 === exit=0 ===
 === ci/out ===
-total 4596
-drwxr-xr-x 2 runner runner   4096 Sep 24 18:13 .
-drwxr-xr-x 7 runner runner   4096 Sep 24 18:13 ..
--rw-r--r-- 1 runner runner 482754 Sep 24 18:14 01-home.png
--rw-r--r-- 1 runner runner 308858 Sep 24 18:14 02-chapters.png
--rw-r--r-- 1 runner runner 285300 Sep 24 18:14 03-gear.png
--rw-r--r-- 1 runner runner 402062 Sep 24 18:14 04-upgrade.png
--rw-r--r-- 1 runner runner 364562 Sep 24 18:14 05-vault.png
--rw-r--r-- 1 runner runner 477473 Sep 24 18:14 06-beast.png
--rw-r--r-- 1 runner runner 415449 Sep 24 18:14 07-codex-enemy.png
--rw-r--r-- 1 runner runner 227176 Sep 24 18:14 08-settings.png
--rw-r--r-- 1 runner runner 251362 Sep 24 18:14 09-about.png
--rw-r--r-- 1 runner runner 264133 Sep 24 18:14 10-daily.png
--rw-r--r-- 1 runner runner 464389 Sep 24 18:15 11-battle.png
--rw-r--r-- 1 runner runner 354694 Sep 24 18:16 12-levelup.png
--rw-r--r-- 1 runner runner 358299 Sep 24 18:16 13-pause.png
--rw-r--r-- 1 runner runner   4931 Sep 24 18:16 screens.json
--rw-r--r-- 1 runner runner   2066 Sep 24 18:16 screens.md
+total 4576
+drwxr-xr-x 2 runner runner   4096 Sep 24 18:19 .
+drwxr-xr-x 7 runner runner   4096 Sep 24 18:19 ..
+-rw-r--r-- 1 runner runner 482847 Sep 24 18:19 01-home.png
+-rw-r--r-- 1 runner runner 308804 Sep 24 18:19 02-chapters.png
+-rw-r--r-- 1 runner runner 285362 Sep 24 18:19 03-gear.png
+-rw-r--r-- 1 runner runner 402056 Sep 24 18:19 04-upgrade.png
+-rw-r--r-- 1 runner runner 364529 Sep 24 18:19 05-vault.png
+-rw-r--r-- 1 runner runner 477426 Sep 24 18:19 06-beast.png
+-rw-r--r-- 1 runner runner 415449 Sep 24 18:19 07-codex-enemy.png
+-rw-r--r-- 1 runner runner 227094 Sep 24 18:19 08-settings.png
+-rw-r--r-- 1 runner runner 251362 Sep 24 18:19 09-about.png
+-rw-r--r-- 1 runner runner 264167 Sep 24 18:19 10-daily.png
+-rw-r--r-- 1 runner runner 499181 Sep 24 18:20 11-battle.png
+-rw-r--r-- 1 runner runner 313179 Sep 24 18:20 12-levelup.png
+-rw-r--r-- 1 runner runner 349547 Sep 24 18:20 13-pause.png
+-rw-r--r-- 1 runner runner   4934 Sep 24 18:20 screens.json
+-rw-r--r-- 1 runner runner   2091 Sep 24 18:20 screens.md
