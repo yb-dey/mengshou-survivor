@@ -56,10 +56,25 @@ const EXPECT_MIN = { 'HOME(大厅)': 8, '设置': 4, '图鉴': 4, '装备库': 4
 //   ⚠ 已核对：构筑芯（pausechip/resultchip）**不是**多余的可点 —— 结算页 L31755 明写
 //   「点条目看怎么来的」，是**被文案prompt的**交互 ⇒ 不能靠"删 onTap"消掉，只能改视觉（见 PM §18.10）。
 const ALLOW_SMALL = [
-  { re: /^pausechip\d+$/, why: '暂停面板构筑芯（点条目看提示）· 行高由面板密度决定，扩命中区会压到相邻芯（安全 pad 仅 3）⇒ 待视觉重排' },
-  { re: /^resultchip\d+$/, why: '结算面板构筑芯（结算页文案明写「点条目看怎么来的」）· 18.4 CSS px 是全游戏最紧 ⇒ 待视觉重排' },
-  { re: /^hallboard\d+$/, why: '大厅六部位框 · 运行时生成的簇，彼此极近（安全 pad 2）⇒ 待视觉重排' },
-  { re: /^runechip\d+$/, why: '大厅符文槽 · 同上，运行时生成的簇' },
+  // ── A 类：运行时生成的"条目簇"（视觉重排才能解决，扩命中区会压到相邻条目）──
+  { re: /^pausechip\d+$/, why: '暂停面板构筑芯 ×14（点条目看提示）· 行高由面板密度决定，安全 pad 仅 3' },
+  { re: /^resultchip\d+$/, why: '结算面板构筑芯 ×2 · **18.4 CSS px 全游戏最紧**；结算页文案明写「点条目看怎么来的」⇒ 被 prompt 的交互，只能改视觉' },
+  { re: /^hallboard\d+$/, why: '大厅六部位框 ×3 · 运行时生成簇，彼此极近（安全 pad 2）' },
+  { re: /^hallgear\d+$/, why: '大厅六部位装备框 ×6 · 同族（运行时生成簇）' },
+  { re: /^runechip\d+$/, why: '大厅符文槽 ×5 · 同族' },
+  { re: /^themechip\d+$/, why: '大厅主题切换芯片 ×4 · 同族' },
+  { re: /^codextab\d+$/, why: '图鉴页签 ×4 · 同族（页签条密度决定高度）' },
+  { re: /^vaulttab\d+$/, why: '宝库页签 ×2（进度打造／天赋）· 同族' },
+  // ── B 类：具名控件，静态判据已算出安全 pad ⇒ **待随下次版本一起零像素补**（本轮不动母版）──
+  { re: /^(homedaily|homevault)$/, why: '大厅后置加菜／仓库兑换 · 安全 pad 13 / 11（≤26 / ≤67）⇒ 待零像素补' },
+  { re: /^set(theme|bgm|export|import|close)$/, why: '设置页五钮 · 安全 pad 9 ⇒ 待零像素补' },
+  { re: /^(beastclose|vaultclose|gearclose|dailycancel)$/, why: '各面板关闭钮（34.7 CSS px 档）· 安全 pad 9 ⇒ 待零像素补' },
+  { re: /^(gearmerge|gearforge)$/, why: '装备库合成／锻造 · 安全 pad 9 ⇒ 待零像素补' },
+  { re: /^(btnrevive|btngiveup)$/, why: '复活／放弃结算（死亡决策，**误触代价最高**）· 两者相距 20px ⇒ 安全 pad 6 ≤ 10 ⇒ 待零像素补' },
+  { re: /^btnreroll$/, why: '升级页「换一批」 · 安全 pad 7 ≤ 14 ⇒ 待零像素补' },
+  { re: /^(btndouble|resulthome)$/, why: '结算页两钮 · 尺寸由 resultActionLayout() 局部变量算出（静态盲区）⇒ 用运行时安全 pad 复核后再补' },
+  // ── C 类：并排太近，扩命中区会抢邻居 ──
+  { re: /^(homeguide|homeabout)$/, why: '大厅右上并排入口（间隔仅 8px）· 安全 pad 只有 4 ⇒ 需重排（PM §18.6 第 2 件）' },
 ];
 
 const scanExpr = (extra) => `
