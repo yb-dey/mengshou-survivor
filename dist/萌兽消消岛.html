@@ -11091,7 +11091,10 @@ var DATA_HALL_UNLOCK = [
   { id: "seedvolley", kind: "weapon", item: "seedvolley", name: "种子散射",
     cond: { type: "clear", chId: "ch1" },
     condText: "通关芽芽原",
-    gainText: "下局开局多带这把武",
+    // 【v1.209c】补回漏字：原文「下局开局多带这把武」少了「器」字（同组另外 4 条都完整）。
+    //   这一行会出现在**仓库兑换**顶部的获取式步骤行与选中卡片的收益行里 ⇒ 08-宝库-金币 截图会变，
+    //   故只重出 08 那一张（口径同 v1.207b / v1.208b / v1.209b）。
+    gainText: "下局开局多带这把武器",
     price: 60 },
   { id: "startbomb", kind: "combat", item: "bomb", name: "开局炸弹",
     cond: { type: "anchor", boss: "boss1" },
@@ -11112,7 +11115,7 @@ var DATA_HALL_UNLOCK = [
   { id: "mapledart", kind: "weapon", item: "mapledart", name: "枫叶双镖",
     cond: { type: "anchor", boss: "boss3" },
     condText: "击破终局首领（深渊鲸王）",
-    gainText: "下局开局多带这把武",
+    gainText: "下局开局多带这把武器",   // 【v1.209c】同上，补回「器」字
     price: 140 },
   { id: "mistleaf", kind: "passive", item: "mistleaf", name: "净露叶",
     cond: { type: "achieve", ach: "kill_100" },
