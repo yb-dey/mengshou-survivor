@@ -24561,6 +24561,20 @@ function paintInkTuft(c2, x, y, s, leaf) {
   leaf = leaf || "#3f7a32";
   c2.lineCap = "round";
   c2.lineJoin = "round";
+  // 【v1.210i 美术·墨线统一》草丛原先**只有中笔带墨**，三片叶身是纯叶色 —— 3× 放大实测与全项目
+  //   「外墨统一」的语言不一致（草叶看起来像没画完）。改法：先把同样三笔按**墨色**描宽 2*ink 打底，
+  //   再用叶色压在上面 ⇒ 得到 1–2px 的细墨边。**颜色 / 位置 / 尺寸一律不动**，只补一圈墨。
+  var _tuftInk = Math.max(1.6, s * 0.055);
+  c2.strokeStyle = "#1c1810";
+  c2.lineWidth = Math.max(5.5, s * 0.24) + _tuftInk * 2;
+  c2.beginPath();
+  c2.moveTo(x, y);
+  c2.lineTo(x - s * 0.58, y - s * 0.82);
+  c2.moveTo(x, y);
+  c2.lineTo(x, y - s);
+  c2.moveTo(x, y);
+  c2.lineTo(x + s * 0.58, y - s * 0.82);
+  c2.stroke();
   c2.strokeStyle = leaf;
   c2.lineWidth = Math.max(5.5, s * 0.24);
   c2.beginPath();
