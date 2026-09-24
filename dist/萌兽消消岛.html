@@ -11,7 +11,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.209">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.210">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -650,7 +650,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.209",   // 【v1.209】「怎么玩」页补「出局之后」三步（原正文到 py+536 收尾、按钮锚 py+890 ⇒ 空 245 逻辑 px ≈ 面板 23%）· 【v1.208】结算构筑条目 34→81（= 44 CSS px 触控下限，提示行"点条目看怎么来的"才成立）· 【v1.207b】硬钳制（满载不溢出）                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
+  version: "1.210",   // 【v1.210 美术·质量】① 外墨去锯齿（bakeOuterInk 给剪影加约 1px 羽化再盖章，外沿不再是一级级台阶；粗细与填色不动，不推翻 v1.177/v1.179 的外墨裁决）② 补主角接地影（原先只有辉光+脚环 ⇒ 人物「浮」在草地上；口径对齐早波杂兵的 v1.194 软扁椭圆）· 【v1.209】「怎么玩」页补「出局之后」三步（原正文到 py+536 收尾、按钮锚 py+890 ⇒ 空 245 逻辑 px ≈ 面板 23%）· 【v1.208】结算构筑条目 34→81（= 44 CSS px 触控下限，提示行"点条目看怎么来的"才成立）· 【v1.207b】硬钳制（满载不溢出）                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
                                        //   前版 v1.205：killEnemy 加已死守卫（修 enemyCount 计数穿负）；
                                        //   前版 v1.204：触屏宿主文案收敛（走位/跳过/过场副标签统一走宿主开关）；
                                        //   前版 v1.203：修符文成就 dim 拼错前缀（5 条成就永不可解锁）+ 加成就接线判据；
@@ -16925,7 +16925,16 @@ function bakeOuterInk(cv, px, cardinalOnly) {
   mask.width = w;
   mask.height = h;
   m = mask.getContext("2d");
+  // 【v1.210 美术·质量】外墨**去锯齿**：给剪影做一次约 1px 羽化再盖章。
+  //   原做法（v1.177 起）是把**硬边** alpha 做成纯色 mask，再按**整数位移盖 8 次** ⇒
+  //   外沿既保留原图 resample 后的台阶，又被位移放大成「锯齿粗黑边」——放大到原生分辨率一眼可见。
+  //   ⚠ 羽化只作用在**外墨自己的外沿**：原图随后原样盖回（下方 c.drawImage(src,0,0)），
+  //     填色 / 五官 / 体型**一个像素不改** ⇒ 不推翻 v1.177「叠怪外墨」与 v1.179「主角外墨加厚」的裁决。
+  //   ⚠ 不新增画布（画布预算门禁按创建数计）；stub 环境不支持 filter 时自动退化为原行为。
+  var _inkFeather = Math.max(0.8, Math.min(1.6, (px || 1) * 0.3));
+  try { m.filter = "blur(" + _inkFeather.toFixed(2) + "px)"; } catch (e) { /* 忽略 */ }
   m.drawImage(src, 0, 0);
+  try { m.filter = "none"; } catch (e) { /* 忽略 */ }
   m.globalCompositeOperation = "source-in";
   m.fillStyle = "#1c1810";
   m.fillRect(0, 0, w, h);
@@ -25570,6 +25579,16 @@ function drawEarlyTrashSolidPass(ctx, dpr, wtx, wty, camX, camY) {
 function drawPlayerInRun(ctx, dpr, wtx, wty) {
   var inv, blinkSoft, spr, hbA, nrA, nrFill, nrKind, rrA;
   if (!player.active) return;
+  // 【v1.210 美术·缺失】主角**接地影**：与早波杂兵同一套口径（v1.194：软、更扁椭圆）。
+  //   为什么补：主角原先只有焦点辉光 + 脚环，**没有接地影** ⇒ 放大图里「浮在草地上」；
+  //   而早波杂兵 v1.181 起就有（drawEarlyTrashContactShadow）—— 敌人有、主角没有，是**缺失**不是风格。
+  //   放在函数最前：避免与下面的无敌闪烁 globalAlpha 状态互相覆盖。
+  if (!(fxTideQuiet() && juiceLevel() < 1)) {
+    var _shR = (player.r || 14) * heroDrawScale();
+    ctx.globalAlpha = 0.30;
+    fillDropShadow(ctx, player.x, player.y + _shR * 0.62, _shR * 1.60, _shR * 0.38);
+    ctx.globalAlpha = 1;
+  }
   inv = GAME.time < player.invUntil;
   blinkSoft = inv && (GAME.frame & 1) === 0;
   if (blinkSoft) ctx.globalAlpha = 0.52;
