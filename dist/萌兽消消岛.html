@@ -34303,7 +34303,13 @@ function makeThemeChip(i, x, y, w, h) {
         fillRoundRect(ctx, r.x + 14, r.y + 10, 4, Math.max(8, stripH - 12), 2);
       }
       ctx.fillStyle = sel ? "#3a5a20" : "#a89e86";
-      ctx.font = "bold 11px " + FONT_STACK;
+      // 【v1.211a】11→**15px**（真机 1.04→1.42mm）。依据是**运行时实测**而不是观感：
+      //   把 `fillText` 挂钩跑一遍大厅，量出这张屏真正画出来的 85 条文字 —— 必须"动手操作"的短词里，
+      //   最小的就是这枚状态签（「点选」/「使用中」），只有 1.04mm，而同一屏的主 CTA 是 3.59mm。
+      //   容器有富余：这行字画在 `max(14, stripH-6)` 高的浅底盘里，而 `stripH = max(16, r.h*0.40)`
+      //   ⇒ 典型芯片 r.h≈74 时盘高≈24px，15px 字只需 ~20px ✓；「使用中」3 字 ×15 = 45px < r.w-20 ✓。
+      //   ⚠ 同一芯片下面的主题名（14px）与签名（10px）**不能**跟着抬：两行只隔 11px，抬了必撞（已核）。
+      ctx.font = "bold 15px " + FONT_STACK;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       // 【v1.210q 文案·改正一句会误导的话】原选中态写「出战中」——**它不决定出战地面**。
