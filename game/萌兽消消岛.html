@@ -29144,7 +29144,9 @@ function bindResultBuildChips() {
   chipH = CONFIG.resultChipH || 81;
   lay = resultActionLayout();
   hookY = lay.hookY;
-  // 【v1.211e 结算页·挑战失败留白】三格没画，就不该占三格的高度。
+  // 【v1.211h 结算页·挑战失败留白】三格没画，就不该占三格的高度。
+  //   （原写 v1.211e：那个字母已被第 129 轮的巡检修订占用 —— 我只在母版里 grep 了字母空间，
+  //    漏了 `_shots/README.md` 里同样登记字母的那三行。属「量了一处、下了全局结论」，P1。）
   //   根因：drawResultPanel 在 runSummary.roomClears 为 0 时只画一行「房回礼 · 未走进」(L32109)，
   //   而这里**无条件**按 resultRoomH(108) 预留 ⇒ 实测那一屏在此处留下 85 逻辑px 纯空条
   //   （裁 60,560,600x170 → `_qc/_imgstat --inkrows`：最长连续空条 255/600 @3× = 43%）。
