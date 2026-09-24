@@ -64,6 +64,14 @@ def main():
     t0 = time.time()
     pipe = AutoPipelineForImage2Image.from_pretrained(MODEL, torch_dtype=torch.float32,
                                                      safety_checker=None, requires_safety_checker=False)
+    # 【第 105 轮】SDXL-turbo 首次运行崩在 `cannot reshape tensor of 0 elements into shape [0, -1, 1, 512]`
+    #   —— CPU 管道上的典型显存/注意力形状问题。按官方建议开注意力分片 + VAE 分片（对 sd-turbo 无副作用）。
+    for _fn in ("enable_attention_slicing", "enable_vae_slicing", "enable_vae_tiling"):
+        try:
+            getattr(pipe, _fn)()
+            print(f"已启用 {_fn}", flush=True)
+        except Exception as e:  # noqa: BLE001
+            print(f"跳过 {_fn}: {e}", flush=True)
     pipe.set_progress_bar_config(disable=False)
     print(f"模型加载完成 {time.time() - t0:.1f}s", flush=True)
 
