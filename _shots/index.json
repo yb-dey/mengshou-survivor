@@ -1,6 +1,6 @@
 {
-  "at": "2026-09-24T18:35:22.357Z",
-  "count": 13,
+  "at": "2026-09-24T18:39:25.269Z",
+  "count": 15,
   "files": [
     "01-home.png",
     "02-chapters.png",
@@ -14,6 +14,8 @@
     "10-daily.png",
     "11-battle.png",
     "12-levelup.png",
-    "13-pause.png"
+    "13-pause.png",
+    "14-result-win.png",
+    "15-result-lose.png"
   ]
 }

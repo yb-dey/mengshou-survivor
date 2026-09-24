@@ -6,7 +6,7 @@ v22.23.2
 
 === npm i playwright ===
 
-added 2 packages in 1s
+added 2 packages in 2s
 === playwright install --with-deps chromium ===
 FFmpeg (playwright ffmpeg v1011) downloaded to /home/runner/.cache/ms-playwright/ffmpeg-1011
 Downloading Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) from https://cdn.playwright.dev/builds/cft/153.0.8010.12/linux64/chrome-headless-shell-linux64.zip
@@ -26,7 +26,9 @@ Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) d
 Version 1.63.0
 
 === node ci/screen-sweep.mjs ===
-::notice::11-battle 采样密度 这张图同屏怪=10 峰值=10 目标=10 轮询=61 结束=达到 10 只
+::notice::11-battle 采样密度 这张图同屏怪=10 峰值=10 目标=10 轮询=89 结束=达到 10 只
+::notice::14-result-win 采样 state=RESULT_WIN chips=3 overlap=false
+::notice::15-result-lose 采样 state=RESULT_LOSE chips=2 overlap=false
 # 全界面巡检
 
 - 可用界面钩子: 35 个
@@ -44,16 +46,24 @@ Version 1.63.0
 | 08-settings | openSettings | 720×1280 | 538 | 36.6% | 74.85 | SETTINGS |  |
 | 09-about | about | 720×1280 | 524 | 41.8% | 80.38 | ABOUT |  |
 | 10-daily | dailyPick | 720×1280 | 541 | 20.2% | 77.4 | HOME |  |
-| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 737 | 20.3% | 44.36 | PLAYING | 同屏怪 **10** 只（峰值 10，目标 10） |
-| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 689 | 41.2% | 64.57 | - |  |
-| 13-pause | pause(true) 轮询成功 | 720×1280 | 719 | 34% | 65.3 | PAUSED_MENU |  |
+| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 895 | 19.4% | 47.49 | PLAYING | 同屏怪 **10** 只（峰值 10，目标 10） |
+| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 616 | 41.5% | 64.36 | - |  |
+| 13-pause | pause(true) 轮询成功 | 720×1280 | 792 | 36.5% | 64.42 | PAUSED_MENU |  |
+| 14-result-win | win() | 720×1280 | 621 | 33.2% | 59.70731867152628 | RESULT_WIN | 结算卡带 **3** 条 · 压住=否 |
+| 15-result-lose | lose() | 720×1280 | 618 | 33.3% | 61.92428192313062 | RESULT_LOSE | 结算卡带 **2** 条 · 压住=否 |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
 
 > ⚠ **11-battle 自带密度标签（第 126 轮新增）**：这一屏原来固定在"进战斗后第 7 秒"拍，
-> 那个时点几乎没怪 —— 实测 13 屏里它的局部对比 edgePct=4.37% 是**全场最低**，
-> 而玩家 90% 的时间恰恰花在这一屏。现在改成：`seek()` 跳到潮期 → 轮询到 `enemyCount ≥ 目标` 才拍，
-> 并把**实测同屏怪数**写进备注列。**没有这个数，就不该拿这一屏下美术结论。**
+> 那个时点几乎没怪，而玩家 90% 的时间恰恰花在这一屏。现在改成：轮询到 `enemyCount ≥ 目标` 才拍，
+> 并取**本次跑里最密的那一帧**（超时也不退回空场），把**实测同屏怪数**写进备注列。
+> **没有这个数，就不该拿这一屏下美术结论。**⛔ 不用 `seek()` 跳潮期：`debugSeekRunTime` 只推
+> runTime 与刷怪调度器、**不动玩家等级** ⇒ 会让 1 级玩家面对 92 秒的压力，拍到的是复活盘。
+
+> ⚠ **14/15 结算（胜/负）是第 128 轮新补的两屏**：它们**每个玩家每局都会看到**，
+> 但这套巡检此前**从来没拍过**（13 屏里没有结算页），而 `win()`/`lose()`/`resultBuild()`
+> 三个钩子母版早就给了。现在两屏都拍 + 断言 `RESULT_WIN`/`RESULT_LOSE`，
+> 并用 `resultBuild()` 当探针把「卡带数 / 有没有压住」写进备注列。
 
 > ⚠ 备注列标 `与上一屏完全相同` 的，表示**该界面没有被真正打开**（截图与上一屏字节相同）。
 > 这类条目**不能当作"已巡检"** —— 修法：先复位到大厅，或换一个能生效的钩子。
@@ -64,21 +74,23 @@ Version 1.63.0
 
 === exit=0 ===
 === ci/out ===
-total 4556
-drwxr-xr-x 2 runner runner   4096 Sep 24 18:33 .
-drwxr-xr-x 7 runner runner   4096 Sep 24 18:33 ..
--rw-r--r-- 1 runner runner 482925 Sep 24 18:34 01-home.png
--rw-r--r-- 1 runner runner 308808 Sep 24 18:34 02-chapters.png
--rw-r--r-- 1 runner runner 285300 Sep 24 18:34 03-gear.png
--rw-r--r-- 1 runner runner 402094 Sep 24 18:34 04-upgrade.png
--rw-r--r-- 1 runner runner 364650 Sep 24 18:34 05-vault.png
--rw-r--r-- 1 runner runner 477426 Sep 24 18:34 06-beast.png
--rw-r--r-- 1 runner runner 415485 Sep 24 18:34 07-codex-enemy.png
--rw-r--r-- 1 runner runner 227081 Sep 24 18:34 08-settings.png
--rw-r--r-- 1 runner runner 251634 Sep 24 18:34 09-about.png
--rw-r--r-- 1 runner runner 264151 Sep 24 18:34 10-daily.png
--rw-r--r-- 1 runner runner 493753 Sep 24 18:35 11-battle.png
--rw-r--r-- 1 runner runner 300002 Sep 24 18:35 12-levelup.png
--rw-r--r-- 1 runner runner 342007 Sep 24 18:35 13-pause.png
--rw-r--r-- 1 runner runner   4932 Sep 24 18:35 screens.json
--rw-r--r-- 1 runner runner   2089 Sep 24 18:35 screens.md
+total 5256
+drwxr-xr-x 2 runner runner   4096 Sep 24 18:39 .
+drwxr-xr-x 7 runner runner   4096 Sep 24 18:37 ..
+-rw-r--r-- 1 runner runner 482940 Sep 24 18:38 01-home.png
+-rw-r--r-- 1 runner runner 308818 Sep 24 18:38 02-chapters.png
+-rw-r--r-- 1 runner runner 285363 Sep 24 18:38 03-gear.png
+-rw-r--r-- 1 runner runner 401920 Sep 24 18:38 04-upgrade.png
+-rw-r--r-- 1 runner runner 364596 Sep 24 18:38 05-vault.png
+-rw-r--r-- 1 runner runner 477426 Sep 24 18:38 06-beast.png
+-rw-r--r-- 1 runner runner 415510 Sep 24 18:38 07-codex-enemy.png
+-rw-r--r-- 1 runner runner 227088 Sep 24 18:38 08-settings.png
+-rw-r--r-- 1 runner runner 251507 Sep 24 18:38 09-about.png
+-rw-r--r-- 1 runner runner 264116 Sep 24 18:38 10-daily.png
+-rw-r--r-- 1 runner runner 550363 Sep 24 18:39 11-battle.png
+-rw-r--r-- 1 runner runner 306651 Sep 24 18:39 12-levelup.png
+-rw-r--r-- 1 runner runner 349866 Sep 24 18:39 13-pause.png
+-rw-r--r-- 1 runner runner 326150 Sep 24 18:39 14-result-win.png
+-rw-r--r-- 1 runner runner 319327 Sep 24 18:39 15-result-lose.png
+-rw-r--r-- 1 runner runner   5640 Sep 24 18:39 screens.json
+-rw-r--r-- 1 runner runner   2900 Sep 24 18:39 screens.md
