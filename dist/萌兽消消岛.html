@@ -33708,7 +33708,12 @@ function makeBeastCell(idx, x, y, w, h) {
       ctx.fillStyle = "#8a5a10";
       // 【v1.211s】O27 样板：删掉下面那行**重复**信息后，把腾出的空间给字号 —— 14→**16px**（1.32→1.51mm）。
       //   ⚠ 只抬这一行：上面那行 `desc + clash` **没有走 hudFitText**、且 clash 可能很长，
-      //     先抬它会有横向溢出风险（记在案，下一轮先补宽度兜底再谈抬它）。
+      //     先抬它会有横向溢出风险（下一轮先补宽度兜底再谈抬它）。
+      //   【第 142 轮实测，留在这里免得重推】抬上面那行之前先知道余量：
+      //     可用宽 = r.w(632) − 118(起点) − 118(右侧签左沿) = **396 逻辑px**；
+      //     全库最坏组合是 `shellturtle` 的 desc + 「与浣熊特工同剪影」≈ **322px @15px**
+      //     ⇒ 抬到 17px ≈ 365px（余 31px，可行）；18px ≈ 386px（余 10px，太险）。
+      //     ⚠ 但**真正宽的是下面那行 stats**（`petCodexStars` 展开后 ≈263px @14px，见本批实测图）。
       ctx.font = "bold 16px " + FONT_STACK;
       ctx.fillText("伤" + d.petDmg + " / " + d.interval + "s · " + petCodexStars(d), r.x + 118, r.y + 72);
       // 【v1.211s】这一行原为 13px 的 `petUnlockStep(d)`，内容是「进度解锁 · 差N金」——
