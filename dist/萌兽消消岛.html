@@ -37909,7 +37909,12 @@ function init() {
         //   `chapterSelectOpen`（母版 L29543，openChapterSelect 置真）、`uiUpgradeModal.visible`（L32427）。
         //   ⛔ 纯调试接口：不动任何表现/数值/布局，也不新增全局状态。
         chapters: !!chapterSelectOpen,
-        upgrade: !!(uiUpgradeModal && uiUpgradeModal.visible)
+        upgrade: !!(uiUpgradeModal && uiUpgradeModal.visible),
+        // 【第 129 轮】`_qc/_shot-coverage.mjs` 查出一个**从没被拍过的页签**：仓库面板的"天赋"页。
+        //   05-vault 拍的是默认的 craft 页，`vaultTapTalent()` 打开的 talent 页**没有任何截图**，
+        //   而只断言 `vault===true` 是**弱判据**（craft 页也满足）⇒ 必须能分辨"现在开的是哪个页签"。
+        //   ⛔ 纯调试接口：不动表现/数值/布局。
+        vaultTab: GAME.hallVaultTab || ''
       };
     },
     hitFlash: function () {

@@ -42,10 +42,14 @@ await page.waitForTimeout(1800);
 const available = await page.evaluate(() => {
   const D = window.MENGSHOU_DEBUG || {};
   const want = ['hall', 'goHome', 'openGear', 'closeGear', 'openUp', 'openVault', 'openBeast', 'openChapters',
-    'openPetCard', 'codex', 'about', 'lore', 'pause', 'levelup', 'resultBuild', 'win', 'lose', 'daily',
+    'codex', 'about', 'lore', 'pause', 'levelup', 'resultBuild', 'win', 'lose', 'daily',
     'startDaily', 'enterRoom', 'enterSkip', 'upgradeView', 'forgeView', 'vaultTapCraft', 'vaultTapTalent',
     'openVault', 'showGearPick', 'heroSheet', 'openUp', 'gearPreview',
-    'codexTab', 'openSettings', 'closeSettings', 'dailyPick', 'levelupTap', 'pauseBuildChip'];   // 【2026-09-21】补齐真实动作型钩子
+    'codexTab', 'openSettings', 'closeSettings', 'dailyPick', 'levelupTap', 'pauseBuildChip',
+    // 【第 129 轮】`_qc/_shot-coverage.mjs` 的 A 侧就是拿这个数组当基准的 ⇒ 这里写进来的名字必须
+    //   **真的在母版里存在**，否则它只是让清单看起来更长。原列表里的 `openPetCard` 已被查出
+    //   **母版里根本没有这个钩子**（`available` 会把它过滤掉 ⇒ 一直静默），故删除。
+    'vaultTapTalent'];
   return want.filter((k) => typeof D[k] === 'function');
 });
 
@@ -78,12 +82,22 @@ const FLAGS = {
   "02-chapters": "chapters",
   "04-upgrade": "upgrade",
 };
+// 【第 129 轮】有些屏的判据不是"某个布尔为真"，而是"**某个字段等于某个值**"。
+//   起因：`_qc/_shot-coverage.mjs` 查出仓库面板的**天赋页从没被拍过**。
+//   只断言 `vault===true` 是**弱判据**（craft 页同样为真 ⇒ 拍错页签也能过）⇒ 必须比页签值。
+const VALUES = {
+  "05b-vault-talent": ["vaultTab", "talent"],
+};
 const STEPS = [
   { name: '01-home', call: 'hall' },
   { name: '02-chapters', call: 'openChapters' },
   { name: '03-gear', call: 'openGear' },
   { name: '04-upgrade', call: 'openUp' },
   { name: '05-vault', call: 'openVault' },
+  // 【第 129 轮】仓库的**天赋页**：`_qc/_shot-coverage.mjs` 查出来的**从没被拍过的页签**。
+  //   05-vault 拍的是默认 craft 页；这一屏用 `vaultTapTalent()`（无参 ⇒ 默认选 "hp"）打开 talent 页。
+  //   判据走 `VALUES`（比对 `state().vaultTab`），**不是** `vault===true` 那种弱判据。
+  { name: '05b-vault-talent', call: 'vaultTapTalent' },
   { name: '06-beast', call: 'openBeast' },
   { name: '07-codex-enemy', call: 'codexTab', arg: 'enemy' },
   { name: '08-settings', call: 'openSettings' },
@@ -197,7 +211,10 @@ for (const s of STEPS) {
     if (stGot) {
       if (EXPECT[s.name]) stateOk = (stGot.name === EXPECT[s.name]);
       else if (FLAGS[s.name]) stateOk = (stGot[FLAGS[s.name]] === true);
-      if (!stateOk) console.log('  ⚠ ' + s.name + ' 目标屏断言不通过：实测 state=' + stGot.name + ' / 期望 ' + (EXPECT[s.name] || FLAGS[s.name] + '=true'));
+      else if (VALUES[s.name]) stateOk = (stGot[VALUES[s.name][0]] === VALUES[s.name][1]);
+      if (!stateOk) console.log('  ⚠ ' + s.name + ' 目标屏断言不通过：实测 state=' + stGot.name +
+        (VALUES[s.name] ? (' / ' + VALUES[s.name][0] + '=' + JSON.stringify(stGot[VALUES[s.name][0]]) + ' 期望 ' + JSON.stringify(VALUES[s.name][1]))
+          : (' / 期望 ' + (EXPECT[s.name] || FLAGS[s.name] + '=true'))));
     }
     if (dup) console.log('  ⚠ ' + s.name + ' 与上一屏截图完全相同 → 该界面未真正打开');
     if (sameAsHome) console.log('  ⚠ ' + s.name + ' 与大厅基线几乎无差异(Δ=' + dHome.toFixed(2) + ') → 该界面未真正打开');
