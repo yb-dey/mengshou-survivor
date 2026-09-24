@@ -85,9 +85,12 @@ const scanExpr = (extra) => `
       var kind = n.kind || '';
       if (kind === 'Modal') { modals++; continue; }   // 遮罩=全屏且先注册（按钮永远赢）⇒ 不参与重叠/间距
       var r = n.rect, pad = n.hitPad || 0;
+      // v1.207：母版支持分轴命中区，探针必须同步（否则补了也量不出来）
+      var padX = (n.hitPadX != null) ? n.hitPadX : pad;
+      var padY = (n.hitPadY != null) ? n.hitPadY : pad;
       out.push({ id: String(n.id != null ? n.id : (kind || ('#' + i))), kind: kind, idx: i,
                  x: +r.x.toFixed(2), y: +r.y.toFixed(2), w: +r.w.toFixed(2), h: +r.h.toFixed(2),
-                 pad: pad, custom: !!n.hitTest });
+                 pad: pad, padX: padX, padY: padY, custom: !!n.hitTest });
     }
     return JSON.stringify({ ok: true, view: [CONFIG.viewW, CONFIG.viewH], nodes: out, modals: modals, total: arr.length });
   }catch(e){ return JSON.stringify({ ok: false, err: String((e && e.message) || e).slice(0, 180) }); }
@@ -259,7 +262,7 @@ const PAD_CAND = ['homedaily', 'homevault', 'settheme', 'setbgm', 'setexport', '
   'btnrevive', 'btngiveup', 'btnreroll', 'btndouble', 'resulthome'];
 console.log('::notice::⑲ B 类候选的运行时间距（v=竖直 h=水平 · 需=补到 44 CSS px 所需）::' +
   PAD_CAND.map((id) => { const x = smallGlobal.find((y) => y.id === id);
-    return x ? `${id} 需${x.need} v${x.vg === Infinity ? '∞' : x.vg} h${x.hg === Infinity ? '∞' : x.hg}` : `${id} -`; }).join(' · '));
+    return x ? `${id} 还差${x.need} v${x.vg === Infinity ? '∞' : x.vg} h${x.hg === Infinity ? '∞' : x.hg}` : `${id} ✓达标`; }).join(' · '));
 console.log(`::notice::⑲ 偏小 ${smallGlobal.length} 个 · 可零像素补 pad ${padable.length} 个 · 最紧::` +
   worst.map((s) => `${s.screen}:${s.id} ${s.css}css pad${s.need}≤${s.safe}`).join(' · '));
 

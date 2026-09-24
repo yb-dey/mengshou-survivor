@@ -14,7 +14,12 @@
 export const SCALE = 390 / 720;   // 逻辑 px → 390pt 手机 CSS px
 export const FLOOR = 81;           // 44 CSS px ≈ 81 逻辑px（iOS HIG 44pt / Android 48dp）
 
-export const hitRect = (n) => ({ x: n.x - n.pad, y: n.y - n.pad, w: n.w + 2 * n.pad, h: n.h + 2 * n.pad });
+// 分轴命中区（v1.207 起母版支持 hitPadX/hitPadY；缺省回落到 hitPad）——
+//   ⚠ 第 72 轮实测教训：母版加了分轴 pad，探针却只读 hitPad ⇒ 云端把补好的控件又判成"偏小"。
+//   凡"游戏侧新增语义"，探针必须同步，否则量的是旧口径。
+export const padOf = (n) => ({ x: n.padX != null ? n.padX : (n.pad || 0), y: n.padY != null ? n.padY : (n.pad || 0) });
+export const effSize = (n) => { const p = padOf(n); return { w: n.w + 2 * p.x, h: n.h + 2 * p.y }; };
+export const hitRect = (n) => { const p = padOf(n); return { x: n.x - p.x, y: n.y - p.y, w: n.w + 2 * p.x, h: n.h + 2 * p.y }; };
 export function intersect(a, b) {
   const w = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
   const h = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
@@ -50,12 +55,16 @@ export function overlapsOf(nodes) {
   return out;
 }
 export function smallOnes(nodes) {
-  return nodes.filter((n) => Math.min(n.w, n.h) < FLOOR).map((n) => {
-    const short = Math.min(n.w, n.h), g = nearestGap(n, nodes), near = g.near, safe = g.safe;
-    return { id: n.id, w: n.w, h: n.h, css: +(short * SCALE).toFixed(1),
-      need: Math.ceil((FLOOR - short) / 2), near, safe, vg: g.vg, hg: g.hg,
-      verdict: Math.ceil((FLOOR - short) / 2) <= safe ? `可补 pad ${Math.ceil((FLOOR - short) / 2)}` : '需改视觉' };
-  }).sort((a, b) => a.css - b.css);
+  // ⚠ 判定用**有效尺寸**（含已有 pad）——补过 hitPadY 的控件不该再算「偏小」；
+  //   `need` 指「还要再补多少」（把 padX/padY 加进去后离 44 CSS px 还差多少）。
+  return nodes.map((n) => {
+    const e = effSize(n), short = Math.min(e.w, e.h);
+    if (short >= FLOOR) return null;
+    const g = nearestGap(n, nodes), need = Math.ceil((FLOOR - short) / 2);
+    return { id: n.id, w: n.w, h: n.h, effW: e.w, effH: e.h, css: +(short * SCALE).toFixed(1),
+      need, near: g.near, safe: g.safe, vg: g.vg, hg: g.hg,
+      verdict: need <= g.safe ? `可再补 pad ${need}` : '需加大行距/改视觉' };
+  }).filter(Boolean).sort((a, b) => a.css - b.css);
 }
 // ── 纯逻辑阴性/阳性对照（本机可跑，不需要浏览器）──
 export function logicSelftest() {
@@ -76,6 +85,11 @@ export function logicSelftest() {
   // ⑤ 自定义 hitTest 的节点不参与 rect 口径
   const E = mk('E', 0, 0, 100, 100, 0, 4, true), F = mk('F', 10, 10, 100, 100, 0, 5);
   out.push(['自定义 hitTest 的节点跳过 rect 口径', overlapsOf([E, F]).length === 0]);
+  // ⑥ 分轴 pad：只扩纵向 ⇒ 与并排邻居不重叠，但有效高度应算上 pad
+  const G = { id: 'G', x: 0, y: 0, w: 100, h: 64, pad: 0, padY: 9, idx: 0, custom: false };
+  const H = { id: 'H', x: 108, y: 0, w: 100, h: 64, pad: 0, idx: 1, custom: false };
+  out.push(['padY 只扩纵向 ⇒ 与水平邻居(8px)不重叠', overlapsOf([G, H]).length === 0]);
+  out.push(['padY=9 ⇒ 有效高度 64+18=82', effSize(G).h === 82]);
   return out;
 }
 const isMain = process.argv[1] && /hit-area-lib\.mjs$/.test(process.argv[1].replace(/\\/g, '/'));
