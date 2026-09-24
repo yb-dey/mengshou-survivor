@@ -38598,6 +38598,13 @@ function init() {
     enter: enterCineSnap,
     enterSkip: skipEnterCine,
     about: onTapOpenAbout,
+    // 【第 131 轮】「怎么玩」帮助页（`GAME.flow.GUIDE`）此前**没有任何钩子** ——
+    //   只能靠在大厅上按坐标点 `uiHomeGuide`（L30743，496,6,100,44）才能打开 ⇒
+    //   巡检拍不到它，而它是**文字最密的一屏**（正文字号/对比度问题最容易藏在这里）。
+    //   ⚠ 注意别和 `guide` 搞混：`guide` 是**教学提示的查询**（返回 guideActive/queue/flags），
+    //     不是打开帮助页。名字像 ≠ 作用像，这也是本季反复记的一条。
+    //   ⛔ 纯调试接口：直接转发已有的 `onTapOpenGuide`，不动表现/数值/布局。
+    openGuide: onTapOpenGuide,
     lore: function () {
       return {
         version: CONFIG.version,

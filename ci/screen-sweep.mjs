@@ -51,7 +51,7 @@ const available = await page.evaluate(() => {
     //   **母版里根本没有这个钩子**（`available` 会把它过滤掉 ⇒ 一直静默），故删除。
     // 【第 130 轮】`enterCine` 是**进场过场**的探针（时间驱动、无钩子可开）——
     //   把它列进 `want` 并真的调用，A 侧从此会盯住它；不列的话它就是"没人看着的那一屏"。
-    'vaultTapTalent', 'enterCine'];
+    'vaultTapTalent', 'enterCine', 'openGuide'];
   return want.filter((k) => typeof D[k] === 'function');
 });
 
@@ -68,8 +68,10 @@ const available = await page.evaluate(() => {
 //   （此前它们是**空门**：只有"≠大厅/≠上一张"两道弱判据，面板开错也能过）。
 const EXPECT = {
   "01-home": "HOME",
+  "03-gear": "ARMORY",      // 【第 131 轮】报告里一直显示 state=ARMORY，却从没被**断言**过 —— 补上（免费的真判据）
   "08-settings": "SETTINGS",
   "09-about": "ABOUT",
+  "10b-guide": "GUIDE",     // 【第 131 轮】「怎么玩」帮助页：文字最密的一屏，此前连钩子都没有
 };
 const FLAGS = {
   "05-vault": "vault",
@@ -105,6 +107,9 @@ const STEPS = [
   { name: '08-settings', call: 'openSettings' },
   { name: '09-about', call: 'about' },
   { name: '10-daily', call: 'dailyPick' },
+  // 【第 131 轮】`GAME.flow.GUIDE`（怎么玩帮助页）—— 用"游戏自己的 flow 枚举"对账查出来的缺口。
+  //   此前它**连钩子都没有**（只能按坐标点大厅的 `uiHomeGuide`），所以既拍不到、也断言不了。
+  { name: '10b-guide', call: 'openGuide' },
 ];
 
 const shots = [];
@@ -403,6 +408,51 @@ try {
       dens, state: st ? st.name : null, stateOk,
       battleEnemy: bBestShot, battlePeak: bPeak, battleTries: bTries, battleReached: bReached, battleWhy: bWhy });
   }
+
+  // ── 【第 131 轮】拍**复活盘**（每个倒下的玩家都会看到，此前从没被拍过）────────────────────
+  //   发现路径沿用第 130 轮那条：**"有钩子的屏" ≠ "所有屏"**，而且这次更隐蔽 ——
+  //   `revive`/`die` 两个钩子母版一直都有（L39175 / L39193），但**既不在 `want` 里**（A 侧看不见），
+  //   **也不是 `open*` 形式**（C 侧看不见）⇒ 两套判据都从它身上跨过去了。
+  //   ⚠ 复盘成一句可复用的判据：**"钩子存在"不等于"有人在看"**；要盯住它就得写进 `want`。
+  //   触发方式（读源码确认，不猜）：`die(src)` 只在 PLAYING / LEVELUP_MODAL 生效，
+  //   置 `player.hp = 0` 后走**真实**的 `onPlayerDeath()`（不是伪造状态）；复活次数不限 ⇒ 必进复活盘。
+  //   ⚠ **诚实标注**：不传 `src` ⇒ 面板上的死因是默认的「调试击倒」。**这是故意的** ——
+  //     与其编一个像真的敌人名把"这是模拟出来的死"藏起来，不如让截图自己说明它是调试触发的；
+  //     报告里同时记录 `deathSrc`，读的人一眼知道这张图的死因行不代表真实战况。
+  {
+    const p = path.join(OUT, '11b-revive.png');
+    await page.evaluate(() => { try { window.MENGSHOU_DEBUG.die(); } catch (e) { void e; } });
+    let rv = null, tries = 0;
+    for (let t = 0; t < 16; t++) {
+      const s = await battleProbe();
+      if (s.st === 'REVIVE_MODAL') { rv = s; break; }
+      tries++;
+      await page.waitForTimeout(350);
+    }
+    await page.screenshot({ path: p });
+    const h = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 12);
+    prevHash = h;
+    const ok = !!(rv && rv.st === 'REVIVE_MODAL');
+    if (!ok) {
+      console.log('::error::11b-revive 目标屏断言不通过：实测 state=' + (rv ? rv.st : 'null') +
+        ' / 期望 REVIVE_MODAL（这张图不代表复活盘）');
+    }
+    // ⚠ 死因行**不要**去读 `summary().lastDamageSrc` —— 我第一版那么写，读了源码才发现
+    //   `summary()` 返回的是 `runSummary`（`enterResult` 时刻**另起的一份快照**，字段表里**没有**
+    //   `lastDamageSrc`），而那个字段挂在 **`run`** 上 ⇒ 那么读会**静默拿到 undefined**，
+    //   报告里显示空字符串，看起来"没有死因"而不是"我读错了对象"（P1/P15 同一类坑）。
+    //   这里改成**由构造断言**：`die()` 未传 src ⇒ 钩子内 `run.lastDamageSrc = src || "调试击倒"`（母版 L39178）
+    //   ⇒ 面板死因行必然是「调试击倒」。**这是读代码得出的，不是猜的**，并在下面如实标注为模拟触发。
+    console.log('::notice::11b-revive 采样 state=' + (rv ? rv.st : 'null') + ' 轮询=' + tries +
+      ' 死因行=调试击倒（die() 未传 src ⇒ 模拟触发，这一行不代表真实战况）');
+    shots.push({ name: '11b-revive', hook: 'die() + 轮询 REVIVE_MODAL', hash: h,
+      dHome: sigDiff(await screenSig(), homeSig), dens: await measureDens(),
+      state: rv ? rv.st : null, stateOk: ok, deathSrc: '调试击倒(模拟)' });
+    // 点复活把这一局续下去（与 stress-perf 同一套已验证钩子；顺手保证后面的 12/13 屏仍有得拍）
+    await page.evaluate(() => { try { if (typeof window.onTapReviveBtn === 'function') window.onTapReviveBtn(); } catch (e) { void e; } });
+    await page.waitForTimeout(900);
+  }
+
   // ⚠ 已知坑：
   //  · `levelup` 是**快照查询**（返回 {ready,armed,state,cards}）→ 不能用来"打开升级"，
   //    但**正好可以当探针轮询**"升级是否已出现"，出现再截图；
@@ -436,8 +486,13 @@ try {
     const h = crypto.createHash('sha1').update(fs.readFileSync(path.join(OUT, '12-levelup.png'))).digest('hex').slice(0, 12);
     prevHash = h;
     const dHome = sigDiff(await screenSig(), homeSig);
+    // 【第 131 轮】补状态断言：原来这一屏只靠"轮询到有卡"就算过，`LEVELUP_MODAL` 这个 flow 状态
+    //   **从来没被断言过**（用游戏自己的 flow 枚举对账查出来的）。卡片出现 ⇒ 状态就该是它。
+    //   ⚠ 只读一次探针：写两遍 `battleProbe()` 会多一次往返，而且**两次读数可能不同**（等于自造竞态）。
+    const lvst = (await battleProbe()).st;
     shots.push({ name: '12-levelup', hook: '轮询 cards.length>0 (' + lu.cards.length + ' 张)', hash: h, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
-      dens: await measureDens() });
+      dens: await measureDens(), state: lvst, stateOk: lvst === 'LEVELUP_MODAL' });
+    if (lvst !== 'LEVELUP_MODAL') console.log('::error::12-levelup 目标屏断言不通过：实测 state=' + lvst + ' / 期望 LEVELUP_MODAL');
   } else {
     console.log('  ⚠ 12-levelup 等待超时：35s 内没有出现升级三选一（战斗可能未进入/时间不够）');
     shots.push({ name: '12-levelup', hook: '轮询 cards.length>0 超时', dup: true });
@@ -573,7 +628,9 @@ const md = [
     + (s.cineDur
       ? (s.cineKind === 'chapter' ? '' : '') + '过场 t=**' + s.cineT + '**/' + s.cineDur +
         ' · kind=' + (s.cineKind || '?') + ' · 首见=' + (s.cineFirst ? '是' : '否')
-      : '') + ' |'),
+      : '')
+    // 【第 131 轮】复活盘同样**自带标注**：死因那行是模拟出来的，必须写清楚。
+    + (s.deathSrc ? '死因行=「' + s.deathSrc + '」（**模拟触发**，不代表真实战况）' : '') + ' |'),
   '',
   '> 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。',
   '',
