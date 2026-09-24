@@ -10,16 +10,17 @@
 | 03-gear | openGear | 720×1280 | 738 | 22.7% | 66.52 | ARMORY |  |
 | 04-upgrade | openUp | 720×1280 | 615 | 24.7% | 62.06 | HOME |  |
 | 05-vault | openVault | 720×1280 | 611 | 20.4% | 55.32 | HOME |  |
+| 05b-vault-talent | vaultTapTalent | 720×1280 | 785 | 18.8% | 55.79 | HOME |  |
 | 06-beast | openBeast | 720×1280 | 635 | 41.7% | 63.17 | BEAST |  |
 | 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 55.44 | BEAST |  |
 | 08-settings | openSettings | 720×1280 | 538 | 36.6% | 74.85 | SETTINGS |  |
 | 09-about | about | 720×1280 | 524 | 41.8% | 80.38 | ABOUT |  |
 | 10-daily | dailyPick | 720×1280 | 541 | 20.2% | 77.4 | HOME |  |
-| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 715 | 20.5% | 46.63 | PLAYING | ⚠ 同屏怪 **9** 只（峰值 9，目标 10） |
-| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 612 | 41.5% | 61.74 | - |  |
-| 13-pause | pause(true) 轮询成功 | 720×1280 | 791 | 38% | 64.61 | PAUSED_MENU |  |
-| 14-result-win | win() | 720×1280 | 621 | 32.9% | 60.08619427839012 | RESULT_WIN | 结算卡带 **4** 条 · 压住=否 |
-| 15-result-lose | lose() | 720×1280 | 620 | 33.3% | 62.03421378173833 | RESULT_LOSE | 结算卡带 **2** 条 · 压住=否 |
+| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 802 | 19.5% | 46.1 | PLAYING | 同屏怪 **10** 只（峰值 10，目标 10） |
+| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 639 | 41.3% | 64.67 | - |  |
+| 13-pause | pause(true) 轮询成功 | 720×1280 | 765 | 32.9% | 64.54 | PAUSED_MENU |  |
+| 14-result-win | win() | 720×1280 | 615 | 33.1% | 59.86583174176904 | RESULT_WIN | 结算卡带 **3** 条 · 压住=否 |
+| 15-result-lose | lose() | 720×1280 | 620 | 33.3% | 62.03493050013955 | RESULT_LOSE | 结算卡带 **2** 条 · 压住=否 |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
 
