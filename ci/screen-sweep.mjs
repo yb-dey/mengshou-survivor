@@ -94,6 +94,14 @@ const FLAGS = {
 //   只断言 `vault===true` 是**弱判据**（craft 页同样为真 ⇒ 拍错页签也能过）⇒ 必须比页签值。
 const VALUES = {
   "05b-vault-talent": ["vaultTab", "talent"],
+  // 【第 137 轮 · 闭 O31】07 原来**只断言 `beast===true`** —— 那是弱判据（pet/fork/item 三个页签同样满足），
+  //   页签切失败也会过、拍到的是别的页 ⇒ 与第 129 轮 vault-talent 那次**完全同型**（当时也是只断言 `vault===true`）。
+  //   改为比页签值。依据：`state().codex` 早就返回 `codexTabId()`（母版 L37930）⇒ **不用改母版**。
+  "07-codex-enemy": ["codex", "enemy"],
+  // 图鉴的 fork / item 两个页签**从来没有被拍过**：19 屏里只有 pet(06-beast) 与 enemy(07)。
+  //   判据同样比页签值 —— 切页签失败 ⇒ `::error::` + sweep 退 2（**会红不会静默**）。
+  "07b-codex-fork": ["codex", "fork"],
+  "07c-codex-item": ["codex", "item"],
 };
 const STEPS = [
   { name: '01-home', call: 'hall' },
@@ -107,6 +115,12 @@ const STEPS = [
   { name: '05b-vault-talent', call: 'vaultTapTalent' },
   { name: '06-beast', call: 'openBeast' },
   { name: '07-codex-enemy', call: 'codexTab', arg: 'enemy' },
+  // 【第 137 轮 · 闭 O31】`codexTab(id)` 是**现成钩子**（母版 L38579：在 HOME 时先开图鉴、再 `setCodexTab(id)`）
+  //   ⇒ 这两屏既拍得到、也断言得了页签值（判据见上面的 `VALUES`）。
+  //   为什么要补：fork / item 两个页签此前**没有任何截图** ⇒ 我在第 136 轮修图鉴白留时
+  //   **判不了 fork 页有没有同型问题**，只能"宁可少改"（那条欠账就是 O31）。
+  { name: '07b-codex-fork', call: 'codexTab', arg: 'fork' },
+  { name: '07c-codex-item', call: 'codexTab', arg: 'item' },
   { name: '08-settings', call: 'openSettings' },
   { name: '09-about', call: 'about' },
   { name: '10-daily', call: 'dailyPick' },

@@ -92,9 +92,10 @@ jobs:
             echo "::error::巡检自身退出码 $code（非 0）"; bad=1
           fi
           if [ "${errs:-0}" != "0" ]; then echo "::error::巡检输出里有 ${errs} 条 ::error::"; bad=1; fi
-          # 19 = 2026-09-24 实测屏数（_shots/index.json）。**增删屏时必须同步改这个数**：
-          # 屏数变了就该有人确认一次，而不是静默地少几张。
-          if [ "${n:-0}" -lt 19 ]; then echo "::error::只产出 $n 张截图（< 19）"; bad=1; fi
+          # 21 = 2026-09-24 实测屏数（19 → 21：第 137 轮补了图鉴的 fork / item 两个页签，闭 O31）。
+          # **增删屏时必须同步改这个数**：屏数变了就该有人确认一次，而不是静默地少几张。
+          # （这条注释就是机制的一部分 —— 第 137 轮加屏时若不改，本步会红。）
+          if [ "${n:-0}" -lt 21 ]; then echo "::error::只产出 $n 张截图（< 21）"; bad=1; fi
           exit $bad
 
       - name: 7c git add + commit
