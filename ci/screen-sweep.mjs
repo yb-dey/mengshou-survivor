@@ -280,7 +280,16 @@ try {
   //     先让读数存在，再由人/后续门禁决定阈值（避免把一个绿色门禁改成掷骰子）。
   const BATTLE_MIN_ENEMY = +(process.env.BATTLE_MIN_ENEMY || 10);
   const BATTLE_WAIT_MS = +(process.env.BATTLE_WAIT_MS || 60000);
+  const battlePath = path.join(OUT, '11-battle.png');
   let bEnemy = 0, bPeak = 0, bState = '', bTries = 0, bWhy = '', bReached = false;
+  // ★ 取"本次跑里最密的那一刻"的图，而不是"循环结束的那一刻"的图。
+  //   为什么必须这样（第 126 轮实测教训）：云端第一跑 `同屏怪=10` 命中阈值，
+  //   第二跑却是 `峰值=9、实测=0` —— 循环等满 60s 超时后我**照样按当下那一刻拍**，
+  //   而那一刻场上**一只怪都没有** ⇒ 拍出来的图**比我原本要修的"第 7 秒空场"还空**。
+  //   而且当时我把"循环退出时的瞬时怪数"当成这张图的密度标签 ⇒ **标签描述的还不是这张图**（P1）。
+  //   ⇒ 改成：只要 `PLAYING` 且怪数刷新新高就立刻拍一张覆盖上去 ⇒ 磁盘上永远是本次最密的那帧，
+  //     并且**记录的 bShotEnemy 就是这张图自己的怪数**。
+  let bBestShot = -1;
   {
     const t0 = Date.now();
     while (Date.now() - t0 < BATTLE_WAIT_MS) {
@@ -289,6 +298,10 @@ try {
       bState = s.st;
       bEnemy = s.sk ? (s.sk.enemyCount | 0) : 0;
       if (bEnemy > bPeak) bPeak = bEnemy;
+      if (bState === 'PLAYING' && bEnemy > bBestShot && bEnemy >= 1) {
+        await page.screenshot({ path: battlePath });
+        bBestShot = bEnemy;
+      }
       if (bState === 'PLAYING' && bEnemy >= BATTLE_MIN_ENEMY) { bReached = true; bWhy = '达到 ' + BATTLE_MIN_ENEMY + ' 只'; break; }
       if (bState === 'LEVELUP_MODAL') {
         // 正常选卡（与 stress-perf 的"清场不选"相反，理由见上）
@@ -313,8 +326,12 @@ try {
     } catch (e) { void e; }
   });
   await page.waitForTimeout(400);
-  await page.screenshot({ path: path.join(OUT, '11-battle.png') });
-  prevHash = crypto.createHash('sha1').update(fs.readFileSync(path.join(OUT, '11-battle.png'))).digest('hex').slice(0, 12);
+  if (bBestShot < 1) {
+    // 一次都没拍到"PLAYING 且有怪" ⇒ 只能退回清场后拍一张，并**在下面如实标注它不代表战斗**
+    await page.screenshot({ path: battlePath });
+    bWhy += '；且全程没拍到"PLAYING 且有怪"的帧';
+  }
+  prevHash = crypto.createHash('sha1').update(fs.readFileSync(battlePath)).digest('hex').slice(0, 12);
   {
     const dHome = sigDiff(await screenSig(), homeSig);
     const dens = await measureDens();
@@ -322,11 +339,11 @@ try {
     const st = await page.evaluate(() => { try { return window.MENGSHOU_DEBUG.state(); } catch (e) { return null; } });
     const stateOk = !!(st && st.playing === true);
     if (!stateOk) console.log('  ⚠ 11-battle 目标屏断言不通过：实测 state=' + (st ? st.name : 'null') + ' / 期望 PLAYING');
-    if (!bReached) console.log('::warning::11-battle 未达密度阈值 ' + BATTLE_MIN_ENEMY + '：' + bWhy + '（实测 ' + bEnemy + '，峰值 ' + bPeak + '）—— 这张图不代表常态战斗，评审前先看这个数');
-    console.log('::notice::11-battle 采样密度 同屏怪=' + bEnemy + ' 峰值=' + bPeak + ' 目标=' + BATTLE_MIN_ENEMY + ' 轮询=' + bTries + ' 结束=' + bWhy);
-    shots.push({ name: '11-battle', hook: 'mouse+轮询怪数', hash: prevHash, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
+    if (!bReached) console.log('::warning::11-battle 未达密度阈值 ' + BATTLE_MIN_ENEMY + '：' + bWhy + '（这张图实测 ' + bBestShot + ' 只，峰值 ' + bPeak + '）—— 评审前先看这个数');
+    console.log('::notice::11-battle 采样密度 这张图同屏怪=' + bBestShot + ' 峰值=' + bPeak + ' 目标=' + BATTLE_MIN_ENEMY + ' 轮询=' + bTries + ' 结束=' + bWhy);
+    shots.push({ name: '11-battle', hook: 'mouse+轮询怪数（取本次最密帧）', hash: prevHash, dHome: dHome >= 0 ? +dHome.toFixed(2) : null,
       dens, state: st ? st.name : null, stateOk,
-      battleEnemy: bEnemy, battlePeak: bPeak, battleTries: bTries, battleReached: bReached, battleWhy: bWhy });
+      battleEnemy: bBestShot, battlePeak: bPeak, battleTries: bTries, battleReached: bReached, battleWhy: bWhy });
   }
   // ⚠ 已知坑：
   //  · `levelup` 是**快照查询**（返回 {ready,armed,state,cards}）→ 不能用来"打开升级"，
