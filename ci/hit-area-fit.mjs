@@ -49,15 +49,18 @@ const ALLOW_OVERLAP = [];   // 允许的重叠（当前为空：任何同屏重�
 //   按 bindResultBuildChips 逐行复算（_qc/_sim-result-layout.mjs）：avail = 324 逻辑px；
 //   构筑到 8/4/6/3/2 行时，芯片已压到 floor 22（11.9 CSS px）却仍差 20px ⇒ 最后一行盖住结算两钮。
 //   ⇒ 只对这两屏放行（并打印），**溢出一旦扩散到别的屏 ⇒ 立刻红**。修法见 PM §18.12。
-const DECLARED_OVERFLOW_SCREENS = ["结算-满载", "暂停-满载"];
+// 【第 74 轮】v1.207b 给结算构筑列表加了**硬钳制**（压到 floor 仍装不下时逐行放行 + 汇总行）⇒
+//   溢出已修 ⇒ 放行名单清空：任何同屏命中区重叠（含"条目压到动作钮"）都按普通重叠红。
+//   若将来又复现，先查 bindResultBuildChips 的 budgetBottom 钳制是否还在（_qc/_sim-clamp2.mjs 有锚点校验）。
+const DECLARED_OVERFLOW_SCREENS = [];
 // 满载两屏 = **诊断屏**：注入依赖调试口（见下），注不满时只报告不拦（否则一条注不满的探针
 //   会把所有 push 永久染红）。它们的数字仍然照常打进 notice，供人工核对。
-const DIAGNOSTIC_SCREENS = ["结算-满载", "暂停-满载"];
+const DIAGNOSTIC_SCREENS = ["结算-满载", "暂停-满载", "结算-挤压（诊断）"];
 // ⚠ 每屏「至少应有几个可点节点」的下限 —— 防「量到 0 个却报 ok」：
 //   首跑实测「复活/死亡 0/0/0」：state 轮询说到了 REVIVE_MODAL，扫描却一个可点节点都没有 ——
 //   这种「没量到」绝不能长得像「量过且没问题」（本工作区反复踩的同一个坑）。低于下限 ⇒ FAIL。
 const EXPECT_MIN = { 'HOME(大厅)': 8, '设置': 4, '图鉴': 4, '装备库': 4, '宝库': 4, '每日挑战': 2,
-  '暂停': 4, '升级三选一': 3, '复活/死亡': 2, '结算': 2, '结算-满载': 6, '暂停-满载': 8 };
+  '暂停': 4, '升级三选一': 3, '复活/死亡': 2, '结算': 2, '结算-满载': 6, '暂停-满载': 8, '结算-挤压（诊断）': 2 };
 // ── 偏小台账：可点节点短边 < 44 CSS px 必须在这里登记"为什么先这样"，否则 FAIL ──
 //   ⚠ 与静态判据的 ALLOW_NEW 同款纪律：**报告不是契约**。60 个偏小如果只是打印出来，
 //   下一个人加一个 18px 的可点条目也不会有任何东西拦他。
@@ -272,6 +275,15 @@ try {
       await page.waitForTimeout(500);
       if (await pollFor('(' + NODES + ') >= 6 && MENGSHOU_DEBUG.state().name === "PAUSED_MENU"', 24, 500)) await scan('暂停-满载', '');
       else { console.log('SKIP [暂停-满载] 未进入 PAUSED_MENU（或构筑未铺开）'); report.cases.push({ label: '暂停-满载', skipped: true }); }
+      // ── 挤压诊断屏：把 resultRoomH 从 108 撑到 308 ⇒ avail 由 324 掉到 124 ⇒
+      //   连 2 行都放不下 ⇒ **强制走 v1.207b 的硬钳制分支**（条目被跳过 + 汇总行交代）。
+      //   断言：不得与动作钮重叠（否则就是钳制失效）；节点数会明显变少，这是它的"指纹"。
+      await page.evaluate(() => { try { CONFIG.resultRoomH = 308; } catch (e) { void e; } });
+      await denseBuild();
+      await page.evaluate(() => { try { MENGSHOU_DEBUG.win(); } catch (e) { void e; } });
+      if (await pollFor('(' + NODES + ') >= 2 && /RESULT_(WIN|LOSE)/.test(MENGSHOU_DEBUG.state().name)', 20, 500)) await scan('结算-挤压（诊断）', '');
+      else { console.log('SKIP [结算-挤压（诊断）] 未进入 RESULT_*'); report.cases.push({ label: '结算-挤压（诊断）', skipped: true }); }
+      await page.evaluate(() => { try { CONFIG.resultRoomH = 108; } catch (e) { void e; } });
     } else {
       console.log('SKIP [战斗相关四屏] start(0) 与点 CTA 都没进 PLAYING');
       for (const l of ['暂停', '升级三选一', '复活/死亡', '结算']) report.cases.push({ label: l, skipped: true });

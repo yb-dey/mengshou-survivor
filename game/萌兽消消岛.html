@@ -650,7 +650,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.207",                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
+  version: "1.207",   // 【v1.207b】结算列表硬钳制（满载局不溢出）· 画面版本号不变，见 PM §18.13                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
                                        //   前版 v1.205：killEnemy 加已死守卫（修 enemyCount 计数穿负）；
                                        //   前版 v1.204：触屏宿主文案收敛（走位/跳过/过场副标签统一走宿主开关）；
                                        //   前版 v1.203：修符文成就 dim 拼错前缀（5 条成就永不可解锁）+ 加成就接线判据；
@@ -28863,9 +28863,16 @@ function bindResultBuildChips() {
     chipH -= 1;
     needH = laneNeed(chipH);
   }
+  // 【v1.207b】硬钳制：压到 floor 22 仍装不下时（满载局），**不许溢出到动作钮** ——
+  //   原实现只压缩不封顶，实测复算（_qc/_sim-result-layout.mjs）会超出 20px，最后一行盖住结算两钮。
+  //   现按可用高度逐行放行，放不下的条目由一行汇总交代；容量与依据见 PM §18.13。
+  var budgetBottom = y + avail, totalRows = 0, skipped = 0;
+  for (li = 0; li < lanes.length; li++) totalRows += (lanes[li].rows || []).length;
   for (li = 0; li < lanes.length; li++) {
     rows = lanes[li].rows || [];
     emptyLine = !rows.length ? lanes[li].empty : "";
+    // ⚠ 表头(18) + 至少一行(chipH) 都放不下 ⇒ 本分区与后续分区都不再铺（第一版漏了这步）
+    if (rows.length && y + 18 + chipH > budgetBottom) break;
     GAME.resultLayout.push({ kind: "section", id: lanes[li].id, title: lanes[li].title, y: y, empty: emptyLine });
     y += 18;
     if (!rows.length) {
@@ -28878,7 +28885,11 @@ function bindResultBuildChips() {
     cw = (innerW - gap * (cols - 1)) / cols;
     rowN = 0;
     for (i = 0; i < rows.length && chipI < uiResultChips.length; i++) {
-      if (i > 0 && i % cols === 0) rowN++;
+      if (i % cols === 0) {
+        if (i > 0) rowN++;
+        // ⚠ 用 rowN（新行号）判断，且**首行也要判**：第一版只在 i>0 时判 ⇒ 单行分区永远不检查
+        if (y + rowN * (chipH + gap) + chipH > budgetBottom) break;
+      }
       cx = x + (i % cols) * (cw + gap);
       cy = y + rowN * (chipH + gap);
       chip = uiResultChips[chipI++];
@@ -28890,6 +28901,13 @@ function bindResultBuildChips() {
       chip.visible = true;
     }
     y += (rowN + 1) * (chipH + gap) + 4;
+    if (y > budgetBottom) break;   // 预算用尽 ⇒ 后续分区不再铺条目
+  }
+  skipped = totalRows - chipI;
+  if (skipped > 0) {
+    var sumY = Math.min(y, budgetBottom - 18);   // 汇总行也占位 ⇒ 钳进预算（否则 resultBodyBottom 会越界 2px）
+    GAME.resultLayout.push({ kind: "unlit", y: sumY, text: "其余 " + skipped + " 条见暂停页 · 点条目看怎么来的" });
+    y = sumY + 18;
   }
   if (view.unlitLine) {
     GAME.resultLayout.push({ kind: "unlit", y: y, text: view.unlitLine });
