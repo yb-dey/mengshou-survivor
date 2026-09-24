@@ -31982,8 +31982,20 @@ function drawResultPanel(ctx, m) {
     : ("第" + (runSummary.chIdx + 1) + "章 · " + runSummary.chName +
       (runSummary.heroName ? (" · " + runSummary.heroName) : "") +
       (runSummary.petName ? (" · " + runSummary.petName + ((runSummary.petLv | 0) >= 5 ? "满星" : ((runSummary.petLv | 0) + "星"))) : ""));
+  // 【v1.211d 美术·结算页头行被切】根因是**画序**，不是字号也不是间距：
+  //   原来先 `fillText(head, cx, py + 32)` 再 `drawChapterMapStrip(..., py + 4, 520, 26)` ——
+  //   章题条（不透明，覆盖 py+4..py+30）**画在文字之后**，而 16px 字以 middle 为基线时纵向占
+  //   **py+24..py+40** ⇒ 条子把每个字**上沿切掉 6px = 16px 字身的 37.5%**，一行字顶被齐齐削平，
+  //   而它下面那行「章题地面 · …」（py+52）不受影响 —— 这正是截图里"第一行被切、第二行完好"的样子。
+  //   ⚠ 为什么一直没人发现：这一屏**从来没被拍过**（第 128 轮才补进巡检 13→15 屏），
+  //     而 `resultBuild().overlap` 只守**底边**越界（`bottom > hookY + 1`），上沿被压根本没人管。
+  //   改法：① 画序反过来——**背景元素先画，文字后画**（结构性修法，防止以后再被别的东西压住）；
+  //        ② 条子上移 2px、高度 26→22 ⇒ 占 py+2..py+24，与文字上沿 py+24 **恰好相接不重叠**。
+  //   ⛔ 只动这两处画序/几何：文字内容、字号、颜色、其余行位置一律不动（不动任何数值）。
+  drawChapterMapStrip(ctx, ch, cx - 260, py + 2, 520, 22);
+  ctx.fillStyle = ink;
+  ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText(head, cx, py + 32);
-  drawChapterMapStrip(ctx, ch, cx - 260, py + 4, 520, 26);
   ctx.fillStyle = c.cardGold;   // 【v1.167】文字用深金(对比度 2.13:1→5.18:1)
   ctx.font = "bold 14px " + FONT_STACK;
   ctx.fillText(mapThemeLine(ch), cx, py + 52);
