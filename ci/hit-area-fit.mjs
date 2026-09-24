@@ -66,9 +66,7 @@ const ALLOW_SMALL = [
   { re: /^codextab\d+$/, why: '图鉴页签 ×4 · 同族（页签条密度决定高度）' },
   { re: /^vaulttab\d+$/, why: '宝库页签 ×2（进度打造／天赋）· 同族' },
   // ── B 类：具名控件，静态判据已算出安全 pad ⇒ **待随下次版本一起零像素补**（本轮不动母版）──
-  { re: /^(homedaily|homevault)$/, why: '大厅两入口 · v1.207 已补 hitPadY：后置加菜 56→82 达标；仓库兑换 60→**74**（40.1 CSS px，受上下邻居 16px 限制）⇒ 需加大行距' },
-  { re: /^set(theme|bgm|export|import|close)$/, why: '设置页 · v1.207 已补 hitPadY：setclose 64→82 达标；其余四钮受上下邻居 12px 限制只到 **74**（40.1 CSS px）⇒ 需加大行距' },
-  { re: /^(btndouble|resulthome)$/, why: '结算页两钮 · 尺寸由 resultActionLayout() 局部变量算出（静态盲区）· v1.207 按运行时 v12 补 hitPadY 5 ⇒ **78**（42.3 CSS px），再大会压邻居 ⇒ 需加大行距' },
+  { re: /^set(theme|bgm|export|import|close)$/, why: '设置页四钮（setclose 已达标）· v1.207 已补 hitPadY 5 ⇒ 有效高 **74**（40.1 CSS px × 119 CSS px 宽）：再补就要压上下邻居（剩余间距仅 2px）⇒ 严格达标需**加大行距**（视觉改动）' },
   // ── C 类：并排太近，扩命中区会抢邻居 ──
   { re: /^(homeguide|homeabout)$/, why: '大厅右上并排入口（间隔仅 8px）· 安全 pad 只有 4 ⇒ 需重排（PM §18.6 第 2 件）' },
 ];
@@ -230,7 +228,7 @@ const ok = report.cases.filter((c) => !c.err && !c.skipped);
 const overlapsGlobal = ok.flatMap((c) => c.overlaps.map((v) => ({ screen: c.label, ...v })));
 const smallGlobal = ok.flatMap((c) => c.small.map((s) => ({ screen: c.label, ...s })));
 const worst = smallGlobal.slice().sort((a, b) => a.css - b.css).slice(0, 6);
-const padable = smallGlobal.filter((s) => s.verdict.startsWith('可补'));
+const padable = smallGlobal.filter((s) => s.verdict.startsWith('可再补'));   // 措辞与 verdict 保持一致（曾写成「可补」⇒ 恒为 0，假数字）
 const underfilled = ok.filter((c) => c.underfilled);
 const uniqSmall = [...new Set(smallGlobal.map((s) => s.id))];
 const unlisted = uniqSmall.filter((id) => !ALLOW_SMALL.some((a) => a.re.test(id)));

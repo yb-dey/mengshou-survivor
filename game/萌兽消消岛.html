@@ -30362,7 +30362,7 @@ function registerUi() {
   uiHomeChapter = makeButton("homechapter", CONFIG.homeChapterX || 528, CONFIG.homeStartY || 536, CONFIG.homeChapterW || 172, CONFIG.homeStartH || 104, "选章", onTapOpenChapters);
   uiHomeChapter.skin = "sec";
   uiHomeVault = makeButton("homevault", 20, CONFIG.homePairY || 784, CONFIG.homeVaultW || 680, CONFIG.homePairH || 60, "仓库兑换", onTapOpenVault);
-  uiHomeVault.hitPadY = 7;   // 【v1.207】只扩纵向：命中高度 64→78 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
+  uiHomeVault.hitPadY = 11;   // 【v1.207】只扩纵向：命中高度 64→78 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiHomeVault.skin = "pair";
   uiHomeVault.accentFill = "#243428";
   uiHomeVault.accentStroke = "#7cb86a";
@@ -30489,7 +30489,7 @@ function registerUi() {
   for (var rci = 0; rci < (CONFIG.resultChipN || 24); rci++) uiResultChips.push(makeResultBuildChip(rci));
   var resultAct = resultActionLayout();
   uiBtnDouble = makeButton("btndouble", resultAct.double.x, resultAct.double.y, resultAct.double.w, resultAct.double.h, "再领一份金币", onTapDoubleBtn);
-  uiBtnDouble.hitPadY = 5;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
+  uiBtnDouble.hitPadY = 6;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiBtnDouble.skin = "resultfoot";
   // 结算确认回大厅(步骤8 注册, 步骤10 改结算确认语义)
   // 【R10】结算重入闸门设在 onTap 派发侧: 双击第二发在首发 goHome(HOME)后被拦, 防二次入账;
@@ -30501,7 +30501,7 @@ function registerUi() {
     if (GAME.state !== GAME.flow.RESULT_WIN && GAME.state !== GAME.flow.RESULT_LOSE) return;
     confirmResult();
   });
-  uiResultHome.hitPadY = 5;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
+  uiResultHome.hitPadY = 6;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiResultHome.skin = "resultfoot";
   uiResultHome.tone = "home";
   // 强化页(步骤10): 模态先注册, 5 个购买按钮+返回后注册(先命中); 价格/等级 draw 时读档(状态唯一来源)。
