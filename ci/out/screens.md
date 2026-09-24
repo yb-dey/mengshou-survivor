@@ -5,19 +5,19 @@
 
 | 截图 | 钩子 | 画布 | 独特色数 | 主色占比 | 与大厅Δ | 实测状态 | 备注 |
 |---|---|---|---|---|---|---|---|
-| 01-home | hall | 720×1280 | 805 | 9.7% | 0 | HOME |  |
+| 01-home | hall | 720×1280 | 806 | 9.7% | 0 | HOME |  |
 | 02-chapters | openChapters | 720×1280 | 767 | 21.1% | 77.08 | HOME |  |
 | 03-gear | openGear | 720×1280 | 738 | 22.7% | 66.52 | ARMORY |  |
 | 04-upgrade | openUp | 720×1280 | 615 | 24.7% | 62.06 | HOME |  |
 | 05-vault | openVault | 720×1280 | 611 | 20.4% | 55.32 | HOME |  |
 | 06-beast | openBeast | 720×1280 | 635 | 41.7% | 63.17 | BEAST |  |
-| 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 55.45 | BEAST |  |
+| 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 55.44 | BEAST |  |
 | 08-settings | openSettings | 720×1280 | 538 | 36.6% | 74.85 | SETTINGS |  |
 | 09-about | about | 720×1280 | 524 | 41.8% | 80.38 | ABOUT |  |
 | 10-daily | dailyPick | 720×1280 | 541 | 20.2% | 77.4 | HOME |  |
-| 11-battle | mouse+轮询怪数 | 720×1280 | 724 | 21.9% | 44.32 | PLAYING | 同屏怪 **10** 只（峰值 10，目标 10） |
-| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 697 | 32.9% | 64.19 | - |  |
-| 13-pause | pause(true) 轮询成功 | 720×1280 | 709 | 32.4% | 64.38 | PAUSED_MENU |  |
+| 11-battle | mouse+轮询怪数 | 720×1280 | 710 | 20.9% | 46.34 | PLAYING | ⚠ 同屏怪 **1** 只（峰值 9，目标 10） |
+| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 621 | 41.3% | 62 | - |  |
+| 13-pause | pause(true) 轮询成功 | 720×1280 | 735 | 37.2% | 64.2 | PAUSED_MENU |  |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
 
