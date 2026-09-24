@@ -118,3 +118,25 @@ jobs:
             git push origin HEAD:main && break || sleep 8
           done
           echo "7d ok"
+
+      # ✅【第 137 轮补的**第二道收口**】7d 是带 `continue-on-error` 的推送步 ⇒ **它失败时 job 依然绿**，
+      #   而我会以为"这批图已经回仓库了"。本轮实测踩到：`a9cbcd7` 触发的这次 art-shots 跑完
+      #   （不在"未完成"里、也没有失败 workflow），可 origin/main 上**根本没有新提交** ⇒ 图没回来。
+      #   判据**不看任何退出码**，只问一句事实：本地 HEAD 到底在不在 origin/main 上。
+      #   ⚠ 本步**不得**带 continue-on-error —— 否则它就是在犯自己审查的错。
+      #   ⚠ 与 7b′ 的分工：7b′ 管"巡检自己的结论"（退出码 / ::error:: / 屏数），本步管"东西真的落地了"。
+      #     **两者缺一不可**：只查前者 ⇒ "算得好但没推上去"照样绿（就是本轮这个洞）。
+      - name: 7e 收口：确认这批图**真的推上去了**（本步不带 continue-on-error）
+        if: always()
+        run: |
+          set +e
+          head=$(git rev-parse HEAD)
+          remote=$(git ls-remote origin refs/heads/main | awk '{print $1}')
+          echo "本地 HEAD=$head · origin/main=$remote"
+          if [ -z "$remote" ]; then echo "::error::读不到 origin/main"; exit 1; fi
+          if git merge-base --is-ancestor "$head" "$remote"; then
+            echo "✅ 本地 HEAD 已在 origin/main 上（本次没有需要推的东西，或已推成功）"
+            exit 0
+          fi
+          echo "::error::本地 HEAD($head) **不在** origin/main($remote) 上 ⇒ 这批截图/日志没能推回仓库（7d 静默失败了）"
+          exit 1
