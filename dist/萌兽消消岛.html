@@ -34785,6 +34785,12 @@ function drawGuidePanel(ctx, m) {
   ctx.fillText("④ 倒下可复活再战, 放弃也会把金币入账", CONFIG.viewW / 2, py + 356);
   ctx.fillStyle = "#1f6b3a";
   ctx.font = "bold 21px " + FONT_STACK;
+  // ⚠ 【v1.210x】下面这句是**对玩家的承诺**，它成立的前提是"三选一刷新不接广告"：
+  //   源码里 `wx.createRewardedVideoAd` 目前只出现在**注释/插槽说明**里（微信端将来怎么接），
+  //   HTML 形态是 stub（刷新直接成功；失败保留原三张）⇒ 承诺成立。
+  //   **哪天把激励视频真的接上，就必须同时改掉这句** —— 否则就是对玩家的假承诺（与 v1.210q 那次
+  //   「出战中」名不副实同一类错）。这条已**机制化**：`_qc/_promise-guard.mjs` 判据①会剥掉注释再找广告
+  //   SDK 调用，接上就当场 FAIL。
   ctx.fillText("没有抽卡, 没有广告, 也不卡关逼你花金币", CONFIG.viewW / 2, py + 442);
   ctx.fillStyle = "#3a4626";
   ctx.font = "bold 21px " + FONT_STACK;
