@@ -109,7 +109,13 @@ const flat = Object.entries(info.stats)
 const rich = Object.values(info.stats).filter((v) => typeof v.colors === 'number' && v.colors > 16).length;
 console.log('SPRITES 条目: ' + info.count + '  颜色丰富(>16色, 疑似AI): ' + rich +
             '  颜色极少(<=4色, 疑似程序化): ' + flat.length);
-if (flat.length) console.log('  疑似程序化清单: ' + flat.join(', '));
+// 【第 134 轮】把这份清单**发成注解**（原来只 console.log ⇒ 云端日志要鉴权 ⇒ 我读不到，P13）。
+//   为什么值得读：`flat` = "颜色 ≤4"，而本工程**真实发生过**这一类事故 ——
+//   O20：装备袋的 PNG 缺失 ⇒ 静默回退成宝箱剪影，三种形态都一样，**没有任何门禁报出来**。
+//   所以这份清单是"缺美术/回退"的**候选**（不是判决：本作杂兵本来就是"墨线+平涂+高光眼"的平涂风格，
+//   平涂不等于缺失 ⇒ 要逐条对着"这张图本来该不该有 AI 贴图"去核）。
+if (flat.length) console.log('::warning::疑似程序化回退（颜色≤4）共 ' + flat.length + ' 条，前 24 条：' + flat.slice(0, 24).join(', '));
+else console.log('::notice::疑似程序化回退（颜色≤4）：0 条 ✓');
 
 // 离群检测（上次靠这招找到"乌鸦在暗场上看不见"）
 const ENEMY = /^(leaptoad|rabbit|bear|mouse|fox|raven|orbitcrab|boomfruit|sporecap|burrowmole|hedgehog|chargerhino|shieldbug|honeypot|boss1|rollshell|boss2|boss3|badger|boar|monkey)_?(dead|hit|enraged)?$/;
