@@ -28251,7 +28251,15 @@ function drawHomeBase(ctx) {
   strokeRoundRect(ctx, 26, 68, 72, 38, 4);
   ctx.lineWidth = 1;
   ctx.fillStyle = "#2e3c1c";
-  ctx.font = "bold 16px " + FONT_STACK;
+  // 【v1.211r】O27 的①抬字：16→**18px**（1.51→1.70mm）。
+  //   推前逐条核过才动 —— 这是本轮第 3 个候选，前两个都被否掉了（见 `复盘.md` P5 ×119）：
+  //     · 「走近才捡」11px：它和**场物名**共用一块 96×28 的小盘（名 12px + 提示 11px 两行）
+  //       ⇒ 抬到 18px 会撑破盘子、还会比它上面的名字更大（层级倒挂）⇒ **不动**；
+  //     · 「健康游戏忠告」13px：那一段有 v1.202 的**实测裁决**（11→12px 是为了 4.5:1 与 6pt 物理下限）
+  //       且正文 56 字 × 12px = 672 已占满 720 宽 ⇒ 没有抬的余量 ⇒ **不动**。
+  //   本处：胶囊 72×38（L28248），「出战」2 字 18px ≈ 36px ⇒ 宽高都富余 ✓；
+  //   且 `ci/text-scale-check.mjs` 的例外台账里**没有**这一条 ⇒ 抬它不会打翻任何已登记的例外。
+  ctx.font = "bold 18px " + FONT_STACK;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("出战", 62, 87);
@@ -28300,7 +28308,10 @@ function drawHomeBase(ctx) {
   strokeRoundRect(ctx, pvX, pvY, pvW, pvH, 10);
   ctx.lineWidth = 1;
   ctx.fillStyle = "#2c3a22";
-  ctx.font = "bold 13px " + FONT_STACK;
+  // 【v1.211r】同批：13→**18px**（1.23→1.70mm）。它在大厅右侧那块 220×154 的奶油铭牌里
+  //   （v1.194 定的牌 + #2c3a22 深苔短标），牌宽 220 ⇒ 4 字 18px ≈ 72px，宽高都富余 ✓；
+  //   基线在 pvY+pvH-34，18px 的字身上下各约 9px ⇒ 仍在牌内 ✓。台账里也没有这一条 ✓。
+  ctx.font = "bold 18px " + FONT_STACK;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("出战地面", pvX + pvW / 2, pvY + pvH - 34);
