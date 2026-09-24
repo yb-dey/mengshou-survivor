@@ -5,19 +5,19 @@
 
 | 截图 | 钩子 | 画布 | 独特色数 | 主色占比 | 与大厅Δ | 实测状态 | 备注 |
 |---|---|---|---|---|---|---|---|
-| 01-home | hall | 720×1280 | 851 | 11.9% | 0 | HOME |  |
-| 02-chapters | openChapters | 720×1280 | 801 | 21.1% | 76.22 | HOME |  |
-| 03-gear | openGear | 720×1280 | 740 | 22.7% | 64.14 | ARMORY |  |
-| 04-upgrade | openUp | 720×1280 | 620 | 24.7% | 60.22 | HOME |  |
-| 05-vault | openVault | 720×1280 | 611 | 20.4% | 53.86 | HOME |  |
-| 06-beast | openBeast | 720×1280 | 641 | 41.7% | 61.47 | BEAST |  |
-| 07-codex-enemy | codexTab | 720×1280 | 656 | 35.2% | 54.53 | BEAST |  |
-| 08-settings | openSettings | 720×1280 | 522 | 36.7% | 74.68 | SETTINGS |  |
-| 09-about | about | 720×1280 | 522 | 41.8% | 79.4 | ABOUT |  |
-| 10-daily | dailyPick | 720×1280 | 536 | 20.5% | 76.25 | HOME |  |
-| 11-battle | mouse | - | - | - | 43.68 | PLAYING |  |
-| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 63.17 | - |  |
-| 13-pause | pause(true) 轮询成功 | - | - | - | 63.58 | PAUSED_MENU |  |
+| 01-home | hall | 720×1280 | 803 | 11.9% | 0 | HOME |  |
+| 02-chapters | openChapters | 720×1280 | 766 | 21.1% | 77.5 | HOME |  |
+| 03-gear | openGear | 720×1280 | 738 | 22.7% | 65.61 | ARMORY |  |
+| 04-upgrade | openUp | 720×1280 | 615 | 24.7% | 61.18 | HOME |  |
+| 05-vault | openVault | 720×1280 | 611 | 20.4% | 54.58 | HOME |  |
+| 06-beast | openBeast | 720×1280 | 635 | 41.7% | 62.44 | BEAST |  |
+| 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 55.2 | BEAST |  |
+| 08-settings | openSettings | 720×1280 | 537 | 36.7% | 74.25 | SETTINGS |  |
+| 09-about | about | 720×1280 | 524 | 41.8% | 80.19 | ABOUT |  |
+| 10-daily | dailyPick | 720×1280 | 536 | 20.5% | 76.89 | HOME |  |
+| 11-battle | mouse | - | - | - | 43.65 | PLAYING |  |
+| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 63.99 | - |  |
+| 13-pause | pause(true) 轮询成功 | - | - | - | 63.6 | PAUSED_MENU |  |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
 

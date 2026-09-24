@@ -43,11 +43,11 @@
       "dens": {
         "w": 720,
         "h": 1280,
-        "distinct": 851,
+        "distinct": 803,
         "dominantPct": 11.9
       },
       "dup": false,
-      "hash": "19120defa734",
+      "hash": "5970c0c8e6cc",
       "dHome": 0,
       "sameAsHome": false,
       "state": "HOME",
@@ -59,12 +59,12 @@
       "dens": {
         "w": 720,
         "h": 1280,
-        "distinct": 801,
+        "distinct": 766,
         "dominantPct": 21.1
       },
       "dup": false,
-      "hash": "d7c2342ee75a",
-      "dHome": 76.22,
+      "hash": "0acf35fa8247",
+      "dHome": 77.5,
       "sameAsHome": false,
       "state": "HOME",
       "stateOk": true
@@ -75,12 +75,12 @@
       "dens": {
         "w": 720,
         "h": 1280,
-        "distinct": 740,
+        "distinct": 738,
         "dominantPct": 22.7
       },
       "dup": false,
-      "hash": "01e26b4e3efe",
-      "dHome": 64.14,
+      "hash": "35196c16bd0a",
+      "dHome": 65.61,
       "sameAsHome": false,
       "state": "ARMORY",
       "stateOk": true
@@ -91,12 +91,12 @@
       "dens": {
         "w": 720,
         "h": 1280,
-        "distinct": 620,
+        "distinct": 615,
         "dominantPct": 24.7
       },
       "dup": false,
-      "hash": "488ae63dd2b8",
-      "dHome": 60.22,
+      "hash": "d900d3680ca2",
+      "dHome": 61.18,
       "sameAsHome": false,
       "state": "HOME",
       "stateOk": true
@@ -111,8 +111,8 @@
         "dominantPct": 20.4
       },
       "dup": false,
-      "hash": "e8b3c77e8c11",
-      "dHome": 53.86,
+      "hash": "989d731906a8",
+      "dHome": 54.58,
       "sameAsHome": false,
       "state": "HOME",
       "stateOk": true
@@ -123,12 +123,12 @@
       "dens": {
         "w": 720,
         "h": 1280,
-        "distinct": 641,
+        "distinct": 635,
         "dominantPct": 41.7
       },
       "dup": false,
-      "hash": "13859768a586",
-      "dHome": 61.47,
+      "hash": "313a338bb94b",
+      "dHome": 62.44,
       "sameAsHome": false,
       "state": "BEAST",
       "stateOk": true
@@ -139,12 +139,12 @@
       "dens": {
         "w": 720,
         "h": 1280,
-        "distinct": 656,
+        "distinct": 637,
         "dominantPct": 35.2
       },
       "dup": false,
-      "hash": "34324c82eb47",
-      "dHome": 54.53,
+      "hash": "bb2df4c8f751",
+      "dHome": 55.2,
       "sameAsHome": false,
       "state": "BEAST",
       "stateOk": true
@@ -155,12 +155,12 @@
       "dens": {
         "w": 720,
         "h": 1280,
-        "distinct": 522,
+        "distinct": 537,
         "dominantPct": 36.7
       },
       "dup": false,
-      "hash": "c9b419f3c677",
-      "dHome": 74.68,
+      "hash": "738e90c989fc",
+      "dHome": 74.25,
       "sameAsHome": false,
       "state": "SETTINGS",
       "stateOk": true
@@ -171,12 +171,12 @@
       "dens": {
         "w": 720,
         "h": 1280,
-        "distinct": 522,
+        "distinct": 524,
         "dominantPct": 41.8
       },
       "dup": false,
-      "hash": "b6b9bd1ef2f7",
-      "dHome": 79.4,
+      "hash": "c15561220686",
+      "dHome": 80.19,
       "sameAsHome": false,
       "state": "ABOUT",
       "stateOk": true
@@ -191,8 +191,8 @@
         "dominantPct": 20.5
       },
       "dup": false,
-      "hash": "7575741b4ffd",
-      "dHome": 76.25,
+      "hash": "1215ef1446f1",
+      "dHome": 76.89,
       "sameAsHome": false,
       "state": "HOME",
       "stateOk": true
@@ -200,22 +200,22 @@
     {
       "name": "11-battle",
       "hook": "mouse",
-      "hash": "2181c015ef1e",
-      "dHome": 43.68,
+      "hash": "499356abed72",
+      "dHome": 43.65,
       "state": "PLAYING",
       "stateOk": true
     },
     {
       "name": "12-levelup",
       "hook": "轮询 cards.length>0 (3 张)",
-      "hash": "3311c322d037",
-      "dHome": 63.17
+      "hash": "521ae3291ed8",
+      "dHome": 63.99
     },
     {
       "name": "13-pause",
       "hook": "pause(true) 轮询成功",
-      "hash": "171031ab99c8",
-      "dHome": 63.58,
+      "hash": "6f8383d9c750",
+      "dHome": 63.6,
       "state": "PAUSED_MENU",
       "stateOk": true
     }
