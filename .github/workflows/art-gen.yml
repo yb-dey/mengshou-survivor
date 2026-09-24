@@ -5,6 +5,9 @@ name: art-gen
 #   （实测同 prompt 换 model 返回字节完全相同 ⇒ image= 被忽略）。而**这个仓库本来就是公开的**，
 #   分钟数免费、我又有推送权限 ⇒ 不需要任何新账号就能有一台云端出图机。
 # 产物落回仓库 `_art/out/`（用内置 GITHUB_TOKEN 提交），这样取结果不需要 artifact 鉴权。
+# 【第二次提交的修正】上一版在"参考图 img2img"步失败，而 Actions 的日志下载需要鉴权（本机无 token）
+#   ⇒ 让工作流**自己把 stdout/stderr 写进 `_art/log/run.txt` 并无论成败都提交**，
+#   这样失败原因会落进仓库，我用 raw/pull 就能读到 —— 自建能力必须连"自查"一起建。
 on:
   push:
     paths:
@@ -22,6 +25,7 @@ jobs:
     env:
       HF_ENDPOINT: https://hf-mirror.com
       HF_HUB_DISABLE_TELEMETRY: '1'
+      PYTHONUNBUFFERED: '1'
     steps:
       - uses: actions/checkout@v4
 
@@ -35,13 +39,25 @@ jobs:
           pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
           pip install --no-cache-dir diffusers transformers accelerate safetensors pillow
 
-      - name: 参考图 img2img
-        run: python _art/gen.py
+      - name: 参考图 img2img（输出留档，失败也继续）
+        continue-on-error: true
+        run: |
+          mkdir -p _art/log
+          set +e
+          python -u _art/gen.py > _art/log/run.txt 2>&1
+          code=$?
+          echo "" >> _art/log/run.txt
+          echo "=== exit=$code ===" >> _art/log/run.txt
+          echo "---- 环境自述 ----" >> _art/log/run.txt
+          python -c "import torch,diffusers,sys;print('python',sys.version.split()[0]);print('torch',torch.__version__);print('diffusers',diffusers.__version__);print('hf_endpoint',__import__('os').environ.get('HF_ENDPOINT'))" >> _art/log/run.txt 2>&1
+          tail -c 3000 _art/log/run.txt
+          exit 0
 
-      - name: 产物提交回仓库
+      - name: 产物与日志提交回仓库（无论成败）
+        if: always()
         run: |
           git config user.name  "art-bot"
           git config user.email "art-bot@users.noreply.github.com"
           git add -A _art/out _art/log
-          git diff --cached --quiet && echo "无产物变化" || git commit -m "art-gen: 云端出图产物（$(date -u '+%Y-%m-%d %H:%M') UTC）"
+          git diff --cached --quiet && echo "无产物变化" || git commit -m "art-gen: 产物/日志（$(date -u '+%Y-%m-%d %H:%M') UTC）"
           git push
