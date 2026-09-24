@@ -24587,43 +24587,63 @@ function paintInkTuft(c2, x, y, s, leaf) {
     else c2.arc(x, y + s * 0.05, s * 0.30, 0, CONFIG.TWO_PI);
     c2.fill();
   } catch (eSh) { /* 不支持 ellipse 的环境退化为无影 */ }
+  // 【v1.210p 美术·去图章感】三片叶的**张角与高度原本是写死的常数** ⇒ 整片地面上的草簇是
+  //   **同一个图章反复盖**（实测战场一屏 13 簇，形状完全一致，只有整体尺寸随 rnd 变）——
+  //   一眼就读成"贴图填充"，是这类画面最典型的廉价感来源。
+  //   改法：由**位置的哈希**派生每簇自己的左张角 / 右张角 / 整簇高度 / 中笔倾斜（四者独立），
+  //   同一坐标永远得到同一形状（不新增状态、可复现、不随帧变）。
+  //   **簇数 / 位置 / 尺寸 / 叶色 / 墨重一律不动**，只让形状不再是一个模子。
+  var _h1 = hashMapFar(x, y, 11), _h2 = hashMapFar(x, y, 23);
+  var _h3 = hashMapFar(x, y, 37), _h4 = hashMapFar(x, y, 53);
+  // 总张角只小幅浮动（0.92–1.24，原写死 1.16），**变化主要放在"左/右怎么分"**——
+  // 不对称（整簇朝左或朝右歪）才是最像"手撒的"的线索，也避免出现又扁又宽的怪簇。
+  var _spread = 0.92 + _h1 * 0.32;
+  var _shareL = 0.34 + _h2 * 0.32;     // 左叶占总张角的比例 0.34–0.66
+  var _spL = _spread * _shareL;
+  var _spR = _spread * (1 - _shareL);
+  var _hh = 0.76 + _h3 * 0.30;         // 整簇高度 0.76–1.06（原写死 1.00）
+  var _lean = (_h4 - 0.5) * 0.32;      // 中笔左右倾 ±0.16（原写死 0）
+  var _lx = x - s * _spL, _ly = y - s * _hh * 0.82;
+  var _mx = x + s * _lean, _my = y - s * _hh;
+  var _rx = x + s * _spR, _ry = y - s * _hh * 0.82;
   var _tuftInk = Math.max(1.6, s * 0.055);
   c2.strokeStyle = "#1c1810";
   c2.lineWidth = Math.max(5.5, s * 0.24) + _tuftInk * 2;
   c2.beginPath();
   c2.moveTo(x, y);
-  c2.lineTo(x - s * 0.58, y - s * 0.82);
+  c2.lineTo(_lx, _ly);
   c2.moveTo(x, y);
-  c2.lineTo(x, y - s);
+  c2.lineTo(_mx, _my);
   c2.moveTo(x, y);
-  c2.lineTo(x + s * 0.58, y - s * 0.82);
+  c2.lineTo(_rx, _ry);
   c2.stroke();
   c2.strokeStyle = leaf;
   c2.lineWidth = Math.max(5.5, s * 0.24);
   c2.beginPath();
   c2.moveTo(x, y);
-  c2.lineTo(x - s * 0.58, y - s * 0.82);
+  c2.lineTo(_lx, _ly);
   c2.moveTo(x, y);
-  c2.lineTo(x, y - s);
+  c2.lineTo(_mx, _my);
   c2.moveTo(x, y);
-  c2.lineTo(x + s * 0.58, y - s * 0.82);
+  c2.lineTo(_rx, _ry);
   c2.stroke();
-  // 【v1.210j】左上受光：沿左叶上缘一道高光（alpha 0.18，够看但不跳出墨线语言）
+  // 【v1.210j】左上受光：沿左叶上缘一道高光（alpha 0.18，够看但不跳出墨线语言）；
+  //   【v1.210p】改为跟着该簇自己的叶片端点走（原来对着写死的坐标，形状一变就对不上）
   try {
     c2.strokeStyle = "rgba(255,255,255,0.18)";
     c2.lineWidth = Math.max(1.4, s * 0.055);
     c2.beginPath();
-    c2.moveTo(x - s * 0.10, y - s * 0.30);
-    c2.lineTo(x - s * 0.50, y - s * 0.76);
-    c2.moveTo(x + s * 0.08, y - s * 0.32);
-    c2.lineTo(x + s * 0.10, y - s * 0.78);
+    c2.moveTo(x + (_lx - x) * 0.35, y + (_ly - y) * 0.35);
+    c2.lineTo(x + (_lx - x) * 0.89, y + (_ly - y) * 0.89);
+    c2.moveTo(x + (_mx - x) * 0.32 + s * 0.08, y + (_my - y) * 0.32);
+    c2.lineTo(x + (_mx - x) * 0.78 + s * 0.10, y + (_my - y) * 0.78);
     c2.stroke();
   } catch (eHl) { /* 忽略 */ }
   c2.strokeStyle = "#1c1810";
   c2.lineWidth = Math.max(3.4, s * 0.14);
   c2.beginPath();
   c2.moveTo(x, y);
-  c2.lineTo(x, y - s * 0.52);
+  c2.lineTo(x + (_mx - x) * 0.52, y + (_my - y) * 0.52);
   c2.stroke();
 }
 function paintInkStarFar(c2, x, y, s) {
