@@ -26,8 +26,9 @@ Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) d
 Version 1.63.0
 
 === node ci/screen-sweep.mjs ===
-::notice::11-battle 采样密度 这张图同屏怪=10 峰值=10 目标=10 轮询=89 结束=达到 10 只
-::notice::14-result-win 采样 state=RESULT_WIN chips=3 overlap=false
+::warning::11-battle 未达密度阈值 10：等满 60s 未达阈值（峰值 9）（这张图实测 9 只，峰值 9）—— 评审前先看这个数
+::notice::11-battle 采样密度 这张图同屏怪=9 峰值=9 目标=10 轮询=136 结束=等满 60s 未达阈值（峰值 9）
+::notice::14-result-win 采样 state=RESULT_WIN chips=4 overlap=false
 ::notice::15-result-lose 采样 state=RESULT_LOSE chips=2 overlap=false
 # 全界面巡检
 
@@ -46,11 +47,11 @@ Version 1.63.0
 | 08-settings | openSettings | 720×1280 | 538 | 36.6% | 74.85 | SETTINGS |  |
 | 09-about | about | 720×1280 | 524 | 41.8% | 80.38 | ABOUT |  |
 | 10-daily | dailyPick | 720×1280 | 541 | 20.2% | 77.4 | HOME |  |
-| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 895 | 19.4% | 47.49 | PLAYING | 同屏怪 **10** 只（峰值 10，目标 10） |
-| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 616 | 41.5% | 64.36 | - |  |
-| 13-pause | pause(true) 轮询成功 | 720×1280 | 792 | 36.5% | 64.42 | PAUSED_MENU |  |
-| 14-result-win | win() | 720×1280 | 621 | 33.2% | 59.70731867152628 | RESULT_WIN | 结算卡带 **3** 条 · 压住=否 |
-| 15-result-lose | lose() | 720×1280 | 618 | 33.3% | 61.92428192313062 | RESULT_LOSE | 结算卡带 **2** 条 · 压住=否 |
+| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 715 | 20.5% | 46.63 | PLAYING | ⚠ 同屏怪 **9** 只（峰值 9，目标 10） |
+| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 612 | 41.5% | 61.74 | - |  |
+| 13-pause | pause(true) 轮询成功 | 720×1280 | 791 | 38% | 64.61 | PAUSED_MENU |  |
+| 14-result-win | win() | 720×1280 | 621 | 32.9% | 60.08619427839012 | RESULT_WIN | 结算卡带 **4** 条 · 压住=否 |
+| 15-result-lose | lose() | 720×1280 | 620 | 33.3% | 62.03421378173833 | RESULT_LOSE | 结算卡带 **2** 条 · 压住=否 |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
 
@@ -74,23 +75,23 @@ Version 1.63.0
 
 === exit=0 ===
 === ci/out ===
-total 5256
-drwxr-xr-x 2 runner runner   4096 Sep 24 18:39 .
-drwxr-xr-x 7 runner runner   4096 Sep 24 18:37 ..
--rw-r--r-- 1 runner runner 482940 Sep 24 18:38 01-home.png
--rw-r--r-- 1 runner runner 308818 Sep 24 18:38 02-chapters.png
--rw-r--r-- 1 runner runner 285363 Sep 24 18:38 03-gear.png
--rw-r--r-- 1 runner runner 401920 Sep 24 18:38 04-upgrade.png
--rw-r--r-- 1 runner runner 364596 Sep 24 18:38 05-vault.png
--rw-r--r-- 1 runner runner 477426 Sep 24 18:38 06-beast.png
--rw-r--r-- 1 runner runner 415510 Sep 24 18:38 07-codex-enemy.png
--rw-r--r-- 1 runner runner 227088 Sep 24 18:38 08-settings.png
--rw-r--r-- 1 runner runner 251507 Sep 24 18:38 09-about.png
--rw-r--r-- 1 runner runner 264116 Sep 24 18:38 10-daily.png
--rw-r--r-- 1 runner runner 550363 Sep 24 18:39 11-battle.png
--rw-r--r-- 1 runner runner 306651 Sep 24 18:39 12-levelup.png
--rw-r--r-- 1 runner runner 349866 Sep 24 18:39 13-pause.png
--rw-r--r-- 1 runner runner 326150 Sep 24 18:39 14-result-win.png
--rw-r--r-- 1 runner runner 319327 Sep 24 18:39 15-result-lose.png
--rw-r--r-- 1 runner runner   5640 Sep 24 18:39 screens.json
--rw-r--r-- 1 runner runner   2900 Sep 24 18:39 screens.md
+total 5332
+drwxr-xr-x 2 runner runner   4096 Sep 24 18:47 .
+drwxr-xr-x 7 runner runner   4096 Sep 24 18:47 ..
+-rw-r--r-- 1 runner runner 482954 Sep 24 18:47 01-home.png
+-rw-r--r-- 1 runner runner 308804 Sep 24 18:47 02-chapters.png
+-rw-r--r-- 1 runner runner 285377 Sep 24 18:47 03-gear.png
+-rw-r--r-- 1 runner runner 402012 Sep 24 18:48 04-upgrade.png
+-rw-r--r-- 1 runner runner 364529 Sep 24 18:48 05-vault.png
+-rw-r--r-- 1 runner runner 477426 Sep 24 18:48 06-beast.png
+-rw-r--r-- 1 runner runner 415449 Sep 24 18:48 07-codex-enemy.png
+-rw-r--r-- 1 runner runner 227252 Sep 24 18:48 08-settings.png
+-rw-r--r-- 1 runner runner 251463 Sep 24 18:48 09-about.png
+-rw-r--r-- 1 runner runner 264198 Sep 24 18:48 10-daily.png
+-rw-r--r-- 1 runner runner 568891 Sep 24 18:48 11-battle.png
+-rw-r--r-- 1 runner runner 345131 Sep 24 18:49 12-levelup.png
+-rw-r--r-- 1 runner runner 355773 Sep 24 18:49 13-pause.png
+-rw-r--r-- 1 runner runner 342272 Sep 24 18:49 14-result-win.png
+-rw-r--r-- 1 runner runner 319576 Sep 24 18:49 15-result-lose.png
+-rw-r--r-- 1 runner runner   5662 Sep 24 18:49 screens.json
+-rw-r--r-- 1 runner runner   2900 Sep 24 18:49 screens.md
