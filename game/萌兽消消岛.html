@@ -29542,15 +29542,32 @@ function drawLevelupCard(ctx, card) {
     drawPetStarMeter(ctx, tx + 8, r.y + 90, pfStar, Math.min(5, pfStar + 1));
   }
   ctx.fillStyle = armed ? "#7a5a12" : "#4a5a22";
-  ctx.font = "bold 16px " + FONT_STACK;
+  // 【v1.211u】16→18px（真机 8→9 CSS px）：这行是「已有 2★ · 再升到 3★」的状态读数，读不清就不知道自己在升什么。
+  //   仍低于标题 24/28px ⇒ 层级不变。
+  ctx.font = "bold 18px " + FONT_STACK;
   stackX = (card.opt && card.opt.kind === "upPet") ? tx + 110 : tx;
   ctx.fillText(hudFitText(ctx, stack, r.x + r.w - stackX - 14), stackX, r.y + 84);
-  // 【v1.153】效果行从 bold 17 收到 15 常规重, 图标→标题→短 desc 层级一眼读完, 不再三行粗体堆噪
+  // 【v1.153】效果行从 bold 17 收到 15 常规重, 图标→标题→短 desc 层级一眼读完, 不再三行粗体堆噪。
+  //   【v1.211u 越过此裁决的理由，以及为什么没违背它的本意】第 145 轮**第一次**出真机 0.5× 尺度图
+  //   （`_qc/_baseline/12-levelup-phone360.png`）才看到：15 设计px 在手机上只有 7.5 CSS px ≈ 1.4mm，
+  //   三行**全糊** —— 层级再清楚，读不出来就等于没有。于是按那条裁决的**本意**（短 desc、不堆噪）改：
+  //   ① 行数 3→**2**（desc3 实测极少出现：真机图里三张卡都只画了两行）；
+  //   ② 字号 15→**19px**、行距 20→**26**（1.42→1.80mm）。这不是「加噪」：行数更少、重量仍是常规体，
+  //      与标题(24/28px 粗)的差距反而更大 ⇒ 层级比原来更清楚。
+  //   ⚠ 未动：右上配方行 15px（v1.153 明确压小以分层，见 L29517）· tag 18px。
   ctx.fillStyle = c.cardDesc;
-  ctx.font = "15px " + FONT_STACK;
-  ctx.fillText(hudFitText(ctx, card.desc1 || "", r.x + r.w - tx - 14), tx, r.y + 114);
-  ctx.fillText(hudFitText(ctx, card.desc2 || "", r.x + r.w - tx - 14), tx, r.y + 134);
-  ctx.fillText(hudFitText(ctx, card.desc3 || "", r.x + r.w - tx - 14), tx, r.y + 154);
+  // 【v1.211u 自适应，修掉本改动自己的一个隐患】第一版直接把第三行删了 ⇒ 自查发现
+  //   **末端 / 成档 / 进化那几类卡的 `desc3` 是有内容的**（母版 L31348 等卡片构建器会给它），
+  //   删绘制＝**吞掉玩家的信息**（「不占武器槽 · 跟宠开火」「点了才合成 · 可略过」这类**可操作性**文案）。
+  //   改成按行数选档，信息一行不少：
+  //     · 两行（常态；真机图里三张卡都是）⇒ **19px / 行距 26**（y 112/138，1.42→1.80mm）
+  //     · 三行（少数卡）⇒ **17px / 行距 21**（y 110/131/152；末行墨迹 ≈162 < 按钮上沿 r.h−42≈168）
+  //   两档都比原来的 15px 大，且都守着 v1.153 的本意（常规体重、不与标题抢层级）。
+  var descFs = card.desc3 ? 17 : 19, descTop = card.desc3 ? 110 : 112, descPit = card.desc3 ? 21 : 26;
+  ctx.font = descFs + "px " + FONT_STACK;
+  ctx.fillText(hudFitText(ctx, card.desc1 || "", r.x + r.w - tx - 14), tx, r.y + descTop);
+  ctx.fillText(hudFitText(ctx, card.desc2 || "", r.x + r.w - tx - 14), tx, r.y + descTop + descPit);
+  if (card.desc3) ctx.fillText(hudFitText(ctx, card.desc3, r.x + r.w - tx - 14), tx, r.y + descTop + descPit * 2);
   cue = levelupCardCue(card.idx, card.opt);
   cueH = 32;
   cueY = r.y + r.h - cueH - 10;
@@ -29561,7 +29578,8 @@ function drawLevelupCard(ctx, card) {
   strokeRoundRect(ctx, r.x + 16, cueY, r.w - 32, cueH, 10);
   ctx.lineWidth = 1;
   ctx.fillStyle = armed ? "#eef4dc" : "#d8f5a8";
-  ctx.font = "bold 16px " + FONT_STACK;
+  // 【v1.211u】按钮字 16→18px：这是玩家**要点的那一下**，读不清有真实可用性代价（按钮高 cueH=32，18px 装得下）。
+  ctx.font = "bold 18px " + FONT_STACK;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(cue, r.x + r.w / 2, cueY + cueH / 2);
