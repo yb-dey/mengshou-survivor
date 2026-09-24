@@ -34,6 +34,25 @@ const page = await browser.newPage({ viewport: { width: SWEEP_W, height: SWEEP_H
 const errs = [];
 page.on('pageerror', (e) => errs.push(String(e.message).slice(0, 200)));
 await page.goto(`http://127.0.0.1:${port}/${encodeURIComponent(entryName)}`, { waitUntil: 'load', timeout: 90000 });
+// 【第 141 轮】**冷启动耗时** —— 这一条从来没被测过（原来只有下面两段盲目等待 4000+1800ms，
+//   那本身就是"不知道要等多久"的产物）。为什么要测：inline 母版 4.5MB（贴图 base64）/
+//   dist 1.85MB + 178 个素材，"首次打开到底多久能玩"一直没人知道，而它是真机上最直接的体验项。
+//   ⚠ 本轮**只记录、不定阈值**（P8：先 dump 真实数据再定判据），且**不改下面那两段等待**
+//   —— 保持批次可比，别让"顺手优化等待"污染前后对比。
+const _t0 = Date.now();
+let _msPlayable = -1;
+try {
+  await page.waitForFunction(
+    () => { try { return !!(window.MENGSHOU_DEBUG && window.MENGSHOU_DEBUG.state().name !== 'BOOT'); } catch (e) { return false; } },
+    { timeout: 20000, polling: 100 });
+  _msPlayable = Date.now() - _t0;
+} catch (e) { _msPlayable = -1; }
+const _nav = await page.evaluate(() => {
+  const n = performance.getEntriesByType('navigation')[0] || {};
+  return { dcl: Math.round(n.domContentLoadedEventEnd || 0), load: Math.round(n.loadEventEnd || 0), dur: Math.round(n.duration || 0) };
+});
+console.log('::notice::冷启动 DCL ' + _nav.dcl + 'ms · load ' + _nav.load + 'ms · navigation ' + _nav.dur +
+  'ms · 到非 BOOT ' + (_msPlayable < 0 ? '超时(20s)' : _msPlayable + 'ms'));
 await page.waitForTimeout(4000);
 await page.evaluate(() => { if (typeof window.guideSkipAll === 'function') window.guideSkipAll(); });
 await page.waitForTimeout(1800);
