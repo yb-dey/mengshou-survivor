@@ -11,7 +11,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.208">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.209">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -650,7 +650,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.208",   // 【v1.208】结算构筑条目 34→81（= 44 CSS px 触控下限，提示行"点条目看怎么来的"才成立）· 【v1.207b】硬钳制（满载不溢出）                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
+  version: "1.209",   // 【v1.209】「怎么玩」页补「出局之后」三步（原正文到 py+536 收尾、按钮锚 py+890 ⇒ 空 245 逻辑 px ≈ 面板 23%）· 【v1.208】结算构筑条目 34→81（= 44 CSS px 触控下限，提示行"点条目看怎么来的"才成立）· 【v1.207b】硬钳制（满载不溢出）                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
                                        //   前版 v1.205：killEnemy 加已死守卫（修 enemyCount 计数穿负）；
                                        //   前版 v1.204：触屏宿主文案收敛（走位/跳过/过场副标签统一走宿主开关）；
                                        //   前版 v1.203：修符文成就 dim 拼错前缀（5 条成就永不可解锁）+ 加成就接线判据；
@@ -34485,10 +34485,25 @@ function drawGuidePanel(ctx, m) {
   ctx.font = "bold 18px " + FONT_STACK;
   ctx.fillText("局内短条不盖血条, 点「跳过」一次收全部提示", CONFIG.viewW / 2, py + 492);
   ctx.fillText(guideTipsPending() ? "进局后还会出 1～2 条短提示, 随时可跳过" : "局内短提示已关掉。想再看就点重看", CONFIG.viewW / 2, py + 536);
+  // 【v1.209】补「出局之后」三步 —— 原文到 py+536 就收尾，而按钮锚在 py+890 / py+962，
+  //   中间空出约 **245 逻辑 px（≈133 CSS px，占面板 23%）**，这页看着像没写完（16 号图是备案截图之一）。
+  //   做法选**填内容**、不动几何：面板高（1060）与按钮坐标一律不动 ⇒ 零位移、零重叠风险
+  //   （对照 v1.167b 的教训：改面板高会让 py 漂移，静态锚定的控件会撞在一起）。
+  //   顺带补上首启最缺的一块 —— **局外成长**：原四步只讲局内，玩家首局结束回大厅后
+  //   面对「装备 / 强化 / 图鉴 / 仓库兑换」没有任何解释。
+  //   ⚠ uiGuideMsg 由 py+596 下移到 py+774（否则与新分区标题同高）。
+  ctx.fillStyle = "#1f6b3a";
+  ctx.font = "bold 17px " + FONT_STACK;
+  ctx.fillText("出局之后", CONFIG.viewW / 2, py + 596);
+  ctx.fillStyle = "#243218";
+  ctx.font = "bold 19px " + FONT_STACK;
+  ctx.fillText("⑤ 回大厅花金币强化六部位, 装备好再出击", CONFIG.viewW / 2, py + 640);
+  ctx.fillText("⑥ 图鉴看进化配方与收集, 仓库兑换把素材换装备", CONFIG.viewW / 2, py + 682);
+  ctx.fillText("⑦ 想换口味点「后置加菜」, 短局 5～6 分钟不冲正片", CONFIG.viewW / 2, py + 724);
   if (uiGuideMsg) {
     ctx.fillStyle = "#1f6b3a";
     ctx.font = "bold 18px " + FONT_STACK;
-    ctx.fillText(uiGuideMsg, CONFIG.viewW / 2, py + 596);
+    ctx.fillText(uiGuideMsg, CONFIG.viewW / 2, py + 774);
   }
 }
 
