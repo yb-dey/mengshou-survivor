@@ -1,0 +1,78 @@
+=== node ===
+v22.23.2
+=== npm init ===
+
+
+
+=== npm i playwright ===
+
+added 2 packages in 2s
+=== playwright install --with-deps chromium ===
+FFmpeg (playwright ffmpeg v1011) downloaded to /home/runner/.cache/ms-playwright/ffmpeg-1011
+Downloading Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) from https://cdn.playwright.dev/builds/cft/153.0.8010.12/linux64/chrome-headless-shell-linux64.zip
+|                                                                                |   0% of 114.3 MiB
+|■■■■■■■■                                                                        |  10% of 114.3 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 114.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 114.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 114.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 114.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 114.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 114.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 114.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 114.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 114.3 MiB
+Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) downloaded to /home/runner/.cache/ms-playwright/chromium_headless_shell-1243
+=== playwright version ===
+Version 1.63.0
+
+=== node ci/screen-sweep.mjs ===
+# 全界面巡检
+
+- 可用界面钩子: 35 个
+- 未捕获异常: 0
+
+| 截图 | 钩子 | 画布 | 独特色数 | 主色占比 | 与大厅Δ | 实测状态 | 备注 |
+|---|---|---|---|---|---|---|---|
+| 01-home | hall | 720×1280 | 851 | 11.9% | 0 | HOME |  |
+| 02-chapters | openChapters | 720×1280 | 801 | 21.1% | 76.22 | HOME |  |
+| 03-gear | openGear | 720×1280 | 740 | 22.7% | 64.14 | ARMORY |  |
+| 04-upgrade | openUp | 720×1280 | 620 | 24.7% | 60.22 | HOME |  |
+| 05-vault | openVault | 720×1280 | 611 | 20.4% | 53.86 | HOME |  |
+| 06-beast | openBeast | 720×1280 | 641 | 41.7% | 61.47 | BEAST |  |
+| 07-codex-enemy | codexTab | 720×1280 | 656 | 35.2% | 54.54 | BEAST |  |
+| 08-settings | openSettings | 720×1280 | 522 | 36.7% | 74.68 | SETTINGS |  |
+| 09-about | about | 720×1280 | 522 | 41.8% | 79.4 | ABOUT |  |
+| 10-daily | dailyPick | 720×1280 | 536 | 20.5% | 76.25 | HOME |  |
+| 11-battle | mouse | - | - | - | 43.79 | PLAYING |  |
+| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 63.02 | - |  |
+| 13-pause | pause(true) 轮询成功 | - | - | - | 63.52 | PAUSED_MENU |  |
+
+> 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
+
+> ⚠ 备注列标 `与上一屏完全相同` 的，表示**该界面没有被真正打开**（截图与上一屏字节相同）。
+> 这类条目**不能当作"已巡检"** —— 修法：先复位到大厅，或换一个能生效的钩子。
+
+## 未捕获异常
+
+（无）
+
+=== exit=0 ===
+=== ci/out ===
+total 4420
+drwxr-xr-x 2 runner runner   4096 Sep 24 11:38 .
+drwxr-xr-x 7 runner runner   4096 Sep 24 11:37 ..
+-rw-r--r-- 1 runner runner 460194 Sep 24 11:37 01-home.png
+-rw-r--r-- 1 runner runner 305130 Sep 24 11:37 02-chapters.png
+-rw-r--r-- 1 runner runner 283552 Sep 24 11:37 03-gear.png
+-rw-r--r-- 1 runner runner 397577 Sep 24 11:37 04-upgrade.png
+-rw-r--r-- 1 runner runner 362545 Sep 24 11:37 05-vault.png
+-rw-r--r-- 1 runner runner 475010 Sep 24 11:37 06-beast.png
+-rw-r--r-- 1 runner runner 412004 Sep 24 11:37 07-codex-enemy.png
+-rw-r--r-- 1 runner runner 219232 Sep 24 11:37 08-settings.png
+-rw-r--r-- 1 runner runner 245545 Sep 24 11:38 09-about.png
+-rw-r--r-- 1 runner runner 254794 Sep 24 11:38 10-daily.png
+-rw-r--r-- 1 runner runner 420518 Sep 24 11:38 11-battle.png
+-rw-r--r-- 1 runner runner 293142 Sep 24 11:38 12-levelup.png
+-rw-r--r-- 1 runner runner 348593 Sep 24 11:38 13-pause.png
+-rw-r--r-- 1 runner runner   4415 Sep 24 11:38 screens.json
+-rw-r--r-- 1 runner runner   1498 Sep 24 11:38 screens.md
