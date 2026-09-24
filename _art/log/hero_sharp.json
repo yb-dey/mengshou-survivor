@@ -1,0 +1,12 @@
+{
+  "name": "hero_sharp",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "crisp clean 2d game sprite of a chibi raccoon survivor hero, bold dark outline, two-tone cel shading, moss green vest, orange neckerchief, striped tail, full body, plain flat background, high clarity lineart",
+  "negative": "",
+  "strength": 0.55,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "hero.png",
+  "seconds": 18.3
+}
