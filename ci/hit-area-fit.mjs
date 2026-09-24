@@ -256,6 +256,14 @@ const skipped = report.cases.filter((c) => c.skipped).length;
 console.log(`::notice::⑲ 命中区逐屏（可点/偏小/重叠）::` + ok.map((c) => `${c.label} ${c.n}/${c.small.length}/${c.overlaps.length}`).join(' · ')
   + (skipped ? ` · ⚠ 跳过 ${skipped} 屏（未量到）` : ' · 10 屏全覆盖'));
 console.log(`::notice::⑲ 偏小 id 摘要（台账用）::` + digest + ` · 未登记 ${unlisted.length} 个`);
+// B 类候选（具名、准备补 hitPad 的）—— 打印**运行时**两轴间距，用来定 pad 值：
+//   `v` = 竖直向最近邻居间距，`h` = 水平向；对称 pad 必须 ≤ ½×min(v,h)，单轴 pad 只需看对应轴。
+const PAD_CAND = ['homedaily', 'homevault', 'settheme', 'setbgm', 'setexport', 'setimport', 'setclose',
+  'beastclose', 'vaultclose', 'gearclose', 'dailycancel', 'gearmerge', 'gearforge',
+  'btnrevive', 'btngiveup', 'btnreroll', 'btndouble', 'resulthome'];
+console.log('::notice::⑲ B 类候选的运行时间距（v=竖直 h=水平 · 需=补到 44 CSS px 所需）::' +
+  PAD_CAND.map((id) => { const x = smallGlobal.find((y) => y.id === id);
+    return x ? `${id} 需${x.need} v${x.vg === Infinity ? '∞' : x.vg} h${x.hg === Infinity ? '∞' : x.hg}` : `${id} -`; }).join(' · '));
 console.log(`::notice::⑲ 偏小 ${smallGlobal.length} 个 · 可零像素补 pad ${padable.length} 个 · 最紧::` +
   worst.map((s) => `${s.screen}:${s.id} ${s.css}css pad${s.need}≤${s.safe}`).join(' · '));
 

@@ -51,9 +51,9 @@ export function overlapsOf(nodes) {
 }
 export function smallOnes(nodes) {
   return nodes.filter((n) => Math.min(n.w, n.h) < FLOOR).map((n) => {
-    const short = Math.min(n.w, n.h), { near, safe } = nearestGap(n, nodes);
+    const short = Math.min(n.w, n.h), g = nearestGap(n, nodes), near = g.near, safe = g.safe;
     return { id: n.id, w: n.w, h: n.h, css: +(short * SCALE).toFixed(1),
-      need: Math.ceil((FLOOR - short) / 2), near, safe,
+      need: Math.ceil((FLOOR - short) / 2), near, safe, vg: g.vg, hg: g.hg,
       verdict: Math.ceil((FLOOR - short) / 2) <= safe ? `可补 pad ${Math.ceil((FLOOR - short) / 2)}` : '需改视觉' };
   }).sort((a, b) => a.css - b.css);
 }
