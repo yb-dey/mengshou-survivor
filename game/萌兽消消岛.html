@@ -24837,7 +24837,7 @@ function paintChapterGround(c2, w, h, mt) {
     //   （star 分支为同一个坑写过「纵向柔罩: 压掉瓦片接缝横纹」，原野这章没修）。
     //   改走 softBandSprite（上下各 32% 淡出）拉伸铺满：band 的 y/高度/颜色不变，只把两端化开。
     pathH = Math.max(64, h * 0.09);
-    // 【v1.211b】两条横带同步压淡（0.55→0.36 / 0.32→0.20）：与色块同因——对比度是病根，
+    // 【v1.210h】两条横带同步压淡（0.55→0.36 / 0.32→0.20）：与色块同因——对比度是病根，
     //   柔化只解决「硬边」，解决不了「一眼看出是横贯全屏的带子」。
     c2.drawImage(softBandSprite(c, 0.36), 0, h * 0.32, w, pathH);
     c2.drawImage(softBandSprite(b, 0.20), 0, h * 0.66, w, Math.max(40, h * 0.055));
