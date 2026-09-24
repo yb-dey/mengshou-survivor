@@ -1,6 +1,6 @@
 {
-  "at": "2026-09-24T19:07:04.374Z",
-  "count": 17,
+  "at": "2026-09-24T19:18:04.004Z",
+  "count": 19,
   "files": [
     "01-home.png",
     "02-chapters.png",
@@ -13,8 +13,10 @@
     "08-settings.png",
     "09-about.png",
     "10-daily.png",
+    "10b-guide.png",
     "11-battle.png",
     "11a-entrance.png",
+    "11b-revive.png",
     "12-levelup.png",
     "13-pause.png",
     "14-result-win.png",
