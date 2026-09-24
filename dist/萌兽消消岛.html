@@ -32396,7 +32396,13 @@ function drawUpgradePanel(ctx, m) {
     if (v.maxed || plocked) {
       ctx.fillText(v.maxed ? (v.stat0 + " · 满") : v.goldLine, pcardX + 8, prowY + 42);
     } else {
-      ctx.fillText(v.stat0 + "→" + v.stat1 + " · 战力+" + v.powerDelta, pcardX + 8, prowY + 42);
+      // 【v1.211i 路径卡统计行被价格钮切字】放大 8× 实测：尾部「力」被钮的左边框**劈开**，其后的「+3」整段看不见。
+      //   ⚠ 钮压住卡片右侧是**有意设计**（L30876-30877 【R22/R32】「原位盖住节点名/描述尾部」，x 195→238 是量过 18px 名字的）
+      //   ⇒ **不动钮**。但 R32 当年量的是 18px 的**名字**，没量到这行 14px 的统计行；而「劈开一个字」与「盖住尾部」不是一回事
+      //   （同族：v1.211d 章题条压住 16px 字上沿，也是覆盖/画序问题）。
+      //   修法：这行把**同一个属性名写了两遍**（「基伤 +0%→基伤 +3%」）——去掉第二遍省约 32px，而缺口只需约 20px
+      //   ⇒ 信息一条不减、字号不动、钮位不动。按第一个空格切，切不到就原样用（不引入正则/转义层）。
+      ctx.fillText(v.stat0 + "→" + v.stat1.slice(v.stat1.indexOf(" ") + 1) + " · 战力+" + v.powerDelta, pcardX + 8, prowY + 42);
     }
     ctx.fillStyle = plocked ? "#777777" : (v.canBuy ? "#3d6844" : "#4a4028");
     ctx.font = "bold 13px " + FONT_STACK;
