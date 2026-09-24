@@ -29286,7 +29286,14 @@ function drawPausePanel(ctx, m) {
       ctx.font = "bold " + (sec.id === "weapon" ? 14 : 13) + "px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, sec.title, m.panelW - 48), px + 18, sec.y + 10);
       if (sec.empty) {
-        ctx.fillStyle = "#6a7a50";
+        // 【v1.211p】暂停页的"空态占位"（「还没点被动」「协同未成档」这类）原来是 `#6a7a50`：
+        //   12px，对苔盘整段梯度只有 **3.61–4.12:1** —— 连**最浅**那一档都过不了 4.5（`_qc/_text-contrast-audit.mjs` 把它列进"必错"）。
+        //   **同一个元素，结算页早就是对的**：那里 L32026 `var ink = "#3c4a30"`（作者自己的注释：
+        //   「【v1.189】结算小字深苔, 对比再抬约一档」），对同一梯度是 **7.35–8.40:1**。
+        //   ⇒ 这不是审美取舍，是**同一处元素在姊妹面板里落后了一代**；直接对齐结算页那个值。
+        //   ⚠ 另：它画在**分区标题的同一行**（标题 px+18、本行 px+72），承担的是"这一栏现在是什么状态"，
+        //     属于要读的信息，不该按"装饰性灰字"处理。
+        ctx.fillStyle = "#3c4a30";
         ctx.font = "bold 12px " + FONT_STACK;
         ctx.fillText(sec.empty, px + 72, sec.y + 10);
       }
@@ -30714,11 +30721,19 @@ function registerUi() {
     ctx.fillText(GAME.gearPickMode ? (GAME.gearPickHint || "开箱选装 · 选一件装备") : "升级三选一 · 点卡锁定", CONFIG.viewW / 2, lm.titleY);
     ctx.font = "bold 18px " + FONT_STACK;
     if (GAME.gearPickMode) {
-      ctx.fillStyle = "#2e8b47";
+      // 【v1.211o】成功绿 `#2e8b47` 当**正文**用，压在默认模态苔盘上 —— 这是 v1.211n 那处的同类，
+      //   本轮由 `_qc/_text-contrast-audit.mjs` 一次扫出全部剩余站点。
+      //   **为什么这次判得死**：苔盘不是单一色，`makeModal` 默认填 `c.modalPanel`（`#e8f0d4`）
+      //   但上面还叠了柔光渐变（作者 v1.167 注释里记的实测底是 `rgb(238,244,220)`，
+      //   我在 02-chapters 渲染图上量到的最深处是 `#dee6ca`）⇒ 我把**整段梯度**都算了：
+      //     `#2e8b47` 对 #dee6ca / #e8f0d4 / #eef4dc = **3.32 / 3.64 / 3.80** —— **三档全不过 4.5**，
+      //   ⇒ 失败与位置无关（不是"在某些地方刚好不行"），可以直接改。
+      //   改成同色系深两档 `#256b36`：整段梯度上 **5.03–5.75** ✓。
+      ctx.fillStyle = "#256b36";
       ctx.fillText("点卡锁定 · 再点才穿上/入包 · 点空白不关", CONFIG.viewW / 2, lm.hintY);
       drawGearLoadoutStrip(ctx, (CONFIG.viewW - (6 * ((CONFIG.gearHudIconS || 30) + 13) - 5)) / 2, py + 122, false, gearPickHotSlots(), true, true);
     } else {
-      ctx.fillStyle = "#2e8b47";
+      ctx.fillStyle = "#256b36";   // 【v1.211o】同上（同屏另一条提示，同一实测梯度结论）
       ctx.fillText("点卡锁定 · 再点才生效 · 金边可略过", CONFIG.viewW / 2, lm.hintY);
     }
   });
@@ -32475,7 +32490,7 @@ function drawUpgradePanel(ctx, m) {
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText(msg1, CONFIG.viewW / 2, py + 1100);
   if (msg2) {
-    ctx.fillStyle = "#2e8b47";
+    ctx.fillStyle = "#256b36";   // 【v1.211o】强化页 15px 正文：同色同盘，3.32–3.80 全不过 4.5 ⇒ 深两档后 5.03–5.75
     ctx.fillText(msg2, CONFIG.viewW / 2, py + 1122);
   }
 }
@@ -34162,7 +34177,10 @@ function makeHeroChip(i, x, y, w, h) {
       ctx.textAlign = "right";
       ctx.fillText("" + sheet.hp, r.x + r.w - 8, r.y + 58);
       ctx.textAlign = "left";
-      ctx.fillStyle = "#6a7a50";
+      // 【v1.211p·第二处】选角卡上的「速」字标签原来是 `#6a7a50`（3.61–4.12:1，整段梯度都不过 4.5），
+      //   而**同一张卡上别的标签**用的是 `#2c3a22`（下一行就是，9.38–11.97:1）⇒ 又是一个"同排里落单的"。
+      //   对齐同卡标签色。
+      ctx.fillStyle = "#2c3a22";
       ctx.fillText("速", r.x + 10, r.y + 74);
       drawHeroMeter(ctx, r.x + 28, r.y + 68, barW - 28, 10, sheet.spd / caps.spd, "#b7c49a");
       ctx.fillStyle = "#2c3a22";
