@@ -30719,7 +30719,13 @@ function registerUi() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(GAME.gearPickMode ? (GAME.gearPickHint || "开箱选装 · 选一件装备") : "升级三选一 · 点卡锁定", CONFIG.viewW / 2, lm.titleY);
-    ctx.font = "bold 18px " + FONT_STACK;
+    // 【v1.211q】这一屏的**两行字开头重复**：「升级三选一 · 点卡锁定」(32px 标题) 下面紧跟着
+    //   「点卡锁定 · 再点才生效 · 金边可略过」(提示) —— 同一句话的同一个短语连着出现两次，读起来是口吃。
+    //   做法走 O27 里的**②减字**，但只删**冗余**、不删信息：标题已经交代了「点卡锁定」这个手势，
+    //   提示就从那里接着讲（再点才生效 / 金边可略过）⇒ 一字信息不丢。
+    //   省下来的宽度用来**抬字号 18→20px**（1.70→1.89mm，朝 O27 那条 2.5mm 线走一步）；
+    //   两行都没走 hudFitText，所以先核过装得下：20px 下最长那条 ≈14 字 ≈ 340px < 面板 580 ✓。
+    ctx.font = "bold 20px " + FONT_STACK;
     if (GAME.gearPickMode) {
       // 【v1.211o】成功绿 `#2e8b47` 当**正文**用，压在默认模态苔盘上 —— 这是 v1.211n 那处的同类，
       //   本轮由 `_qc/_text-contrast-audit.mjs` 一次扫出全部剩余站点。
@@ -30730,11 +30736,11 @@ function registerUi() {
       //   ⇒ 失败与位置无关（不是"在某些地方刚好不行"），可以直接改。
       //   改成同色系深两档 `#256b36`：整段梯度上 **5.03–5.75** ✓。
       ctx.fillStyle = "#256b36";
-      ctx.fillText("点卡锁定 · 再点才穿上/入包 · 点空白不关", CONFIG.viewW / 2, lm.hintY);
+      ctx.fillText("再点才穿上/入包 · 点空白不关", CONFIG.viewW / 2, lm.hintY);
       drawGearLoadoutStrip(ctx, (CONFIG.viewW - (6 * ((CONFIG.gearHudIconS || 30) + 13) - 5)) / 2, py + 122, false, gearPickHotSlots(), true, true);
     } else {
       ctx.fillStyle = "#256b36";   // 【v1.211o】同上（同屏另一条提示，同一实测梯度结论）
-      ctx.fillText("点卡锁定 · 再点才生效 · 金边可略过", CONFIG.viewW / 2, lm.hintY);
+      ctx.fillText("再点才生效 · 金边可略过", CONFIG.viewW / 2, lm.hintY);
     }
   });
   uiLevelupModal.onTap = function () { onTapLevelupMask(); };
