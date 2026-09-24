@@ -11,7 +11,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.206">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.207">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -650,7 +650,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.206",                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
+  version: "1.207",                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
                                        //   前版 v1.205：killEnemy 加已死守卫（修 enemyCount 计数穿负）；
                                        //   前版 v1.204：触屏宿主文案收敛（走位/跳过/过场副标签统一走宿主开关）；
                                        //   前版 v1.203：修符文成就 dim 拼错前缀（5 条成就永不可解锁）+ 加成就接线判据；
@@ -27236,7 +27236,12 @@ var UIStack = {
       } else {
         r = c.rect;
         pad = c.hitPad || 0;
-        if (x < r.x - pad || x >= r.x + r.w + pad || y < r.y - pad || y >= r.y + r.h + pad) continue;
+        // 【v1.207】分轴命中区：`hitPadX` / `hitPadY` 可单独覆盖（缺省仍取 hitPad，行为向后兼容）。
+        //   为什么需要：一排并排钮（装备库「三合一/锻纹升品」水平只隔 8px）不能横向扩，
+        //   而它们缺的是**高度** ⇒ 只扩纵向既不抢邻居、又能达到 44 CSS px 的触控下限。PM §18.11
+        var padX = (c.hitPadX != null) ? c.hitPadX : pad;
+        var padY = (c.hitPadY != null) ? c.hitPadY : pad;
+        if (x < r.x - padX || x >= r.x + r.w + padX || y < r.y - padY || y >= r.y + r.h + padY) continue;
       }
       this.pressed = c;
       c.onTap(x, y);
@@ -30336,6 +30341,7 @@ function registerUi() {
     uiCards.push(makeCard(i, cardX0, 0, cardW0, CONFIG.uiCardH));
   }
   uiBtnReroll = makeButton("btnreroll", CONFIG.viewW / 2 - 150, 1000, CONFIG.levelupRerollW || 300, CONFIG.levelupRerollH || 68, "换一批", onTapRerollBtn);
+  uiBtnReroll.hitPadY = 7;   // 【v1.207】只扩纵向：命中高度 64→78 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiBtnReroll.visible = false;
   layoutLevelupCards();
   // 复活弹窗(步骤9): 模态先注册, 两按钮后注册(先命中);
@@ -30343,7 +30349,9 @@ function registerUi() {
   // 文案无任何广告字样(红线); 剩余次数 draw 时读 run(状态唯一来源, 禁缓存双写)。
   uiReviveModal = makeModal("revivemodal", CONFIG.revivePanelW || 540, CONFIG.revivePanelH || 660, drawRevivePanel);
   uiBtnRevive = makeButton("btnrevive", CONFIG.viewW / 2 - 160, CONFIG.reviveBtnY || 720, 320, 70, "复活继续", onTapReviveBtn);
+  uiBtnRevive.hitPadY = 6;   // 【v1.207】只扩纵向：命中高度 64→76 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiBtnGiveUp = makeButton("btngiveup", CONFIG.viewW / 2 - 160, CONFIG.reviveGiveY || 810, 320, 70, "放弃结算", onTapGiveUpBtn);
+  uiBtnGiveUp.hitPadY = 6;   // 【v1.207】只扩纵向：命中高度 64→76 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiBtnRevive.skin = "comfort";
   uiBtnGiveUp.skin = "comfort";
   uiBtnGiveUp.tone = "quiet";
@@ -30354,10 +30362,12 @@ function registerUi() {
   uiHomeChapter = makeButton("homechapter", CONFIG.homeChapterX || 528, CONFIG.homeStartY || 536, CONFIG.homeChapterW || 172, CONFIG.homeStartH || 104, "选章", onTapOpenChapters);
   uiHomeChapter.skin = "sec";
   uiHomeVault = makeButton("homevault", 20, CONFIG.homePairY || 784, CONFIG.homeVaultW || 680, CONFIG.homePairH || 60, "仓库兑换", onTapOpenVault);
+  uiHomeVault.hitPadY = 7;   // 【v1.207】只扩纵向：命中高度 64→78 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiHomeVault.skin = "pair";
   uiHomeVault.accentFill = "#243428";
   uiHomeVault.accentStroke = "#7cb86a";
   uiHomeDaily = makeButton("homedaily", CONFIG.homeDailyX || 210, CONFIG.homeDailyY || 988, CONFIG.homeDailyW || 300, CONFIG.homeDailyH || 56, "后置加菜", onTapDaily);
+  uiHomeDaily.hitPadY = 13;   // 【v1.207】只扩纵向：命中高度 64→90 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiHomeDaily.skin = "quiet";
   uiHomeDaily.accentFill = "#1a2418";
   uiHomeDaily.accentStroke = "#5a6a50";
@@ -30469,6 +30479,7 @@ function registerUi() {
     uiDailyCards.push(makeDailyCard(dci, dCardX, dPy + 136 + dci * (dCardH + 10), dCardW, dCardH));
   }
   uiDailyCancel = makeButton("dailycancel", CONFIG.viewW / 2 - 120, dPy + dPh - 88, 240, 64, "返回大厅", onTapDailyCancel);
+  uiDailyCancel.hitPadY = 9;   // 【v1.207】只扩纵向：命中高度 64→82 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiDailyCancel.skin = "sec";
   // 结算页(步骤10): RESULT_WIN/RESULT_LOSE 共用组件; 模态先注册(先画), 构筑芯后注册, 按钮最后注册(先命中)。
   // 双倍领取走 Hooks.requestCoinDouble->AdService(免费同步回调, 每局 1 次只翻金币, 无广告字样);
@@ -30478,6 +30489,7 @@ function registerUi() {
   for (var rci = 0; rci < (CONFIG.resultChipN || 24); rci++) uiResultChips.push(makeResultBuildChip(rci));
   var resultAct = resultActionLayout();
   uiBtnDouble = makeButton("btndouble", resultAct.double.x, resultAct.double.y, resultAct.double.w, resultAct.double.h, "再领一份金币", onTapDoubleBtn);
+  uiBtnDouble.hitPadY = 5;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiBtnDouble.skin = "resultfoot";
   // 结算确认回大厅(步骤8 注册, 步骤10 改结算确认语义)
   // 【R10】结算重入闸门设在 onTap 派发侧: 双击第二发在首发 goHome(HOME)后被拦, 防二次入账;
@@ -30489,6 +30501,7 @@ function registerUi() {
     if (GAME.state !== GAME.flow.RESULT_WIN && GAME.state !== GAME.flow.RESULT_LOSE) return;
     confirmResult();
   });
+  uiResultHome.hitPadY = 5;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiResultHome.skin = "resultfoot";
   uiResultHome.tone = "home";
   // 强化页(步骤10): 模态先注册, 5 个购买按钮+返回后注册(先命中); 价格/等级 draw 时读档(状态唯一来源)。
@@ -30532,6 +30545,7 @@ function registerUi() {
       vLay.btnW, vLay.btnH, "升级", makeVaultTalentTap(DATA_HALL_TALENT[vti].id)));
   }
   uiVaultClose = makeButton("vaultclose", CONFIG.viewW / 2 - 110, vLay.closeY, 220, 64, "返回", onTapCloseVault);
+  uiVaultClose.hitPadY = 9;   // 【v1.207】只扩纵向：命中高度 64→82 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   //   图鉴页(步骤11 / 【v1.45】): 全屏模态 + 跟宠/敌人/配方三页。跟宠改横行(开火/星阶可读),
   // 敌人分组行, 配方 10 组分叉卡+成档卡+战斗物进化条; 返回钮仍在面板底, 不盖内容。
   uiBeastModal = makeModal("beastmodal", 660, 1280, drawBeastPanel);
@@ -30630,6 +30644,7 @@ function registerUi() {
       evoW, evoH));
   }
   uiBeastClose = makeButton("beastclose", CONFIG.viewW / 2 - 110, bPy + 1210, 220, 64, "返回", onTapCloseBeast);
+  uiBeastClose.hitPadY = 9;   // 【v1.207】只扩纵向：命中高度 64→82 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   codexStampBases();      // 【v1.167b】面板高自适应后 py 会变 → 先记下各控件的基准 y
   // 设置页(步骤12): 静音/导出/导入/返回; 存储不可用警示 draw 时读 Platform.Storage.available()(状态唯一来源)。
   uiSettingsModal = makeModal("settingsmodal", 660, 1060, drawSettingsPanel);
@@ -30639,10 +30654,15 @@ function registerUi() {
   uiSetNodeSfx = makeButton("setnodesfx", setAudio.sfx.x, setAudio.sfx.y, setAudio.sfx.w, setAudio.sfx.h, "音效 开", onTapSetNodeSfx);
   uiSetMute = makeButton("setmute", setAudio.mute.x, setAudio.mute.y, setAudio.mute.w, setAudio.mute.h, "静音 关", onTapSetMute);
   uiSetTheme = makeButton("settheme", CONFIG.viewW / 2 - 160, sPy + 268, 320, 64, "主题: 灯笼港湾", onTapCycleTheme);
+  uiSetTheme.hitPadY = 5;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiSetBgm = makeButton("setbgm", CONFIG.viewW / 2 - 160, sPy + 344, 320, 64, "曲目: 跟主题", onTapCycleBgm);
+  uiSetBgm.hitPadY = 5;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiSetExport = makeButton("setexport", CONFIG.viewW / 2 - 160, sPy + 420, 320, 64, "导出存档", onTapSetExport);
+  uiSetExport.hitPadY = 5;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiSetImport = makeButton("setimport", CONFIG.viewW / 2 - 160, sPy + 496, 320, 64, "导入存档", onTapSetImport);
+  uiSetImport.hitPadY = 5;   // 【v1.207】只扩纵向：命中高度 64→74 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiSetClose = makeButton("setclose", CONFIG.viewW / 2 - 110, sPy + 970, 220, 64, "返回", onTapCloseSettings);
+  uiSetClose.hitPadY = 9;   // 【v1.207】只扩纵向：命中高度 64→82 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiGearModal = makeModal("gearmodal", 660, 1180, drawGearPanel);
   var gPy = (CONFIG.viewH - 1180) / 2;
   uiGearSlots = [];
@@ -30654,8 +30674,11 @@ function registerUi() {
     uiGearBag.push(makeGearBagCell(gb, 40 + (gb % 4) * 160, gPy + 400 + ((gb / 4) | 0) * 150, 148, 136));
   }
   uiGearMerge = makeButton("gearmerge", 236, gPy + 860, 188, 64, "三合一", onTapGearMerge);
+  uiGearMerge.hitPadY = 9;   // 【v1.207】只扩纵向：命中高度 64→82 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiGearForge = makeButton("gearforge", 32, gPy + 860, 196, 64, "锻纹升品", onTapGearForge);
+  uiGearForge.hitPadY = 9;   // 【v1.207】只扩纵向：命中高度 64→82 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   uiGearClose = makeButton("gearclose", 440, gPy + 860, 188, 64, "返回", onTapCloseGear);
+  uiGearClose.hitPadY = 9;   // 【v1.207】只扩纵向：命中高度 64→82 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
   // 大厅怎么玩(可跳过): 模态先注册, 跳过/知道了/重看后注册(先命中)
   uiGuideModal = makeModal("guidemodal", 660, 1060, drawGuidePanel);
   var gPyGuide = (CONFIG.viewH - 1060) / 2;
