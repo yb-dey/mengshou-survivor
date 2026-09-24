@@ -29964,7 +29964,15 @@ function drawChapterRoomStrip(ctx, x, y, w, h, ch) {
   ctx.textBaseline = "middle";
   ctx.fillText("房回礼 · " + roomTierTitle(0), x + 4, y + 9);
   ctx.textAlign = "right";
-  ctx.fillStyle = "#c9c0a8";
+  // 【v1.211l】这一行原来用 `#c9c0a8`，而它是**给深色皮肤用的「变暗」色**（另 7 处都配着
+  //   `dim > 0` / `skDim` 或与 `#fff7e0`/`#c4c8b8` 这类**浅字**同屏 ⇒ 都是浅字压深底）。
+  //   这里却是压在**苔纸**上 ⇒ 用项目自己的口径量：`_qc/_contrast.mjs` = **1.54:1**
+  //   （#c9c0a8 on #e8f0d4；换米纸/淡苔也都只有 1.56–1.58）—— 连 3:1 的大字线都不到，
+  //   而同一行的「房回礼 · …」是 5.03:1 ⇒ **一行之内一个读得清、一个几乎看不见**。
+  //   判据不是我立的：v1.210n 就是按「16px 小字要 4.5:1」把 2.25:1 判成缺陷修掉的 ——
+  //   1.54 比那次更差。改调色板里现成的「纸上副文字」色 `CONFIG.colors.cardDesc = #6a6a5a`
+  //   （实测 4.66:1，且在更亮的纸上只会更高）。**其余 7 处 `#c9c0a8` 一律不动**（它们是对的）。
+  ctx.fillStyle = "#6a6a5a";
   ctx.font = "bold 12px " + FONT_STACK;
   ctx.fillText(later, x + w - 4, y + 9);
   drawRoomGiftTrio(ctx, x, y + 20, w, h - 20, view);
