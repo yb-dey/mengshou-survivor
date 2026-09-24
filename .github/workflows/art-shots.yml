@@ -1,0 +1,48 @@
+name: art-shots
+
+# 18 屏巡检截图**自动落回仓库**（不是 artifact —— artifact 下载要鉴权，本机没有 token）。
+# 背景（台账 O1/O3）：用户"看不到我改了哪里"的根因之一是**取像形态不一致**；
+#   而 CI 的 screen-sweep 产物只在 artifact 里，我读不到 ⇒ 只能凭空猜画面。
+# 本流水线复用仓库里已测过的 `ci/screen-sweep.mjs`（在 game/ 上起 http 服务、按 18 个界面钩子逐屏截图），
+#   再把 `ci/out/*.png` 提交回仓库 ⇒ 我用 pull/raw 就能拿到与 CI 同源的实机画面。
+on:
+  push:
+    paths:
+      - '_shots/**'
+      - '.github/workflows/art-shots.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 安装 playwright（chromium）
+        run: |
+          npm init -y >/dev/null 2>&1 || true
+          npm i --no-audit --no-fund playwright@1.49.1
+          npx playwright install --with-deps chromium
+
+      - name: 跑 18 屏巡检（输出 ci/out）
+        run: node ci/screen-sweep.mjs
+
+      - name: 截图与清单提交回仓库
+        if: always()
+        run: |
+          git config user.name  "shots-bot"
+          git config user.email "shots-bot@users.noreply.github.com"
+          mkdir -p _shots/v1210
+          cp -f ci/out/*.png _shots/v1210/ 2>/dev/null || true
+          node -e "const fs=require('fs');const d='ci/out';const f=fs.existsSync(d)?fs.readdirSync(d).filter(x=>x.endsWith('.png')):[];fs.writeFileSync('_shots/index.json',JSON.stringify({at:new Date().toISOString(),count:f.length,files:f},null,2));console.log('shots',f.length);"
+          git add -A _shots ci/out
+          git diff --cached --quiet && echo "无截图变化" || git commit -m "art-shots: 18 屏巡检截图（$(date -u '+%Y-%m-%d %H:%M') UTC）"
+          git push
