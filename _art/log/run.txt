@@ -3,19 +3,23 @@
 [transformers] `CLIPImageProcessor` requires torchvision (not installed); falling back to `CLIPImageProcessorPil` for backward compatibility. Install torchvision to use the default backend, or import `CLIPImageProcessorPil` directly to silence this warning.
 [transformers] `SiglipImageProcessor` requires torchvision (not installed); falling back to `SiglipImageProcessorPil` for backward compatibility. Install torchvision to use the default backend, or import `SiglipImageProcessorPil` directly to silence this warning.
 [transformers] `Siglip2ImageProcessorFast` is deprecated. The `Fast` suffix for image processors has been removed; use `Siglip2ImageProcessor` instead.
-任务数 1 · 模型 stabilityai/sd-turbo · steps 4 · size 512
+任务数 3 · 模型 stabilityai/sd-turbo · steps 4 · size 512
 /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.
   warnings.warn(
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.
   deprecate("torch_dtype", "1.0.0", _TORCH_DTYPE_DEPRECATION_MESSAGE)
-Fetching 12 files:   0%|          | 0/12 [00:00<?, ?it/s]Fetching 12 files:  17%|█▋        | 2/12 [00:00<00:03,  2.68it/s]Fetching 12 files:  58%|█████▊    | 7/12 [00:00<00:00, 10.16it/s]Fetching 12 files:  83%|████████▎ | 10/12 [00:11<00:02,  1.47s/it]Fetching 12 files:  92%|█████████▏| 11/12 [00:18<00:02,  2.37s/it]Fetching 12 files:  92%|█████████▏| 11/12 [00:29<00:02,  2.37s/it]Fetching 12 files: 100%|██████████| 12/12 [00:35<00:00,  5.17s/it]Fetching 12 files: 100%|██████████| 12/12 [00:35<00:00,  2.99s/it]
-Loading pipeline components...:   0%|          | 0/5 [00:00<?, ?it/s]Loading pipeline components...:  60%|██████    | 3/5 [00:00<00:00, 20.76it/s]
-Loading weights:   0%|          | 0/372 [00:00<?, ?it/s][ALoading weights: 100%|██████████| 372/372 [00:00<00:00, 4091.34it/s]
-Loading pipeline components...: 100%|██████████| 5/5 [00:00<00:00, 13.98it/s]
-模型加载完成 37.7s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:03<00:03,  3.13s/it]100%|██████████| 2/2 [00:06<00:00,  3.13s/it]100%|██████████| 2/2 [00:06<00:00,  3.13s/it]
-✓ hero_sharp → hero_sharp.png  18.3s
+Fetching 12 files:   0%|          | 0/12 [00:00<?, ?it/s]Fetching 12 files:  17%|█▋        | 2/12 [00:00<00:00, 10.11it/s]Fetching 12 files:  33%|███▎      | 4/12 [00:00<00:01,  7.95it/s]Fetching 12 files:  75%|███████▌  | 9/12 [00:00<00:00, 15.10it/s]Fetching 12 files:  92%|█████████▏| 11/12 [00:16<00:02,  2.28s/it]Fetching 12 files: 100%|██████████| 12/12 [00:31<00:00,  4.29s/it]Fetching 12 files: 100%|██████████| 12/12 [00:31<00:00,  2.59s/it]
+Loading pipeline components...:   0%|          | 0/5 [00:00<?, ?it/s]Loading pipeline components...:  40%|████      | 2/5 [00:00<00:00, 18.67it/s]
+Loading weights:   0%|          | 0/372 [00:00<?, ?it/s][ALoading weights: 100%|██████████| 372/372 [00:00<00:00, 5430.41it/s]
+Loading pipeline components...: 100%|██████████| 5/5 [00:00<00:00, 16.86it/s]Loading pipeline components...: 100%|██████████| 5/5 [00:00<00:00, 17.05it/s]
+模型加载完成 32.7s
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:04<00:00,  4.46s/it]100%|██████████| 1/1 [00:04<00:00,  4.46s/it]
+✓ hero_s030 → hero_s030.png  21.7s
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:04<00:00,  4.32s/it]100%|██████████| 1/1 [00:04<00:00,  4.32s/it]
+✓ hero_s040 → hero_s040.png  21.5s
+  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:04<00:04,  4.44s/it]100%|██████████| 2/2 [00:08<00:00,  4.43s/it]100%|██████████| 2/2 [00:08<00:00,  4.43s/it]
+✓ hero_s050 → hero_s050.png  26.1s
 
 === exit=0 ===
 ---- 环境自述 ----
