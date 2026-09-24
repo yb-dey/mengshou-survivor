@@ -6,7 +6,7 @@ v22.23.2
 
 === npm i playwright ===
 
-added 2 packages in 2s
+added 2 packages in 1s
 === playwright install --with-deps chromium ===
 FFmpeg (playwright ffmpeg v1011) downloaded to /home/runner/.cache/ms-playwright/ffmpeg-1011
 Downloading Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) from https://cdn.playwright.dev/builds/cft/153.0.8010.12/linux64/chrome-headless-shell-linux64.zip
@@ -26,11 +26,12 @@ Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) d
 Version 1.63.0
 
 === node ci/screen-sweep.mjs ===
-::notice::11a-entrance 采样 过场 t=1.587/1.72 kind=chapter first=true 轮询=0
-::warning::11-battle 未达密度阈值 10：等满 60s 未达阈值（峰值 8）（这张图实测 8 只，峰值 8）—— 评审前先看这个数
-::notice::11-battle 采样密度 这张图同屏怪=8 峰值=8 目标=10 轮询=134 结束=等满 60s 未达阈值（峰值 8）
+::notice::冷启动 DCL 1394ms · load 1533ms · navigation 1533ms · 到非 BOOT 75ms
+::notice::11a-entrance 采样 过场 t=1.687/1.72 kind=chapter first=true 轮询=0
+::warning::11-battle 未达密度阈值 10：等满 60s 未达阈值（峰值 9）（这张图实测 9 只，峰值 9）—— 评审前先看这个数
+::notice::11-battle 采样密度 这张图同屏怪=9 峰值=9 目标=10 轮询=139 结束=等满 60s 未达阈值（峰值 9）
 ::notice::11b-revive 采样 state=REVIVE_MODAL 定格窗剩余 cine=0 面板可见=true 轮询=2 死因行=调试击倒（die() 未传 src ⇒ 模拟触发，这一行不代表真实战况）
-::notice::14-result-win 采样 state=RESULT_WIN chips=7 overlap=false
+::notice::14-result-win 采样 state=RESULT_WIN chips=6 overlap=false
 ::notice::15-result-lose 采样 state=RESULT_LOSE chips=2 overlap=false
 # 全界面巡检
 
@@ -40,26 +41,26 @@ Version 1.63.0
 | 截图 | 钩子 | 画布 | 独特色数 | 主色占比 | 与大厅Δ | 实测状态 | 备注 |
 |---|---|---|---|---|---|---|---|
 | 01-home | hall | 720×1280 | 809 | 9.7% | 0 | HOME |  |
-| 02-chapters | openChapters | 720×1280 | 746 | 21.1% | 77.56 | HOME |  |
+| 02-chapters | openChapters | 720×1280 | 746 | 21.1% | 77.55 | HOME |  |
 | 03-gear | openGear | 720×1280 | 738 | 22.7% | 67.1 | ARMORY |  |
 | 04-upgrade | openUp | 720×1280 | 615 | 24.7% | 62.63 | HOME |  |
-| 05-vault | openVault | 720×1280 | 611 | 20.4% | 55.81 | HOME |  |
+| 05-vault | openVault | 720×1280 | 611 | 20.4% | 55.8 | HOME |  |
 | 05b-vault-talent | vaultTapTalent | 720×1280 | 785 | 18.8% | 56.29 | HOME |  |
 | 06-beast | openBeast | 720×1280 | 648 | 37.4% | 55.85 | BEAST |  |
 | 07-codex-enemy | codexTab | 720×1280 | 637 | 35.2% | 56.01 | BEAST |  |
-| 07b-codex-fork | codexTab | 720×1280 | 1113 | 40.5% | 61.86 | BEAST |  |
+| 07b-codex-fork | codexTab | 720×1280 | 1113 | 40.5% | 61.85 | BEAST |  |
 | 07c-codex-item | codexTab | 720×1280 | 597 | 25.8% | 72.11 | BEAST |  |
-| 08-settings | openSettings | 720×1280 | 542 | 36.6% | 74.64 | SETTINGS |  |
+| 08-settings | openSettings | 720×1280 | 542 | 36.6% | 74.65 | SETTINGS |  |
 | 09-about | about | 720×1280 | 527 | 41.8% | 80.18 | ABOUT |  |
-| 10-daily | dailyPick | 720×1280 | 544 | 20.2% | 77.19 | HOME |  |
+| 10-daily | dailyPick | 720×1280 | 544 | 20.2% | 77.2 | HOME |  |
 | 10b-guide | openGuide | 720×1280 | 600 | 63.2% | 71.07 | GUIDE |  |
-| 11a-entrance | 轮询 enterCine().live | 720×1280 | 679 | 36.2% | 78.59259501255596 | chapter | 过场 t=**1.587**/1.72 · kind=chapter · 首见=是 |
-| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 773 | 21% | 46.59 | PLAYING | ⚠ 同屏怪 **8** 只（峰值 8，目标 10） |
-| 11b-revive | die() + 轮询「面板真的可见」 | 720×1280 | 473 | 29% | 63.0576088553293 | REVIVE_MODAL | 死因行=「调试击倒(模拟)」（**模拟触发**，不代表真实战况） |
-| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 591 | 41.6% | 62.46 | LEVELUP_MODAL |  |
-| 13-pause | pause(true) 轮询成功 | 720×1280 | 764 | 37.7% | 64.27 | PAUSED_MENU |  |
-| 14-result-win | win() | 720×1280 | 676 | 32.8% | 59.73268361816411 | RESULT_WIN | 结算卡带 **7** 条 · 压住=否 |
-| 15-result-lose | lose() | 720×1280 | 620 | 34.1% | 62.1775609776089 | RESULT_LOSE | 结算卡带 **2** 条 · 压住=否 |
+| 11a-entrance | 轮询 enterCine().live | 720×1280 | 680 | 35.9% | 83.54481199776788 | chapter | 过场 t=**1.687**/1.72 · kind=chapter · 首见=是 |
+| 11-battle | mouse+轮询怪数（取本次最密帧） | 720×1280 | 660 | 26.1% | 44.13 | PLAYING | ⚠ 同屏怪 **9** 只（峰值 9，目标 10） |
+| 11b-revive | die() + 轮询「面板真的可见」 | 720×1280 | 451 | 29% | 62.558425643485016 | REVIVE_MODAL | 死因行=「调试击倒(模拟)」（**模拟触发**，不代表真实战况） |
+| 12-levelup | 轮询 cards.length>0 (3 张) | 720×1280 | 603 | 41.4% | 62.39 | LEVELUP_MODAL |  |
+| 13-pause | pause(true) 轮询成功 | 720×1280 | 797 | 35.3% | 65.32 | PAUSED_MENU |  |
+| 14-result-win | win() | 720×1280 | 669 | 32.9% | 60.26446797398162 | RESULT_WIN | 结算卡带 **6** 条 · 压住=否 |
+| 15-result-lose | lose() | 720×1280 | 620 | 34.1% | 62.17728718261727 | RESULT_LOSE | 结算卡带 **2** 条 · 压住=否 |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**⚠ 它不等于"画面空"**（第 133 轮实测更正）：
 > 一条平底面板（如帮助页）主色占比可以到 **63%**，但用 `_qc/_imgstat.mjs --inkrows 32` 量它的
@@ -91,29 +92,29 @@ Version 1.63.0
 
 === exit=0 ===
 === ci/out ===
-total 7312
-drwxr-xr-x 2 runner runner   4096 Sep 24 21:19 .
-drwxr-xr-x 7 runner runner   4096 Sep 24 21:19 ..
--rw-r--r-- 1 runner runner 484010 Sep 24 21:19 01-home.png
--rw-r--r-- 1 runner runner 309457 Sep 24 21:19 02-chapters.png
--rw-r--r-- 1 runner runner 285388 Sep 24 21:19 03-gear.png
--rw-r--r-- 1 runner runner 403606 Sep 24 21:19 04-upgrade.png
--rw-r--r-- 1 runner runner 364606 Sep 24 21:19 05-vault.png
--rw-r--r-- 1 runner runner 339488 Sep 24 21:19 05b-vault-talent.png
--rw-r--r-- 1 runner runner 493196 Sep 24 21:19 06-beast.png
--rw-r--r-- 1 runner runner 415472 Sep 24 21:20 07-codex-enemy.png
--rw-r--r-- 1 runner runner 565120 Sep 24 21:20 07b-codex-fork.png
--rw-r--r-- 1 runner runner 396751 Sep 24 21:20 07c-codex-item.png
--rw-r--r-- 1 runner runner 228677 Sep 24 21:20 08-settings.png
--rw-r--r-- 1 runner runner 252925 Sep 24 21:20 09-about.png
--rw-r--r-- 1 runner runner 265392 Sep 24 21:20 10-daily.png
--rw-r--r-- 1 runner runner 215210 Sep 24 21:20 10b-guide.png
--rw-r--r-- 1 runner runner 513326 Sep 24 21:20 11-battle.png
--rw-r--r-- 1 runner runner 180849 Sep 24 21:20 11a-entrance.png
--rw-r--r-- 1 runner runner 326809 Sep 24 21:21 11b-revive.png
--rw-r--r-- 1 runner runner 355128 Sep 24 21:21 12-levelup.png
--rw-r--r-- 1 runner runner 353815 Sep 24 21:21 13-pause.png
--rw-r--r-- 1 runner runner 362062 Sep 24 21:21 14-result-win.png
--rw-r--r-- 1 runner runner 313620 Sep 24 21:21 15-result-lose.png
--rw-r--r-- 1 runner runner   7928 Sep 24 21:21 screens.json
--rw-r--r-- 1 runner runner   4506 Sep 24 21:21 screens.md
+total 7336
+drwxr-xr-x 2 runner runner   4096 Sep 24 21:30 .
+drwxr-xr-x 7 runner runner   4096 Sep 24 21:30 ..
+-rw-r--r-- 1 runner runner 483798 Sep 24 21:31 01-home.png
+-rw-r--r-- 1 runner runner 309536 Sep 24 21:31 02-chapters.png
+-rw-r--r-- 1 runner runner 285405 Sep 24 21:31 03-gear.png
+-rw-r--r-- 1 runner runner 403675 Sep 24 21:31 04-upgrade.png
+-rw-r--r-- 1 runner runner 364529 Sep 24 21:31 05-vault.png
+-rw-r--r-- 1 runner runner 339336 Sep 24 21:31 05b-vault-talent.png
+-rw-r--r-- 1 runner runner 493325 Sep 24 21:31 06-beast.png
+-rw-r--r-- 1 runner runner 415468 Sep 24 21:31 07-codex-enemy.png
+-rw-r--r-- 1 runner runner 565105 Sep 24 21:31 07b-codex-fork.png
+-rw-r--r-- 1 runner runner 396705 Sep 24 21:31 07c-codex-item.png
+-rw-r--r-- 1 runner runner 228430 Sep 24 21:31 08-settings.png
+-rw-r--r-- 1 runner runner 252789 Sep 24 21:31 09-about.png
+-rw-r--r-- 1 runner runner 265457 Sep 24 21:31 10-daily.png
+-rw-r--r-- 1 runner runner 215210 Sep 24 21:31 10b-guide.png
+-rw-r--r-- 1 runner runner 546159 Sep 24 21:32 11-battle.png
+-rw-r--r-- 1 runner runner 181270 Sep 24 21:31 11a-entrance.png
+-rw-r--r-- 1 runner runner 286193 Sep 24 21:33 11b-revive.png
+-rw-r--r-- 1 runner runner 361987 Sep 24 21:33 12-levelup.png
+-rw-r--r-- 1 runner runner 377739 Sep 24 21:33 13-pause.png
+-rw-r--r-- 1 runner runner 364829 Sep 24 21:33 14-result-win.png
+-rw-r--r-- 1 runner runner 313620 Sep 24 21:33 15-result-lose.png
+-rw-r--r-- 1 runner runner   7931 Sep 24 21:33 screens.json
+-rw-r--r-- 1 runner runner   4509 Sep 24 21:33 screens.md
