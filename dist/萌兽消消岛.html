@@ -18797,6 +18797,63 @@ function buildSprites() {
     chAi.half = ch.half;
     SPRITES.chest = chAi;
   }
+  // 【v1.210t】装备袋程序化剪影: 此前没有 loot_pouch 时**借的是宝箱剪影**(L26172 `SPRITES.loot_pouch || SPRITES.chest`),
+  //   与 v1.12 的裁决「装备袋 … 不引用弹壳箱皮」**直接打架** —— 战场上捡到装备袋, 画出来是一只木箱。
+  //   宝箱 PNG 本就不进仓库(v1.178 裁决"程序化剪影已够"), 所以袋子的兜底只能自己画:
+  //   麻布束口袋 + 束口绳 + 3px 深墨边(与图集同一支墨线 #2e1c0e)。
+  //   尺寸/半尺寸**沿用宝箱那一套**(64×64, CONFIG.chestDrawHalf) ⇒ 场上占位与原来逐像素同尺寸,
+  //   只有形状变了 —— 不触碰 R7G 的数值/密度冻结。
+  var lp = document.createElement("canvas");
+  lp.width = 64; lp.height = 64;
+  var lpc = lp.getContext("2d");
+  lpc.lineJoin = "round";
+  // 袋身: 上窄下鼓的一只麻袋(轮廓走贝塞尔, 刻意不用矩形, 免得又读成箱子)
+  lpc.beginPath();
+  lpc.moveTo(24, 26);
+  lpc.bezierCurveTo(12, 32, 10, 43, 18, 50);
+  lpc.bezierCurveTo(24, 54, 40, 54, 46, 50);
+  lpc.bezierCurveTo(54, 43, 52, 32, 40, 26);
+  lpc.closePath();
+  lpc.fillStyle = "#b98c4e";
+  lpc.fill();
+  // 受光面: 左上一条窄亮面(与木箱同款"平涂 + 一层亮面", 不引入渐变)
+  lpc.beginPath();
+  lpc.moveTo(25, 28);
+  lpc.bezierCurveTo(17, 33, 16, 42, 22, 47);
+  lpc.bezierCurveTo(20, 40, 21, 33, 28, 29);
+  lpc.closePath();
+  lpc.fillStyle = "#d8b273";
+  lpc.fill();
+  // 束口: 脖子上一圈深色绳带 + 中间打下的结
+  //   【v1.210t·第二稿回退】先试过"蝴蝶结 + 绿叶片徽记 + 底暗面"(想把信息量对齐宝箱的"金锁+绿菱形"),
+  //   8× 直看发现: 两片绳环读成**两只眼睛**、绿叶片读成**嘴** ⇒ 整只袋子变成一张脸; 而它实战只画 16–32px,
+  //   32px 下这些细节糊成一团、反倒不如"一个亮面 + 一圈束口"干净。**细节是给大图看的, 小图只认剪影。**
+  //   ⇒ 回退到第一稿的极简形态(照着 v1.180「珠」字那条裁决的思路: 小尺寸元素不与主体抢读)。
+  lpc.fillStyle = "#6f4a22";
+  lpc.fillRect(22, 22, 20, 7);
+  lpc.fillRect(30, 27, 4, 9);
+  // 墨边: 只描外轮廓 + 绳带, 与图集 3px 深墨一致
+  lpc.strokeStyle = "#2e1c0e";
+  lpc.lineWidth = 3;
+  lpc.beginPath();
+  lpc.moveTo(24, 26);
+  lpc.bezierCurveTo(12, 32, 10, 43, 18, 50);
+  lpc.bezierCurveTo(24, 54, 40, 54, 46, 50);
+  lpc.bezierCurveTo(54, 43, 52, 32, 40, 26);
+  lpc.closePath();
+  lpc.stroke();
+  lpc.strokeRect(22.5, 22.5, 19, 6);
+  lp.half = CONFIG.chestDrawHalf;
+  SPRITES.loot_pouch = lp;
+  // 【v1.163 同款】AI 贴图若已就绪则覆盖程序化版本 —— 直接复用画布尺寸与 half(尺寸语义零改动)
+  if (AI_ART_READY["loot_pouch"]) {
+    var lpAi = document.createElement("canvas");
+    lpAi.width = lp.width;
+    lpAi.height = lp.height;
+    lpAi.getContext("2d").drawImage(AI_ART_READY["loot_pouch"], 0, 0, lp.width, lp.height);
+    lpAi.half = lp.half;
+    SPRITES.loot_pouch = lpAi;
+  }
   bakeCuteItemIcons();
 
   // R8 方向箭头贴图: 指向 +x 的三角箭头, 精英钢灰 / BOSS 暗红加粗 3px 描边, 绘制期 setTransform 旋转【R8】
