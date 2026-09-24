@@ -76,7 +76,15 @@ const info = await page.evaluate(() => {
       stats[k] = { w: cv.width, h: cv.height, half: cv.half ?? null,
                    fillPct: +(opaque / total * 100).toFixed(1), colors: pal.size,
                    lum: +(lumSum / Math.max(1, opaque)).toFixed(1),
-                   sat: +(satSum / Math.max(1, opaque)).toFixed(3) };
+                   sat: +(satSum / Math.max(1, opaque)).toFixed(3),
+                   // 【第 132 轮】分辨率充足度：贴图**画布像素** ÷ 它**显示的逻辑像素**（= 2*half）。
+                   //   ratio < 1 ⇒ 连 dpr=1 都在放大 ⇒ 真机上一定糊，这是**与设备无关的硬底线**。
+                   //   ratio = 1 ⇒ 逻辑 1:1；dprCap=2 时后台缓冲是 1440/720 = 2× ⇒ 还想更清就得 ≥2。
+                   //   ⚠ 为什么不设成"必须 ≥ dprCap"：正确目标**随设备变**——`aiArtPhysSize()`
+                   //     算的是 `逻辑 × dpr × cssW/viewW`（小屏走 CSS 下采样，多出的像素纯属浪费），
+                   //     所以 AI 贴图在手机上只要 ~1.08× 就够。用一个写死的 2 去卡它 = **判据拍脑袋**（P8）。
+                   ratio: (typeof cv.half === "number" && cv.half > 0)
+                     ? +(cv.width / (cv.half * 2)).toFixed(3) : null };
     } catch (e) { stats[k] = { err: String(e).slice(0, 60) }; }
   }
   const D = window.MENGSHOU_DEBUG || {};
@@ -235,6 +243,27 @@ await page.screenshot({ path: path.join(OUT, 'battle.png') });
 const report = { info, enemySample: enemyIds, famReport, ranAt: new Date().toISOString() };
 fs.writeFileSync(path.join(OUT, 'art-audit.json'), JSON.stringify(report, null, 2));
 
+// 【第 132 轮】分辨率充足度：**这是此前只收集、从不判定的一栏**。
+//   为什么值得判：贴图糊不糊取决于"画布像素 ÷ 显示的逻辑像素"，而它**没有任何门禁看着**；
+//   我这一轮本来怀疑"真机上贴图被放大 ⇒ 糊 ⇒ 用户说美术不行"，读源码后**否定**了这个怀疑
+//   （程序化路径 `cv.width = size * scale`（scale=2）= 2× 逻辑；AI 路径 `aiArtPhysSize()`
+//    显式算 `逻辑 × dpr × cssW/viewW`，两级缩放都计入了）。⇒ 结论是"本来就是对的"，
+//   但**对的这件事此前只写在注释里、没有判据** ⇒ 把它变成每轮自动报的读数。
+//   ⚠ 判据只取**与设备无关的硬底线** `ratio ≥ 1`（连 dpr=1 都不放大）；目标是设备相关的，不写死（P8）。
+const ratioRows = Object.entries(info.stats)
+  .filter(([, v]) => typeof v.ratio === 'number')
+  .sort((a, b) => a[1].ratio - b[1].ratio);
+const under = ratioRows.filter(([, v]) => v.ratio < 1);
+const minR = ratioRows.length ? ratioRows[0][1].ratio : null;
+if (under.length) {
+  console.log('::warning::贴图分辨率充足度：**' + under.length + '/' + ratioRows.length +
+    ' 张画布小于显示尺寸**（ratio<1，连 dpr=1 都在放大）→ 真机必糊。最差：' +
+    under.slice(0, 5).map(([k, v]) => k + '=' + v.ratio).join(', '));
+} else {
+  console.log('::notice::贴图分辨率充足度：' + ratioRows.length + ' 张全部 ratio ≥ 1 ✓（最小 ' + minR +
+    '；程序化路径固定 2×，AI 路径按 逻辑×dpr×cssW/viewW 自适应）');
+}
+
 const md = [
   '# 美术审计（基于实际绘制的 SPRITES）',
   '',
@@ -267,9 +296,17 @@ const md = [
   '',
   '## 逐项：尺寸 / half / 非透明占比 / 颜色数',
   '',
-  '| id | 尺寸 | half | 非透明% | 颜色数 |',
-  '|---|---|---|---|---|',
-  ...Object.entries(info.stats).map(([k, v]) => '| ' + k + ' | ' + (v.w || '-') + '×' + (v.h || '-') + ' | ' + (v.half ?? '-') + ' | ' + (v.fillPct ?? v.err ?? '-') + ' | ' + (v.colors ?? '-') + ' |'),
+  // 【第 132 轮】加 `分辨率比` 一列 = 画布像素 ÷ 显示的逻辑像素（=2*half）。
+  //   <1 标 ⚠（连 dpr=1 都在放大）；≥1 正常；≥2 表示连 dpr=2 的后台缓冲都 1:1。
+  '| id | 尺寸 | half | 分辨率比 | 非透明% | 颜色数 |',
+  '|---|---|---|---|---|---|',
+  ...Object.entries(info.stats).map(([k, v]) => '| ' + k + ' | ' + (v.w || '-') + '×' + (v.h || '-') + ' | ' + (v.half ?? '-') + ' | ' +
+    (typeof v.ratio === 'number' ? ((v.ratio < 1 ? '⚠ ' : '') + v.ratio.toFixed(2)) : '-') + ' | ' + (v.fillPct ?? v.err ?? '-') + ' | ' + (v.colors ?? '-') + ' |'),
+  '',
+  '> **分辨率比** = 贴图画布像素 ÷ 它显示的逻辑像素（= 2×half）。**dpr 封顶 2**（`CONFIG.dprCap`），',
+  '> 而 canvas 的后台缓冲 = 逻辑 × dpr ⇒ 比 <1 表示**连 dpr=1 都在放大**（真机必糊），=1 逻辑 1:1，≥2 后台缓冲 1:1。',
+  '> ⚠ 目标值**随设备变**（`aiArtPhysSize()` 算的是 `逻辑 × dpr × cssW/viewW`，小屏走 CSS 下采样），',
+  '> 所以这里只判**与设备无关的硬底线 ≥1**，不写死 2。',
   '',
 ].join('\n');
 fs.writeFileSync(path.join(OUT, 'report.md'), md);
