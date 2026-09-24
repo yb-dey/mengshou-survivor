@@ -28413,10 +28413,22 @@ function drawHomeBase(ctx) {
   ctx.fillRect(0, 1072, CONFIG.viewW, 3);
   ctx.fillStyle = "rgba(124,184,106,0.55)";
   ctx.fillRect(12, 1075, 228, 3);
-  ctx.fillStyle = "rgba(255,247,224,0.7)";
+  // 【v1.211m】这行是**合规显式标识**，却一直直接压在**随章变色的地板**上：
+  //   实测（`_crop-contrast.mjs`）：01-home（未调暗）文字 #f4efe2 对地板 #ccd2b4 = **1.36:1**；
+  //   模态屏再叠 50% 黑罩后更低到 **1.17:1** —— 两种情况都读不出来，而它是要给人看的标识。
+  //   而 MEMORY 对这类「字压**随章变化**的场景底」早有裁决：**换色无解，只能描墨边或托底**
+  //   （地板颜色逐章不同，任何一个字色都会在某些章失效）。⇒ 这里走托底：
+  //   先铺一层深墨盘（α0.62 ⇒ 浅地板上 #5a614e / 中地板上 #38402c），奶油字压上去实测
+  //   **5.62:1 / 9.44:1**（都过 AA）；且深盘与字被模态同比例调暗 ⇒ **比值不变**，模态屏同样可读。
+  //   ⚠ 盘子下沿止于 y=1070：其下 1072 起本来就是那块 208px 近不透明深板（L28409-28410）。
+  var noticeTxt = "部分内容由 AI 生成 · 适龄提示 8+";
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.textAlign = "center";
-  ctx.fillText("部分内容由 AI 生成 · 适龄提示 8+", CONFIG.viewW / 2, 1056);
+  var noticeW = Math.ceil(ctx.measureText(noticeTxt).width) + 28;
+  ctx.fillStyle = "rgba(20,28,16,0.62)";
+  fillRoundRect(ctx, (CONFIG.viewW - noticeW) / 2, 1040, noticeW, 30, 15);
+  ctx.fillStyle = "#f4efe2";
+  ctx.fillText(noticeTxt, CONFIG.viewW / 2, 1056);
   // 【合规】《健康游戏忠告》—— 跨平台**强制**项，不是可选：
   //   微信《运营规范》三·小游戏特别规范 2.6.2 / 抖音《小游戏自审标准》/ 支付宝《小游戏行业管理规范》/
   //   快手《内容规范》均逐字要求「在游戏开始前，必须在画面的显著位置全文登载《健康游戏忠告》」；
@@ -29972,7 +29984,11 @@ function drawChapterRoomStrip(ctx, x, y, w, h, ch) {
   //   判据不是我立的：v1.210n 就是按「16px 小字要 4.5:1」把 2.25:1 判成缺陷修掉的 ——
   //   1.54 比那次更差。改调色板里现成的「纸上副文字」色 `CONFIG.colors.cardDesc = #6a6a5a`
   //   （实测 4.66:1，且在更亮的纸上只会更高）。**其余 7 处 `#c9c0a8` 一律不动**（它们是对的）。
-  ctx.fillStyle = "#6a6a5a";
+  // 【v1.211m】v1.211l 把这里从 #c9c0a8（1.38:1）改成调色板的 cardDesc #6a6a5a，
+  //   但**实测**（`_crop-contrast.mjs` 复量渲染图）只有 **4.26:1** —— 因为本页真正的底色是
+  //   `#dee6ca`（比调色板上的苔纸 #e8f0d4 暗一档），我刚才是拿**假定的底色**算的，差 4.5 一点点。
+  //   ⇒ 同色相压深一档：#5f6050 在同底上 **4.97:1** ✓（够 AA，且仍是"次要文字"的灰）。
+  ctx.fillStyle = "#5f6050";
   ctx.font = "bold 12px " + FONT_STACK;
   ctx.fillText(later, x + w - 4, y + 9);
   drawRoomGiftTrio(ctx, x, y + 20, w, h - 20, view);
