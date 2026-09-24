@@ -57,19 +57,36 @@ jobs:
           tail -60 _shots/run.txt
           exit 0
 
-      - name: 截图与日志提交回仓库（无论成败）
+      - name: 7a 建目录
         if: always()
+        continue-on-error: true
+        run: mkdir -p _shots/v1210 && echo "7a ok"
+
+      - name: 7b 拷截图 + 写 index.json
+        if: always()
+        continue-on-error: true
+        run: |
+          cp -f ci/out/*.png _shots/v1210/ 2>/dev/null || true
+          node -e "const fs=require('fs');const f=fs.existsSync('ci/out')?fs.readdirSync('ci/out').filter(x=>x.endsWith('.png')):[];fs.writeFileSync('_shots/index.json',JSON.stringify({at:new Date().toISOString(),count:f.length,files:f},null,2));console.log('shots',f.length);"
+          echo "7b ok"
+
+      - name: 7c git add + commit
+        if: always()
+        continue-on-error: true
         run: |
           git config user.name  "shots-bot"
           git config user.email "shots-bot@users.noreply.github.com"
-          mkdir -p _shots/v1210
-          cp -f ci/out/*.png _shots/v1210/ 2>/dev/null || true
-          node -e "const fs=require('fs');const f=fs.existsSync('ci/out')?fs.readdirSync('ci/out').filter(x=>x.endsWith('.png')):[];fs.writeFileSync('_shots/index.json',JSON.stringify({at:new Date().toISOString(),count:f.length,files:f},null,2));console.log('shots',f.length);"
           git add -A _shots ci/out
-          git diff --cached --quiet && echo "无变化" || git commit -m "art-shots: 18 屏截图 + 运行日志（$(date -u '+%Y-%m-%d %H:%M') UTC）"
-          # 第 7 步曾因 push 被并发工作流（art-gen）顶掉而失败（诊断：步骤 1-6 成功、7 失败）
-          # ⇒ 推之前先 rebase，并最多重试 3 次。
+          git status --short | head -20
+          git diff --cached --quiet && echo "7c 无变化" || git commit -m "art-shots: 截图 + 日志（$(date -u '+%Y-%m-%d %H:%M') UTC）"
+          echo "7c ok"
+
+      - name: 7d push（rebase + 重试）
+        if: always()
+        continue-on-error: true
+        run: |
           for i in 1 2 3; do
-            git pull --rebase origin main >/dev/null 2>&1 || true
+            git pull --rebase origin main || true
             git push origin HEAD:main && break || sleep 8
           done
+          echo "7d ok"
