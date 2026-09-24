@@ -24564,6 +24564,17 @@ function paintInkTuft(c2, x, y, s, leaf) {
   // 【v1.210i 美术·墨线统一》草丛原先**只有中笔带墨**，三片叶身是纯叶色 —— 3× 放大实测与全项目
   //   「外墨统一」的语言不一致（草叶看起来像没画完）。改法：先把同样三笔按**墨色**描宽 2*ink 打底，
   //   再用叶色压在上面 ⇒ 得到 1–2px 的细墨边。**颜色 / 位置 / 尺寸一律不动**，只补一圈墨。
+  // 【v1.210j 美术·草簇体积】两处只加“落地感”与“受光”，形状/颜色/尺寸一律不动：
+  //   ① 接地影：脚下一小块椭圆压暗 —— 原先草是“飘”在地面上的（无接触影）；
+  //   ② 左上受光：叶片上缘一道极淡高光 —— 原先整簇是单色平涂，无体积。
+  //   两条都是烘焙期一次性绘制，不新增画布（画布预算门禁按创建数计）。
+  try {
+    c2.fillStyle = "rgba(24,32,18,0.20)";
+    c2.beginPath();
+    if (typeof c2.ellipse === "function") c2.ellipse(x, y + s * 0.05, s * 0.46, s * 0.13, 0, 0, CONFIG.TWO_PI);
+    else c2.arc(x, y + s * 0.05, s * 0.30, 0, CONFIG.TWO_PI);
+    c2.fill();
+  } catch (eSh) { /* 不支持 ellipse 的环境退化为无影 */ }
   var _tuftInk = Math.max(1.6, s * 0.055);
   c2.strokeStyle = "#1c1810";
   c2.lineWidth = Math.max(5.5, s * 0.24) + _tuftInk * 2;
@@ -24585,6 +24596,17 @@ function paintInkTuft(c2, x, y, s, leaf) {
   c2.moveTo(x, y);
   c2.lineTo(x + s * 0.58, y - s * 0.82);
   c2.stroke();
+  // 【v1.210j】左上受光：沿左叶上缘一道高光（alpha 0.18，够看但不跳出墨线语言）
+  try {
+    c2.strokeStyle = "rgba(255,255,255,0.18)";
+    c2.lineWidth = Math.max(1.4, s * 0.055);
+    c2.beginPath();
+    c2.moveTo(x - s * 0.10, y - s * 0.30);
+    c2.lineTo(x - s * 0.50, y - s * 0.76);
+    c2.moveTo(x + s * 0.08, y - s * 0.32);
+    c2.lineTo(x + s * 0.10, y - s * 0.78);
+    c2.stroke();
+  } catch (eHl) { /* 忽略 */ }
   c2.strokeStyle = "#1c1810";
   c2.lineWidth = Math.max(3.4, s * 0.14);
   c2.beginPath();
