@@ -47,7 +47,7 @@
         "dominantPct": 10.1
       },
       "dup": false,
-      "hash": "aeb0fded508a",
+      "hash": "a4cafe0e49e7",
       "dHome": 0,
       "sameAsHome": false,
       "state": "HOME",
@@ -79,7 +79,7 @@
         "dominantPct": 22.7
       },
       "dup": false,
-      "hash": "9285d3eaa01c",
+      "hash": "df0daabf7739",
       "dHome": 65.95,
       "sameAsHome": false,
       "state": "ARMORY",
@@ -95,7 +95,7 @@
         "dominantPct": 24.7
       },
       "dup": false,
-      "hash": "da6162e15e5a",
+      "hash": "adab1f9fc2fa",
       "dHome": 61.53,
       "sameAsHome": false,
       "state": "HOME",
@@ -127,7 +127,7 @@
         "dominantPct": 41.7
       },
       "dup": false,
-      "hash": "081f3ac95b3d",
+      "hash": "d9f4bd79ff8a",
       "dHome": 62.57,
       "sameAsHome": false,
       "state": "BEAST",
@@ -143,7 +143,7 @@
         "dominantPct": 35.2
       },
       "dup": false,
-      "hash": "ab793bc34721",
+      "hash": "9eb4dea4e051",
       "dHome": 54.92,
       "sameAsHome": false,
       "state": "BEAST",
@@ -159,7 +159,7 @@
         "dominantPct": 36.6
       },
       "dup": false,
-      "hash": "1c85a70fd2c1",
+      "hash": "826709e6b05e",
       "dHome": 74.02,
       "sameAsHome": false,
       "state": "SETTINGS",
@@ -175,7 +175,7 @@
         "dominantPct": 41.8
       },
       "dup": false,
-      "hash": "b6e3de6b1055",
+      "hash": "ad0409ba8d0e",
       "dHome": 80.04,
       "sameAsHome": false,
       "state": "ABOUT",
@@ -191,7 +191,7 @@
         "dominantPct": 20.5
       },
       "dup": false,
-      "hash": "56bb374343bd",
+      "hash": "b50ade45a5ae",
       "dHome": 76.75,
       "sameAsHome": false,
       "state": "HOME",
@@ -200,22 +200,22 @@
     {
       "name": "11-battle",
       "hook": "mouse",
-      "hash": "1299fcba4fd7",
-      "dHome": 43.85,
+      "hash": "fb5907c49b04",
+      "dHome": 43.42,
       "state": "PLAYING",
       "stateOk": true
     },
     {
       "name": "12-levelup",
       "hook": "轮询 cards.length>0 (3 张)",
-      "hash": "29d5820fa0ae",
-      "dHome": 64.15
+      "hash": "9d8df62154e4",
+      "dHome": 64.33
     },
     {
       "name": "13-pause",
       "hook": "pause(true) 轮询成功",
-      "hash": "2651f826a2db",
-      "dHome": 63.58,
+      "hash": "a23a522d0d17",
+      "dHome": 63.53,
       "state": "PAUSED_MENU",
       "stateOk": true
     }

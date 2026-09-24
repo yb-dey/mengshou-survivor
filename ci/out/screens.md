@@ -15,9 +15,9 @@
 | 08-settings | openSettings | 720×1280 | 538 | 36.6% | 74.02 | SETTINGS |  |
 | 09-about | about | 720×1280 | 524 | 41.8% | 80.04 | ABOUT |  |
 | 10-daily | dailyPick | 720×1280 | 536 | 20.5% | 76.75 | HOME |  |
-| 11-battle | mouse | - | - | - | 43.85 | PLAYING |  |
-| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 64.15 | - |  |
-| 13-pause | pause(true) 轮询成功 | - | - | - | 63.58 | PAUSED_MENU |  |
+| 11-battle | mouse | - | - | - | 43.42 | PLAYING |  |
+| 12-levelup | 轮询 cards.length>0 (3 张) | - | - | - | 64.33 | - |  |
+| 13-pause | pause(true) 轮询成功 | - | - | - | 63.53 | PAUSED_MENU |  |
 
 > 「主色占比」= 出现最多的那一种颜色占采样点的比例。**越高说明画面越空/越平**。
 
