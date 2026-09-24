@@ -113,6 +113,17 @@ const inlineArt = (script.match(/data:image\//g) || []).length
 console.log(`源：${SRC.replace(REPO, 'mengshou-survivor')}`)
 // 【第 83 轮】把源的版本号打出来 —— 上次那次选错源若有这一行，一眼就能看见。
 console.log(`源版本：${(/version:\s*"([\d.]+)"/.exec(html) || [, '?'])[1]}（仓库根 ${REPO}）`)
+// 【第 83 轮】硬闸：**dist 必须与母版同版** —— 产物落后往往不是构建的错，而是 dist 忘了重建。
+//   主包/分包里跑的就是 dist 的脚本，所以这条闸同时守住「游戏内版本」这条线。
+if (!SELFTEST) {
+  const vM = (/version:\s*"([\d.]+)"/.exec(readFileSync(join(REPO, 'game', '萌兽消消岛.html'), 'utf8')) || [, '?'])[1]
+  const vD = (/version:\s*"([\d.]+)"/.exec(html) || [, '?'])[1]
+  if (vM !== vD) {
+    console.error(`❌ dist 与母版不同版：dist=${vD} · 母版=${vM}`)
+    console.error('   ⇒ 先重建 dist：node ci/build-dist.js game/萌兽消消岛.html dist')
+    process.exit(1)
+  }
+}
 console.log(`  脚本 ${script.length} 字符；内嵌 data:image ${inlineArt} 处`)
 
 if (!SELFTEST) {
