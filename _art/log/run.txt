@@ -3,25 +3,78 @@
 [transformers] `CLIPImageProcessor` requires torchvision (not installed); falling back to `CLIPImageProcessorPil` for backward compatibility. Install torchvision to use the default backend, or import `CLIPImageProcessorPil` directly to silence this warning.
 [transformers] `SiglipImageProcessor` requires torchvision (not installed); falling back to `SiglipImageProcessorPil` for backward compatibility. Install torchvision to use the default backend, or import `SiglipImageProcessorPil` directly to silence this warning.
 [transformers] `Siglip2ImageProcessorFast` is deprecated. The `Fast` suffix for image processors has been removed; use `Siglip2ImageProcessor` instead.
-任务数 3 · 模型 stabilityai/sd-turbo · steps 4 · size 512
+任务数 3 · 模型 stabilityai/sdxl-turbo · steps 2 · size 768
 /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.
   warnings.warn(
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.
   deprecate("torch_dtype", "1.0.0", _TORCH_DTYPE_DEPRECATION_MESSAGE)
-Fetching 12 files:   0%|          | 0/12 [00:00<?, ?it/s]Fetching 12 files:  17%|█▋        | 2/12 [00:00<00:00, 10.11it/s]Fetching 12 files:  33%|███▎      | 4/12 [00:00<00:01,  7.95it/s]Fetching 12 files:  75%|███████▌  | 9/12 [00:00<00:00, 15.10it/s]Fetching 12 files:  92%|█████████▏| 11/12 [00:16<00:02,  2.28s/it]Fetching 12 files: 100%|██████████| 12/12 [00:31<00:00,  4.29s/it]Fetching 12 files: 100%|██████████| 12/12 [00:31<00:00,  2.59s/it]
-Loading pipeline components...:   0%|          | 0/5 [00:00<?, ?it/s]Loading pipeline components...:  40%|████      | 2/5 [00:00<00:00, 18.67it/s]
-Loading weights:   0%|          | 0/372 [00:00<?, ?it/s][ALoading weights: 100%|██████████| 372/372 [00:00<00:00, 5430.41it/s]
-Loading pipeline components...: 100%|██████████| 5/5 [00:00<00:00, 16.86it/s]Loading pipeline components...: 100%|██████████| 5/5 [00:00<00:00, 17.05it/s]
-模型加载完成 32.7s
-  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:04<00:00,  4.46s/it]100%|██████████| 1/1 [00:04<00:00,  4.46s/it]
-✓ hero_s030 → hero_s030.png  21.7s
-  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:04<00:00,  4.32s/it]100%|██████████| 1/1 [00:04<00:00,  4.32s/it]
-✓ hero_s040 → hero_s040.png  21.5s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:04<00:04,  4.44s/it]100%|██████████| 2/2 [00:08<00:00,  4.43s/it]100%|██████████| 2/2 [00:08<00:00,  4.43s/it]
-✓ hero_s050 → hero_s050.png  26.1s
+Fetching 18 files:   0%|          | 0/18 [00:00<?, ?it/s]Fetching 18 files:  11%|█         | 2/18 [00:00<00:01,  9.09it/s]Fetching 18 files:  17%|█▋        | 3/18 [00:00<00:02,  5.69it/s]Fetching 18 files:  44%|████▍     | 8/18 [00:00<00:00, 16.38it/s]Fetching 18 files:  61%|██████    | 11/18 [00:00<00:00, 16.58it/s]Fetching 18 files:  78%|███████▊  | 14/18 [00:00<00:00, 18.46it/s]Fetching 18 files:  89%|████████▉ | 16/18 [00:19<00:00, 18.46it/s]Fetching 18 files:  94%|█████████▍| 17/18 [00:20<00:02,  2.19s/it]Fetching 18 files: 100%|██████████| 18/18 [00:39<00:00,  4.63s/it]Fetching 18 files: 100%|██████████| 18/18 [00:39<00:00,  2.21s/it]
+Keyword arguments {'safety_checker': None, 'requires_safety_checker': False} are not expected by StableDiffusionXLImg2ImgPipeline and will be ignored.
+Loading pipeline components...:   0%|          | 0/7 [00:00<?, ?it/s]Loading pipeline components...:  14%|█▍        | 1/7 [00:00<00:01,  5.92it/s]Loading pipeline components...:  71%|███████▏  | 5/7 [00:00<00:00,  9.46it/s]
+Loading weights:   0%|          | 0/196 [00:00<?, ?it/s][ALoading weights: 100%|██████████| 196/196 [00:00<00:00, 2223.21it/s]
+Loading pipeline components...:  86%|████████▌ | 6/7 [00:00<00:00,  7.98it/s]
+Loading weights:   0%|          | 0/517 [00:00<?, ?it/s][A
+Loading weights:  96%|█████████▌| 494/517 [00:00<00:00, 4851.44it/s][ALoading weights: 100%|██████████| 517/517 [00:00<00:00, 5019.48it/s]
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00,  6.40it/s]Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00,  7.09it/s]
+模型加载完成 42.3s
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+0it [00:00, ?it/s]0it [00:00, ?it/s]
+Traceback (most recent call last):
+  File "/home/runner/work/mengshou-survivor/mengshou-survivor/_art/gen.py", line 93, in <module>
+    main()
+  File "/home/runner/work/mengshou-survivor/mengshou-survivor/_art/gen.py", line 80, in main
+    out = pipe(prompt=t["prompt"], image=img, strength=t["strength"],
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py", line 1472, in __call__
+    image = self.vae.decode(latents, return_dict=False)[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/utils/accelerate_utils.py", line 46, in wrapper
+    return method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/models/autoencoders/autoencoder_kl.py", line 235, in decode
+    decoded = self._decode(z).sample
+              ^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/models/autoencoders/autoencoder_kl.py", line 206, in _decode
+    dec = self.decoder(z)
+          ^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/models/autoencoders/vae.py", line 297, in forward
+    sample = self.mid_block(sample, latent_embeds)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/models/unets/unet_2d_blocks.py", line 745, in forward
+    hidden_states = attn(hidden_states, temb=temb)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/models/attention_processor.py", line 607, in forward
+    return self.processor(
+           ^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/models/attention_processor.py", line 2755, in __call__
+    query = query.view(batch_size, -1, attn.heads, head_dim).transpose(1, 2)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: cannot reshape tensor of 0 elements into shape [0, -1, 1, 512] because the unspecified dimension size -1 can be any value and is ambiguous
 
-=== exit=0 ===
+=== exit=1 ===
 ---- 环境自述 ----
 python 3.11.16
 torch 2.14.0+cpu
