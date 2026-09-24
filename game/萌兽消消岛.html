@@ -18413,7 +18413,14 @@ function strokeActorCanvas(src, ink, rim, offMul) {
   mask.width = w;
   mask.height = h;
   m = mask.getContext("2d");
+  // 【v1.210b 美术·质量】与 bakeOuterInk 同一处病根：硬边 mask 按**整数位移盖 8 次** ⇒
+  //   外沿保留原图 resample 后的台阶、又被位移放大成锯齿（敌人/道具/跟宠都走这条路径）。
+  //   这里给外墨 mask 加一次约 1px 羽化；**填色 / 粗细(off) / 方位一律不动**，只在边缘做抗锯齿。
+  //   ⚠ 不新增画布；stub 环境不支持 filter 时自动退化为原行为。
+  var _inkF = Math.max(0.8, Math.min(1.6, (half || 32) * 0.07 * 0.3));
+  try { m.filter = "blur(" + _inkF.toFixed(2) + "px)"; } catch (e) { /* 忽略 */ }
   m.drawImage(src, 0, 0);
+  try { m.filter = "none"; } catch (e) { /* 忽略 */ }
   m.globalCompositeOperation = "source-in";
   m.fillStyle = ink || "#1c1810";
   m.fillRect(0, 0, w, h);
@@ -18427,7 +18434,10 @@ function strokeActorCanvas(src, ink, rim, offMul) {
     shine.width = w;
     shine.height = h;
     s = shine.getContext("2d");
+    // 【v1.210b】受光边同样羽化：否则外墨平滑了、左上受光边还是锯齿，两者并排更显脏。
+    try { s.filter = "blur(" + _inkF.toFixed(2) + "px)"; } catch (e2) { /* 忽略 */ }
     s.drawImage(src, 0, 0);
+    try { s.filter = "none"; } catch (e3) { /* 忽略 */ }
     s.globalCompositeOperation = "source-in";
     s.fillStyle = rim;
     s.fillRect(0, 0, w, h);
