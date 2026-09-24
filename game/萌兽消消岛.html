@@ -34227,7 +34227,15 @@ function makeThemeChip(i, x, y, w, h) {
       ctx.font = "bold 11px " + FONT_STACK;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(sel ? "出战中" : "点选", r.x + r.w / 2 + (sel ? 3 : 0), r.y + 5 + stripH / 2);
+      // 【v1.210q 文案·改正一句会误导的话】原选中态写「出战中」——**它不决定出战地面**。
+      //   实测（同一局内直读）：选中主题 city(灯笼港湾) 后进第 1 章芽芽原，
+      //   `SPRITES.chapterMapId` = **sprout**（= 章节的地面），世界主题仍是 city。
+      //   即：这四个签改的是**大厅**的地面（表内字段就叫 `homeTrack`，注释原文「独立于章节难度」），
+      //   而战场地面跟的是**章节**。于是同一屏上出现两句互相打架的话：
+      //   右上角面板「出战地面 星星巅·星白夜巅」 vs 签上「灯笼港湾 出战中」。
+      //   ⇒ 改成中性的「使用中」：对"这张地面正在用"为真，且不再宣称自己是出战地面。
+      //   点选语义 / 热区 / 尺寸 / 未选态「点选」一律不动。
+      ctx.fillText(sel ? "使用中" : "点选", r.x + r.w / 2 + (sel ? 3 : 0), r.y + 5 + stripH / 2);
       kind = (th.ambient && th.ambient.kind) || "petal";
       drawThemeKind(ctx, kind, r.x + 16, r.y + r.h - 12, 5, sel ? th.accent : "rgba(201,162,75,0.30)");
       ctx.fillStyle = sel ? "#fff7e0" : "#b0a88e";
