@@ -1,0 +1,12 @@
+{
+  "name": "sporecap_ink",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "children storybook ink and watercolor painting, soft ink outline, gentle watercolor fills, tiny bead eyes, warm colors, cute round mushroom creature, plain background , full body, centered",
+  "negative": "",
+  "strength": 0.55,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "hero.png",
+  "seconds": 31.1
+}

@@ -1,0 +1,12 @@
+{
+  "name": "rabbit_flat",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "flat vector cartoon game sprite, thick clean dark outline, solid colors, no gradient, no glossy highlight, simple small dot eyes, cute chibi proportions, plain background , full body, centered",
+  "negative": "",
+  "strength": 0.55,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "hero.png",
+  "seconds": 31.3
+}

@@ -1,0 +1,12 @@
+{
+  "name": "sporecap_chalk",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "hand-drawn crayon storybook illustration, rough paper texture, soft waxy strokes, muted natural colors, small simple eyes, cute chubby mushroom creature, plain background , full body, centered",
+  "negative": "",
+  "strength": 0.55,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "hero.png",
+  "seconds": 31.2
+}
