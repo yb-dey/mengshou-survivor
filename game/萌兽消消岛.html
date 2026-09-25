@@ -32184,20 +32184,27 @@ function drawDeathCine(ctx) {
   px = CONFIG.viewW / 2;
   py = CONFIG.viewH * 0.40;
   ctx.globalAlpha = 0.92 * a;
-  ctx.fillStyle = "rgba(244, 239, 226, 0.94)";
+  // 【v1.211z 第十九刀：阵亡提示板由奶油换深盘 —— 与复活盘同一时刻、必须是同一套语言】
+  //   `drawDeathCine`（倒下那 0.14s+ 的提示板）与 `drawRevivePanel` 是**同一次死亡的两拍**：
+  //   先闪这块板、再弹复活盘。上一轮把复活盘改深之后，这里仍是 v1.188 的奶油填 + 旧橄榄边 ⇒
+  //   玩家会看到「奶油一闪 → 深色弹窗」的跳变。
+  //   ⚠ **不违 v1.188**：那条管的是**色相家族**（橄榄/奶油、金黄与警报红退出）⇒ 这里四个新色
+  //     `#2f3a26 / #8fae6a / #f2f6e2 / #b9c8a6` **全部取自复活盘已经验过的那一套**，一个金黄、一个警报红都没引入。
+  //   回退：把这四行改回 `rgba(244, 239, 226, 0.94)` / `#4e6240` / `#2e3c1c` / `#5c6848`。
+  ctx.fillStyle = "#2f3a26";
   fillRoundRect(ctx, px - 150, py - 52, 300, 112, 16);
-  ctx.strokeStyle = "#4e6240";
+  ctx.strokeStyle = "#8fae6a";
   ctx.lineWidth = 2;
   strokeRoundRect(ctx, px - 150, py - 52, 300, 112, 16);
   ctx.lineWidth = 1;
   ctx.globalAlpha = a;
-  ctx.fillStyle = "#2e3c1c";
+  ctx.fillStyle = "#f2f6e2";   // 【v1.211z 第十九刀】深盘上的标题（原 #2e3c1c 深橄榄，压深盘读不出）
   ctx.font = "bold 48px " + FONT_STACK;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("倒下了", px, py - 8);
   ctx.font = "bold 20px " + FONT_STACK;
-  ctx.fillStyle = "#5c6848";
+  ctx.fillStyle = "#b9c8a6";   // 【v1.211z 第十九刀】被谁击倒（原 #5c6848 中间调，压深盘偏暗）
   ctx.fillText(run.lastDamageSrc || "", px, py + 32);
   ctx.restore();
 }
