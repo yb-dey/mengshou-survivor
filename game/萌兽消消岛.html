@@ -3,6 +3,10 @@
 <head data-page-node-id="VcnaKBuFL9PcTBiQ0Cd1Q7">
 <meta charset="UTF-8" data-page-node-id="9e3SovBDdZ7MHJGSaBfbc3">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" data-page-node-id="R7q4on4OLaEVr6Bqxc88mN">
+<!-- 【v1.211z 第十八刀】移动端第一印象：没有 theme-color 时，手机浏览器/状态栏会取默认（多半是白），
+     与深底亮卡的游戏本体割裂。取当前大厅纸色 #3f4f33 —— 与 #cv 的底色、CONFIG.colors.bg 同源。
+     回退：删掉这一行即可（不删也不影响任何游戏逻辑）。 -->
+<meta name="theme-color" content="#3f4f33">
 <title>萌兽不好惹</title>
 <!-- 【2026-09-22】AI 内容标识 · 隐式（元数据）——
      依据《人工智能生成合成内容标识办法》（2025-09 施行）：本游戏部分美术与文本内容由人工智能生成合成。
@@ -19,7 +23,7 @@
 <style>
 html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:hidden;-webkit-user-select:none;user-select:none;font-family:'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei','Noto Sans CJK SC',sans-serif;}
 #app{position:relative;width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;}
-#cv{display:block;touch-action:none;background:#e8f4d8;}
+#cv{display:block;touch-action:none;background:#3f4f33;}   /* 【v1.211z 第十八刀】首帧之前的底色：#e8f4d8 是**旧浅纸色**，改深后它成了「一闪浅绿 + 跑调」。换成当前大厅纸色 #3f4f33。回退：改回 #e8f4d8。 */
 </style>
 </head>
 <body data-page-node-id="XG6KrVBrjP8x6DDZiDiH8k">
@@ -1576,7 +1580,7 @@ var CONFIG = {
 
   // 颜色旋钮 [假设]
   colors: {
-    bg: "#e8f4d8",
+    bg: "#3f4f33",                    // 【v1.211z 第十八刀】主题缺失时的兜底底色，同步到当前深纸色（原 #e8f4d8 是旧浅纸）
     player: "#4a7c2f",
     heroShell: "#2f8a6a",           // 【v1.144】壳壳龟背甲青绿, 不跟浣熊叶绿糊
     heroGrizz: "#8a5528",           // 【v1.144】莽莽熊暖褐, 口鼻另开浅色
