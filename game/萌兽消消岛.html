@@ -29480,9 +29480,9 @@ function makeModal(id, panelW, panelH, drawPanel) {
         ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
         ctx.fillStyle = "rgba(36, 48, 24, 0.16)";
         fillRoundRect(ctx, px + 2, py + 4, this.panelW, this.panelH, 18);
-        ctx.fillStyle = "#f4efe2";
+        ctx.fillStyle = "#2f3a26";
         fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
-        ctx.strokeStyle = "#4e6240";
+        ctx.strokeStyle = "#8fae6a";
         ctx.lineWidth = 2;
         strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
         ctx.lineWidth = 1;
@@ -31803,41 +31803,41 @@ function drawRevivePanel(ctx, m) {
   var gearN = (run.gearGot && run.gearGot.length) || 0;
   var used = run.revivesUsed | 0;
   // 【v1.188】字阶收进橄榄/奶油, 金黄与警报红退出复活盘
-  ctx.fillStyle = "#2e3c1c";
+  ctx.fillStyle = "#f2f6e2";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = "bold 40px " + FONT_STACK;
   ctx.fillText("倒下了!", cx, py + 58);
   if (runReviveUnlimited()) {
-    ctx.fillStyle = "#3d6844";
+    ctx.fillStyle = "#a8d8a0";
     ctx.font = "bold 22px " + FONT_STACK;
     ctx.fillText("倒下可再战 · 不限次数", cx, py + 124);
-    ctx.fillStyle = "#5c6848";
+    ctx.fillStyle = "#b9c8a6";
     ctx.font = "bold 16px " + FONT_STACK;
     ctx.fillText(used ? ("本局已再战 " + used + " 次") : "无广告 · 点继续即可", cx, py + 152);
   } else {
     drawRevivePips(ctx, cx, py + 108, left, maxN);
-    ctx.fillStyle = "#3e4e32";
+    ctx.fillStyle = "#dfe8cc";
     ctx.font = "bold 22px " + FONT_STACK;
     ctx.fillText("还可复活 " + left + " / " + maxN + " 次", cx, py + 140);
   }
-  ctx.fillStyle = "#5a4038";
+  ctx.fillStyle = "#e0b8a8";
   ctx.font = "bold 20px " + FONT_STACK;
   ctx.fillText(run.lastDamageSrc || "被怪群击倒", cx, py + 176);
   drawSoftCard(ctx, cx - 230, py + 200, 460, 86, "#6a8a4a");
-  ctx.fillStyle = "#2e3c1c";
+  ctx.fillStyle = "#f2f6e2";
   ctx.font = "bold 20px " + FONT_STACK;
   ctx.fillText(fmtClock(GAME.runTime) + " · 击杀 " + (player.killCount | 0) + " · 掉落 " + (run.coinsGained | 0) + " 金", cx, py + 228);
-  ctx.fillStyle = "#555548";
+  ctx.fillStyle = "#c2c8b4";
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText("满血再战 · 无敌 " + CONFIG.reviveInvSec + " 秒 · 击退近敌", cx, py + 258);
-  ctx.fillStyle = "#555548";
+  ctx.fillStyle = "#c2c8b4";
   ctx.font = "bold 18px " + FONT_STACK;
   ctx.fillText("放弃将结算约 " + peek.total + " 金", cx, py + 312);
-  ctx.fillStyle = "#555548";
+  ctx.fillStyle = "#c2c8b4";
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText(gearN ? ("局内装备 " + gearN + " 件已入账, 放弃也会带回大厅") : "局内还没拿到装备", cx, py + 338);
-  ctx.fillStyle = "#5c6848";
+  ctx.fillStyle = "#b9c8a6";
   // 【v1.210z】这一行的完整弧（三次提交，值得留档）：
   //   v1.210y 抬到 18px（静态判据全过）⇒ 推上去后云端 `audio-audit` 变红（「② 战斗+击杀高于 BGM 窗口 1→1 ❌」）
   //   ⇒ 第 117 轮**先回退保绿**；当时就写明"证据只有 n=1 的 A/B，分不清因果与抖动"。
@@ -31848,7 +31848,7 @@ function drawRevivePanel(ctx, m) {
   ctx.font = "bold 18px " + FONT_STACK;
   ctx.fillText("放弃无通关礼 / 首通金币 / 锻纹", cx, py + 362);
   if (!saveData.guideFlags.revive) {
-    ctx.fillStyle = "#3d6844";
+    ctx.fillStyle = "#a8d8a0";
     ctx.font = "bold 18px " + FONT_STACK;
     ctx.fillText("别慌, 点继续再战或放弃结算都行", cx, py + 392);
   }
