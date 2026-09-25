@@ -29494,7 +29494,16 @@ function makeModal(id, panelW, panelH, drawPanel) {
       //   复活盘**不进名单**：它有【v1.188】「字阶收进橄榄/奶油、金黄与警报红退出复活盘」的整屏配色裁决。
       // 【v1.211z 第九刀】深盘名单再扩：+ 暂停盘（战斗中第三个必看模态，与七/八刀同一套语言）。
       //   仍然**逐屏 opt-in**：三个 id 各自在下面 `drawXPanel` 里配套翻亮，其余模态一字不动。
-      var isDarkPanelLv = (this.id === "levelup" || this.id === "resultmodal" || this.id === "pausemenu") && (typeof GAME !== "undefined") && !GAME.gearPickMode;
+      // 【v1.211z 第十刀】**元界面整层一起改**（上一轮量清 47 处、判定"要么整层要么不动"）：
+      //   + gearmodal（装备库，试点已验：浅格铺深盘像背包格、不花）/ vaultmodal（仓库）/ upgrademodal（强化）
+      //   / beastmodal（图鉴）/ chaptermodal（选章）。
+      //   每屏只翻**面板级**文字（标题/副标题/分区标题/提示/状态行）；**格子级一律不动** ——
+      //   格子有各自的状态填色（选中/未选/可合成/锁定），翻了就是在浅格上写亮字。
+      //   奶油路径那四个（settings/about/guide/daily）**仍不动**：文档型模态，见 ART-DIRECTION 的元界面一节。
+      var isDarkPanelLv = (this.id === "levelup" || this.id === "resultmodal" || this.id === "pausemenu" ||
+        this.id === "gearmodal" || this.id === "vaultmodal" || this.id === "upgrademodal" ||
+        this.id === "beastmodal" || this.id === "chaptermodal") &&
+        (typeof GAME !== "undefined") && !GAME.gearPickMode;
       ctx.fillStyle = isDarkPanelLv ? "#2f3a26" : c.modalPanel;
       fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       if (!isDarkPanelLv) {
@@ -30358,13 +30367,13 @@ function drawChapterPanel(ctx, m) {
   var view = chapterRewardView(sel, "preview");
   var trioY = py + (CONFIG.chapterTrioY || 552);
   var trioH = CONFIG.chapterTrioH || 100;
-  ctx.fillStyle = c.cardTitle;
+  ctx.fillStyle = "#f4f8e6";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = "bold 36px " + FONT_STACK;
   ctx.fillText("选择章节", CONFIG.viewW / 2, py + 36);
   ctx.font = "bold 16px " + FONT_STACK;
-  ctx.fillStyle = c.cardDesc;
+  ctx.fillStyle = "#c9d6bb";
   ctx.fillText(sel.name + " · " + sel.durMin + " 分钟 · " +
     (chapterSelIdx <= CONFIG.tutorialChapterMax ? "教程 · " : "正片 · ") +
     (sel.winMode === "survive" ? "存活到计时结束即胜" : "击败最终 BOSS 即胜"), CONFIG.viewW / 2, py + 68);
@@ -30382,17 +30391,17 @@ function drawChapterPanel(ctx, m) {
   //   改法：同色系压深两档 `#256b36` ⇒ 同一实测底上 **5.03:1** ✓。
   //   ⚠ 只改这一处：`#2e8b47` 全库 33 处，绝大多数是**按钮填充/描边/刻度**（那里它是底不是字），
   //     不能一起改；其余"当文字用"的站点由 `_qc/_text-contrast-audit.mjs` 每轮列出来逐个核。
-  ctx.fillStyle = "#256b36";
+  ctx.fillStyle = "#a8e0a0";
   ctx.fillText(chapterRhythmLine(sel) + " · 袋×" + ((sel.gearNodes && sel.gearNodes.length) || 0) +
     " · 武器池 " + chapterWeaponCount(chapterSelIdx) + " 把",
     CONFIG.viewW / 2, py + m.panelH - 72);
-  ctx.fillStyle = c.cardGold;   // 【v1.167】文字用深金(对比度 2.13:1→5.18:1)
+  ctx.fillStyle = "#e6c24a";   // 【v1.167】文字用深金(对比度 2.13:1→5.18:1)
   ctx.fillText((chapterSelIdx <= CONFIG.tutorialChapterMax ? "短章 " : "正片 ") + chapterForkLine(chapterSelIdx) + " · " + chapterEventLine(sel), CONFIG.viewW / 2, py + m.panelH - 50);
   var info31 = [];
   if (GAME.runeId) info31.push("当前符文:" + DATA_RUNES[GAME.runeId].name);
   if (sel.endless && !saveData.chapterCleared[sel.chId]) info31.push("此章首通后转入无尽挑战");
   if (info31.length) {
-    ctx.fillStyle = c.cardDesc;
+    ctx.fillStyle = "#c9d6bb";
     ctx.fillText(info31.join(" · "), CONFIG.viewW / 2, py + m.panelH - 28);
   }
 }
@@ -32548,13 +32557,13 @@ function drawUpgradePanel(ctx, m) {
   var last = GAME.hallUpLast;
   var i, d, v, rowY, hot, flash, pdef2, pnv, prowY, pcardX, plocked, btn;
   var msg1, msg2;
-  ctx.fillStyle = c.cardTitle;
+  ctx.fillStyle = "#f4f8e6";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = "bold 32px " + FONT_STACK;
   ctx.fillText("永久强化", CONFIG.viewW / 2, py + 28);
   ctx.font = "bold 15px " + FONT_STACK;
-  ctx.fillStyle = (GAME.hallPowerPulse > 0) ? "#b8860b" : c.cardTitle;
+  ctx.fillStyle = (GAME.hallPowerPulse > 0) ? "#ffe08a" : "#f4f8e6";
   if (last) {
     ctx.fillText("战力 " + last.p0 + "→" + last.p1 + " · 现 " + displayedHallPower() +
       " · 五线再 " + spend.remain5 + " · " + spend.pathLabel, CONFIG.viewW / 2, py + 52);
@@ -32568,7 +32577,7 @@ function drawUpgradePanel(ctx, m) {
   if (uiUpgradeOk && last) {
     drawSpendGainDuo(ctx, 80, py + 142, 560, 34, hallDealFromUpgrade(last));
   } else if (uiUpgradeMsg !== "") {
-    ctx.fillStyle = "#c0392b";
+    ctx.fillStyle = "#ff9a86";
     ctx.font = "bold 14px " + FONT_STACK;
     ctx.fillText(uiUpgradeMsg, CONFIG.viewW / 2, py + 154);
   } else {
@@ -32605,17 +32614,17 @@ function drawUpgradePanel(ctx, m) {
     ctx.lineWidth = 1;
     drawItemSprite(ctx, d.id === "hp" ? "tal_hp" : (d.id === "pickup" ? "tal_pickup" : (d.id === "move" ? "tal_move" : (d.id === "atk" ? "wpn_pinecone" : "wpn_bladeleaf"))), 60, rowY + 16, 44);
     // 【v1.190】行标题深苔, 攻击/生命/… Lv 对奶油盘更清楚; 花费钮仍走 upcost 闷橄榄
-    ctx.fillStyle = "#2c3a22";
+    ctx.fillStyle = "#f4f8e6";
     ctx.font = "bold 26px " + FONT_STACK;
     ctx.fillText(d.name + "  Lv." + v.lv + "/" + v.maxLv, 118, rowY + 28);
-    ctx.fillStyle = v.canBuy ? "#2e8b47" : c.cardTitle;
+    ctx.fillStyle = v.canBuy ? "#a8e0a0" : "#e8f0d4";
     ctx.font = "bold 16px " + FONT_STACK;
     if (v.maxed) {
       ctx.fillText(v.stat0 + " · 战力 " + v.power0, 118, rowY + 52);
     } else {
       ctx.fillText(v.stat0 + " → " + v.stat1 + " · 战力 " + v.power0 + "→" + v.power1, 118, rowY + 52);
     }
-    ctx.fillStyle = v.canBuy ? "#3d6844" : (v.maxed ? c.cardDesc : "#4a4028");
+    ctx.fillStyle = v.canBuy ? "#a8e0a0" : (v.maxed ? "#c9d6bb" : "#e6c24a");
     ctx.font = "bold 15px " + FONT_STACK;
     ctx.fillText(v.goldLine, 118, rowY + 74);
     btn = uiUpBtns[i];
@@ -32626,7 +32635,7 @@ function drawUpgradePanel(ctx, m) {
     }
   }
   ctx.textAlign = "center";
-  ctx.fillStyle = c.cardTitle;
+  ctx.fillStyle = "#f4f8e6";
   ctx.font = "bold 28px " + FONT_STACK;
   ctx.fillText("路径抉择 · 二选一", CONFIG.viewW / 2, py + 706);
   for (i = 0; i < PATH_NODE_DEFS.length; i++) {
@@ -32656,10 +32665,10 @@ function drawUpgradePanel(ctx, m) {
       ctx.lineWidth = 1;
     }
     ctx.textAlign = "left";
-    ctx.fillStyle = plocked ? "#777777" : c.cardTitle;
+    ctx.fillStyle = plocked ? "#9aa08f" : "#f4f8e6";
     ctx.font = "bold 17px " + FONT_STACK;
     ctx.fillText((plocked ? "[已锁] " : "") + pdef2.name + " " + pnv + "/" + CONFIG.pathMaxLv, pcardX + 8, prowY + 18);
-    ctx.fillStyle = plocked ? "#777777" : (v.canBuy ? "#2e8b47" : c.cardDesc);
+    ctx.fillStyle = plocked ? "#9aa08f" : (v.canBuy ? "#a8e0a0" : "#c9d6bb");
     ctx.font = "bold 14px " + FONT_STACK;
     if (v.maxed || plocked) {
       ctx.fillText(v.maxed ? (v.stat0 + " · 满") : v.goldLine, pcardX + 8, prowY + 42);
@@ -32672,7 +32681,7 @@ function drawUpgradePanel(ctx, m) {
       //   ⇒ 信息一条不减、字号不动、钮位不动。按第一个空格切，切不到就原样用（不引入正则/转义层）。
       ctx.fillText(v.stat0 + "→" + v.stat1.slice(v.stat1.indexOf(" ") + 1) + " · 战力+" + v.powerDelta, pcardX + 8, prowY + 42);
     }
-    ctx.fillStyle = plocked ? "#777777" : (v.canBuy ? "#3d6844" : "#4a4028");
+    ctx.fillStyle = plocked ? "#9aa08f" : (v.canBuy ? "#a8e0a0" : "#e6c24a");
     ctx.font = "bold 13px " + FONT_STACK;
     if (!plocked && !v.maxed) ctx.fillText(v.goldLine, pcardX + 8, prowY + 64);
     else if (v.maxed) ctx.fillText("已满级", pcardX + 8, prowY + 64);
@@ -32685,7 +32694,7 @@ function drawUpgradePanel(ctx, m) {
   }
   ctx.textAlign = "center";
   ctx.font = "bold 15px " + FONT_STACK;
-  ctx.fillStyle = c.cardDesc;
+  ctx.fillStyle = "#c9d6bb";
   ctx.fillText(spend.pathLabel.indexOf("锋芒") === 0 ? "已择 锋芒 之路"
     : (spend.pathLabel.indexOf("磐石") === 0 ? "已择 磐石 之路"
       : "首次购买即选定路径, 另一路径将锁定"),
@@ -32707,11 +32716,11 @@ function drawUpgradePanel(ctx, m) {
   } else {
     msg1 = "点升级: 本页立刻跳战力/属性, 开战才进伤害与移速";
   }
-  ctx.fillStyle = uiUpgradeOk ? "#2e8b47" : (uiUpgradeMsg !== "" ? "#c0392b" : c.cardDesc);
+  ctx.fillStyle = uiUpgradeOk ? "#a8e0a0" : (uiUpgradeMsg !== "" ? "#c0392b" : c.cardDesc);
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText(msg1, CONFIG.viewW / 2, py + 1100);
   if (msg2) {
-    ctx.fillStyle = "#256b36";   // 【v1.211o】强化页 15px 正文：同色同盘，3.32–3.80 全不过 4.5 ⇒ 深两档后 5.03–5.75
+    ctx.fillStyle = "#a8e0a0";   // 【v1.211o】强化页 15px 正文：同色同盘，3.32–3.80 全不过 4.5 ⇒ 深两档后 5.03–5.75
     ctx.fillText(msg2, CONFIG.viewW / 2, py + 1122);
   }
 }
@@ -33380,7 +33389,7 @@ function drawVaultPanel(ctx, m) {
   coins = (saveData.coins | 0);
   marks = (saveData.forgeMarks | 0);
   refreshHallUnlocks();
-  ctx.fillStyle = c.cardTitle;
+  ctx.fillStyle = "#f4f8e6";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = "bold 32px " + FONT_STACK;
@@ -33396,21 +33405,21 @@ function drawVaultPanel(ctx, m) {
   ctx.strokeStyle = "rgba(42,58,24,0.35)";
   ctx.lineWidth = 1;
   strokeRoundRect(ctx, 80, lay.walletY, 560, lay.walletH, 10);
-  ctx.fillStyle = (deal && deal.ok && !deal.spent) ? "#1a5a2a" : "#2a2418";
+  ctx.fillStyle = (deal && deal.ok && !deal.spent) ? "#a8e0a0" : "#dfe8cc";
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText(vaultWalletLine(deal, coins, marks), CONFIG.viewW / 2, lay.walletY + lay.walletH / 2);
   drawSpendGainDuo(ctx, 80, lay.duoY, 560, lay.duoH, hallDealFromVault(deal));
   if (uiVaultOk) {
     hint = uiVaultMsg || "已入账 · 花费→收益见上格";
-    hintCol = "#2e8b47";
+    hintCol = "#a8e0a0";
   } else if (uiVaultMsg) {
     hint = uiVaultMsg;
-    hintCol = vaultIsArmed(tab === "talent" ? "talent" : "craft", GAME.hallVaultSel) ? "#b86a10" : "#c0392b";
+    hintCol = vaultIsArmed(tab === "talent" ? "talent" : "craft", GAME.hallVaultSel) ? "#e6c24a" : "#ff9a86";
   } else {
     hint = tab === "talent"
       ? "左卡点选看账 · 价格钮两下升级 · 满级停 · 连点不连扣"
       : "左卡点选看条件 · 价格钮两下才打造 · 未解锁不扣金";
-    hintCol = c.cardDesc;
+    hintCol = "#c9d6bb";
   }
   ctx.fillStyle = hintCol;
   ctx.font = "bold 13px " + FONT_STACK;
@@ -34810,13 +34819,18 @@ function drawGearPanel(ctx, m) {
   var deal = sel ? enhanceDealView(sel) : emptyEnhanceDeal("点背包或部位选中");
   var mergeN = countMergeReady();
   var last = GAME.hallForgeLast;
-  ctx.fillStyle = CONFIG.colors.cardTitle;
+  // 【v1.211z 第十刀·试点】装备库先只翻**面板级**两行（标题 + 副标题）。
+  //   ⚠ 为什么只翻两行就停下来看：战斗模态深盘上是 3 张大卡（干净）；而装备库是**十几块小浅格拼的马赛克**，
+  //     铺在深盘上可能变成"花"而不是"亮"。这是个只能靠渲染判的风险 ⇒ 先小步、看图、再决定要不要整层推。
+  //   格子里的字（L34833 起那三处 `sel ? cardTitle : …`、L34845 的 `#1c2810`）**一律不动** ——
+  //     它们画在**各自有状态填色的格子**上（选中/未选/可合成），翻了就是在浅格上写亮字。
+  ctx.fillStyle = "#f4f8e6";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = "bold 40px " + FONT_STACK;
   ctx.fillText("装备库", CONFIG.viewW / 2, py + 50);
   ctx.font = FONT_UI_S;
-  ctx.fillStyle = CONFIG.colors.cardDesc;
+  ctx.fillStyle = "#c9d6bb";
   ctx.fillText("出战战力 " + displayedHallPower() + " · 金币 " + (saveData.coins | 0) + " · 锻纹 " + (saveData.forgeMarks | 0),
     CONFIG.viewW / 2, py + 88);
   if (uiGearMerge) uiGearMerge.label = mergeN > 0 ? ("三合一 · " + mergeN + "组") : "三合一";
