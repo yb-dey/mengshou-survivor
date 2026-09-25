@@ -34149,6 +34149,10 @@ function makePetPageChip(slot, x, y, w, h, dir) {
     id: "petpg" + slot, kind: "PetPageChip",
     rect: { x: x, y: y, w: w, h: h },
     visible: false, slot: slot, dir: dir,
+    // 【v1.211z 第三十七刀 · O27 ⑲】只扩纵向命中区：52→72 逻辑px（36 CSS px）。
+    //   上方 12px 是跟宠行、下方 12px 到内容底 ⇒ pad 10 是本屏安全上限（再大会与相邻热区/内容重叠）。
+    //   绘制像素一律不变。回退：删掉下面这一行。
+    hitPadY: 10,
     onTap: function () {
       if (GAME.state !== GAME.flow.HOME && GAME.state !== GAME.flow.BEAST) return;
       if (!this.dir) return;
