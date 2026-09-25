@@ -33389,6 +33389,25 @@ function drawVaultPanel(ctx, m) {
       ctx.lineWidth = chrome.lw;
       strokeRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
       ctx.lineWidth = 1;
+      // 【v1.211z 美术方向 · 第六刀：仓库行也带车道色竖轨】
+      //   【为什么】三选一卡（第五刀）已经用**武器金/道具红/被动蓝**给玩家建立了颜色语言；
+      //     而仓库兑换这 6 行仍然只有"苔盘 + 小图标 + 小字" ⇒ 同一个语言在第二屏就断了。
+      //     参考作品里这类"升级列表"一律靠**左侧色轨**分级，扫一眼就知道在升哪条线。
+      //   【改了什么】纯增量：在行卡左侧内沿画一条 7px 宽、上下内缩 12px 的竖轨，色相取自 `rec.kind`。
+      //     **不动** `vaultRowChrome` 的任何填色/描边 —— 那是带 6 种状态分支的面色系统
+      //     （locked/focusLock/armed/focus/craft/maxed），项目 AGENTS 明确警告过别碰。
+      //   【可量】6 行 × 7×(h-24) ≈ 6×7×44 = 1848 画布px² 的车道色进入这一屏（原本为 0）。
+      //   回退：删掉本段 `if (laneColV) { … }` 即可。
+      var laneColV = rec.kind === "weapon" ? CONFIG.colors.cardLaneWeapon
+        : (rec.kind === "combat" ? CONFIG.colors.cardLaneCombat
+        : (rec.kind === "passive" ? CONFIG.colors.cardLanePassive : null));
+      if (laneColV) {
+        ctx.save();
+        ctx.globalAlpha = 0.92;
+        ctx.fillStyle = laneColV;
+        fillRoundRect(ctx, lay.cardX + 4, rowY + 12, 7, lay.cardH - 24, 3.5);
+        ctx.restore();
+      }
       // 【v1.156】图标井改苔纸+细墨框(对齐强化面板图标盘), 不再裸绿晕
       ctx.fillStyle = "rgba(222,232,198,0.94)";
       fillRoundRect(ctx, lay.cardX + 10, rowY + 14, 52, 52, 10);
@@ -33433,6 +33452,25 @@ function drawVaultPanel(ctx, m) {
       ctx.lineWidth = chrome.lw;
       strokeRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
       ctx.lineWidth = 1;
+      // 【v1.211z 美术方向 · 第六刀：仓库行也带车道色竖轨】
+      //   【为什么】三选一卡（第五刀）已经用**武器金/道具红/被动蓝**给玩家建立了颜色语言；
+      //     而仓库兑换这 6 行仍然只有"苔盘 + 小图标 + 小字" ⇒ 同一个语言在第二屏就断了。
+      //     参考作品里这类"升级列表"一律靠**左侧色轨**分级，扫一眼就知道在升哪条线。
+      //   【改了什么】纯增量：在行卡左侧内沿画一条 7px 宽、上下内缩 12px 的竖轨，色相取自 `rec.kind`。
+      //     **不动** `vaultRowChrome` 的任何填色/描边 —— 那是带 6 种状态分支的面色系统
+      //     （locked/focusLock/armed/focus/craft/maxed），项目 AGENTS 明确警告过别碰。
+      //   【可量】6 行 × 7×(h-24) ≈ 6×7×44 = 1848 画布px² 的车道色进入这一屏（原本为 0）。
+      //   回退：删掉本段 `if (laneColV) { … }` 即可。
+      var laneColV = rec.kind === "weapon" ? CONFIG.colors.cardLaneWeapon
+        : (rec.kind === "combat" ? CONFIG.colors.cardLaneCombat
+        : (rec.kind === "passive" ? CONFIG.colors.cardLanePassive : null));
+      if (laneColV) {
+        ctx.save();
+        ctx.globalAlpha = 0.92;
+        ctx.fillStyle = laneColV;
+        fillRoundRect(ctx, lay.cardX + 4, rowY + 12, 7, lay.cardH - 24, 3.5);
+        ctx.restore();
+      }
       ctx.fillStyle = "rgba(222,232,198,0.94)";
       fillRoundRect(ctx, lay.cardX + 10, rowY + 14, 52, 52, 10);
       ctx.strokeStyle = "rgba(42,58,24,0.55)";
