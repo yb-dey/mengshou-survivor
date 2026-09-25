@@ -29532,9 +29532,20 @@ function drawLevelupCardFrame(ctx, x, y, w, h, rareColor, armed) {
   strokeRoundRect(ctx, x, y, w, h, 12);
   ctx.lineWidth = 1;
   if (rareColor) {
-    ctx.globalAlpha = 0.85;
+    // 【v1.211z 美术方向 · 第五刀：把「三选一」的车道色做成一眼可辨】
+    //   【为什么】原实现只有一条 3px、两侧各内缩 12px 的顶线（alpha 0.85）⇒ 真机（×0.5）**1.5 CSS px**、
+    //     还被内缩 6px ⇒ 三张卡在真机上看起来**几乎一样**，玩家只能读小字才知道哪张是武器/道具/被动。
+    //     参考作品（弹壳特工队/元素骑士）的三选一正是**靠颜色一眼分级**。
+    //   【改了什么】只动**框的几何**：顶线 3px→7px 且贴齐卡片内侧（内缩 12→8）；新增**左缘竖轨** 8px 宽、上下内缩 16px。
+    //     色相仍用调用方给的 `rareColor`（车道/稀有度），**一个字、一个底色都没动**。
+    //   【为什么不动卡片底色】卡上文字的背景就是那层淡绿（`rgba(220,232,194,…)`）——
+    //     往它里面掺色会改文字背景 ⇒ 触碰 v1.211n/o 那批**文字对比度裁决**。本刀刻意避开。
+    //   【可量】车道色可见面积：原 3×(w-24)≈3×312=936 画布px² ⇒ 新 7×(w-16)+8×(h-32) ≈ 7×320+8×88 = 2944 ⇒ **约 3.1 倍**。
+    //   回退：把下面两段换回 `fillRoundRect(ctx, x + 12, y + 5, w - 24, 3, 1.5);` 一行即可。
+    ctx.globalAlpha = 0.92;
     ctx.fillStyle = rareColor;
-    fillRoundRect(ctx, x + 12, y + 5, w - 24, 3, 1.5);
+    fillRoundRect(ctx, x + 8, y + 4, w - 16, 7, 3.5);
+    fillRoundRect(ctx, x + 4, y + 16, 8, h - 32, 4);
     ctx.globalAlpha = 1;
   }
 }
