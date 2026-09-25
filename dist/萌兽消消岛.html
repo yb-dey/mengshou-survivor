@@ -11740,6 +11740,7 @@ var SAVE_SCHEMA = {
     totalRoars: { type: "number", default: 0 },        // 【R22】跨局累计咆哮次数(成就维度)
     totalAffixKills: { type: "number", default: 0 },   // 【R22】跨局累计词缀精英击杀(成就维度)
     achRewardPend: { type: "number", default: 0 },     // 【R22】局外成就奖励待入账池(下次结算确认经唯一入账折算)
+    enemyKills: { type: "object", default: {} },       // 【v1.211x O35 击破入册】per-enemy 击杀表 {enemyId: 击杀数}（图鉴按此亮彩色本体）
     dailyStamp: { type: "string", default: "" },       // 【v1.4】上次今日挑战日历键 YYYY-MM-DD
     dailyBest: { type: "object", default: {} },        // 【v1.4】{date,wins,bestKills,bestSec,ruleId}
     worldTheme: { type: "string", default: "city" },    // 【v1.5】大厅主题 id
@@ -21993,6 +21994,10 @@ function killEnemy(e) {
   e.active = false;
   if (e.isSpecial) specialCount--; else enemyCount--;
   player.killCount++;
+  // 【v1.211x O35 击破入册】按敌人 id 累计本局击杀（结算 confirmResult 折算入档 → 图鉴亮彩色）。
+  //   ⚠ 敌人对象的类型字段是 e.type（不是 e.id —— 实测 {"undefined":13} 抓出）。
+  GAME.runEnemyKills = GAME.runEnemyKills || {};
+  GAME.runEnemyKills[e.type] = (GAME.runEnemyKills[e.type] | 0) + 1;
   noteChallengeKill(e);
   if (cdef && (cdef.cat === "elite" || cdef.cat === "boss")) {
     lootView = makeEliteLootView({
@@ -23302,6 +23307,16 @@ function confirmResult() {
     saveData.achRewardPend = 0;
   }
   saveData.coins += runSummary.coins;
+  // 【v1.211x O35 击破入册兑现】敌人图鉴承诺「击破入册」但从未兑现 —— codexEnemySprite 无条件返回
+  //   软墨剪影(enemysil_)，且存档只有 totalKills 总数、无 per-enemy 击杀表（用户 2026-09-25 截图点破）。
+  //   本局击杀按敌人 id 折算入档（GAME.runEnemyKills 在敌人死亡处累计，见 killCount++ 处）；
+  //   图鉴里击破过(>0)的敌人显示彩色本体，未击破的保持剪影 —— 收集册的完整闭环。
+  if (GAME.runEnemyKills) {
+    if (!saveData.enemyKills || typeof saveData.enemyKills !== "object") saveData.enemyKills = {};
+    for (var ek in GAME.runEnemyKills) {
+      saveData.enemyKills[ek] = (saveData.enemyKills[ek] | 0) + (GAME.runEnemyKills[ek] | 0);
+    }
+  }
   if (GAME.dailyMode) {
     var ds = todayStamp();
     saveData.dailyStamp = ds;
@@ -33907,7 +33922,9 @@ function makeCodexEnemyCell(idx, x, y, w, h) {
       // 【v1.155】敌人条目改柔光苔纸盘托底(极淡组色晕), 不再浓色椭圆盖住贴图; 剪影/贴图本体保持 1.152 墨光
       // 【v1.178】缺贴图时盘内画本色软圆+墨缘兜底, 不留空黑格(不逐帧烘焙)
       drawCodexBeastPlate(ctx, r.x + 10, r.y + 6, 96, 96, def && def.tint);
+      // 【v1.211x O35 击破入册】击破过(击杀数>0)的敌人亮彩色本体；未击破保持软墨剪影（收集悬念）
       spr = codexEnemySprite(entry.id);
+      if ((saveData.enemyKills && (saveData.enemyKills[entry.id] | 0) > 0) && SPRITES[entry.id] && SPRITES[entry.id].width > 0) spr = SPRITES[entry.id];
       if (spr && spr.width > 0) {
         // 【v1.179】与跟宠行同走 drawSpriteFit(含 box 裁切), 软墨剪影占满井格可读
         drawSpriteFit(ctx, spr, r.x + 18, r.y + 10, 80, 88);
