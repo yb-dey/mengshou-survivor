@@ -32549,12 +32549,12 @@ function drawResultPanel(ctx, m) {
   for (var ri = 0; ri < rLay.length; ri++) {
     rSec = rLay[ri];
     if (rSec.kind === "title") {
-      ctx.fillStyle = "#8a5a10";
+      ctx.fillStyle = "#e6c24a";
       ctx.font = "bold 16px " + FONT_STACK;
       ctx.textAlign = "left";
       ctx.fillText(rSec.text, rPx + 18, rSec.y + 8);
     } else if (rSec.kind === "section") {
-      ctx.fillStyle = (rSec.id === "pair" || rSec.id === "evo") ? "#8a5a10" : c.cardTitle;
+      ctx.fillStyle = (rSec.id === "pair" || rSec.id === "evo") ? "#e6c24a" : c.cardTitle;
       ctx.font = "bold " + (rSec.id === "weapon" ? 14 : 13) + "px " + FONT_STACK;
       ctx.textAlign = "left";
       ctx.fillText(hudFitText(ctx, rSec.title, m.panelW - 48), rPx + 18, rSec.y + 10);
@@ -34287,7 +34287,7 @@ function makeCodexEnemyCell(idx, x, y, w, h) {
       ctx.fillStyle = grp.text || grp.tint;   // 【v1.210n】「读招·」行同因：原 tint 压苔盘 2.06:1
       ctx.font = "bold 16px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, "读招·" + entry.tell, r.w - 140), r.x + 112, r.y + 52);
-      ctx.fillStyle = "#8a5a10";
+      ctx.fillStyle = "#7a4e0c";
       ctx.font = "bold 14px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, "出处·" + entry.where + " → 击破入册" + (def ? (" · HP" + def.hp) : ""), r.w - 230), r.x + 112, r.y + 80);
       drawCodexChip(ctx, r.x + r.w - 100, r.y + 32, 84, 40, grp.name, selected ? grp.tint : "rgba(222,232,198,0.90)", selected ? (grp.chipInk || "#fff7e0") : "#3a4626");   // 【v1.210n】选中态字色按组选（绿/橙→深墨 5.47/4.83）
