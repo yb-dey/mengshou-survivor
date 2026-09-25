@@ -26079,44 +26079,54 @@ function renderGame() {
       var mgY = qR27.y < CONFIG.viewH - qR27.y ? qR27.y : CONFIG.viewH - qR27.y;
       var bfR27 = (mgX < mgY ? mgX : mgY) / 12;            // 出屏边界淡出(12px 渐隐带)
       if (bfR27 <= 0) continue;
-      ctx.globalAlpha = 0.22 * qR27.a * (bfR27 > 1 ? 1 : bfR27);
+      // 【v1.211z 美术方向 · 第四刀：把局内环境粒子调到「交付尺度看得见」】
+      //   【为什么】这套粒子在真机上**等于不存在**：花瓣只有 `size*2.4 × size*1.1` = 7.2×3.3 画布px
+      //     ⇒ 真机（×0.5）**3.6×1.65 CSS px**，再乘 **alpha 0.22** 压在亮绿地面上 ⇒ 抓帧里一颗粒子都看不到
+      //     （第 146 轮实测：三批战斗帧全无粒子）。参考作品（弹壳特工队/元素骑士）的战场都有可见的氛围粒子 ⇒
+      //     这是「画面没活气」的一条实因。
+      //   【改了什么】只改**看得见与否**：不透明度 0.22→0.40、各类形状半径整体放大 ~1.35 倍。
+      //     **没动**：生成速率（各章 ambient.rate）、池大小、门控（`inPlay`/`_juice`/`_fxQuiet`）、
+      //     绘制层级（仍在世界层实体之下）、颜色（各章 ambient.color）。⇒ 零布局风险、零文字风险、零数值风险。
+      //   【可量】粒子平均不透明度 ×1.82、花瓣面积 ×1.78 ⇒ 交付尺度下从「不可见」到「可见的飘落物」。
+      //   回退：alpha 改回 0.22、各半径改回原倍数（原值见本注释与 git 历史）。
+      ctx.globalAlpha = 0.40 * qR27.a * (bfR27 > 1 ? 1 : bfR27);
       ctx.fillStyle = amR27.color;
       if (amR27.kind === "petal") {
         ctx.beginPath();
-        if (typeof ctx.ellipse === "function") ctx.ellipse(camX + qR27.x, camY + qR27.y, amR27.size * 2.4, amR27.size * 1.1, qR27.x * 0.04, 0, CONFIG.TWO_PI);
-        else ctx.arc(camX + qR27.x, camY + qR27.y, amR27.size * 2, 0, CONFIG.TWO_PI);
+        if (typeof ctx.ellipse === "function") ctx.ellipse(camX + qR27.x, camY + qR27.y, amR27.size * 3.2, amR27.size * 1.5, qR27.x * 0.04, 0, CONFIG.TWO_PI);
+        else ctx.arc(camX + qR27.x, camY + qR27.y, amR27.size * 2.8, 0, CONFIG.TWO_PI);
         ctx.fill();
       } else if (amR27.kind === "lantern") {
-        ctx.fillRect(camX + qR27.x - 3, camY + qR27.y - 6, 6, 11);
-        ctx.globalAlpha = 0.28 * qR27.a * (bfR27 > 1 ? 1 : bfR27);
+        ctx.fillRect(camX + qR27.x - 4, camY + qR27.y - 8, 8, 14);
+        ctx.globalAlpha = 0.46 * qR27.a * (bfR27 > 1 ? 1 : bfR27);
         ctx.beginPath();
-        ctx.arc(camX + qR27.x, camY + qR27.y + 8, 8, 0, CONFIG.TWO_PI);
+        ctx.arc(camX + qR27.x, camY + qR27.y + 10, 10, 0, CONFIG.TWO_PI);
         ctx.fill();
       } else if (amR27.kind === "dust") {
-        ctx.fillRect(camX + qR27.x, camY + qR27.y, amR27.size * 3.2, amR27.size);
+        ctx.fillRect(camX + qR27.x, camY + qR27.y, amR27.size * 4.2, amR27.size * 1.4);
       } else if (amR27.kind === "snow") {
-        var snx = camX + qR27.x, sny = camY + qR27.y, sns = amR27.size * 1.7;
+        var snx = camX + qR27.x, sny = camY + qR27.y, sns = amR27.size * 2.4;
         ctx.fillRect(snx - sns, sny - 1, sns * 2, 2);
         ctx.fillRect(snx - 1, sny - sns, 2, sns * 2);
       } else if (amR27.kind === "star") {
-        var stx = camX + qR27.x, sty = camY + qR27.y, sts = amR27.size * 1.8;
+        var stx = camX + qR27.x, sty = camY + qR27.y, sts = amR27.size * 2.4;
         ctx.fillRect(stx - sts, sty - 1, sts * 2, 2);
         ctx.fillRect(stx - 1, sty - sts, 2, sts * 2);
       } else if (amR27.kind === "blossom") {
         ctx.beginPath();
-        if (typeof ctx.ellipse === "function") ctx.ellipse(camX + qR27.x, camY + qR27.y, amR27.size * 2.8, amR27.size * 1.3, qR27.x * 0.05, 0, CONFIG.TWO_PI);
-        else ctx.arc(camX + qR27.x, camY + qR27.y, amR27.size * 2.2, 0, CONFIG.TWO_PI);
+        if (typeof ctx.ellipse === "function") ctx.ellipse(camX + qR27.x, camY + qR27.y, amR27.size * 3.6, amR27.size * 1.7, qR27.x * 0.05, 0, CONFIG.TWO_PI);
+        else ctx.arc(camX + qR27.x, camY + qR27.y, amR27.size * 3, 0, CONFIG.TWO_PI);
         ctx.fill();
       } else if (amR27.kind === "pebble") {
-        ctx.fillRect(camX + qR27.x - 3, camY + qR27.y - 2, amR27.size * 2.4, amR27.size * 1.6);
+        ctx.fillRect(camX + qR27.x - 4, camY + qR27.y - 3, amR27.size * 3.2, amR27.size * 2.2);
       } else if (amR27.kind === "mist") {
         ctx.beginPath();
-        if (typeof ctx.ellipse === "function") ctx.ellipse(camX + qR27.x, camY + qR27.y, amR27.size * 4.2, amR27.size * 1.6, 0.2, 0, CONFIG.TWO_PI);
-        else ctx.arc(camX + qR27.x, camY + qR27.y, amR27.size * 2.6, 0, CONFIG.TWO_PI);
+        if (typeof ctx.ellipse === "function") ctx.ellipse(camX + qR27.x, camY + qR27.y, amR27.size * 5.4, amR27.size * 2.2, 0.2, 0, CONFIG.TWO_PI);
+        else ctx.arc(camX + qR27.x, camY + qR27.y, amR27.size * 3.4, 0, CONFIG.TWO_PI);
         ctx.fill();
       } else if (amR27.kind === "fruit") {
         ctx.beginPath();
-        ctx.arc(camX + qR27.x, camY + qR27.y, amR27.size * 1.5, 0, CONFIG.TWO_PI);
+        ctx.arc(camX + qR27.x, camY + qR27.y, amR27.size * 2, 0, CONFIG.TWO_PI);
         ctx.fill();
       } else if (amR27.kind === "neon") {
         ctx.fillRect(camX + qR27.x, camY + qR27.y, amR27.size * 5, amR27.size);
