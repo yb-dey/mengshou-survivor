@@ -21,13 +21,27 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='28' fill='%233faf5a'/%3E%3Ccircle cx='16' cy='16' r='9' fill='%233faf5a'/%3E%3Ccircle cx='48' cy='16' r='9' fill='%233faf5a'/%3E%3Ccircle cx='32' cy='36' r='18' fill='%23ffe9b0'/%3E%3Ccircle cx='24' cy='32' r='3.2' fill='%232a2418'/%3E%3Ccircle cx='40' cy='32' r='3.2' fill='%232a2418'/%3E%3Cpath d='M24 42 Q32 48 40 42' fill='none' stroke='%23c0392b' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
-html,body{margin:0;padding:0;height:100%;height:100dvh;background:#000;overflow:hidden;-webkit-user-select:none;user-select:none;font-family:'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei','Noto Sans CJK SC',sans-serif;}
+html,body{margin:0;padding:0;height:100%;height:100dvh;background:#3f4f33;overflow:hidden;-webkit-user-select:none;user-select:none;font-family:'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei','Noto Sans CJK SC',sans-serif;}
 #app{position:relative;width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;}
-#cv{display:block;touch-action:none;background:#3f4f33;}   /* 【v1.211z 第十八刀】首帧之前的底色：#e8f4d8 是**旧浅纸色**，改深后它成了「一闪浅绿 + 跑调」。换成当前大厅纸色 #3f4f33。回退：改回 #e8f4d8。 */
+#cv{display:block;touch-action:none;background:transparent;position:relative;z-index:1;}
+  /* 【v1.211z 第三十八刀】首帧之前那一屏：母版 4.6MB，手机上解析要一会儿。
+     原来这里是一片**没有署名的**深绿（第十八刀只为"不要一闪浅绿"）。这一刀给它加上名字：
+     splash 画在 canvas **下面**（canvas 透明 + z-index 1）⇒ 游戏一绘出第一帧就自动盖住它，
+     **全程不需要一行脚本**（脚本万一挂了，splash 留在那儿反而是好事 —— 好过一片空白）。
+     底色仍取大厅纸色 #3f4f33（与 theme-color / CONFIG.colors.bg 同源）。回退：删 #boot 那段 HTML + 还原本行 background。 */
+  #boot{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;background:#3f4f33;color:#f4f8e6;z-index:0;
+    font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}
+  #boot .t{font-size:34px;font-weight:700;letter-spacing:6px;color:#f4f8e6;text-shadow:0 2px 0 rgba(20,28,14,0.55);}
+  #boot .s{font-size:15px;letter-spacing:2px;color:#c9d6bb;}
+  #boot .d{margin-top:6px;width:74px;height:3px;border-radius:2px;background:rgba(201,214,187,0.30);
+    animation:bootpulse 1.6s ease-in-out infinite;}
+  @keyframes bootpulse{0%,100%{opacity:0.35;transform:scaleX(0.55);}50%{opacity:1;transform:scaleX(1);}}
+  @media (prefers-reduced-motion:reduce){#boot .d{animation:none;opacity:0.7;transform:none;}}   /* 【v1.211z 第十八刀】首帧之前的底色：#e8f4d8 是**旧浅纸色**，改深后它成了「一闪浅绿 + 跑调」。换成当前大厅纸色 #3f4f33。回退：改回 #e8f4d8。 */
 </style>
 </head>
 <body data-page-node-id="XG6KrVBrjP8x6DDZiDiH8k">
-<div id="app" data-page-node-id="LDEPJ5GNrJCyUNZ3NPnFpv"><canvas id="cv" data-page-node-id="WoFPWLkiX7Gm2dtKtSjCkS"></canvas></div>
+<div id="app" data-page-node-id="LDEPJ5GNrJCyUNZ3NPnFpv"><div id="boot"><div class="t">萌兽不好惹</div><div class="s">正在唤醒萌兽…</div><div class="d"></div></div><canvas id="cv" data-page-node-id="WoFPWLkiX7Gm2dtKtSjCkS"></canvas></div>
 <script>
 "use strict";
 // ============================================================
