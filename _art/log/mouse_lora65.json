@@ -1,0 +1,14 @@
+{
+  "name": "mouse_lora65",
+  "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+  "prompt": "a small grey mouse creature with round ears and a thin tail, game asset, front view, pixel art, PixArFK",
+  "negative": "",
+  "strength": 0.65,
+  "guidance": 7.5,
+  "steps": 20,
+  "size": 512,
+  "ref": "mouse.png",
+  "lora": "artificialguybr/pixelartredmond-1-5v-pixel-art-loras-for-sd-1-5",
+  "lora_weight": "PixelArtRedmond15V-PixelArt-PIXARFK.safetensors",
+  "seconds": 195.2
+}

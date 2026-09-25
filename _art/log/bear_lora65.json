@@ -1,0 +1,14 @@
+{
+  "name": "bear_lora65",
+  "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+  "prompt": "a chunky brown bear creature with small round ears and heavy arms, game asset, front view, pixel art, PixArFK",
+  "negative": "",
+  "strength": 0.65,
+  "guidance": 7.5,
+  "steps": 20,
+  "size": 512,
+  "ref": "bear.png",
+  "lora": "artificialguybr/pixelartredmond-1-5v-pixel-art-loras-for-sd-1-5",
+  "lora_weight": "PixelArtRedmond15V-PixelArt-PIXARFK.safetensors",
+  "seconds": 194.7
+}
