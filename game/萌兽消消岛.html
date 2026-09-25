@@ -29476,7 +29476,10 @@ function makeModal(id, panelW, panelH, drawPanel) {
       //     不翻就是「深绿压深盘」——v1.211o 那类读不出来的错。
       //   【没动的】柔光梯度（浅盘专用）在深盘下**跳过**；墨缘换成亮橄榄，否则深绿边压深盘等于没有边。
       //   回退：把 `isDarkPanelLv` 恒置 false（或删本段改回 `ctx.fillStyle = c.modalPanel;`）。
-      var isDarkPanelLv = (this.id === "levelup") && (typeof GAME !== "undefined") && !GAME.gearPickMode;
+      // 【v1.211z 第八刀】深盘名单扩展：升级三选一（第七刀）+ 结算（本刀）。
+      //   结算页文字集中度高（小字全在 `drawResultPanel` 的局部 `ink` 里）⇒ 翻亮只需 4 处，风险可控。
+      //   复活盘**不进名单**：它有【v1.188】「字阶收进橄榄/奶油、金黄与警报红退出复活盘」的整屏配色裁决。
+      var isDarkPanelLv = (this.id === "levelup" || this.id === "resultmodal") && (typeof GAME !== "undefined") && !GAME.gearPickMode;
       ctx.fillStyle = isDarkPanelLv ? "#2f3a26" : c.modalPanel;
       fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       if (!isDarkPanelLv) {
@@ -32222,7 +32225,12 @@ function drawResultPanel(ctx, m) {
   var goldY = py + (CONFIG.resultGoldY || 276);
   var cardY = py + (CONFIG.resultPowerY || 416);
   var mm, ss, head;
-  var ink = "#3c4a30";   // 【v1.189】结算小字深苔, 对比再抬约一档, 无金闪
+  // 【v1.211z 第八刀】结算走深盘配套：小字翻亮。
+  //   本屏小字**全部**走这一个局部量 ⇒ 一处即全屏。原 `#3c4a30` 是【v1.189】拿**浅苔盘**算的
+  //   （深苔、对比再抬一档）；深盘下必须同步换，否则就是深压深读不出来。
+  //   无需条件：`drawResultPanel` 只服务 `resultmodal`，而该盘按名单**必然**是深盘。
+  //   `#dfe8cc` 压深盘 `#2f3a26` = **9.39:1**（按 WCAG 相对亮度实算）。
+  var ink = "#dfe8cc";
   ctx.fillStyle = ink;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -32248,10 +32256,14 @@ function drawResultPanel(ctx, m) {
   ctx.fillStyle = ink;
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText(head, cx, py + 32);
-  ctx.fillStyle = c.cardGold;   // 【v1.167】文字用深金(对比度 2.13:1→5.18:1)
+  // 【v1.211z 第八刀】深盘配套：地图行由浅盘专用的「深金」换「亮金」`#e6c24a`
+  //   （压深盘 6.86:1；原深金 `#7a6220` 压深盘只有 2.03:1）。本盘恒深（名单里只有 levelup/resultmodal）。
+  ctx.fillStyle = "#e6c24a";
   ctx.font = "bold 14px " + FONT_STACK;
   ctx.fillText(mapThemeLine(ch), cx, py + 52);
-  ctx.fillStyle = runSummary.win ? c.cardTitle : "#8a2a2a";
+  // 【v1.211z 第八刀】深盘配套：标题翻亮 —— 胜 = 暖白 `#f4f8e6`（压深盘 11.07:1）；
+  //   负 = 浅红 `#ff9a86`（5.17:1）。原 `#8a2a2a` 压深盘只有 1.6:1（等于看不见）。
+  ctx.fillStyle = runSummary.win ? "#f4f8e6" : "#ff9a86";
   ctx.font = "bold 40px " + FONT_STACK;
   ctx.fillText(runSummary.win ? "通关胜利!" : "挑战失败", cx, py + 84);
   // 【v1.154】标题下划线收短收细且降 alpha, 结算 chrome 更静, 层级=标题→数据→CTA
@@ -32275,7 +32287,8 @@ function drawResultPanel(ctx, m) {
     ctx.fillText("此章最佳 胜" + runSummary.prevBest.wins + " · 击杀 " + runSummary.prevBest.bestKills
       + " · 最快 " + pbm + ":" + (pbs < 10 ? "0" : "") + pbs, cx, py + 132);
   } else if (!runSummary.win && runSummary.note) {
-    ctx.fillStyle = "#c0392b";
+    // 【v1.211z 第八刀】深盘配套：失败备注由警报红换浅红（原 `#c0392b` 压深盘 2.16:1；`#ff9a86` = 5.17:1）
+    ctx.fillStyle = "#ff9a86";
     ctx.fillText(runSummary.note, cx, py + 132);
   }
   // 【v1.193】无尽结算第二行: 本局成绩 vs 历史最佳(原缺陷: endlessTime/Kills 写盘+clamp 携带但零渲染点,
@@ -32313,7 +32326,8 @@ function drawResultPanel(ctx, m) {
         + " · 击杀 " + (_pe2.endlessKills | 0), cx, py + 158);
     }
   } else if (!runSummary.win && runSummary.note) {
-    ctx.fillStyle = "#c0392b";
+    // 【v1.211z 第八刀】深盘配套：失败备注由警报红换浅红（原 `#c0392b` 压深盘 2.16:1；`#ff9a86` = 5.17:1）
+    ctx.fillStyle = "#ff9a86";
     ctx.fillText(runSummary.note, cx, py + 132);
   }
   drawRewardTrio(ctx, cx - 260, trioY, 520, CONFIG.resultTrioH || 118, view, true);
