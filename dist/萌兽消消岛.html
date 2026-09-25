@@ -25294,13 +25294,25 @@ function paintHallGround(c2, w, h, th) {
   // 【v1.152】洗更净: 草丛 4→2 簇且更小更淡, 大色块再柔一档, 舞台/英雄/出击是主角
   // 【v1.176】瓦片只留左上受光+稀疏草团。路唇改在 drawHallStageGround 画一次, 避免平铺成条纹。
   // 【v1.184】草簇加密(备案 HALL 不空奶油), 仍不成格栅; 路纹在 drawHallStageAccent
-  c2.fillStyle = "#dce8c8";
+  // 【v1.211z 第十四刀：大厅纸面由「浅鼠尾草绿纸」换**深苔纸**】
+  //   ⚠ **本条是对【v1.143】「浅鼠尾草绿纸」/【v1.152】「洗更净」/【v1.211b】「颜色一律不动」的有意变更**。
+  //     理由（按项目自己的权威顺序：用户当面要求 > 内部注释）：用户当面点名方向是
+  //     「萌兽 + 弹壳特攻队 + 元素骑士」并明确判「画风不行、质量差、方向很重要」，而那两款作品的首屏都是**深底亮卡**；
+  //     本项目其余 12/13 模态已按同一方向改成深盘 ⇒ 只剩大厅是浅纸，玩家一进一出就感到**色调跳变**。
+  //   【变更的是色调，不是那几条裁决的意图】v1.143/v1.152 要的是「出击与英雄是主角」——
+  //     深纸上的**浅色带子与立绘反而更跳**（样张 `_qc/_baseline/hall-before-after.png` 已用真图验证）。
+  //   【严格没动什么】草簇/路纹颜色 `#6a9a4a/#5a8a3a` **一个字没改**（那是 v1.211b 明确保护的对象）；
+  //     位置种子 4217、平铺方式、簇数尺寸一律不动。⇒ 草簇在深纸上会读作**更含蓄的暗纹**，不再抢主角。
+  //   【连带的一处】5 团柔光椭圆在深纸上会变成亮斑 ⇒ 同刀把它们的 alpha 收下来（0.85/0.7 → 0.12/0.09），
+  //     仍是「光池」读法，只是不再喊。
+  //   回退：四处色值改回 `#dce8c8` / `#f2f6e4` / `#e4eed4` / `#c6d6ae`，两个 alpha 改回 `0.85` / `0.7`。
+  c2.fillStyle = "#3f4f33";
   c2.fillRect(0, 0, w, h);
   try {
     g = c2.createLinearGradient(0, 0, w * 0.72, h * 0.9);
-    g.addColorStop(0, "#f2f6e4");
-    g.addColorStop(0.42, "#e4eed4");
-    g.addColorStop(1, "#c6d6ae");
+    g.addColorStop(0, "#4c5c3e");
+    g.addColorStop(0.42, "#44543a");
+    g.addColorStop(1, "#364528");
     c2.fillStyle = g;
     c2.fillRect(0, 0, w, h);
   } catch (eHg) { /* keep flat base */ }
@@ -25311,7 +25323,7 @@ function paintHallGround(c2, w, h, th) {
     y = 80 + rnd() * (h - 160);
     rw = 90 + rnd() * 70;
     rh = 40 + rnd() * 36;
-    c2.fillStyle = n % 2 ? "rgba(210,224,184,0.85)" : "rgba(236,244,220,0.7)";
+    c2.fillStyle = n % 2 ? "rgba(210,224,184,0.12)" : "rgba(236,244,220,0.09)";   // 【v1.211z】深纸上的光池，alpha 收下来
     c2.beginPath();
     if (typeof c2.ellipse === "function") c2.ellipse(x, y, rw, rh, rnd() * 0.4, 0, CONFIG.TWO_PI);
     else c2.arc(x, y, rw * 0.5, 0, CONFIG.TWO_PI);
