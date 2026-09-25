@@ -49,6 +49,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
           pip install --no-cache-dir diffusers transformers accelerate safetensors pillow
+          # 【O35 第 6 批实测】load_lora_weights() 需要 peft 后端 —— 缺它时抛
+          #   `ValueError: PEFT backend is required for load_lora_weights()`。
+          #   ⚠ gen.py 是"LoRA 失败就退回原模型继续"，所以那一批**照常出图、跑完还写 success**，
+          #   只有 run.txt 里一行告警能看出来 —— 教训：**降级路径必须配一个"我降级了"的醒目读数**。
+          pip install --no-cache-dir peft
 
       - name: 参考图 img2img（输出留档，失败也继续）
         continue-on-error: true
