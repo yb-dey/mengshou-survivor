@@ -28116,6 +28116,22 @@ function drawHallOverlays(ctx) {
   if (GAME.state !== GAME.flow.HOME && GAME.state !== GAME.flow.ABOUT &&
       GAME.state !== GAME.flow.GUIDE && GAME.state !== GAME.flow.ARMORY &&
       GAME.state !== GAME.flow.BEAST && GAME.state !== GAME.flow.SETTINGS) return;
+  // 【v1.211z 第十三刀：大厅加一层**暗角** —— 只压纸面、不压带子】
+  //   【为什么是加法而不是改色】大厅底面有一族硬裁决（【v1.143】浅鼠尾草绿纸 / 【v1.152】洗更净 /
+  //     【v1.211b】⛔颜色一律不动）—— 它们讲的是「纸要多浅、地面别抢 CTA」，**没有一条禁止在纸上加层次**。
+  //     所以本刀**一个色号都不改**，只在纸面上叠一张预渲染暗角 ⇒ 视线被收到中间（英雄 + 正片出击），四周沉下去。
+  //   【为什么不算违裁决】它服务的是同一件事：v1.143/v1.152 要的就是「出击与英雄是主角」，
+  //     暗角正是把主角托出来的手法；而且本函数画在**世界层**（按钮与模态都在它之后）⇒ 带子与卡片**零变化**。
+  //   【复用了什么】`SPRITES.vignette` —— 战斗里「超武合成径向暗角」用的同一张**预渲染**贴图（【R5】），
+  //     符合「禁逐帧创建渐变、改用预渲染贴图」的硬规矩；无新资源、无逐帧渐变。
+  //   【可量】纸面边角亮度下降、画面中心不变；带子/卡片像素零变化。
+  //   回退：删掉下面这个 if 块即可。
+  if (SPRITES.vignette) {
+    ctx.save();
+    ctx.globalAlpha = 0.20;
+    ctx.drawImage(SPRITES.vignette, 0, 0, CONFIG.viewW, CONFIG.viewH);
+    ctx.restore();
+  }
   th = worldThemeOf();
   if (GAME.state === GAME.flow.HOME && GAME.hallForgeMsgT > 0 && (GAME.hallDeal || GAME.hallForgeMsg)) {
     a = Math.min(1, GAME.hallForgeMsgT / 0.22);
