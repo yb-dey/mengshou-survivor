@@ -29466,17 +29466,34 @@ function makeModal(id, panelW, panelH, drawPanel) {
       // 【v1.176】苔盘再净一档: 左上柔光 + #2f5a3a 墨缘, 强化/图鉴备案截图不显洗白
       ctx.fillStyle = "rgba(16,20,14,0.18)";
       fillRoundRect(ctx, px + 3, py + 6, this.panelW, this.panelH, 18);
-      ctx.fillStyle = c.modalPanel;
+      // 【v1.211z 美术方向 · 第七刀：升级三选一单独走**深盘**（全局 modalPanel 一字不动）】
+      //   【为什么只给这一屏】它是全游戏看得最多的模态（每局 5~10 次），也是参考作品里对比最强的一屏。
+      //     `c.modalPanel` 本身动不得（两代裁决 + 选中态分支 + v1.211n/o 那批**拿它算过的文字对比度结论**）
+      //     ⇒ 走**逐屏 opt-in**：只这一屏换底，其余八个模态保持原样，风险面被压到一屏之内。
+      //   【为什么带 gearPickMode 守卫】开箱选装与它共用同一个面板函数，但那支里还有
+      //     `drawGearLoadoutStrip` 等一件套件（配色都是照浅盘调的）⇒ 那一支**继续走浅盘**，不连带。
+      //   【配套必须一起改的】面板级文字只有两行（32px 标题 + 20px 提示），本刀同时把它们翻亮：
+      //     不翻就是「深绿压深盘」——v1.211o 那类读不出来的错。
+      //   【没动的】柔光梯度（浅盘专用）在深盘下**跳过**；墨缘换成亮橄榄，否则深绿边压深盘等于没有边。
+      //   回退：把 `isDarkPanelLv` 恒置 false（或删本段改回 `ctx.fillStyle = c.modalPanel;`）。
+      var isDarkPanelLv = (this.id === "levelup") && (typeof GAME !== "undefined") && !GAME.gearPickMode;
+      ctx.fillStyle = isDarkPanelLv ? "#2f3a26" : c.modalPanel;
       fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
-      try {
-        mossG = ctx.createLinearGradient(px, py, px + this.panelW * 0.7, py + this.panelH * 0.55);
-        mossG.addColorStop(0, "rgba(255,252,238,0.42)");
-        mossG.addColorStop(0.45, "rgba(232,240,200,0.10)");
-        mossG.addColorStop(1, "rgba(58,70,38,0.06)");
-        ctx.fillStyle = mossG;
-        fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
-      } catch (eMoss) { /* keep flat panel */ }
-      ctx.strokeStyle = "#2f5a3a";
+      if (!isDarkPanelLv) {
+        try {
+          mossG = ctx.createLinearGradient(px, py, px + this.panelW * 0.7, py + this.panelH * 0.55);
+          mossG.addColorStop(0, "rgba(255,252,238,0.42)");
+          mossG.addColorStop(0.45, "rgba(232,240,200,0.10)");
+          mossG.addColorStop(1, "rgba(58,70,38,0.06)");
+          ctx.fillStyle = mossG;
+          fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
+        } catch (eMoss) { /* keep flat panel */ }
+      } else {
+        // 深盘上给一层极淡的顶光，避免整块死平（不创建逐帧渐变的替代：单色柔叠）
+        ctx.fillStyle = "rgba(255,255,255,0.045)";
+        fillRoundRect(ctx, px, py, this.panelW, this.panelH * 0.42, 18);
+      }
+      ctx.strokeStyle = isDarkPanelLv ? "#8fae6a" : "#2f5a3a";
       ctx.lineWidth = 2.2;
       strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       ctx.lineWidth = 1;
@@ -30863,7 +30880,8 @@ function registerUi() {
     var lm = levelupPanelMetrics();
     m.panelH = lm.panelH;                    // 【v1.167】面板随可见卡数自适应(否则卡片与底板错位)
     var py = (CONFIG.viewH - m.panelH) / 2;
-    ctx.fillStyle = c.cardTitle;
+    // 【v1.211z 第七刀】深盘配套：本屏标题翻亮（浅盘时仍是 c.cardTitle，一个字不变）
+    ctx.fillStyle = ((typeof GAME !== "undefined") && !GAME.gearPickMode) ? "#f4f8e6" : c.cardTitle;
     ctx.font = "bold 32px " + FONT_STACK;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -30888,7 +30906,12 @@ function registerUi() {
       ctx.fillText("再点才穿上/入包 · 点空白不关", CONFIG.viewW / 2, lm.hintY);
       drawGearLoadoutStrip(ctx, (CONFIG.viewW - (6 * ((CONFIG.gearHudIconS || 30) + 13) - 5)) / 2, py + 122, false, gearPickHotSlots(), true, true);
     } else {
-      ctx.fillStyle = "#256b36";   // 【v1.211o】同上（同屏另一条提示，同一实测梯度结论）
+      // 【v1.211z 第七刀】深盘配套：提示翻亮。⚠ 原色 `#256b36` 是 v1.211o **拿浅盘梯度算出来**的
+      //   （对 #dee6ca/#e8f0d4/#eef4dc 是 3.32/3.64/3.80 → 改深两档才过 4.5）—— 那一整套结论
+      //   前提是**浅盘**；本屏既然换深盘，就必须同步换字色，否则等于把那条裁决原地推翻。
+      //   新色 `#d8e8b8` 压 #2f3a26 的对比度 = **9.21:1**（远过 4.5）；浅盘分支（开箱选装）仍用 #256b36。
+      //   （同屏标题 `#f4f8e6` 压 #2f3a26 = **11.07:1**。两处都按 WCAG 相对亮度算，不是估值。）
+      ctx.fillStyle = ((typeof GAME !== "undefined") && !GAME.gearPickMode) ? "#d8e8b8" : "#256b36";
       ctx.fillText("再点才生效 · 金边可略过", CONFIG.viewW / 2, lm.hintY);
     }
   });
