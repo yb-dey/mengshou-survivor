@@ -1,3 +1,3 @@
-# O35 第 3 批：元气骑士风（用户指定）× 兔/蘑菇
-rabbit_soulknight | Soul Knight style game character sprite, chubby rabbit warrior, chunky proportions, bold thick black outlines, bright saturated colors, simple pixel-art inspired shading, tiny dot eyes, full body, front view, plain white background | 0.6 |  | rabbit.png
-sporecap_soulknight | Soul Knight style game character sprite, chubby mushroom creature, chunky proportions, bold thick black outlines, bright saturated colors, simple pixel-art inspired shading, tiny dot eyes, full body, front view, plain white background | 0.6 |  | sporecap.png
+# O35 第 4 批：像素画风（元气骑士参照）
+rabbit_pix | pixel art game sprite of a cute rabbit warrior, 32x32 pixels, chunky pixels, limited color palette, bold saturated colors, dark outline, Soul Knight style, transparent simple background, full body | 0.45 |  | rabbit.png
+sporecap_pix | pixel art game sprite of a cute mushroom creature, 32x32 pixels, chunky pixels, limited color palette, bold saturated colors, dark outline, Soul Knight style, transparent simple background, full body | 0.45 |  | sporecap.png
