@@ -29374,6 +29374,41 @@ function drawPausePanel(ctx, m) {
 }
 
 // Modal: 全屏遮罩吞点击(防穿透摇杆) + 居中面板; 面板内按钮后注册 -> 先命中。
+// 【v1.211z 美术方向 · 第三刀：区域颜色身份】每个模态给一条自己的色带。
+//   【为什么是这里】21 屏真机联络表的第一号问题是「**八个区域长得一模一样**」——大厅/选章/装备库/
+//     仓库/天赋/图鉴/设置/结算 全是同一种淡绿，玩家只能靠读标题知道自己在哪；而参考游戏（弹壳特工队/
+//     元素骑士）每个区域都有色彩 signature。全部模态的面板由 `makeModal` 一处绘制 ⇒ **一处改、九屏生效**。
+//   【为什么不改面板底色】`modalPanel` 有两代裁决（【v1.176】「苔盘略深一档·备案不洗白」）+ **状态分支**
+//     （选中态是另一个色 `#c8ecc8`，见 L10694）+ 一串**拿它算过的文字对比度裁决**（v1.211n/o）⇒ 动它会
+//     连带推翻那些结论。本刀**只加一条色带**：零文字改动、零状态色改动、零素材改动。
+//   【取色】低饱和、与苔绿家族共存（不引入霓虹），靠色相区分而不是靠亮度喊。
+//   回退：删掉本表与两处 `if (acc)` 绘制块即可。
+var MODAL_ACCENT = {
+  "levelup": "#d9a33a", "upgrademodal": "#c98a2e", "vaultmodal": "#a5713f",
+  "beastmodal": "#8b5cc7", "gearmodal": "#3f8fb0", "chaptermodal": "#4f9e4a",
+  "resultmodal": "#c9a227", "pausemenu": "#6b7a8f", "revivemodal": "#b8483c",
+  "settingsmodal": "#6b7a8f", "dailymodal": "#d07a3a", "guidemodal": "#7a8f5a",
+  "aboutmodal": "#8a8f7a"
+};
+function drawModalAccent(ctx, px, py, panelW, id) {
+  var acc = MODAL_ACCENT[id];
+  if (!acc) return;
+  // 顶部色带（加厚到 20：14 时在真机上只有 7 CSS px，只算"看得出"，算不上"身份"）
+  var bx = px + 11, bw = panelW - 22, by = py + 10, bh = 20;
+  ctx.fillStyle = acc;
+  fillRoundRect(ctx, bx, by, bw, bh, 8);
+  // 色带上沿一道细高光、下沿一道淡墨 —— 与「苔纸 + 细墨框」的家族感对齐, 不引入金边
+  ctx.fillStyle = "rgba(255,255,255,0.22)";
+  fillRoundRect(ctx, bx + 2, by + 2, bw - 4, 4, 2);
+  ctx.fillStyle = "rgba(47,90,58,0.30)";
+  fillRoundRect(ctx, bx + 2, by + bh - 3, bw - 4, 2, 1);
+  // 左缘竖轨：同色、贴边、**永远压不到文字** ⇒ 零对比度风险，却让"这是哪个区域"在余光里也能认出
+  var railH = 96;
+  ctx.fillStyle = acc;
+  fillRoundRect(ctx, px + 5, py + 40, 8, railH, 4);
+  ctx.fillStyle = "rgba(255,255,255,0.18)";
+  fillRoundRect(ctx, px + 6, py + 43, 2.5, railH - 6, 1.2);
+}
 function makeModal(id, panelW, panelH, drawPanel) {
   return UIStack.add({
     id: id, kind: "Modal",
@@ -29413,6 +29448,7 @@ function makeModal(id, panelW, panelH, drawPanel) {
         ctx.lineWidth = 2;
         strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
         ctx.lineWidth = 1;
+        drawModalAccent(ctx, px, py, this.panelW, this.id);   // 【v1.211z】区域色带
         if (drawPanel) drawPanel(ctx, this);
         return;
       }
@@ -29434,6 +29470,7 @@ function makeModal(id, panelW, panelH, drawPanel) {
       ctx.lineWidth = 2.2;
       strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       ctx.lineWidth = 1;
+      drawModalAccent(ctx, px, py, this.panelW, this.id);   // 【v1.211z】区域色带
       if (drawPanel) drawPanel(ctx, this);
     }
   });
