@@ -1,6 +1,7 @@
-# 输出名 | 提示词 | strength | guidance | 参考图
-# strength = 改多少：越低越像原图（保质量），越高越"重画"（易出 AI 痕迹）。
-# 首张 strength 0.55 的结果：角色保住了，但画质下降（护目镜丢失、尾巴/武器有痕迹）⇒ 本轮做低 strength 对照。
-hero_s030 | crisp clean 2d game sprite of a chibi raccoon survivor hero, bold dark outline, two-tone cel shading, moss green vest, orange neckerchief, striped tail, full body front view, plain flat pale green background, high clarity lineart, sticker style | 0.30 | 0.0 | hero.png
-hero_s040 | crisp clean 2d game sprite of a chibi raccoon survivor hero, bold dark outline, two-tone cel shading, moss green vest, orange neckerchief, striped tail, full body front view, plain flat pale green background, high clarity lineart, sticker style | 0.40 | 0.0 | hero.png
-hero_s050 | crisp clean 2d game sprite of a chibi raccoon survivor hero, bold dark outline, two-tone cel shading, moss green vest, orange neckerchief, striped tail, full body front view, plain flat pale green background, high clarity lineart, sticker style | 0.50 | 0.0 | hero.png
+# 第 145 轮 O35 重新设计样张：三种候选风格 × 兔/蘑菇（用户否了豆豆眼样张，要求整体重设计）
+rabbit_flat | flat vector cartoon game sprite, thick clean dark outline, solid colors, no gradient, no glossy highlight, simple small dot eyes, cute chibi proportions, plain background , full body, centered | 0.55
+sporecap_flat | flat vector cartoon game sprite, thick clean dark outline, solid colors, no gradient, no glossy highlight, simple small dot eyes, cute chibi proportions, plain background , full body, centered | 0.55
+rabbit_chalk | hand-drawn crayon storybook illustration, rough paper texture, soft waxy strokes, muted natural colors, small simple eyes, cute chubby rabbit, plain background , full body, centered | 0.55
+sporecap_chalk | hand-drawn crayon storybook illustration, rough paper texture, soft waxy strokes, muted natural colors, small simple eyes, cute chubby mushroom creature, plain background , full body, centered | 0.55
+rabbit_ink | children storybook ink and watercolor painting, soft ink outline, gentle watercolor fills, tiny bead eyes, warm colors, cute round rabbit, plain background , full body, centered | 0.55
+sporecap_ink | children storybook ink and watercolor painting, soft ink outline, gentle watercolor fills, tiny bead eyes, warm colors, cute round mushroom creature, plain background , full body, centered | 0.55

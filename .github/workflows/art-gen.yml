@@ -29,9 +29,9 @@ jobs:
       # 【第 101 轮】sd-turbo 4 步/512px 的结论：角色保住但**打不过现有手绘**（0.30 最像、0.50 已劣化）。
       # 换成 SDXL-turbo 再量一档：分辨率 768、1–2 步；跑不动（OOM/超时）就说明这台 runner 的天花板在这，
       # 失败原因会由工作流写进 _art/log/run.txt（回读通道）。
-      ART_MODEL: stabilityai/sdxl-turbo
-      ART_STEPS: '2'
-      ART_SIZE: '768'
+      ART_MODEL: stabilityai/sd-turbo
+      ART_STEPS: '4'
+      ART_SIZE: '512'
     steps:
       - uses: actions/checkout@v4
 
