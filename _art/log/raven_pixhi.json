@@ -1,0 +1,12 @@
+{
+  "name": "raven_pixhi",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "32-bit pixel art sprite of a small dark purple bird creature with spread pointed wings and a wide beak, flat colours, thick dark outline, no gradients, minimal detail, simple bold shapes, game enemy sprite, plain background",
+  "negative": "",
+  "strength": 0.9,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "raven.png",
+  "seconds": 37.0
+}

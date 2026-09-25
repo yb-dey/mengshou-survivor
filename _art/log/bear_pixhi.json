@@ -1,0 +1,12 @@
+{
+  "name": "bear_pixhi",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "32-bit pixel art sprite of a chunky brown bear creature with small round ears and heavy arms, flat colours, thick dark outline, no gradients, minimal detail, simple bold shapes, game enemy sprite, plain background",
+  "negative": "",
+  "strength": 0.9,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "bear.png",
+  "seconds": 37.1
+}

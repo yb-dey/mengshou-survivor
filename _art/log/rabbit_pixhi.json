@@ -1,0 +1,12 @@
+{
+  "name": "rabbit_pixhi",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "32-bit pixel art sprite of a small round rabbit creature with long upright ears, flat colours, thick dark outline, no gradients, no soft shading, minimal detail, simple bold shapes, game enemy sprite, plain background",
+  "negative": "",
+  "strength": 0.9,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "rabbit.png",
+  "seconds": 37.1
+}
