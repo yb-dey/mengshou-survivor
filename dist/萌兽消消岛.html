@@ -858,8 +858,8 @@ var CONFIG = {
   codexTabW: 204,                // 【v1.45】页签宽
   codexTabGap: 10,               // 【v1.45】页签间距
   codexBodyY: 168,               // 【v1.45】分页内容顶
-  codexPetRowH: 118,             // 【v1.45】跟宠行高(开火/星阶一行可读)
-  codexPetGap: 4,                // 【v1.177】跟宠行距略收, 一屏更像册页; 行高仍够四行字
+  codexPetRowH: 200,             // 【v1.211w O27 样板】118→200：每页 4 行大字（名字 28/说明 22/数值 20/手感 17），7 只分两页
+  codexPetGap: 14,               // 【v1.211w】4→14：行距随行高放大，一屏 4 行 + 底部翻页签
   codexEnemyRowH: 108,           // 【v1.45】敌人行高
   codexEnemyGap: 4,              // 【v1.177】敌人行距略收, 与跟宠同档
   codexGroupH: 52,               // 【v1.45】敌人分组签高
@@ -30709,7 +30709,7 @@ var uiVaultModal = null, uiVaultTabs = null, uiVaultCraft = null, uiVaultTalent 
 var uiVaultCraftRows = null, uiVaultTalentRows = null;
 var uiVaultMsg = "";
 var uiVaultOk = false;
-var uiBeastModal = null, uiBeastCells = null, uiBeastClose = null;   // 图鉴页(步骤11)
+var uiBeastModal = null, uiBeastCells = null, uiBeastClose = null, uiPetPageChips = null;   // 图鉴页(步骤11)
 var uiCodexTabs = [];               // 【v1.45】跟宠/敌人/配方页签
 var uiCodexEnemyGroups = [];        // 【v1.45】敌人分组签
 var uiCodexEnemyCells = [];         // 【v1.45】敌人行
@@ -31027,11 +31027,25 @@ function registerUi() {
   }
   uiBeastCells = [];
   var petY0 = bPy + (CONFIG.codexBodyY || 168);
-  var petH = CONFIG.codexPetRowH || 118;
-  var petGap = CONFIG.codexPetGap || 6;
-  for (var b = 0; b < DATA_BEAST.length; b++) {
+  // 【v1.211w O27 样板（用户 2026-09-25 拍板"减字+改密度，先做图鉴样板屏"）】
+  //   密度：7 行 118px 一屏挤下 → **每页 4 行 200px**（7 只 = 4+3 两页，行区下方翻页签）。
+  //   行内字号同步抬（真机 mm = px×0.0944）：名字 22→28（2.08→2.64mm）· 说明 17→22（1.60→2.08mm）·
+  //   数值 16→20（1.51→1.89mm）· 手感提示（原挤在说明行里）**独立成行 17px**。
+  //   减字：说明与手感**拆成两行**而不是删内容 —— 行高翻倍后竖向空间足够，信息一条不丢。
+  var petH = CONFIG.codexPetRowH || 200;
+  var petGap = CONFIG.codexPetGap || 14;
+  var petVisible = Math.min(4, DATA_BEAST.length);
+  for (var b = 0; b < petVisible; b++) {
     uiBeastCells.push(makeBeastCell(b, 44, petY0 + b * (petH + petGap), 632, petH));
   }
+  // 翻页签（仅 pet 页）：‹ 上一页 | 1/2 | 下一页 ›，画在行区之下 12px；codexContentBottom 同口径 +64
+  uiPetPageChips = [];
+  var pgY = petY0 + petVisible * (petH + petGap) - petGap + 12, pgH = 52;
+  var pgW = 132, pgMidW = 88, pgGapX = 18;
+  var pgX0 = 44 + (632 - (pgW * 2 + pgMidW + pgGapX * 2)) / 2;
+  uiPetPageChips.push(makePetPageChip(0, pgX0, pgY, pgW, pgH, -1));
+  uiPetPageChips.push(makePetPageChip(1, pgX0 + pgW + pgGapX, pgY, pgMidW, pgH, 0));
+  uiPetPageChips.push(makePetPageChip(2, pgX0 + pgW + pgMidW + pgGapX * 2, pgY, pgW, pgH, 1));
   uiCodexEnemyGroups = [];
   var grpW = 152, grpGap = 8, grpX0 = (CONFIG.viewW - (4 * grpW + 3 * grpGap)) / 2;
   var grpY = bPy + (CONFIG.codexBodyY || 168);
@@ -33407,7 +33421,7 @@ function drawCodexBeastPlate(ctx, x, y, w, h, tint) {
 // 【v1.167】图鉴"内容底" —— 页脚不再写死绝对偏移，而是跟着当前页签的真实条目数走
 // 【v1.167b】控件基准 y：面板改矮后 py 会变，控件必须跟着平移，否则标题被裁、副标题压页签
 function codexStampBases() {
-  var arrs = [uiCodexTabs, uiBeastCells, uiCodexEnemyGroups, uiCodexEnemyCells, uiCodexForks, uiCodexPairs, uiCodexEvos, [uiBeastClose]];
+  var arrs = [uiCodexTabs, uiBeastCells, uiPetPageChips, uiCodexEnemyGroups, uiCodexEnemyCells, uiCodexForks, uiCodexPairs, uiCodexEvos, [uiBeastClose]];
   for (var a = 0; a < arrs.length; a++) {
     var g = arrs[a];
     if (!g) continue;
@@ -33418,7 +33432,7 @@ function codexStampBases() {
   }
 }
 function codexShiftWidgets(py) {
-  var arrs = [uiCodexTabs, uiBeastCells, uiCodexEnemyGroups, uiCodexEnemyCells, uiCodexForks, uiCodexPairs, uiCodexEvos, [uiBeastClose]];
+  var arrs = [uiCodexTabs, uiBeastCells, uiPetPageChips, uiCodexEnemyGroups, uiCodexEnemyCells, uiCodexForks, uiCodexPairs, uiCodexEvos, [uiBeastClose]];
   for (var a = 0; a < arrs.length; a++) {
     var g = arrs[a];
     if (!g) continue;
@@ -33431,7 +33445,11 @@ function codexShiftWidgets(py) {
 function codexContentBottom() {
   var tab = codexTabId();
   var bodyY = CONFIG.codexBodyY || 168;
-  if (tab === "pet") return bodyY + DATA_BEAST.length * ((CONFIG.codexPetRowH || 118) + (CONFIG.codexPetGap || 6));
+  if (tab === "pet") {
+    // 【v1.211w O27 样板】每页 4 行（行高 200/间距 14）+ 行区下 12px 的翻页签行（52）—— 与布局端同口径
+    var pv = Math.min(4, DATA_BEAST.length);
+    return bodyY + pv * ((CONFIG.codexPetRowH || 200) + (CONFIG.codexPetGap || 14)) - (CONFIG.codexPetGap || 14) + 64;
+  }
   // 【2026-09-22】「道具」页: 3 张三卡竖排(rh132+gap26)，与 drawCodexItemDetail 同口径
   if (tab === "item") return bodyY + FIELD_KIND_ORDER.length * 158 - 26;
   if (tab === "fork") {
@@ -33724,9 +33742,12 @@ function makeBeastCell(idx, x, y, w, h) {
     id: "beastcell" + idx, kind: "BeastCell",
     rect: { x: x, y: y, w: w, h: h },
     visible: false, idx: idx,
-    onTap: function () { onTapBeastCell(this.idx); },
+    onTap: function () { onTapBeastCell((GAME.codexPetPage | 0) * 4 + this.idx); },
     draw: function (ctx) {
-      var d = DATA_BEAST[this.idx];
+      // 【v1.211w】分页映射：格子 this.idx(0..3) → 实际跟宠 = 页号×4 + idx；空槽不画
+      var pi = (GAME.codexPetPage | 0) * 4 + this.idx;
+      var d = DATA_BEAST[pi];
+      if (!d) return;
       var unlocked = isBeastUnlocked(d.id);
       var r = this.rect;
       var isFollow = getCombatPetId() === d.id;
@@ -33737,42 +33758,33 @@ function makeBeastCell(idx, x, y, w, h) {
       var chip, chipFill, chipInk;
       // 【v1.155】协中框不再重金, 改墨绿; 生物下垫柔光苔纸盘, 小图可读
       drawCodexFrame(ctx, r.x, r.y, r.w, r.h, selected || isFollow, isFollow ? "#5a7a32" : "#6faf4f");
-      drawCodexBeastPlate(ctx, r.x + 12, r.y + 8, 100, 102, unlocked ? (d.color || null) : mixHex(d.color || "#8a9a6a", "#eef4dc", 0.35));
-      if (spr && spr.width > 0) drawSpriteFit(ctx, spr, r.x + 18, r.y + 12, 88, 94);
-      drawCodexChip(ctx, r.x + 118, r.y + 10, 36, 24, glyph, d.color || "#c9a24b", "#2a2418");
+      drawCodexBeastPlate(ctx, r.x + 14, r.y + 15, 160, 170, unlocked ? (d.color || null) : mixHex(d.color || "#8a9a6a", "#eef4dc", 0.35));
+      if (spr && spr.width > 0) drawSpriteFit(ctx, spr, r.x + 24, r.y + 25, 140, 150);
+      // 【v1.211w】perk 字签改为**叠在图盘右上角的徽章**（原挤在文字列左侧）—— 文字列因此整体左移到 x+174，
+      //   名字行独占全宽（右侧价格签 y+26..74 只与名字行同高，名字最坏 8-9 字 ≈ 252px < 预算 320px ✓）
+      drawCodexChip(ctx, r.x + 126, r.y + 22, 44, 30, glyph, d.color || "#c9a24b", "#2a2418");
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
+      // 【v1.211w O27 样板】字号与纵排（行高 200，墨迹中心对齐图盘中心 y+100）：
+      //   名字 28px @ y+46 · 说明 22px @ y+104 · 数值 20px @ y+146 · 手感 17px 灰 @ y+178。
+      //   说明/数值/手感 = 2.08 / 1.89 / 1.60mm（改前 1.60 / 1.51 / ——）；真机可用宽 = 632 − 174 − 24 = 434px，
+      //   说明最坏 14 字 ≈ 308px ✓、数值最坏 ≈390px ✓、手感最短 ✓ —— 三行全部放得下，无省略号。
+      //   （v1.211s/t 的抬字与居中历史见 复盘 P17 前后批次 91c3b90 / 7da8e8c —— 本轮把那套"行内挤三行"
+      //     改为"行高翻倍后的舒展排"。）
       ctx.fillStyle = "#3a5a20";
-      // 【v1.211t】三行文字整体下移 13px —— 这是**上一轮删行后自己留下的几何后果**，不是新审美：
-      //   删掉第 4 行后墨迹只到 80，块中心 45.5 而卡片中心 59 ⇒ **偏上 13.5px**，
-      //   上留白 11 / 下留白 38：看起来像「删漏了一行」，而不像有意排的。
-      //   下移后墨迹 24..93.5（中心 58.75）⇒ 上 24 / 下 24.5，并与图盘(8..110)、右签(36..80，中心 58)
-      //   三者的中心对齐。⚠ 只改这三个 y，**几何/行高/条目数一律不碰**。
-      //   【第 143 轮实测 · 批次 91c3b90】三条墨带各下移 **+13 / +12 / +14** 桶 ✓、带数仍 3 ✓；
-      //     但留白实测是 **上 30 / 下 22**，不是我按 em 盒估的 24 / 24.5 —— 因为 **CJK 墨迹只占约 0.75em
-      //     且整体偏上**（22px 那行的实测墨带只有 **20** 逻辑px），而 `textBaseline="middle"` 居中的是
-      //     **em 盒、不是墨盒**。⇒ **算文字竖向位置时用「该行实测墨带高」推，别用字号推。**
-      //     （余差 4px 在真机 0.5 尺度下 = 0.19mm，判为可接受、不再为一件事反复微调。）
-      ctx.font = "bold 22px " + FONT_STACK;
-      ctx.fillText(d.name + " · " + d.tagline, r.x + 162, r.y + 35);
+      ctx.font = "bold 28px " + FONT_STACK;
+      ctx.fillText(hudFitText(ctx, d.name + " · " + d.tagline, 320), r.x + 174, r.y + 46);
       ctx.fillStyle = "#5a6a40";
-      // 【v1.211t】接上一轮实测记下的余量（可用宽 396 / 最坏 ≈322px@15px）：**先补宽度兜底再抬字**，
-      //   两件事必须同批做 —— v1.211s 只抬下面那行，唯一原因就是这行当时没有兜底。
-      //   抬 15→**17px**（1.42→1.60mm）。兜底是安全网（最坏 365px < 396px），正常档位不会触发省略号。
-      ctx.font = "bold 17px " + FONT_STACK;
-      ctx.fillText(hudFitText(ctx, d.desc + (clash ? (" · " + clash) : ""), 396), r.x + 118, r.y + 65);
+      ctx.font = "bold 22px " + FONT_STACK;
+      ctx.fillText(hudFitText(ctx, d.desc || "", 434), r.x + 174, r.y + 104);
       ctx.fillStyle = "#8a5a10";
-      // 【v1.211s】O27 样板：删掉下面那行**重复**信息后，把腾出的空间给字号 —— 14→**16px**（1.32→1.51mm）。
-      //   ⚠ 只抬这一行：上面那行 `desc + clash` **没有走 hudFitText**、且 clash 可能很长，
-      //     先抬它会有横向溢出风险（下一轮先补宽度兜底再谈抬它）。
-      //   【第 142 轮实测，留在这里免得重推】抬上面那行之前先知道余量：
-      //     可用宽 = r.w(632) − 118(起点) − 118(右侧签左沿) = **396 逻辑px**；
-      //     全库最坏组合是 `shellturtle` 的 desc + 「与浣熊特工同剪影」≈ **322px @15px**
-      //     ⇒ 抬到 17px ≈ 365px（余 31px，可行）；18px ≈ 386px（余 10px，太险）。
-      //     ⚠ 但**真正宽的是下面那行 stats**（`petCodexStars` 展开后 ≈263px @14px，见本批实测图）。
-      ctx.font = "bold 16px " + FONT_STACK;
-      // 【v1.211t】随上面两行一起下移 13px（72→85）保持整块居中；字号沿用上一轮已在渲染图里验过的 16px。
-      ctx.fillText("伤" + d.petDmg + " / " + d.interval + "s · " + petCodexStars(d), r.x + 118, r.y + 85);
+      ctx.font = "bold 20px " + FONT_STACK;
+      ctx.fillText(hudFitText(ctx, "伤" + d.petDmg + " / " + d.interval + "s · " + petCodexStars(d), 434), r.x + 174, r.y + 146);
+      if (clash) {
+        ctx.fillStyle = "#8a8a72";
+        ctx.font = "bold 17px " + FONT_STACK;
+        ctx.fillText(hudFitText(ctx, clash, 434), r.x + 174, r.y + 178);
+      }
       // 【v1.211s】这一行原为 13px 的 `petUnlockStep(d)`，内容是「进度解锁 · 差N金」——
       //   而**同一张卡右侧的签**（L33716）在金币不足时画的正是「差N金」，
       //   **页面头部**（L33467 的 `obtain`）又画了一次同一条 ⇒ 同一信息在**一屏里出现三次**。
@@ -33785,7 +33797,43 @@ function makeBeastCell(idx, x, y, w, h) {
         else { chip = "差" + (d.price - (saveData.coins | 0)) + "金"; /* 【v1.167h】codexPoorAmber：同类清理——价格不足是中性信息态，红=错误；改琥珀静默小签（与价格语言 #8a5a10 同族）。回退：chipFill=#c0392b / chipInk=#fff7e0 */ chipFill = "rgba(138,90,16,0.14)"; chipInk = "#7a5210"; }
       } else if (isFollow) { chip = "协战中"; chipFill = "#5a7a32"; chipInk = "#f2f6e4"; }
       else { chip = "点击协战"; chipFill = "#3faf5a"; chipInk = "#fff7e0"; }
-      drawCodexChip(ctx, r.x + r.w - 118, r.y + 36, 102, 44, chip, chipFill, chipInk);
+      drawCodexChip(ctx, r.x + r.w - 130, r.y + 26, 114, 48, chip, chipFill, chipInk);
+    }
+  });
+}
+// 【v1.211w O27 样板】跟宠列表翻页签：‹ 上一页 | 1/2 | 下一页 › —— dir=-1/+1 是翻页键、0 是页码指示（不可点）。
+//   页号存 GAME.codexPetPage（0 基），codexPetPageSafe() 负责钳制；可见性走 syncCodexUi 的 pet 页分支。
+function makePetPageChip(slot, x, y, w, h, dir) {
+  return UIStack.add({
+    id: "petpg" + slot, kind: "PetPageChip",
+    rect: { x: x, y: y, w: w, h: h },
+    visible: false, slot: slot, dir: dir,
+    onTap: function () {
+      if (GAME.state !== GAME.flow.HOME && GAME.state !== GAME.flow.BEAST) return;
+      if (!this.dir) return;
+      var max = Math.ceil(DATA_BEAST.length / 4) - 1;
+      var p = Math.min(max, Math.max(0, (GAME.codexPetPage | 0) + this.dir));
+      if (p !== (GAME.codexPetPage | 0)) { GAME.codexPetPage = p; Audio.play("select"); }
+    },
+    draw: function (ctx) {
+      var r = this.rect;
+      var max = Math.ceil(DATA_BEAST.length / 4) - 1;
+      var page = Math.min(GAME.codexPetPage | 0, max);
+      var label = this.dir ? (this.dir < 0 ? "‹ 上一页" : "下一页 ›") : (page + 1) + " / " + (max + 1);
+      var can = !this.dir || ((this.dir < 0 && page > 0) || (this.dir > 0 && page < max));
+      ctx.fillStyle = "rgba(16,20,14,0.12)";
+      fillRoundRect(ctx, r.x + 1, r.y + 2, r.w, r.h, 10);
+      ctx.fillStyle = can ? "#c8ecc8" : "rgba(214,224,196,0.6)";
+      fillRoundRect(ctx, r.x, r.y, r.w, r.h, 10);
+      ctx.strokeStyle = can ? "rgba(47,90,58,0.55)" : "rgba(47,90,58,0.25)";
+      ctx.lineWidth = can ? 2.4 : 1.2;
+      strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 10);
+      ctx.lineWidth = 1;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = can ? "#2e3c1c" : "rgba(46,60,28,0.45)";
+      ctx.font = "bold 20px " + FONT_STACK;
+      ctx.fillText(label, r.x + r.w / 2, r.y + r.h / 2);
     }
   });
 }
@@ -34066,6 +34114,9 @@ function syncCodexUi() {
   }
   if (uiBeastCells) {
     for (i = 0; i < uiBeastCells.length; i++) uiBeastCells[i].visible = open && tab === "pet";
+  }
+  if (uiPetPageChips) {
+    for (i = 0; i < uiPetPageChips.length; i++) uiPetPageChips[i].visible = open && tab === "pet";
   }
   if (uiCodexEnemyGroups) {
     for (i = 0; i < uiCodexEnemyGroups.length; i++) uiCodexEnemyGroups[i].visible = open && tab === "enemy";
