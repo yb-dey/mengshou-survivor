@@ -1,3 +1,8 @@
-# O35 第 4 批：像素画风（元气骑士参照）
-rabbit_pix | pixel art game sprite of a cute rabbit warrior, 32x32 pixels, chunky pixels, limited color palette, bold saturated colors, dark outline, Soul Knight style, transparent simple background, full body | 0.45 |  | rabbit.png
-sporecap_pix | pixel art game sprite of a cute mushroom creature, 32x32 pixels, chunky pixels, limited color palette, bold saturated colors, dark outline, Soul Knight style, transparent simple background, full body | 0.45 |  | sporecap.png
+# O35 第 5 批：**高强度重绘**（此前只试过 0.45 / 0.5 / 0.6 —— 参考图占主导，风格根本没换）
+# 判据：出图应是"低细节的硬边像素块"，而不是"原图的锯齿版"。若仍是原图质感 ⇒ 说明 sd-turbo 这条路到头了。
+rabbit_pixhi | 32-bit pixel art sprite of a small round rabbit creature with long upright ears, flat colours, thick dark outline, no gradients, no soft shading, minimal detail, simple bold shapes, game enemy sprite, plain background | 0.90 |  | rabbit.png
+mouse_pixhi | 32-bit pixel art sprite of a small grey mouse creature with round ears and a thin zigzag tail, flat colours, thick dark outline, no gradients, minimal detail, simple bold shapes, game enemy sprite, plain background | 0.90 |  | mouse.png
+bear_pixhi | 32-bit pixel art sprite of a chunky brown bear creature with small round ears and heavy arms, flat colours, thick dark outline, no gradients, minimal detail, simple bold shapes, game enemy sprite, plain background | 0.90 |  | bear.png
+fox_pixhi | 32-bit pixel art sprite of a slim orange fox creature with pointed ears and a bushy white-tipped tail, flat colours, thick dark outline, no gradients, minimal detail, simple bold shapes, game enemy sprite, plain background | 0.88 |  | fox.png
+hedgehog_pixhi | 32-bit pixel art sprite of a round golden hedgehog creature covered in big triangular spikes, flat colours, thick dark outline, no gradients, minimal detail, simple bold shapes, game enemy sprite, plain background | 0.90 |  | hedgehog.png
+raven_pixhi | 32-bit pixel art sprite of a small dark purple bird creature with spread pointed wings and a wide beak, flat colours, thick dark outline, no gradients, minimal detail, simple bold shapes, game enemy sprite, plain background | 0.90 |  | raven.png
