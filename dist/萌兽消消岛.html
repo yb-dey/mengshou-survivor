@@ -33922,9 +33922,10 @@ function makeCodexEnemyCell(idx, x, y, w, h) {
       // 【v1.155】敌人条目改柔光苔纸盘托底(极淡组色晕), 不再浓色椭圆盖住贴图; 剪影/贴图本体保持 1.152 墨光
       // 【v1.178】缺贴图时盘内画本色软圆+墨缘兜底, 不留空黑格(不逐帧烘焙)
       drawCodexBeastPlate(ctx, r.x + 10, r.y + 6, 96, 96, def && def.tint);
-      // 【v1.211x O35 击破入册】击破过(击杀数>0)的敌人亮彩色本体；未击破保持软墨剪影（收集悬念）
-      spr = codexEnemySprite(entry.id);
-      if ((saveData.enemyKills && (saveData.enemyKills[entry.id] | 0) > 0) && SPRITES[entry.id] && SPRITES[entry.id].width > 0) spr = SPRITES[entry.id];
+      // 【v1.211y O35】敌人图鉴直接显示彩色本体（战斗同款素材，零成本）—— 用户两轮否定黑影剪影墙
+      //   （2026-09-25 截图：剪影滤镜让深色怪糊成泥团，且图鉴从未亮过彩色 = 失去"看到敌人"的价值）。
+      //   击杀表(enemyKills)保留，"收集进度"显示后续可再叠加。
+      spr = (SPRITES[entry.id] && SPRITES[entry.id].width > 0) ? SPRITES[entry.id] : codexEnemySprite(entry.id);
       if (spr && spr.width > 0) {
         // 【v1.179】与跟宠行同走 drawSpriteFit(含 box 裁切), 软墨剪影占满井格可读
         drawSpriteFit(ctx, spr, r.x + 18, r.y + 10, 80, 88);
