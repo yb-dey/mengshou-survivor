@@ -34113,7 +34113,12 @@ function makeBeastCell(idx, x, y, w, h) {
       ctx.fillStyle = "#5a6a40";
       ctx.font = "bold 22px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, d.desc || "", 434), r.x + 174, r.y + 104);
-      ctx.fillStyle = "#8a5a10";
+      // 【v1.211z 第二十五刀】图鉴跟宠页那行数值：琥珀 `#8a5a10` 压在浅卡 `#d4ddbd` 上实测 **4.19:1**
+      //   （`_crop-contrast.mjs`；第 17 轮量到 4.21、本轮复核一致）—— 差一点点到 AA 正文 4.5:1。
+      //   ⇒ 只把**这一处**压深到 `#7a4e0c`（同色相家族）。
+      //   ⚠ **不能全局替换**：同一个 `#8a5a10` 在强化盘等处压在**深盘**上，那里它是对的（见 v1.211z 第九刀）。
+      //   回退：把这行改回 `#8a5a10`。
+      ctx.fillStyle = "#7a4e0c";
       ctx.font = "bold 20px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, "伤" + d.petDmg + " / " + d.interval + "s · " + petCodexStars(d), 434), r.x + 174, r.y + 146);
       if (clash) {
