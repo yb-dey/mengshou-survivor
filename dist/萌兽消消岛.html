@@ -31591,7 +31591,13 @@ function describeCard(card, opt) {
     card.desc1 = (gp.statLine || "") + " · " + (rar.name || "");
     card.desc2 = gp.curLine || "";
     card.desc3 = (gp.actLine || "") + " · 来自" + srcLine;
-    card.stack = cardStackLine(opt);
+    // 【v1.211z 第十六刀：修掉「同一句话印两遍」】gear 分支里 `cardStackLine()` 返回的就是 `gp.curLine`
+    //   （见 L6663 的 `case "gear"`），而同一句已经塞给了 `card.desc2`（上一行）⇒ 卡片把「现装 松果弩·普通 伤害 +4%」
+    //   **画了两遍**（stack 一行 + desc2 一行），玩家读作"这句话说了两遍"。实测证据 `_qc/_baseline/gearpick-zoom.png`。
+    //   ⚠ 只清「与 desc2 **逐字相同**」的那种；其它类别的卡（`已有 1★ · 再升到 2★` / `不占槽` …）一个字不动。
+    //   回退：把下面两行换回 `card.stack = cardStackLine(opt);`。
+    var _stkGear = cardStackLine(opt);
+    card.stack = (_stkGear && _stkGear === card.desc2) ? "" : _stkGear;
     return;
   }
   evo = cardEvoRead(opt);
