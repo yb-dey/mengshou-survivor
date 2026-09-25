@@ -6665,6 +6665,32 @@ function cardStackLine(opt) {
       return "";
   }
 }
+
+// 【v1.211z 第十七刀】把「同一句话印两遍」从卡面拿掉。
+//   为什么需要它：`card.stack`（槽位摘要）与 `desc1/2/3`（卡面说明）是**两条独立的文案生产线**，
+//   各自都会写「新占一槽」「点了变超武」「现装 …」这类**同一件事**的话 ⇒ 玩家在卡上读到两遍。
+//   规则：按「·」拆段，凡是在描述行里**逐字出现过**的分段就从 stack 里去掉；整行相同则整条清空。
+//   **描述行一律不动**（信息一句不少，只是不再重复）。
+//   回退：把调用改回 `cardStackLine(opt)` 即可（函数留着不碍事）。
+function dedupeStackLine(stack, descs) {
+  if (!stack || !descs || !descs.length) return stack;
+  var segs = String(stack).split("·"), keep = [], i, j, k, s, d, ds, dup;
+  for (i = 0; i < segs.length; i++) {
+    s = segs[i].trim();
+    if (!s) continue;
+    dup = false;
+    for (j = 0; j < descs.length; j++) {
+      d = descs[j];
+      if (!d) continue;
+      if (String(d) === String(stack)) { dup = true; break; }
+      ds = String(d).split("·");
+      for (k = 0; k < ds.length; k++) { if (ds[k].trim() === s) { dup = true; break; } }
+      if (dup) break;
+    }
+    if (!dup) keep.push(s);
+  }
+  return keep.join(" · ");
+}
 function levelupCardCue(idx, opt) {
   if (levelupIsArmed(idx)) {
     if (opt && opt.kind === "combatEvo") return "再点才合成 · 可略过";
@@ -31644,7 +31670,8 @@ function describeCard(card, opt) {
   card.desc1 = evo.desc1 || "";
   card.desc2 = evo.desc2 || "";
   card.desc3 = evo.desc3 || "";
-  card.stack = cardStackLine(opt);
+  // 【v1.211z 第十七刀】走通用去重（见本文件 dedupeStackLine 的注释）。
+  card.stack = dedupeStackLine(cardStackLine(opt), [card.desc1, card.desc2, card.desc3]);
   if (!card.desc1 && !card.desc2 && !card.desc3) {
     dl = wrapCardDesc(card.desc);
     card.desc1 = dl[0];
