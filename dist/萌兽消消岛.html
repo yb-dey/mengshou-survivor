@@ -3805,19 +3805,28 @@ function drawEntranceWipe(ctx) {
   if (GAME.reduceMotion) {
     clipEntranceWipe(ctx, px, py, 0);
     ctx.globalAlpha = 0.90 * (1 - u);
-    ctx.fillStyle = "#f4ead4";
+    ctx.fillStyle = "#141a10";
     ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
     ctx.restore();
     return;
   }
   maxR = Math.sqrt(CONFIG.viewW * CONFIG.viewW + CONFIG.viewH * CONFIG.viewH) * 0.62;
   r = 40 + (maxR - 40) * (u * (2 - u));
-  // 章卡 scrim 画在世界层之上。奶油必须盖在 scrim 上, 同时让开章卡和跳过钮。
+  // 章卡 scrim 画在世界层之上。**遮盖层必须盖在 scrim 上**，同时让开章卡和跳过钮。
+  // 【v1.211z 第十二刀】遮盖层由奶油 `rgba(244,234,212,0.94)` 换**深墨** `rgba(16,20,14,0.93)`。
+  //   【为什么】十一刀之后整个模态系统都是"深底亮卡"，只剩这一屏背后是一片奶油 ——
+  //     它是**每局开场都会出现**的一屏，成了全游戏最后一个浅色孤岛（21 屏体检里一眼可见）。
+  //   【裁决核对】原注释只要求"奶油**必须盖在** scrim 上"（讲的是**遮盖关系**，不是色号），
+  //     更早的【v1.193】奶油族已在本轮统一时有意变更 ⇒ 这里改的是同一条链上的最后一处，理由一致。
+  //   【为什么要同时改圆环】原来的环色是 `rgba(42,58,24,·)`（深绿，压在奶油上看得见）；
+  //     深底上它会消失 ⇒ 换亮橄榄，环仍然读得出来（进场的"擦除"动作不丢）。
+  //   章卡本体**没动**：它本来就是深绿卡 + 亮绿描边 + 浅字 + 三个浅格奖励 ⇒ 深底上层次反而更清楚。
+  //   回退：三处色值改回 `#f4ead4` / `rgba(244, 234, 212, 0.94)` / `rgba(42, 58, 24, ` 即可。
   clipEntranceWipe(ctx, px, py, r);
-  ctx.fillStyle = "rgba(244, 234, 212, 0.94)";
+  ctx.fillStyle = "rgba(16, 20, 14, 0.93)";
   ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
   edge = 0.72 * (1 - u * 0.75);
-  ctx.strokeStyle = "rgba(42, 58, 24, " + edge + ")";
+  ctx.strokeStyle = "rgba(168, 198, 128, " + edge + ")";
   ctx.lineWidth = 2.6;
   ctx.beginPath();
   ctx.arc(px, py, r, 0, CONFIG.TWO_PI);
