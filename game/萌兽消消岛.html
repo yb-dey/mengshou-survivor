@@ -1626,7 +1626,9 @@ var CONFIG = {
     hpBarBg: "rgba(0,0,0,0.18)",
     xpBar: "#f2b632",
     xpBarBg: "rgba(0,0,0,0.22)",
-    modalMask: "rgba(8,12,8,0.78)",      // 【v1.211v 美术方向 · 第一刀】0.5→0.78：模态背幕压暗。
+    modalMask: "rgba(8,12,8,0.78)",      // 【v1.211z 美术方向 · 第一刀】0.5→0.78：模态背幕压暗。
+  //   ⚠ 版本字母更正：本条与下条最初误标 v1.211v/v1.211w —— 那两个字母已被另一侧（O32 三线卡面文案修）占用，
+  //     实测母版里 v/w/x/y 均在用 ⇒ 统一改挂 **v1.211z**。
   //   【为什么改】第 146 轮按用户点名方向（弹壳特攻队 / 元素骑士 / 魔兽）做了实测对照：
   //     把同类型开源实现（github.com/ricardo-foundry/canvas-vampire-survivors 的官方截图）
   //     与我们的同类型屏并排后，最大差距是「**底与卡片的明度几乎一样**」——
@@ -2118,7 +2120,7 @@ var DATA_CHAPTER = [
     horde: { durSec: 50, waves: 5, countMin: 72, countMax: 90, densMul: 3.2, enemyIds: ["rabbit", "mouse"] },
     elites: [ { t: 40, enemyId: "rollshell", every: 96 }, { t: 48, enemyId: "badger", every: 42 }, { t: 72, enemyId: "honeypot", every: 70 }, { t: 200, enemyId: "boar", every: 40 } ],
     bgmId: "march", bgmRate: 0.98, mapSize: 2400,
-    theme: { mapId: "sprout", name: "嫩绿原野", bgColor: "#a9c95c", wash: "#5f9e3c",   // 【v1.211w 地面再压一档】承 v1.163 同一根轴（那轮把 #d8f0a8→#c8e878、亮度 224.7→209.7）：
+    theme: { mapId: "sprout", name: "嫩绿原野", bgColor: "#a9c95c", wash: "#5f9e3c",   // 【v1.211z 美术方向 · 第二刀：地面再压一档】承 v1.163 同一根轴（那轮把 #d8f0a8→#c8e878、亮度 224.7→209.7）：
     //   第 146 轮 DSH 侧按"交付尺度"复看战斗屏（360×640）发现 **209.7 仍然发白** ⇒ 杂兵（2×r≈20–32 设计px、
     //   偏白）与地面同色，读不出轮廓 —— 与 O35「发白/与地面同色」是同一个病根。
     //   本轮把 bgColor 压到 **#a9c95c（亮度≈179、饱和≈0.54）**、wash 压到 **#5f9e3c**：**不动任何素材**
