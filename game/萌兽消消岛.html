@@ -2108,7 +2108,7 @@ function flavorWavesFor(winTime, chapterNum, cut) {
 // sceneStyle=六档地面 tint 色值(嫩绿/暖黄/岩灰/青蓝/暮紫/星白), buildGroundTile 一次性叠色。
 var DATA_CHAPTER = [
   { chId: "ch1", id: "ch1", name: "芽芽原", chapter: 1, durMin: 4, winTime: 240, winMode: "survive",
-    bossTimes: [180], bossIds: ["boss1"], firstClear: 80, sceneStyle: "#5f9e3c",
+    bossTimes: [180], bossIds: ["boss1"], firstClear: 80, sceneStyle: "#6fbf4a",
     hordeTimes: [90], phaseSplit: [80, 160], waves: buildWavesFor(240, 1),
     gearNodes: [50],
     rooms: [22],
@@ -2120,13 +2120,16 @@ var DATA_CHAPTER = [
     horde: { durSec: 50, waves: 5, countMin: 72, countMax: 90, densMul: 3.2, enemyIds: ["rabbit", "mouse"] },
     elites: [ { t: 40, enemyId: "rollshell", every: 96 }, { t: 48, enemyId: "badger", every: 42 }, { t: 72, enemyId: "honeypot", every: 70 }, { t: 200, enemyId: "boar", every: 40 } ],
     bgmId: "march", bgmRate: 0.98, mapSize: 2400,
-    theme: { mapId: "sprout", name: "嫩绿原野", bgColor: "#a9c95c", wash: "#5f9e3c",   // 【v1.211z 美术方向 · 第二刀：地面再压一档】承 v1.163 同一根轴（那轮把 #d8f0a8→#c8e878、亮度 224.7→209.7）：
-    //   第 146 轮 DSH 侧按"交付尺度"复看战斗屏（360×640）发现 **209.7 仍然发白** ⇒ 杂兵（2×r≈20–32 设计px、
-    //   偏白）与地面同色，读不出轮廓 —— 与 O35「发白/与地面同色」是同一个病根。
-    //   本轮把 bgColor 压到 **#a9c95c（亮度≈179、饱和≈0.54）**、wash 压到 **#5f9e3c**：**不动任何素材**
-    //   （杂兵贴图一张没改），只动"地" ⇒ 若有效，O35 就不必再靠重画/换模型。
-    //   可量口径沿用 v1.163 自己的：`avgL`（战斗面平均亮度，目标不再 >190）+ `edge`（细节量，越大越有层次）。
-    //   回退：bgColor 改回 "#c8e878"、wash 改回 "#6fbf4a"、sceneStyle 改回 "#6fbf4a"。
+    theme: { mapId: "sprout", name: "嫩绿原野", bgColor: "#c8e878", wash: "#6fbf4a",   // 【v1.211z 反向结论：这一刀是空改，已回退】原打算承 v1.163 同一根轴把地面再压一档（那轮把 #d8f0a8→#c8e878、亮度 224.7→209.7）：
+    //   **实测推翻**：三处都改成 #a9c95c/#5f9e3c 之后 ——（a）**判别探针**：运行时把 bgColor/wash/sceneStyle
+    //     全设成 `#ff0000`，场地**没有变红**；（b）**云端两批同屏对照**（同一交付尺度 360×640）：
+    //     11-battle 156.7→156.8、11a-entrance 162→161.9 —— **都在噪声内**。
+    //   ⇒ 结论：`DATA_CHAPTER.theme.bgColor/wash` 与 `sceneStyle` **不是战场地面可见色的入口**
+    //     （地面瓦片由 `buildGroundTile(img, tint)` 一次性叠色，tint 的真实来源另在别处，待查）。
+    //   ⇒ **已回退**（不留没验成的改动）：三个色值全部还原。
+    //   ⚠ 教训（P1 同族）：我当时"看见地面变深了"，其实那两张图里**模态盖住大半屏**，
+    //     变深的是**背幕**（另一刀），不是地面 —— **同一张图里有两个变量时，观感不能当证据**。
+    //   下一步（写在 `_qc/ART-DIRECTION.md`）：先找到 `buildGroundTile` 的 tint 真实来源，再动地面。
 
       farTop: "#b8e878", farBot: "#e8f8c8", farAccent: "#3f8a3a",
       hudFg: "#234818", hudWash: "rgba(70,130,40,0.16)", accent: "#3faf5a",
