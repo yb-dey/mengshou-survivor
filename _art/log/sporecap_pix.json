@@ -1,0 +1,12 @@
+{
+  "name": "sporecap_pix",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "pixel art game sprite of a cute mushroom creature, 32x32 pixels, chunky pixels, limited color palette, bold saturated colors, dark outline, Soul Knight style, transparent simple background, full body",
+  "negative": "",
+  "strength": 0.45,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "sporecap.png",
+  "seconds": 26.3
+}
