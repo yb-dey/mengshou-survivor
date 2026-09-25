@@ -23,6 +23,12 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 MODEL = os.environ.get("ART_MODEL", "stabilityai/sd-turbo")
 STEPS = int(os.environ.get("ART_STEPS", "4"))
 SIZE = int(os.environ.get("ART_SIZE", "512"))
+# 【O35 第 6 批】可选的**像素画 LoRA**。
+#   为什么加这一条：sd-turbo 只会重绘"柔光插画"，6 次尝试都没能把它变成像素画；
+#   而社区有专门拿像素画微调的 LoRA（PixelArtRedmond 15V，触发词 "pixel art, PixArFK"）。
+#   不设 ART_LORA 时行为与之前**完全一致**（可回退）。
+LORA = os.environ.get("ART_LORA", "").strip()
+LORA_WEIGHT = os.environ.get("ART_LORA_WEIGHT", "").strip()
 
 
 def load_tasks():
@@ -56,7 +62,7 @@ def load_tasks():
 
 def main():
     tasks = load_tasks()
-    print(f"任务数 {len(tasks)} · 模型 {MODEL} · steps {STEPS} · size {SIZE}", flush=True)
+    print(f"任务数 {len(tasks)} · 模型 {MODEL} · steps {STEPS} · size {SIZE} · lora {LORA or '（无）'}", flush=True)
     if not tasks:
         print("prompt.txt 里没有有效任务，退出。")
         return
@@ -64,6 +70,14 @@ def main():
     t0 = time.time()
     pipe = AutoPipelineForImage2Image.from_pretrained(MODEL, torch_dtype=torch.float32,
                                                      safety_checker=None, requires_safety_checker=False)
+    # 【O35 第 6 批】挂像素画 LoRA。失败不致命：打印告警后按原模型继续（宁可出"旧风格"也不要整批白跑）。
+    if LORA:
+        try:
+            kw = {"weight_name": LORA_WEIGHT} if LORA_WEIGHT else {}
+            pipe.load_lora_weights(LORA, **kw)
+            print(f"已挂 LoRA {LORA} {LORA_WEIGHT or ''}", flush=True)
+        except Exception as e:  # noqa: BLE001
+            print(f"⚠ LoRA 加载失败，改用原模型继续: {type(e).__name__}: {e}", flush=True)
     # 【第 105 轮】SDXL-turbo 首次运行崩在 `cannot reshape tensor of 0 elements into shape [0, -1, 1, 512]`
     #   —— CPU 管道上的典型显存/注意力形状问题。按官方建议开注意力分片 + VAE 分片（对 sd-turbo 无副作用）。
     for _fn in ("enable_attention_slicing", "enable_vae_slicing", "enable_vae_tiling"):
@@ -92,6 +106,7 @@ def main():
         meta = {"name": t["name"], "model": MODEL, "prompt": t["prompt"],
                 "negative": "", "strength": t["strength"], "guidance": t["guidance"],
                 "steps": STEPS, "size": SIZE, "ref": ref_path.name,
+                "lora": LORA, "lora_weight": LORA_WEIGHT,
                 "seconds": round(time.time() - ts, 1)}
         (LOG_DIR / f"{t['name']}.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"✓ {t['name']} → {out_path.name}  {meta['seconds']}s", flush=True)

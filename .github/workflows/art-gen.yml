@@ -26,12 +26,17 @@ jobs:
       HF_ENDPOINT: https://hf-mirror.com
       HF_HUB_DISABLE_TELEMETRY: '1'
       PYTHONUNBUFFERED: '1'
-      # 【第 101 轮】sd-turbo 4 步/512px 的结论：角色保住但**打不过现有手绘**（0.30 最像、0.50 已劣化）。
-      # 换成 SDXL-turbo 再量一档：分辨率 768、1–2 步；跑不动（OOM/超时）就说明这台 runner 的天花板在这，
-      # 失败原因会由工作流写进 _art/log/run.txt（回读通道）。
-      ART_MODEL: stabilityai/sd-turbo
-      ART_STEPS: '4'
+      # 【O35 第 6 批】换掉 sd-turbo，改用 **SD1.5 + PixelArtRedmond 像素画 LoRA**。
+      #   依据：sd-turbo 在 6 次尝试里只会重绘"柔光插画"，把强度拉到 0.9 也只得到"压平的插画"，
+      #   从来没产出过真正的像素画 —— 而用户要的参照（元气骑士）就是像素画。
+      #   LoRA 是社区专门拿像素画微调的（触发词 "pixel art, PixArFK"），base=SD1.5 且未设 gated。
+      #   ⚠ 换 LoRA 后 guidance 必须给（SD1.5 要 ~7.5；sd-turbo 那套 guidance=0 不适用）⇒ 写在 prompt.txt 第 4 列。
+      #   回退：把 ART_MODEL/ART_STEPS 改回 sd-turbo/4 并清空 ART_LORA 即可（gen.py 未设 LORA 时行为不变）。
+      ART_MODEL: stable-diffusion-v1-5/stable-diffusion-v1-5
+      ART_STEPS: '20'
       ART_SIZE: '512'
+      ART_LORA: artificialguybr/pixelartredmond-1-5v-pixel-art-loras-for-sd-1-5
+      ART_LORA_WEIGHT: PixelArtRedmond15V-PixelArt-PIXARFK.safetensors
     steps:
       - uses: actions/checkout@v4
 

@@ -1,8 +1,11 @@
-# O35 第 5 批：**高强度重绘**（此前只试过 0.45 / 0.5 / 0.6 —— 参考图占主导，风格根本没换）
-# 判据：出图应是"低细节的硬边像素块"，而不是"原图的锯齿版"。若仍是原图质感 ⇒ 说明 sd-turbo 这条路到头了。
-rabbit_pixhi | 32-bit pixel art sprite of a small round rabbit creature with long upright ears, flat colours, thick dark outline, no gradients, no soft shading, minimal detail, simple bold shapes, game enemy sprite, plain background | 0.90 |  | rabbit.png
-mouse_pixhi | 32-bit pixel art sprite of a small grey mouse creature with round ears and a thin zigzag tail, flat colours, thick dark outline, no gradients, minimal detail, simple bold shapes, game enemy sprite, plain background | 0.90 |  | mouse.png
-bear_pixhi | 32-bit pixel art sprite of a chunky brown bear creature with small round ears and heavy arms, flat colours, thick dark outline, no gradients, minimal detail, simple bold shapes, game enemy sprite, plain background | 0.90 |  | bear.png
-fox_pixhi | 32-bit pixel art sprite of a slim orange fox creature with pointed ears and a bushy white-tipped tail, flat colours, thick dark outline, no gradients, minimal detail, simple bold shapes, game enemy sprite, plain background | 0.88 |  | fox.png
-hedgehog_pixhi | 32-bit pixel art sprite of a round golden hedgehog creature covered in big triangular spikes, flat colours, thick dark outline, no gradients, minimal detail, simple bold shapes, game enemy sprite, plain background | 0.90 |  | hedgehog.png
-raven_pixhi | 32-bit pixel art sprite of a small dark purple bird creature with spread pointed wings and a wide beak, flat colours, thick dark outline, no gradients, minimal detail, simple bold shapes, game enemy sprite, plain background | 0.90 |  | raven.png
+# O35 第 6 批：**像素画 LoRA**（SD1.5 + PixelArtRedmond 15V）
+# 为什么这一批与前面 5 批不同：换的是**模型本身**，不是提示词。sd-turbo 只会重绘柔光插画；
+#   这批用的 LoRA 是专门拿像素画微调的，触发词 `pixel art, PixArFK`。
+# 本批为**探路**：只跑 5 张，且兔给两档强度（0.55 / 0.75）夹逼"保角色 vs 出像素"的平衡点。
+# 判据：出图应当能看到**成块的像素 + 硬边 + 有限调色板**；若仍是柔光插画 ⇒ LoRA 没生效（去读 _art/log/run.txt）。
+# ⚠ SD1.5 需要 guidance ≈ 7.5（sd-turbo 那套 0 不适用）⇒ 第 4 列不能空。
+rabbit_lora55 | a small round rabbit creature with long upright ears, game asset, front view, pixel art, PixArFK | 0.55 | 7.5 | rabbit.png
+rabbit_lora75 | a small round rabbit creature with long upright ears, game asset, front view, pixel art, PixArFK | 0.75 | 7.5 | rabbit.png
+mouse_lora65 | a small grey mouse creature with round ears and a thin tail, game asset, front view, pixel art, PixArFK | 0.65 | 7.5 | mouse.png
+bear_lora65 | a chunky brown bear creature with small round ears and heavy arms, game asset, front view, pixel art, PixArFK | 0.65 | 7.5 | bear.png
+fox_lora65 | a slim orange fox creature with pointed ears and a bushy white-tipped tail, game asset, front view, pixel art, PixArFK | 0.65 | 7.5 | fox.png
