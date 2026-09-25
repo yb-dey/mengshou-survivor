@@ -32502,13 +32502,13 @@ function drawResultPanel(ctx, m) {
   ctx.fillStyle = c.cardTitle;
   ctx.font = "bold 18px " + FONT_STACK;
   ctx.fillText(runSummary.doubled ? "本局入账 · 已再领一份" : "本局入账", cx, goldY + 22);
-  ctx.fillStyle = ink;
+  ctx.fillStyle = "#2c3a22";   // 【v1.211z 第二十八刀】卡上是**浅底** ⇒ 用深墨（原来是深盘的浅 ink，压浅卡约 1.1:1）
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText(resultCoinParts(), cx, goldY + 46);
   ctx.fillStyle = "#b8860b";
   ctx.font = "bold 44px " + FONT_STACK;
   ctx.fillText("" + resultPayoutTotal(), cx, goldY + 84);
-  ctx.fillStyle = ink;
+  ctx.fillStyle = "#2c3a22";   // 【v1.211z 第二十八刀】卡上是**浅底** ⇒ 用深墨（原来是深盘的浅 ink，压浅卡约 1.1:1）
   ctx.font = "bold 14px " + FONT_STACK;
   ctx.fillText("点「入账回大厅」才进钱包  " + runSummary.walletBefore + "→" + (runSummary.walletBefore + resultPayoutTotal()), cx, goldY + (CONFIG.resultGoldH || 128) - 16);
 
@@ -32516,7 +32516,7 @@ function drawResultPanel(ctx, m) {
   ctx.fillStyle = (GAME.hallPowerPulse > 0) ? "#b8860b" : c.cardTitle;
   ctx.font = "bold 22px " + FONT_STACK;
   ctx.fillText("战力 " + p0 + "→" + p1 + (dlt ? (" (" + signedGearDelta(dlt) + ")") : " · 未改"), cx, cardY + 32);
-  ctx.fillStyle = ink;
+  ctx.fillStyle = "#2c3a22";   // 【v1.211z 第二十八刀】卡上是**浅底** ⇒ 用深墨（原来是深盘的浅 ink，压浅卡约 1.1:1）
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText("局内装备 " + (runSummary.gearInRun | 0) + " 件已入账", cx, cardY + 64);
   ctx.font = "bold 15px " + FONT_STACK;
