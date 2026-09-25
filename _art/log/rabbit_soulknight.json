@@ -1,0 +1,12 @@
+{
+  "name": "rabbit_soulknight",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "Soul Knight style game character sprite, chubby rabbit warrior, chunky proportions, bold thick black outlines, bright saturated colors, simple pixel-art inspired shading, tiny dot eyes, full body, front view, plain white background",
+  "negative": "",
+  "strength": 0.6,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "rabbit.png",
+  "seconds": 32.3
+}

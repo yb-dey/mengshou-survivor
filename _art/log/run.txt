@@ -3,99 +3,25 @@
 [transformers] `CLIPImageProcessor` requires torchvision (not installed); falling back to `CLIPImageProcessorPil` for backward compatibility. Install torchvision to use the default backend, or import `CLIPImageProcessorPil` directly to silence this warning.
 [transformers] `SiglipImageProcessor` requires torchvision (not installed); falling back to `SiglipImageProcessorPil` for backward compatibility. Install torchvision to use the default backend, or import `SiglipImageProcessorPil` directly to silence this warning.
 [transformers] `Siglip2ImageProcessorFast` is deprecated. The `Fast` suffix for image processors has been removed; use `Siglip2ImageProcessor` instead.
-任务数 39 · 模型 stabilityai/sd-turbo · steps 4 · size 512
+任务数 2 · 模型 stabilityai/sd-turbo · steps 4 · size 512
 /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.
   warnings.warn(
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.
   deprecate("torch_dtype", "1.0.0", _TORCH_DTYPE_DEPRECATION_MESSAGE)
-Fetching 12 files:   0%|          | 0/12 [00:00<?, ?it/s]Fetching 12 files:  17%|█▋        | 2/12 [00:00<00:00, 10.38it/s]Fetching 12 files:  33%|███▎      | 4/12 [00:00<00:01,  5.86it/s]Fetching 12 files:  75%|███████▌  | 9/12 [00:00<00:00, 12.95it/s]Fetching 12 files:  92%|█████████▏| 11/12 [00:08<00:01,  1.12s/it]Fetching 12 files: 100%|██████████| 12/12 [00:15<00:00,  1.29s/it]
-Loading pipeline components...:   0%|          | 0/5 [00:00<?, ?it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 12 files:   0%|          | 0/12 [00:00<?, ?it/s]Fetching 12 files:  17%|█▋        | 2/12 [00:00<00:00, 10.01it/s]Fetching 12 files:  33%|███▎      | 4/12 [00:00<00:01,  6.14it/s]Fetching 12 files:  75%|███████▌  | 9/12 [00:00<00:00, 12.79it/s]Fetching 12 files:  92%|█████████▏| 11/12 [00:09<00:01,  1.28s/it]Fetching 12 files: 100%|██████████| 12/12 [00:16<00:00,  2.15s/it]Fetching 12 files: 100%|██████████| 12/12 [00:16<00:00,  1.34s/it]
+Loading pipeline components...:   0%|          | 0/5 [00:00<?, ?it/s]Loading pipeline components...:  40%|████      | 2/5 [00:00<00:00, 19.02it/s]
 Loading weights:   0%|          | 0/372 [00:00<?, ?it/s][A
-Loading weights:  91%|█████████ | 337/372 [00:00<00:00, 3351.77it/s][ALoading weights: 100%|██████████| 372/372 [00:00<00:00, 3508.14it/s]
-Loading pipeline components...:  60%|██████    | 3/5 [00:00<00:00,  8.73it/s]Loading pipeline components...: 100%|██████████| 5/5 [00:00<00:00, 11.35it/s]
+Loading weights:  95%|█████████▌| 354/372 [00:00<00:00, 3504.72it/s][ALoading weights: 100%|██████████| 372/372 [00:00<00:00, 3615.49it/s]
+Loading pipeline components...:  80%|████████  | 4/5 [00:00<00:00,  9.27it/s]Loading pipeline components...: 100%|██████████| 5/5 [00:00<00:00, 11.57it/s]
 已启用 enable_attention_slicing
 跳过 enable_vae_slicing: 'StableDiffusionImg2ImgPipeline' object has no attribute 'enable_vae_slicing'
 跳过 enable_vae_tiling: 'StableDiffusionImg2ImgPipeline' object has no attribute 'enable_vae_tiling'
-模型加载完成 17.8s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.63s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]
-✓ rabbit_crayon → rabbit_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]
-✓ rabbit_hit_crayon → rabbit_hit_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]
-✓ rabbit_dead_crayon → rabbit_dead_crayon.png  31.5s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.62s/it]100%|██████████| 2/2 [00:11<00:00,  5.63s/it]100%|██████████| 2/2 [00:11<00:00,  5.63s/it]
-✓ mouse_crayon → mouse_crayon.png  31.7s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]
-✓ mouse_hit_crayon → mouse_hit_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]
-✓ mouse_dead_crayon → mouse_dead_crayon.png  31.7s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]
-✓ bear_crayon → bear_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.64s/it]100%|██████████| 2/2 [00:11<00:00,  5.61s/it]100%|██████████| 2/2 [00:11<00:00,  5.61s/it]
-✓ bear_hit_crayon → bear_hit_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]
-✓ bear_dead_crayon → bear_dead_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]
-✓ hedgehog_crayon → hedgehog_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]
-✓ hedgehog_hit_crayon → hedgehog_hit_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.56s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]
-✓ hedgehog_dead_crayon → hedgehog_dead_crayon.png  31.5s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]
-✓ boar_crayon → boar_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.63s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.61s/it]
-✓ boar_hit_crayon → boar_hit_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]
-✓ boar_dead_crayon → boar_dead_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.56s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]
-✓ fox_crayon → fox_crayon.png  31.5s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]
-✓ fox_hit_crayon → fox_hit_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.55s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]
-✓ fox_dead_crayon → fox_dead_crayon.png  31.5s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.61s/it]100%|██████████| 2/2 [00:11<00:00,  5.61s/it]
-✓ monkey_crayon → monkey_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.61s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.61s/it]
-✓ monkey_hit_crayon → monkey_hit_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]
-✓ monkey_dead_crayon → monkey_dead_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.61s/it]100%|██████████| 2/2 [00:11<00:00,  5.61s/it]
-✓ badger_crayon → badger_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]
-✓ badger_hit_crayon → badger_hit_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.61s/it]100%|██████████| 2/2 [00:11<00:00,  5.61s/it]100%|██████████| 2/2 [00:11<00:00,  5.61s/it]
-✓ badger_dead_crayon → badger_dead_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]
-✓ raven_crayon → raven_crayon.png  31.5s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]
-✓ raven_hit_crayon → raven_hit_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.62s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]
-✓ raven_dead_crayon → raven_dead_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]
-✓ leaptoad_crayon → leaptoad_crayon.png  31.5s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.63s/it]100%|██████████| 2/2 [00:11<00:00,  5.63s/it]100%|██████████| 2/2 [00:11<00:00,  5.63s/it]
-✓ leaptoad_hit_crayon → leaptoad_hit_crayon.png  31.7s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.62s/it]100%|██████████| 2/2 [00:11<00:00,  5.62s/it]
-✓ leaptoad_dead_crayon → leaptoad_dead_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.56s/it]100%|██████████| 2/2 [00:11<00:00,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]
-✓ orbitcrab_crayon → orbitcrab_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]
-✓ orbitcrab_hit_crayon → orbitcrab_hit_crayon.png  31.5s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]
-✓ orbitcrab_dead_crayon → orbitcrab_dead_crayon.png  31.5s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]
-✓ shieldbug_crayon → shieldbug_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]
-✓ shieldbug_hit_crayon → shieldbug_hit_crayon.png  31.5s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]100%|██████████| 2/2 [00:11<00:00,  5.58s/it]
-✓ shieldbug_dead_crayon → shieldbug_dead_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.59s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]
-✓ sporecap_crayon → sporecap_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]100%|██████████| 2/2 [00:11<00:00,  5.57s/it]
-✓ sporecap_hit_crayon → sporecap_hit_crayon.png  31.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.61s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]
-✓ sporecap_dead_crayon → sporecap_dead_crayon.png  31.6s
+模型加载完成 18.2s
+  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.79s/it]100%|██████████| 2/2 [00:11<00:00,  5.77s/it]100%|██████████| 2/2 [00:11<00:00,  5.77s/it]
+✓ rabbit_soulknight → rabbit_soulknight.png  32.3s
+  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.72s/it]100%|██████████| 2/2 [00:11<00:00,  5.69s/it]100%|██████████| 2/2 [00:11<00:00,  5.69s/it]
+✓ sporecap_soulknight → sporecap_soulknight.png  32.0s
 
 === exit=0 ===
 ---- 环境自述 ----
