@@ -1626,7 +1626,19 @@ var CONFIG = {
     hpBarBg: "rgba(0,0,0,0.18)",
     xpBar: "#f2b632",
     xpBarBg: "rgba(0,0,0,0.22)",
-    modalMask: "rgba(0,0,0,0.5)",
+    modalMask: "rgba(8,12,8,0.78)",      // 【v1.211z 美术方向 · 第一刀】0.5→0.78：模态背幕压暗。
+  //   ⚠ 版本字母更正：本条与下条最初误标 v1.211v/v1.211w —— 那两个字母已被另一侧（O32 三线卡面文案修）占用，
+  //     实测母版里 v/w/x/y 均在用 ⇒ 统一改挂 **v1.211z**。
+  //   【为什么改】第 146 轮按用户点名方向（弹壳特攻队 / 元素骑士 / 魔兽）做了实测对照：
+  //     把同类型开源实现（github.com/ricardo-foundry/canvas-vampire-survivors 的官方截图）
+  //     与我们的同类型屏并排后，最大差距是「**底与卡片的明度几乎一样**」——
+  //     参考是**暗底 + 亮卡**，我们是**浅绿底 + 更浅的绿卡**。背幕是唯一一处能全局提分离的开关。
+  //   【为什么只改这一半】同轮实测：把面板也压暗（`modalPanel:#39452c`）确实更像参考，
+  //     但**面板级文字（模态标题/副标题）是深绿，压暗后变成深绿压深绿、读不出来** ⇒
+  //     "暗面板"必须与"面板文字翻亮"成套改，只改一半比不改更糟。完整改造地图见
+  //     `_qc/ART-DIRECTION.md`（含要翻的站点清单）。
+  //   【可量】0.5→0.78 只动背幕，不动任何文字/卡片的对比度 ⇒ 不触碰 `_qc/_text-contrast-audit.mjs` 的判据。
+  //   回退：改回 "rgba(0,0,0,0.5)" 即可。
     modalPanel: "#e8f0d4",            // 【v1.176】苔盘略深一档, 强化/图鉴备案不洗白
     modalBorder: "#2f5a3a",
     cardBg: "#e8f0d4",
@@ -2096,7 +2108,7 @@ function flavorWavesFor(winTime, chapterNum, cut) {
 // sceneStyle=六档地面 tint 色值(嫩绿/暖黄/岩灰/青蓝/暮紫/星白), buildGroundTile 一次性叠色。
 var DATA_CHAPTER = [
   { chId: "ch1", id: "ch1", name: "芽芽原", chapter: 1, durMin: 4, winTime: 240, winMode: "survive",
-    bossTimes: [180], bossIds: ["boss1"], firstClear: 80, sceneStyle: "#6fbf4a",
+    bossTimes: [180], bossIds: ["boss1"], firstClear: 80, sceneStyle: "#5f9e3c",
     hordeTimes: [90], phaseSplit: [80, 160], waves: buildWavesFor(240, 1),
     gearNodes: [50],
     rooms: [22],
@@ -2108,7 +2120,14 @@ var DATA_CHAPTER = [
     horde: { durSec: 50, waves: 5, countMin: 72, countMax: 90, densMul: 3.2, enemyIds: ["rabbit", "mouse"] },
     elites: [ { t: 40, enemyId: "rollshell", every: 96 }, { t: 48, enemyId: "badger", every: 42 }, { t: 72, enemyId: "honeypot", every: 70 }, { t: 200, enemyId: "boar", every: 40 } ],
     bgmId: "march", bgmRate: 0.98, mapSize: 2400,
-    theme: { mapId: "sprout", name: "嫩绿原野", bgColor: "#c8e878", wash: "#6fbf4a",   // 【v1.163】#d8f0a8→#c8e878: 实测原色亮度224.7且单色占画面64.1%, 致战斗面 avgL=190 发白、细节量仅主界面一半(edge 2.84 vs 5.76); 新色亮度209.7、饱和度0.48(原0.30), 更沉更绿
+    theme: { mapId: "sprout", name: "嫩绿原野", bgColor: "#a9c95c", wash: "#5f9e3c",   // 【v1.211z 美术方向 · 第二刀：地面再压一档】承 v1.163 同一根轴（那轮把 #d8f0a8→#c8e878、亮度 224.7→209.7）：
+    //   第 146 轮 DSH 侧按"交付尺度"复看战斗屏（360×640）发现 **209.7 仍然发白** ⇒ 杂兵（2×r≈20–32 设计px、
+    //   偏白）与地面同色，读不出轮廓 —— 与 O35「发白/与地面同色」是同一个病根。
+    //   本轮把 bgColor 压到 **#a9c95c（亮度≈179、饱和≈0.54）**、wash 压到 **#5f9e3c**：**不动任何素材**
+    //   （杂兵贴图一张没改），只动"地" ⇒ 若有效，O35 就不必再靠重画/换模型。
+    //   可量口径沿用 v1.163 自己的：`avgL`（战斗面平均亮度，目标不再 >190）+ `edge`（细节量，越大越有层次）。
+    //   回退：bgColor 改回 "#c8e878"、wash 改回 "#6fbf4a"、sceneStyle 改回 "#6fbf4a"。
+
       farTop: "#b8e878", farBot: "#e8f8c8", farAccent: "#3f8a3a",
       hudFg: "#234818", hudWash: "rgba(70,130,40,0.16)", accent: "#3faf5a",
       deco: "sprout", tileA: "#8fc64a", tileB: "#6fb83a", tileC: "#a8dc62",
