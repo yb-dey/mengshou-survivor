@@ -29330,7 +29330,9 @@ function drawPausePanel(ctx, m) {
   var i, sec, lay, hint;
   bindPauseBuildChips();
   lay = GAME.pauseLayout || [];
-  ctx.fillStyle = c.cardTitle;
+  // 【v1.211z 第九刀】暂停盘走深盘配套：本屏五处面板文字全部翻亮（色值与结算页同一套 ⇒ 语言统一）。
+  //   ① 标题：「已暂停」 `c.cardTitle` → `#f4f8e6`（压实测深盘 #38432f = 9.65:1）
+  ctx.fillStyle = "#f4f8e6";
   ctx.font = "bold 32px " + FONT_STACK;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -29340,11 +29342,13 @@ function drawPausePanel(ctx, m) {
   for (i = 0; i < lay.length; i++) {
     sec = lay[i];
     if (sec.kind === "title") {
-      ctx.fillStyle = "#8a5a10";
+      // 【v1.211z 第九刀】② 分区大标题：深琥珀 `#8a5a10` → 亮金 `#e6c24a`（压深盘 6.03:1；原值压深盘 1.9:1）
+      ctx.fillStyle = "#e6c24a";
       ctx.font = "bold 16px " + FONT_STACK;
       ctx.fillText(sec.text, px + 18, sec.y + 8);
     } else if (sec.kind === "section") {
-      ctx.fillStyle = (sec.id === "pair" || sec.id === "evo") ? "#8a5a10" : c.cardTitle;
+      // 【v1.211z 第九刀】③ 分区小标题：两种原色都翻亮（`#8a5a10`→`#e6c24a` 6.03:1、`c.cardTitle`→`#f4f8e6` 9.65:1）
+      ctx.fillStyle = (sec.id === "pair" || sec.id === "evo") ? "#e6c24a" : "#f4f8e6";
       ctx.font = "bold " + (sec.id === "weapon" ? 14 : 13) + "px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, sec.title, m.panelW - 48), px + 18, sec.y + 10);
       if (sec.empty) {
@@ -29355,7 +29359,8 @@ function drawPausePanel(ctx, m) {
         //   ⇒ 这不是审美取舍，是**同一处元素在姊妹面板里落后了一代**；直接对齐结算页那个值。
         //   ⚠ 另：它画在**分区标题的同一行**（标题 px+18、本行 px+72），承担的是"这一栏现在是什么状态"，
         //     属于要读的信息，不该按"装饰性灰字"处理。
-        ctx.fillStyle = "#3c4a30";
+        // 【v1.211z 第九刀】④ 空态占位：`#3c4a30`（v1.211p 拿浅盘定的）→ `#dfe8cc`（压深盘 8.21:1）
+        ctx.fillStyle = "#dfe8cc";
         ctx.font = "bold 12px " + FONT_STACK;
         ctx.fillText(sec.empty, px + 72, sec.y + 10);
       }
@@ -29374,7 +29379,8 @@ function drawPausePanel(ctx, m) {
   hint = GAME.pauseHint || (touchOnlyHost()
     ? "已有战斗物 / 差1 / 将成 · 点条目看怎么来的 · 点「继续游戏」"
     : "已有战斗物 / 差1 / 将成 · 点条目看怎么来的 · Esc 继续");
-  ctx.fillStyle = GAME.pauseHint ? "#8a5a10" : c.cardTitle;
+  // 【v1.211z 第九刀】⑤ 底部提示行：两种原色同样翻亮（同 ③ 的两个新值）
+  ctx.fillStyle = GAME.pauseHint ? "#e6c24a" : "#f4f8e6";
   ctx.font = "bold 13px " + FONT_STACK;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -29486,7 +29492,9 @@ function makeModal(id, panelW, panelH, drawPanel) {
       // 【v1.211z 第八刀】深盘名单扩展：升级三选一（第七刀）+ 结算（本刀）。
       //   结算页文字集中度高（小字全在 `drawResultPanel` 的局部 `ink` 里）⇒ 翻亮只需 4 处，风险可控。
       //   复活盘**不进名单**：它有【v1.188】「字阶收进橄榄/奶油、金黄与警报红退出复活盘」的整屏配色裁决。
-      var isDarkPanelLv = (this.id === "levelup" || this.id === "resultmodal") && (typeof GAME !== "undefined") && !GAME.gearPickMode;
+      // 【v1.211z 第九刀】深盘名单再扩：+ 暂停盘（战斗中第三个必看模态，与七/八刀同一套语言）。
+      //   仍然**逐屏 opt-in**：三个 id 各自在下面 `drawXPanel` 里配套翻亮，其余模态一字不动。
+      var isDarkPanelLv = (this.id === "levelup" || this.id === "resultmodal" || this.id === "pausemenu") && (typeof GAME !== "undefined") && !GAME.gearPickMode;
       ctx.fillStyle = isDarkPanelLv ? "#2f3a26" : c.modalPanel;
       fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       if (!isDarkPanelLv) {
