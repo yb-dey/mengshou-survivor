@@ -1,0 +1,12 @@
+{
+  "name": "hedgehog_hit_crayon",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "cute chubby hedgehog creature game sprite, hand-drawn crayon storybook illustration, rough paper texture, soft waxy strokes, muted natural colors, small simple dot eyes, gentle face, flinching hurt pose, plain white background",
+  "negative": "",
+  "strength": 0.5,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "hedgehog_hit.png",
+  "seconds": 31.6
+}

@@ -1,0 +1,12 @@
+{
+  "name": "bear_dead_crayon",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "cute chubby bear creature game sprite, hand-drawn crayon storybook illustration, rough paper texture, soft waxy strokes, muted natural colors, small simple dot eyes, gentle face, defeated lying down, dizzy, plain white background",
+  "negative": "",
+  "strength": 0.5,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "bear_dead.png",
+  "seconds": 31.6
+}
