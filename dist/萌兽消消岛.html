@@ -32564,7 +32564,7 @@ function drawResultPanel(ctx, m) {
         ctx.fillText(rSec.empty, rPx + 72, rSec.y + 10);
       }
     } else if (rSec.kind === "unlit") {
-      ctx.fillStyle = "#3c4a30";
+      ctx.fillStyle = ink;
       ctx.font = "bold 12px " + FONT_STACK;
       ctx.textAlign = "left";
       ctx.fillText(hudFitText(ctx, rSec.text, m.panelW - 36), rPx + 18, rSec.y + 10);
@@ -32724,7 +32724,7 @@ function drawUpgradePanel(ctx, m) {
     ctx.fillText(uiUpgradeMsg, CONFIG.viewW / 2, py + 154);
   } else {
     // 【v1.182】焦点强化获取条(入袋→现在→下一步), 对齐装备库 gearPathCrumbLine
-    ctx.fillStyle = "#1c2810";
+    ctx.fillStyle = "#c9d6bb";
     ctx.font = "bold 13px " + FONT_STACK;
     ctx.fillText(hudFitText(ctx, upgradePathCrumbLine(spend.cheapest), 560), CONFIG.viewW / 2, py + 154);
   }
@@ -35001,7 +35001,7 @@ function drawGearPanel(ctx, m) {
   // 【v1.175】入袋 / 现在 / 下一步。落在六部位与背包之间的空档, 不挪热区, 不改掉率/升品价。
   // 【v1.181】路径条略上移, 腾出一行短获取条(不被六部位/背包盖住)
   drawPathSteps(ctx, 40, py + 340, 640, 32, gearPathSteps(sel, deal));
-  ctx.fillStyle = "#1c2810";
+  ctx.fillStyle = "#c9d6bb";
   ctx.font = "bold 13px " + FONT_STACK;
   ctx.fillText(hudFitText(ctx, gearPathCrumbLine(sel, deal), 620), CONFIG.viewW / 2, py + 386);
   if (GAME.hallForgeLastT > 0 && last && last.spent && last.ok && uiGearMsg.indexOf("升品!") >= 0) {
@@ -35555,7 +35555,7 @@ function drawAboutPanel(ctx, m) {
       ly += 26;
     }
     ctx.textAlign = "center";
-    ctx.fillStyle = "#55603c";
+    ctx.fillStyle = "#c9d6bb";
     ctx.font = "bold 14px " + FONT_STACK;
     ctx.fillText("展开可读完 · " + loreSkipHint(), CONFIG.viewW / 2, cardY + cardH - 22);
   }
