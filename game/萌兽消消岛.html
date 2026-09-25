@@ -30381,10 +30381,16 @@ function makeRuneChip(i, x, y, w, h) {
       // 【v1.167】符文芯片文字可读性 —— 实测未选中标题 #b6ae96 对芯片底 rgb(171,175,154) 仅 **1.48:1**、
     //   说明 #6e644a 仅 2.61:1；选中态近白压浅绿推算 1.23:1（正文标准 4.5:1）→ 大厅最常用的一行读不出来。
     //   原值：标题 selected?"#e8f8e0":"#b6ae96"；说明 selected?"#b8f0c0":"#6e644a"。
-    ctx.fillStyle = selected ? "#1e4a22" : "#2b2718";
+    // 【v1.211z 第十四刀·配套】符文芯片的字色翻亮。
+    //   ⚠ 这四处是**上一刀（大厅换深纸）的连带项**：芯片底是**半透明**的 `rgba(20,24,16,0.22)` /
+    //     `rgba(63,175,90,0.22)`，它继承纸色 ⇒ 纸一变深，【v1.167】当年那套「拿浅色底 rgb(171,175,154)
+    //     算出来」的字色**整条假设失效**，实测标题变成深绿压深底、几乎读不出来（云端 01-home 放大可见）。
+    //   ⇒ 换成对应的亮色（选中=浅绿 / 未选中=浅奶油），并**保留原来的选中-未选中层级**（选中更亮更绿）。
+    //   回退：四处改回 `#1e4a22` / `#2b2718` / `#2a5a2e` / `#443e2c`（⚠ 必须与深纸一起退，单退纸会把浅字压浅底）。
+    ctx.fillStyle = selected ? "#d8f6c8" : "#e8f0d4";
       ctx.font = "bold 15px " + FONT_STACK;
       ctx.fillText(rn.name, r.x + r.w / 2, r.y + r.h / 2 - 7);
-      ctx.fillStyle = selected ? "#2a5a2e" : "#443e2c";
+      ctx.fillStyle = selected ? "#b8e8b0" : "#b9c8a6";
       ctx.font = "11px " + FONT_STACK;
       ctx.fillText(rn.desc, r.x + r.w / 2, r.y + r.h / 2 + 10);
       endWidgetPress(ctx, pressed);
