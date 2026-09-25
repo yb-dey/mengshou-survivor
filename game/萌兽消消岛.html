@@ -6447,8 +6447,12 @@ function forkHintFor(kind, id) {
       if (DATA_SUPER[sid].req !== id) continue;
       from = DATA_SUPER[sid].from;
       if (getWeapon(from) && !isSuperSource(from)) {
-        pack = forkBranchPack(sid);
-        names.push((DATA_WEAPON[from] ? DATA_WEAPON[from].name : from) + "→" + ((pack && pack.mine && pack.mine.feel) || DATA_SUPER[sid].name));
+        // 【v1.211v】卡面提示只留武器名。原先 "武器→手感 / …" 的全称在 3 线被动（nectar / spinachseed / peppercorn）
+        //   约 31 字 ≈ 598px @19px，超过可用宽 414px —— 且 15px 时代就有 472px ⇒ **hudFitText 一直切尾，
+        //   玩家从没在卡上看过完整列表**（OPEN-ITEMS O32）。武器名才是卡上的可行动信息（哪些武器能分叉）；
+        //   手感全称与选购建议在图鉴分叉页原样保留，且不同武器的分支手感会重名（"七向扇铺"×2），卡上只留手感反而歧义。
+        //   实测最长 "喂 种子散射 / 松果连弩 / 回旋飞叶" ≈ 17 字 ≈ 314px @19px ⇒ 放得下，不再切尾。
+        names.push(DATA_WEAPON[from] ? DATA_WEAPON[from].name : from);
       }
     }
     return names.length ? ("喂 " + names.join(" / ")) : "";
