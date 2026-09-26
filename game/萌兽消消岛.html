@@ -15,7 +15,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.212">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.213">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -668,9 +668,9 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.212",  // 【v1.212 大厅深底】用户当面说"新旧没有区别、看不到进步" ⇒ 把大厅浅纸面整体压成深底
-                                        //   （rgba(12,18,12,0.58) 一层罩），舞台/铭牌/标题/按钮/卡片全浮出来——一眼不同。
-                                        //   ⚠ 版本号必须**纯数字**（合规门禁正则；带字母后缀曾红过一次）。
+  version: "1.213",  // 【v1.213 视觉系统·批A】按"眼睛"（Flash 看图评审）清单动工：
+                                        //   ① 修升级弹窗漏摇杆穿帮（只在 PLAYING 画摇杆）；② 模态盘加近底硬影 + 亮盘顶沿高光（面板物理）；
+                                        //   ③ 主 CTA 换**预渲染**渐变 #7BE86A→#2FB84A。⚠ 版本号必须**纯数字**。
                                         //   ① 13 个模态区域色带全部提饱和/提亮 + 色带/左轨柔光晕；② 模态盘双层伪软影 + 亮橄榄描边 + 顶光 + 上缘高光；
                                         //   ③ 三选一车道轨加光晕与白高光；④ 全部按钮皮肤提亮提精；⑤ 按钮副标 8 处 bold→常规重（字重层次）；
                                         //   ⑥ 大厅舞台加**预渲染主角柔光池** + 氛围浮标抬半档 + 苔墙横梁受光条 + 暗角 0.20→0.22；
@@ -27213,7 +27213,7 @@ function renderGame() {
       hudEndlessStr = "无尽 " + ((eSec31 / 60) | 0) + ":" + (eSec31 % 60 < 10 ? "0" : "") + (eSec31 % 60) + " · " + ek31 + "杀";
     }
   }
-  if (inPlay || GAME.state === GAME.flow.PAUSED_MENU || GAME.state === GAME.flow.LEVELUP_MODAL || GAME.state === GAME.flow.REVIVE_MODAL) {
+  if (inPlay || GAME.state === GAME.flow.PAUSED_MENU) {   // 【v1.213 批D】LEVELUP_MODAL/REVIVE_MODAL 不再画顶部 HUD（弹窗就该盖住战场，"眼睛"两次点名）
     drawVitalsHud(ctx);
   }
   if (inPlay) drawHeroBriefHud(ctx);
@@ -27751,6 +27751,52 @@ function endWidgetPress(ctx, pressed) {
 var FONT_UI = "bold 26px " + FONT_STACK;
 var FONT_UI_S = "bold 22px " + FONT_STACK;
 
+// 【v1.212】CTA 竖向渐变条：**预渲染** 1×N 缓存（禁逐帧渐变的合规做法），drawImage 拉伸
+var CTA_GRAD = null;
+function ctaGrad() {
+  if (CTA_GRAD) return CTA_GRAD;
+  var cv = document.createElement("canvas");
+  cv.width = 1; cv.height = 104;
+  var c2 = cv.getContext("2d");
+  var g = c2.createLinearGradient(0, 0, 0, 104);
+  g.addColorStop(0, "#7be86a");
+  g.addColorStop(1, "#2fb84a");
+  c2.fillStyle = g;
+  c2.fillRect(0, 0, 1, 104);
+  CTA_GRAD = cv;
+  return cv;
+}
+
+// 【v1.213 批E】结算大数字的金色渐变条 + 柔光（预渲染，禁逐帧渐变的合规做法）
+var GOLD_GRAD = null;
+function goldGrad() {
+  if (GOLD_GRAD) return GOLD_GRAD;
+  var cv = document.createElement("canvas");
+  cv.width = 1; cv.height = 72;
+  var c2 = cv.getContext("2d");
+  var g = c2.createLinearGradient(0, 0, 0, 72);
+  g.addColorStop(0, "#ffd98a");
+  g.addColorStop(1, "#d99a2b");
+  c2.fillStyle = g;
+  c2.fillRect(0, 0, 1, 72);
+  GOLD_GRAD = cv;
+  return cv;
+}
+var GOLD_GLOW = null;
+function goldGlow() {
+  if (GOLD_GLOW) return GOLD_GLOW;
+  var cv = document.createElement("canvas");
+  cv.width = 240; cv.height = 130;
+  var c2 = cv.getContext("2d");
+  var rg = c2.createRadialGradient(120, 65, 8, 120, 65, 120);
+  rg.addColorStop(0, "rgba(255,200,90,0.55)");
+  rg.addColorStop(1, "rgba(255,200,90,0)");
+  c2.fillStyle = rg;
+  c2.fillRect(0, 0, 240, 130);
+  GOLD_GLOW = cv;
+  return cv;
+}
+
 function fillRoundRect(ctx, x, y, w, h, r) {
   var rr = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
@@ -28069,8 +28115,9 @@ function drawHallIcon(ctx, kind, cx, cy, s, ink) {
   ctx.lineWidth = Math.max(2.2, s * 0.12);
   ctx.strokeStyle = stroke;
   function fs() { ctx.fill(); ctx.stroke(); }
+  // 【v1.213 批H】四个底栏图标统一为**同色墨线剪影**（"眼睛"：金折线/绿箭头/米字形/蓝准星四种语言并排）
   if (kind === "gear") {
-    ctx.fillStyle = "#e6c24a";
+    ctx.fillStyle = stroke;
     ctx.beginPath();
     ctx.moveTo(-s * 0.16, -s);
     ctx.lineTo(s * 0.16, -s);
@@ -28081,12 +28128,12 @@ function drawHallIcon(ctx, kind, cx, cy, s, ink) {
     ctx.lineTo(-s * 0.58, s * 0.12);
     ctx.closePath();
     fs();
-    ctx.fillStyle = "#8a5a18";
+    ctx.fillStyle = stroke;
     ctx.beginPath();
     ctx.arc(0, s * 0.2, s * 0.16, 0, CONFIG.TWO_PI);
     fs();
   } else if (kind === "up") {
-    ctx.fillStyle = "#5ecf8a";
+    ctx.fillStyle = stroke;
     ctx.beginPath();
     ctx.moveTo(0, -s);
     ctx.lineTo(-s * 0.78, s * 0.18);
@@ -28096,47 +28143,39 @@ function drawHallIcon(ctx, kind, cx, cy, s, ink) {
     ctx.fillRect(-s * 0.22, s * 0.1, s * 0.44, s * 0.72);
     ctx.strokeRect(-s * 0.22, s * 0.1, s * 0.44, s * 0.72);
   } else if (kind === "beast") {
-    // 【v1.142】叶签手册: 竖本+一片叶签, 可读成图鉴, 不是兽脸
-    ctx.fillStyle = "#7ee8b0";
-    fillRoundRect(ctx, -s * 0.50, -s * 0.22, s, s * 1.08, s * 0.14);
+    // 【v1.213 批J】改"翻开的手册"（镂空描边）：原竖本+叶签被读成人头肩/账号（"眼睛"）
     ctx.strokeStyle = stroke;
-    strokeRoundRect(ctx, -s * 0.50, -s * 0.22, s, s * 1.08, s * 0.14);
+    ctx.lineWidth = Math.max(2.4, s * 0.11);
     ctx.beginPath();
-    ctx.moveTo(-s * 0.24, -s * 0.10);
-    ctx.lineTo(-s * 0.24, s * 0.72);
+    ctx.moveTo(0, -s * 0.8);
+    ctx.quadraticCurveTo(s * 0.5, -s * 0.9, s * 0.6, -s * 0.55);
+    ctx.lineTo(s * 0.6, s * 0.8);
+    ctx.quadraticCurveTo(s * 0.5, s * 0.9, 0, s * 0.8);
+    ctx.moveTo(0, -s * 0.8);
+    ctx.quadraticCurveTo(-s * 0.5, -s * 0.9, -s * 0.6, -s * 0.55);
+    ctx.lineTo(-s * 0.6, s * 0.8);
+    ctx.quadraticCurveTo(-s * 0.5, s * 0.9, 0, s * 0.8);
     ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(-s * 0.08, s * 0.10);
-    ctx.lineTo(s * 0.32, s * 0.10);
-    ctx.moveTo(-s * 0.08, s * 0.36);
-    ctx.lineTo(s * 0.32, s * 0.36);
-    ctx.stroke();
-    ctx.fillStyle = "#4a8f3a";
-    ctx.beginPath();
-    ctx.moveTo(s * 0.06, -s * 0.22);
-    ctx.bezierCurveTo(s * 0.46, -s * 0.55, s * 0.38, -s * 0.98, s * 0.04, -s * 1.02);
-    ctx.bezierCurveTo(-s * 0.28, -s * 0.70, -s * 0.18, -s * 0.38, s * 0.06, -s * 0.22);
-    ctx.closePath();
-    fs();
-    ctx.beginPath();
-    ctx.moveTo(s * 0.06, -s * 0.30);
-    ctx.lineTo(s * 0.08, -s * 0.88);
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, -s * 0.8); ctx.lineTo(0, s * 0.8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(s * 0.15, -s * 0.75); ctx.lineTo(s * 0.15, s * 0.75); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-s * 0.15, -s * 0.75); ctx.lineTo(-s * 0.15, s * 0.75); ctx.stroke();
   } else if (kind === "set") {
-    ctx.strokeStyle = "#e7f6fb";
-    ctx.lineWidth = Math.max(3, s * 0.12);
-    ctx.fillStyle = "#8fd4e8";
-    ctx.beginPath();
-    ctx.arc(0, 0, s * 0.34, 0, CONFIG.TWO_PI);
-    fs();
-    ctx.beginPath();
-    ctx.moveTo(0, -s * 0.9); ctx.lineTo(0, -s * 0.52);
-    ctx.moveTo(0, s * 0.9); ctx.lineTo(0, s * 0.52);
-    ctx.moveTo(-s * 0.9, 0); ctx.lineTo(-s * 0.52, 0);
-    ctx.moveTo(s * 0.9, 0); ctx.lineTo(s * 0.52, 0);
-    ctx.stroke();
+    // 【v1.213 批J】改齿轮剪影：原十字靶心被读成定位（"眼睛"）
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = Math.max(2.4, s * 0.12);
+    ctx.fillStyle = stroke;
+    ctx.beginPath(); ctx.arc(0, 0, s * 0.30, 0, CONFIG.TWO_PI); fs();
+    ctx.beginPath(); ctx.arc(0, 0, s * 0.12, 0, CONFIG.TWO_PI); ctx.stroke();
+    var gi, ga;
+    for (gi = 0; gi < 8; gi++) {
+      ga = gi * Math.PI / 4;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ga) * s * 0.34, Math.sin(ga) * s * 0.34);
+      ctx.lineTo(Math.cos(ga) * s * 0.48, Math.sin(ga) * s * 0.48);
+      ctx.stroke();
+    }
   } else {
-    ctx.fillStyle = "#ffe9c0";
+    ctx.fillStyle = stroke;
     ctx.beginPath();
     ctx.rect(-s * 0.55, -s * 0.7, s * 1.1, s * 1.4);
     fs();
@@ -28357,11 +28396,9 @@ function drawHomeBase(ctx) {
   ctx.fillStyle = th.bgColor;
   ctx.fillRect(0, y0, CONFIG.viewW, y1 - y0);
   ctx.restore();
-  // 【v1.212 大厅深底·用户当面点名"看不到变化"】整层压暗：浅纸面→夜色深底。
-  //   只加一层半透明深色，**不改任何色号/文字/几何/坐标** ⇒ 既有对比度裁决全部原样成立；
-  //   画在本层之后的舞台/氛围/铭牌/标题与全部按钮、卡片都不受这层影响 ⇒ 亮卡浮在深底上，一眼不同。
-  //   回退：删掉下面两行即可。
-  ctx.fillStyle = "rgba(12,18,12,0.58)";
+  // 【v1.213 批D·元素骑士】整层压暗从"军绿"改"深靛蓝"：冷底（蓝紫）配暖卡（奶油）才是奇幻的冷暖对冲。
+  //   只改罩色，不动任何色号/文字/几何；回退=换回 rgba(12,18,12,0.58)。
+  ctx.fillStyle = "rgba(22,26,60,0.76)";
   ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
   drawHallAmbi(ctx);
   drawHallStageGround(ctx);
@@ -28727,18 +28764,16 @@ function makeButton(id, x, y, w, h, label, onTap) {
       if (skin === "cta") {
         // 【v1.211ab 美术·鲜亮精修】主 CTA 提亮提精：双层柔影 + 亮一档的薄荷绿 + 更强的顶光 + 底部内阴，
         //   副标改常规重（标题 38 粗 / 副标 18 常规 = 字重层次）。尺寸/热区/文案/字色（v1.210n 的 6.03:1 结论）不动。
+        // 【v1.212】换成**预渲染**竖向渐变（"眼睛"清单第 9 条：主按钮渐变 #7BE86A→#2FB84A；禁逐帧渐变的合规做法）
         ctx.fillStyle = "rgba(12,16,12,0.18)";
         fillRoundRect(ctx, r.x, r.y + 9, r.w, r.h, rr);
         ctx.fillStyle = "rgba(12,16,12,0.32)";
         fillRoundRect(ctx, r.x, r.y + 5, r.w, r.h, rr);
         ctx.fillStyle = "#165e2e";
         fillRoundRect(ctx, r.x, r.y + 3, r.w, r.h, rr);
-        ctx.fillStyle = "#37ce5f";
-        fillRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
+        ctx.drawImage(ctaGrad(), r.x, r.y, r.w, r.h);
         ctx.fillStyle = "rgba(255,247,224,0.16)";
         fillRoundRect(ctx, r.x + 6, r.y + 5, r.w - 12, Math.max(16, r.h * 0.40), Math.min(rr, 12));
-        ctx.fillStyle = "rgba(0,0,0,0.12)";
-        fillRoundRect(ctx, r.x + 2, r.y + r.h * 0.78, r.w - 4, r.h * 0.20, Math.min(rr, 10));
         ctx.strokeStyle = "#262014";
         ctx.lineWidth = 2.5;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
@@ -29040,16 +29075,35 @@ function makeButton(id, x, y, w, h, label, onTap) {
       if (skin === "resultfoot") {
         // 【v1.189】结算再领/入账回大厅: 闷橄榄填 + 深苔字, 无奶白描边无金闪
         // 【v1.190】入账回大厅再深一档橄榄 + 2px 苔缘, 对奶油盘多一档对比, 仍无金眩
+        // 【v1.213 批B】主次分明（"眼睛"清单 C2）：入账回大厅=绿渐变主按钮，再领一份=次级描边
         var homeBtn = this.tone === "home";
         ctx.fillStyle = "rgba(28, 36, 20, 0.12)";
         fillRoundRect(ctx, r.x + 1, r.y + 2, r.w, r.h, rr);
-        ctx.fillStyle = homeBtn ? "#b3c396" : "#d4dec4";
+        if (homeBtn) {
+          // 【v1.213 批E】主按钮外发光（"眼睛"：主按钮没有外发光，和锁定条是同一绿）
+          ctx.fillStyle = "rgba(90,230,120,0.22)";
+          fillRoundRect(ctx, r.x - 4, r.y - 4, r.w + 8, r.h + 8, rr + 4);
+          ctx.drawImage(ctaGrad(), r.x, r.y, r.w, r.h);
+          ctx.strokeStyle = "#1e7a34";
+          ctx.lineWidth = 2.5;
+          strokeRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
+          ctx.lineWidth = 1;
+          ctx.fillStyle = "#10301a";
+          ctx.font = r.h >= 64 ? FONT_UI : FONT_UI_S;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(this.label, r.x + r.w / 2, r.y + r.h / 2);
+          endWidgetPress(ctx, pressed);
+          return;
+        }
+        // 【v1.213 批G】次级按钮去光、半透明深盘（"眼睛"：两个都在发光，主次抵消）
+        ctx.fillStyle = "rgba(42,47,92,0.55)";
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
-        ctx.strokeStyle = homeBtn ? "#3a4c2e" : "#5c6c48";
-        ctx.lineWidth = homeBtn ? 2 : 1.5;
+        ctx.strokeStyle = "rgba(255,255,255,0.25)";
+        ctx.lineWidth = 1.5;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
         ctx.lineWidth = 1;
-        ctx.fillStyle = "#2c3a22";
+        ctx.fillStyle = "#e8dcb0";
         ctx.font = r.h >= 64 ? FONT_UI : FONT_UI_S;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -29655,7 +29709,7 @@ function makeModal(id, panelW, panelH, drawPanel) {
         if (drawPanel) drawPanel(ctx, this);
         return;
       }
-      ctx.fillStyle = c.modalMask;
+      ctx.fillStyle = (this.id === "levelup") ? "rgba(8,12,8,0.88)" : c.modalMask;   // 【v1.213 批B】升级弹窗用近不透明遮罩：顶沿不再漏战斗 HUD（"眼睛"复查抓到）
       ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
       // 【v1.211z 第十一刀：四个「文档型」模态也走深盘 —— 模态系统 12/13 统一】
       //   ⚠ **本条是对【v1.193】「设置/关于/怎么玩/后置加菜: 奶油填 + 2px 软苔缘」的有意变更**，理由：
@@ -29674,13 +29728,13 @@ function makeModal(id, panelW, panelH, drawPanel) {
         fillRoundRect(ctx, px + 6, py + 12, this.panelW, this.panelH, 18);
         ctx.fillStyle = "rgba(16,20,14,0.16)";
         fillRoundRect(ctx, px + 3, py + 6, this.panelW, this.panelH, 18);
-        ctx.fillStyle = "#2f3a26";
+        ctx.fillStyle = "#262b4a";
         fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
         ctx.fillStyle = "rgba(255,255,255,0.06)";
         fillRoundRect(ctx, px, py, this.panelW, this.panelH * 0.46, 18);
         ctx.fillStyle = "rgba(255,255,255,0.12)";
         fillRoundRect(ctx, px + 1, py + 1, this.panelW - 2, 2, 2);
-        ctx.strokeStyle = "#a9cf7e";
+        ctx.strokeStyle = "#93a4d0";
         ctx.lineWidth = 2.4;
         strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
         ctx.lineWidth = 1;
@@ -29695,6 +29749,9 @@ function makeModal(id, panelW, panelH, drawPanel) {
       fillRoundRect(ctx, px + 6, py + 12, this.panelW, this.panelH, 18);
       ctx.fillStyle = "rgba(16,20,14,0.16)";
       fillRoundRect(ctx, px + 3, py + 6, this.panelW, this.panelH, 18);
+      // 【v1.212】面板物理（"眼睛"清单第 1 条）：近底一道硬影，面板"立"起来；只加影不动填色/文字
+      ctx.fillStyle = "rgba(8,12,8,0.38)";
+      fillRoundRect(ctx, px + 2, py + 5, this.panelW, this.panelH, 18);
       // 【v1.211z 美术方向 · 第七刀：升级三选一单独走**深盘**（全局 modalPanel 一字不动）】
       //   【为什么只给这一屏】它是全游戏看得最多的模态（每局 5~10 次），也是参考作品里对比最强的一屏。
       //     `c.modalPanel` 本身动不得（两代裁决 + 选中态分支 + v1.211n/o 那批**拿它算过的文字对比度结论**）
@@ -29727,7 +29784,7 @@ function makeModal(id, panelW, panelH, drawPanel) {
         this.id === "gearmodal" || this.id === "vaultmodal" || this.id === "upgrademodal" ||
         this.id === "beastmodal" || this.id === "chaptermodal") &&
         (typeof GAME !== "undefined") && !GAME.gearPickMode;
-      ctx.fillStyle = isDarkPanelLv ? "#2f3a26" : c.modalPanel;
+      ctx.fillStyle = isDarkPanelLv ? "#262b4a" : c.modalPanel;   // 【v1.213 批D·元素骑士】深盘从军绿改深靛蓝（冷底+暖卡对冲；浅字对比度 8.7:1 仍达标）
       fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       if (!isDarkPanelLv) {
         try {
@@ -29738,6 +29795,9 @@ function makeModal(id, panelW, panelH, drawPanel) {
           ctx.fillStyle = mossG;
           fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
         } catch (eMoss) { /* keep flat panel */ }
+        // 【v1.212】亮盘也加顶沿内高光（面板物理统一）
+        ctx.fillStyle = "rgba(255,255,255,0.35)";
+        fillRoundRect(ctx, px + 1, py + 1, this.panelW - 2, 2, 2);
       } else {
         // 深盘上给一层极淡的顶光，避免整块死平（不创建逐帧渐变的替代：单色柔叠）
         // 【v1.211ab】顶光 0.045→0.07 且上缘加一道 1px 高光线 —— 深盘"浮起来"的观感来源
@@ -29746,7 +29806,7 @@ function makeModal(id, panelW, panelH, drawPanel) {
         ctx.fillStyle = "rgba(255,255,255,0.12)";
         fillRoundRect(ctx, px + 1, py + 1, this.panelW - 2, 2, 2);
       }
-      ctx.strokeStyle = isDarkPanelLv ? "#a9cf7e" : "#2f5a3a";
+      ctx.strokeStyle = isDarkPanelLv ? "#93a4d0" : "#2f5a3a";
       ctx.lineWidth = isDarkPanelLv ? 2.4 : 2.2;
       strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       ctx.lineWidth = 1;
@@ -29795,9 +29855,14 @@ function makeCard(idx, x, y, w, h) {
 function drawLevelupCardFrame(ctx, x, y, w, h, rareColor, armed) {
   ctx.fillStyle = "rgba(16,20,14,0.16)";
   fillRoundRect(ctx, x + 2, y + 4, w, h, 12);
+  // 【v1.213 批G】卡面质感：底边 2px 暗边 + 1px 顶部内高光 + 品质色描边（"眼睛"清单 C1：卡面缺厚度与光）
+  ctx.fillStyle = "rgba(0,0,0,0.16)";
+  fillRoundRect(ctx, x + 1, y + h - 3, w - 2, 3, 6);
   ctx.fillStyle = armed ? "rgba(226,236,198,0.97)" : "rgba(220,232,194,0.95)";
   fillRoundRect(ctx, x, y, w, h, 12);
-  ctx.strokeStyle = "#2a3a18";
+  ctx.fillStyle = "rgba(255,255,255,0.30)";
+  fillRoundRect(ctx, x + 3, y + 2, w - 6, 2, 1);
+  ctx.strokeStyle = rareColor || "#2a3a18";   // 品质色描边：三张卡一眼分档
   ctx.lineWidth = 2.5;
   strokeRoundRect(ctx, x, y, w, h, 12);
   ctx.lineWidth = 1;
@@ -29969,13 +30034,31 @@ function drawLevelupCard(ctx, card) {
   cue = levelupCardCue(card.idx, card.opt);
   cueH = 32;
   cueY = r.y + r.h - cueH - 10;
-  ctx.fillStyle = armed ? "#6a7c52" : "rgba(46,139,71,0.42)";
-  fillRoundRect(ctx, r.x + 16, cueY, r.w - 32, cueH, 10);
-  ctx.strokeStyle = armed ? "rgba(46,62,32,0.72)" : "rgba(216,245,168,0.55)";
-  ctx.lineWidth = 1.4;
-  strokeRoundRect(ctx, r.x + 16, cueY, r.w - 32, cueH, 10);
-  ctx.lineWidth = 1;
-  ctx.fillStyle = armed ? "#eef4dc" : "#d8f5a8";
+  // 【v1.213 批B】"点此锁定"是主操作：未锁 = 绿渐变亮条（一眼可点），已锁 = 静默深盘（"眼睛"清单 C3）
+  ctx.fillStyle = "rgba(16,20,14,0.25)";
+  fillRoundRect(ctx, r.x + 16, cueY + 2, r.w - 32, cueH, 10);
+  if (armed) {
+    ctx.fillStyle = "#39452b";
+    fillRoundRect(ctx, r.x + 16, cueY, r.w - 32, cueH, 10);
+    ctx.strokeStyle = "rgba(216,245,168,0.55)";
+    ctx.lineWidth = 1.4;
+    strokeRoundRect(ctx, r.x + 16, cueY, r.w - 32, cueH, 10);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = "#eef4dc";
+  } else {
+    // 【v1.213 批F】推荐卡（hot）锁定条换金色渐变 = "就点这张"（"眼睛"：三条同亮度，没有一条被标成推荐）
+    if (card.synTone === "hot") {
+      ctx.drawImage(goldGrad(), r.x + 16, cueY, r.w - 32, cueH);
+      ctx.strokeStyle = "#8a5a10";
+    } else {
+      ctx.drawImage(ctaGrad(), r.x + 16, cueY, r.w - 32, cueH);
+      ctx.strokeStyle = "#1e7a34";
+    }
+    ctx.lineWidth = 1.6;
+    strokeRoundRect(ctx, r.x + 16, cueY, r.w - 32, cueH, 10);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = "#10301a";
+  }
   // 【v1.211u】按钮字 16→18px：这是玩家**要点的那一下**，读不清有真实可用性代价（按钮高 cueH=32，18px 装得下）。
   ctx.font = "bold 18px " + FONT_STACK;
   ctx.textAlign = "center";
@@ -30704,6 +30787,8 @@ function makeJoystickView() {
     onTap: null,
     draw: function (ctx) {
       var j = Input.joy, kb = Input.kb, c = CONFIG.colors, TWO = CONFIG.TWO_PI;
+      // 【v1.212】只在 PLAYING 画摇杆：升级三选一/暂停等模态下不再漏出蓝圆点（"眼睛"实测抓到的穿帮）
+      if (GAME.state !== GAME.flow.PLAYING) return;
       var ret = !j.active && j.retT > 0;
       if (j.active || ret) {
         var baseA = ret ? j.retT / (CONFIG.joyReturnMs / 1000) : 1;
@@ -32617,14 +32702,27 @@ function drawResultPanel(ctx, m) {
   ctx.fillStyle = "#2c3a22";   // 【v1.211z 第二十八刀】卡上是**浅底** ⇒ 用深墨（原来是深盘的浅 ink，压浅卡约 1.1:1）
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText(resultCoinParts(), cx, goldY + 46);
-  ctx.fillStyle = "#b8860b";
-  ctx.font = "bold 44px " + FONT_STACK;
-  ctx.fillText("" + resultPayoutTotal(), cx, goldY + 84);
+  ctx.drawImage(goldGlow(), cx - 120, goldY + 20, 240, 130);   // 【v1.213 批E】大数字柔光
+  // 【v1.213 批G】深蓝底嵌块：金数字从米绿卡上"脱"出来（"眼睛"：渐变压米绿底像水印）
+  // 【v1.213 批J】嵌块升级"金库数字盘"：落影 + 金边 + 顶内高光（"眼睛"：纯色块像临时色板）
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  fillRoundRect(ctx, cx - 96, goldY + 59, 192, 56, 12);
+  ctx.fillStyle = "#1e2350";
+  fillRoundRect(ctx, cx - 96, goldY + 56, 192, 56, 12);
+  ctx.strokeStyle = "#d8a22e";
+  ctx.lineWidth = 2;
+  strokeRoundRect(ctx, cx - 96, goldY + 56, 192, 56, 12);
+  ctx.lineWidth = 1;
+  ctx.fillStyle = "rgba(255,255,255,0.10)";
+  fillRoundRect(ctx, cx - 92, goldY + 58, 184, 2, 1);
+  ctx.fillStyle = ctx.createPattern(goldGrad(), "repeat");     // 预渲染金色渐变（元素骑士能量感）
+  ctx.font = "bold 48px " + FONT_STACK;
+  ctx.fillText("" + resultPayoutTotal(), cx, goldY + 88);
   ctx.fillStyle = "#2c3a22";   // 【v1.211z 第二十八刀】卡上是**浅底** ⇒ 用深墨（原来是深盘的浅 ink，压浅卡约 1.1:1）
   ctx.font = "bold 14px " + FONT_STACK;
-  ctx.fillText("点「入账回大厅」才进钱包  " + runSummary.walletBefore + "→" + (runSummary.walletBefore + resultPayoutTotal()), cx, goldY + (CONFIG.resultGoldH || 128) - 16);
+  ctx.fillText("点「入账回大厅」才进钱包  " + runSummary.walletBefore + "→" + (runSummary.walletBefore + resultPayoutTotal()), cx, goldY + (CONFIG.resultGoldH || 128) - 6);   // 【v1.213 批G】下移 10px，给嵌块数字让位（"眼睛"：两行糊成一团）
 
-  drawSoftCard(ctx, cx - 260, cardY, 520, CONFIG.resultPowerH || 132, edge, runSummary.win ? "rgba(212,228,184,0.92)" : "rgba(236,220,214,0.90)", true);
+  drawSoftCard(ctx, cx - 260, cardY, 520, CONFIG.resultPowerH || 132, edge, runSummary.win ? "rgba(198,206,176,0.92)" : "rgba(224,208,200,0.90)", true);   // 【v1.213 批F】战力卡压暗一档：金色大数字成为唯一视觉中心
   ctx.fillStyle = (GAME.hallPowerPulse > 0) ? "#b8860b" : c.cardTitle;
   ctx.font = "bold 22px " + FONT_STACK;
   ctx.fillText("战力 " + p0 + "→" + p1 + (dlt ? (" (" + signedGearDelta(dlt) + ")") : " · 未改"), cx, cardY + 32);
@@ -34940,6 +35038,9 @@ function makeHallBoardCell(i, x, y, w, h) {
       // 【v1.157】大厅装/强/鉴战力看板去金: 深盘+金框+金hint → 柔影+苔纸+细墨框+细圆色签(对齐 drawBuildChip/dockGold);
       //   金/绿/蓝只留左侧细签, 战力数字改深墨仍可读; 尺寸/热区/文案不动。
       // 【v1.188】软抬唇 + 2px 苔外墨: 正面多出一截苔脊, 备案截图能读出三条结构。热区/文案不动。
+      // 【v1.213 批C】面板物理：近底硬影（"眼睛"：大厅三格看板还平贴）
+      ctx.fillStyle = "rgba(8,12,8,0.38)";
+      fillRoundRect(ctx, r.x + 1, r.y + 4, r.w, r.h, 10);
       ctx.fillStyle = "rgba(36, 48, 24, 0.30)";
       fillRoundRect(ctx, r.x + 1, r.y + 5, r.w, r.h, 10);
       ctx.fillStyle = "#3a4e28";
@@ -34999,6 +35100,11 @@ function makeThemeChip(i, x, y, w, h) {
         ctx.scale(pop, pop);
         ctx.translate(-cx, -cy);
       }
+      // 【v1.213 批C】芯片物理：底唇硬影 + 顶沿微光（暗底上把芯片"立"起来）
+      ctx.fillStyle = "rgba(8,12,8,0.45)";
+      fillRoundRect(ctx, r.x, r.y + 4, r.w, r.h, 8);
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      fillRoundRect(ctx, r.x + 4, r.y + 1.5, r.w - 8, 1.5, 1);
       var stripH = Math.max(16, r.h * 0.40);
       ctx.fillStyle = sel ? "#1a2414" : "#1a1812";
       fillRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
@@ -35167,6 +35273,11 @@ function makeGearSlot(i, x, y, w, h) {
       var rar = it ? DATA_GEAR_RARITY[it.rarity] : null;
       var col = rar ? rar.color : CONFIG.colors.cardBorder;
       drawRarityFrame(ctx, r.x, r.y, r.w, r.h, col, "#fff7e0");
+      // 【v1.213 批J】槽位"凸起"材质：顶内高光 + 底内阴影（"眼睛"：格子是纸片，缺甲片感）
+      ctx.fillStyle = "rgba(255,255,255,0.40)";
+      fillRoundRect(ctx, r.x + 4, r.y + 2, r.w - 8, 2, 1);
+      ctx.fillStyle = "rgba(0,0,0,0.14)";
+      fillRoundRect(ctx, r.x + 3, r.y + r.h - 3, r.w - 6, 2, 1);
       drawItemSprite(ctx, d ? gearSpriteKey(d.id) : "", r.x + 10, r.y + 16, 72);
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
@@ -35196,8 +35307,13 @@ function makeGearBagCell(i, x, y, w, h) {
     draw: function (ctx) {
       var keys = bagUidList();
       var r = this.rect;
+      // 【v1.213 批I】背包格质感：外投影 + 顶部内高光（"眼睛"清单 C1：卡面缺厚度与光）
+      ctx.fillStyle = "rgba(16,20,14,0.16)";
+      fillRoundRect(ctx, r.x + 2, r.y + 3, r.w, r.h, 10);
       ctx.fillStyle = "#f4efe0";
       fillRoundRect(ctx, r.x, r.y, r.w, r.h, 10);
+      ctx.fillStyle = "rgba(255,255,255,0.30)";
+      fillRoundRect(ctx, r.x + 3, r.y + 1.5, r.w - 6, 1.5, 1);
       if (this.idx >= keys.length) {
         ctx.strokeStyle = "rgba(40,46,38,0.2)";
         ctx.lineWidth = 1;
