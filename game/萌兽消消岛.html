@@ -28973,7 +28973,7 @@ function makeButton(id, x, y, w, h, label, onTap) {
         ctx.lineWidth = 1;
         ctx.fillStyle = "#48c566";
         fillRoundRect(ctx, r.x + 6, r.y + 12, 5, r.h - 24, 2);
-        drawHallIcon(ctx, this.icon || "gear", r.x + r.w / 2, r.y + 42, 28, "#2a2418");
+        drawHallIcon(ctx, this.icon || "gear", r.x + r.w / 2, r.y + 40, 34, "#2a2418");   // 【v1.213 批N】图标 28→34（"眼睛"：图标太小、文字巨大，比例反了）
         ctx.fillStyle = "#24301c";
         ctx.font = "bold 26px " + FONT_STACK;
         ctx.textAlign = "center";
@@ -29001,7 +29001,7 @@ function makeButton(id, x, y, w, h, label, onTap) {
         ctx.lineWidth = widgetPressed(this) ? 2.5 : 1.5;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 16);
         ctx.lineWidth = 1;
-        drawHallIcon(ctx, this.icon || "about", r.x + r.w / 2, r.y + 48, 26);
+        drawHallIcon(ctx, this.icon || "about", r.x + r.w / 2, r.y + 44, 32);   // 【v1.213 批N】图标 26→32
         ctx.fillStyle = "#2e3c1c";
         ctx.font = "bold 22px " + FONT_STACK;
         ctx.textAlign = "center";
@@ -29709,7 +29709,7 @@ function makeModal(id, panelW, panelH, drawPanel) {
         if (drawPanel) drawPanel(ctx, this);
         return;
       }
-      ctx.fillStyle = (this.id === "levelup") ? "rgba(8,12,8,0.88)" : c.modalMask;   // 【v1.213 批B】升级弹窗用近不透明遮罩：顶沿不再漏战斗 HUD（"眼睛"复查抓到）
+      ctx.fillStyle = (this.id === "levelup" || this.id === "resultmodal") ? "rgba(8,10,24,0.78)" : c.modalMask;   // 【v1.213 批B/O】升级/结算用近不透明冷遮罩：顶沿不漏战斗 HUD、底不露经验条（"眼睛"复查）
       ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
       // 【v1.211z 第十一刀：四个「文档型」模态也走深盘 —— 模态系统 12/13 统一】
       //   ⚠ **本条是对【v1.193】「设置/关于/怎么玩/后置加菜: 奶油填 + 2px 软苔缘」的有意变更**，理由：
@@ -29784,7 +29784,7 @@ function makeModal(id, panelW, panelH, drawPanel) {
         this.id === "gearmodal" || this.id === "vaultmodal" || this.id === "upgrademodal" ||
         this.id === "beastmodal" || this.id === "chaptermodal") &&
         (typeof GAME !== "undefined") && !GAME.gearPickMode;
-      ctx.fillStyle = isDarkPanelLv ? "#262b4a" : c.modalPanel;   // 【v1.213 批D·元素骑士】深盘从军绿改深靛蓝（冷底+暖卡对冲；浅字对比度 8.7:1 仍达标）
+      ctx.fillStyle = isDarkPanelLv ? (this.id === "resultmodal" ? "#1f2444" : "#262b4a") : c.modalPanel;   // 【v1.213 批D/O】深盘从军绿改深靛蓝；结算盘再深一档更"封底"（浅字对比度仍达标）
       fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       if (!isDarkPanelLv) {
         try {
@@ -29853,6 +29853,9 @@ function makeCard(idx, x, y, w, h) {
 // 【v1.153】三选一卡面专用 chrome: 一块柔盘影 + 苔纸底 + 2.5px 墨框(不再粗金框), 顶部 3px 稀有色细签。
 // 与 drawRarityFrame 分家(装备格/获得演出仍走旧框), 只服务升级三选一, 点卡锁定金圈语义保留。
 function drawLevelupCardFrame(ctx, x, y, w, h, rareColor, armed) {
+  // 【v1.213 批O】外投影 + 品质色描边 3px（"眼睛"：三张卡像平级表单行，兴奋感全在框上）
+  ctx.fillStyle = "rgba(0,0,0,0.30)";
+  fillRoundRect(ctx, x + 3, y + 7, w, h, 12);
   ctx.fillStyle = "rgba(16,20,14,0.16)";
   fillRoundRect(ctx, x + 2, y + 4, w, h, 12);
   // 【v1.213 批G】卡面质感：底边 2px 暗边 + 1px 顶部内高光 + 品质色描边（"眼睛"清单 C1：卡面缺厚度与光）
@@ -29863,7 +29866,7 @@ function drawLevelupCardFrame(ctx, x, y, w, h, rareColor, armed) {
   ctx.fillStyle = "rgba(255,255,255,0.30)";
   fillRoundRect(ctx, x + 3, y + 2, w - 6, 2, 1);
   ctx.strokeStyle = rareColor || "#2a3a18";   // 品质色描边：三张卡一眼分档
-  ctx.lineWidth = 2.5;
+  ctx.lineWidth = 3;
   strokeRoundRect(ctx, x, y, w, h, 12);
   ctx.lineWidth = 1;
   if (rareColor) {
@@ -30355,9 +30358,14 @@ function drawRewardTrio(ctx, x, y, w, h, view, quiet) {
     cx0 = x + i * (colW + gap);
     hot = rewardKindHot(col.kind);
     edge = hot ? col.color : "rgba(90,98,84,0.55)";
-    fill = hot ? "rgba(16,20,14,0.55)" : "rgba(40,46,38,0.28)";
+    fill = hot ? "#2a2e4e" : "rgba(40,46,38,0.28)";   // 【v1.213 批O】热格填色提到深蓝紫（"眼睛"：金币/通关礼格厚度只剩一条边）
     ctx.fillStyle = fill;
     fillRoundRect(ctx, cx0, y, colW, h, 12);
+    // 【v1.213 批M】奖励格"凸起"材质（顶内高光 + 底内阴，"眼睛"：清一色贴片）
+    ctx.fillStyle = "rgba(255,255,255,0.08)";
+    fillRoundRect(ctx, cx0 + 4, y + 2, colW - 8, 2, 1);
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    fillRoundRect(ctx, cx0 + 3, y + h - 3, colW - 6, 2, 1);
     ctx.strokeStyle = edge;
     // 【v1.158】结算三格热缘再细一档: quiet 2.2→1.8, 侧签 alpha 0.78→0.62, 苔纸细墨到底无金盘
     ctx.lineWidth = hot ? (quiet ? 1.8 : 3) : 1;
@@ -31617,7 +31625,7 @@ function registerUi() {
   var gPy = (CONFIG.viewH - 1180) / 2;
   uiGearSlots = [];
   for (var gs = 0; gs < DATA_GEAR_SLOT.length; gs++) {
-    uiGearSlots.push(makeGearSlot(gs, 40 + (gs % 3) * 220, gPy + 130 + ((gs / 3) | 0) * 120, 200, 104));
+    uiGearSlots.push(makeGearSlot(gs, 40 + (gs % 3) * 220, gPy + 140 + ((gs / 3) | 0) * 120, 200, 104));   // 【v1.213 批K】+130→+140：给标题区第三行说明让出 10px（"眼睛"：被第一排卡压掉一半）
   }
   uiGearBag = [];
   for (var gb = 0; gb < 12; gb++) {
@@ -32626,9 +32634,21 @@ function drawResultPanel(ctx, m) {
   ctx.fillText(mapThemeLine(ch), cx, py + 52);
   // 【v1.211z 第八刀】深盘配套：标题翻亮 —— 胜 = 暖白 `#f4f8e6`（压深盘 11.07:1）；
   //   负 = 浅红 `#ff9a86`（5.17:1）。原 `#8a2a2a` 压深盘只有 1.6:1（等于看不见）。
-  ctx.fillStyle = runSummary.win ? "#f4f8e6" : "#ff9a86";
-  ctx.font = "bold 40px " + FONT_STACK;
-  ctx.fillText(runSummary.win ? "通关胜利!" : "挑战失败", cx, py + 84);
+  // 【v1.213 批O】胜利标题上金（"眼睛"：全场情绪最高点反而最静）：金渐变+暗描边+外发光
+  if (runSummary.win) {
+    ctx.drawImage(goldGlow(), cx - 150, py + 30, 300, 130);
+    ctx.strokeStyle = "#2a1b06";
+    ctx.lineWidth = 5;
+    ctx.font = "bold 44px " + FONT_STACK;
+    ctx.strokeText("通关胜利!", cx, py + 84);
+    ctx.fillStyle = ctx.createPattern(goldGrad(), "repeat");
+    ctx.fillText("通关胜利!", cx, py + 84);
+    ctx.lineWidth = 1;
+  } else {
+    ctx.fillStyle = "#ff9a86";
+    ctx.font = "bold 40px " + FONT_STACK;
+    ctx.fillText("挑战失败", cx, py + 84);
+  }
   // 【v1.154】标题下划线收短收细且降 alpha, 结算 chrome 更静, 层级=标题→数据→CTA
   ctx.globalAlpha = 0.72;
   ctx.fillStyle = runSummary.win ? "#c9a24b" : "#c0392b";
@@ -35227,14 +35247,14 @@ function drawGearPanel(ctx, m) {
   ctx.font = "bold 13px " + FONT_STACK;
   ctx.fillText(hudFitText(ctx, gearPathCrumbLine(sel, deal), 620), CONFIG.viewW / 2, py + 386);
   if (GAME.hallForgeLastT > 0 && last && last.spent && last.ok && uiGearMsg.indexOf("升品!") >= 0) {
-    drawSpendGainDuo(ctx, 40, py + 928, 640, 52, last);
+    drawSpendGainDuo(ctx, 40, py + 936, 640, 52, last);
   } else {
-    drawSpendGainDuo(ctx, 40, py + 928, 640, 52, deal);
+    drawSpendGainDuo(ctx, 40, py + 936, 640, 52, deal);
   }
   ctx.fillStyle = uiGearMsg ? ((uiGearMsg.indexOf("升品!") >= 0 || uiGearMsg.indexOf("合成成功") >= 0 || uiGearMsg.indexOf("已装备") >= 0) ? "#2e8b47" : "#c0392b") : CONFIG.colors.cardDesc;
   ctx.font = "bold 15px " + FONT_STACK;
   ctx.fillText(uiGearMsg || (mergeN ? ("有 " + mergeN + " 组可合成") : "通关礼/袋入装。锻纹优先, 没有再花金币。"),
-    CONFIG.viewW / 2, py + 996);
+    CONFIG.viewW / 2, py + 1004);   // 【v1.213 批K】+996→+1004：与底排按钮拉开（"眼睛"：挤在一起半透明透出来）
 }
 function makeGearSlot(i, x, y, w, h) {
   return UIStack.add({
@@ -35336,20 +35356,30 @@ function makeGearBagCell(i, x, y, w, h) {
       ctx.textBaseline = "middle";
       ctx.fillStyle = rar.color;
       ctx.font = "bold 14px " + FONT_STACK;
-      ctx.fillText(d ? d.name : "?", r.x + r.w / 2, r.y + 86);
-      ctx.fillStyle = CONFIG.colors.cardDesc;
-      ctx.font = "bold 12px " + FONT_STACK;
-      ctx.fillText(rar.name, r.x + r.w / 2, r.y + 104);
+      ctx.fillText(d ? d.name : "?", r.x + r.w / 2, r.y + 82);
+      // 【v1.213 批L】稀有度名改"实心角标"（色底 + 墨边白字），不再是一行灰绿小字（"眼睛"清单 C2）
+      var rw = Math.min(r.w - 24, ctx.measureText(rar.name).width + 16);
+      fillRoundRect(ctx, r.x + (r.w - rw) / 2, r.y + 96, rw, 20, 8);
+      ctx.strokeStyle = "rgba(26,20,8,0.75)";
+      ctx.lineWidth = 2.2;
+      ctx.strokeText(rar.name, r.x + r.w / 2, r.y + 106);
+      ctx.fillStyle = "#fff7e0";
+      ctx.fillText(rar.name, r.x + r.w / 2, r.y + 106);
+      ctx.lineWidth = 1;
       var eq = false, sl;
       for (sl in saveData.gearEquip) if (saveData.gearEquip[sl] === uid) eq = true;
       if (eq) {
-        // 【v1.167】状态文字可读性：实测 #3faf5a 压苔纸仅 2.41:1（正文标准 4.5:1）→ 改深绿 4.66:1。
-        //   原值 #3faf5a 备查；同色的细条/色块（图形）不动。
+        // 【v1.213 批O】"穿戴中"挪右下角、右对齐（"眼睛"：和角标叠成两行团）
+        ctx.textAlign = "right";
         ctx.fillStyle = "#1e7a34";
-        ctx.fillText("穿戴中", r.x + r.w / 2, r.y + 120);
+        ctx.fillText("穿戴中", r.x + r.w - 10, r.y + r.h - 16);
+        ctx.textAlign = "center";
       } else if (d) {
+        // 属性行挪左下角、左对齐
+        ctx.textAlign = "left";
         ctx.fillStyle = CONFIG.colors.cardDesc;
-        ctx.fillText(gearStatLine(d, it.rarity | 0), r.x + r.w / 2, r.y + 120);
+        ctx.fillText(gearStatLine(d, it.rarity | 0), r.x + 10, r.y + r.h - 16);
+        ctx.textAlign = "center";
       }
       var mkN = mergeKeyCount(it.defId, it.rarity);
       if (mkN >= 3 && (it.rarity | 0) < 4) {
