@@ -15,7 +15,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.211">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.212">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -668,8 +668,9 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.211",  // 【v1.211(ab) 美术·鲜亮精修】⚠ 版本号必须**纯数字**——合规门禁按 /1\.\d+/ 解析，
-                                        //   带字母后缀会"抽不到 CONFIG.version"（09-26 云端 verify 红过一次，教训见复盘）。
+  version: "1.212",  // 【v1.212 大厅深底】用户当面说"新旧没有区别、看不到进步" ⇒ 把大厅浅纸面整体压成深底
+                                        //   （rgba(12,18,12,0.58) 一层罩），舞台/铭牌/标题/按钮/卡片全浮出来——一眼不同。
+                                        //   ⚠ 版本号必须**纯数字**（合规门禁正则；带字母后缀曾红过一次）。
                                         //   ① 13 个模态区域色带全部提饱和/提亮 + 色带/左轨柔光晕；② 模态盘双层伪软影 + 亮橄榄描边 + 顶光 + 上缘高光；
                                         //   ③ 三选一车道轨加光晕与白高光；④ 全部按钮皮肤提亮提精；⑤ 按钮副标 8 处 bold→常规重（字重层次）；
                                         //   ⑥ 大厅舞台加**预渲染主角柔光池** + 氛围浮标抬半档 + 苔墙横梁受光条 + 暗角 0.20→0.22；
@@ -28356,6 +28357,12 @@ function drawHomeBase(ctx) {
   ctx.fillStyle = th.bgColor;
   ctx.fillRect(0, y0, CONFIG.viewW, y1 - y0);
   ctx.restore();
+  // 【v1.212 大厅深底·用户当面点名"看不到变化"】整层压暗：浅纸面→夜色深底。
+  //   只加一层半透明深色，**不改任何色号/文字/几何/坐标** ⇒ 既有对比度裁决全部原样成立；
+  //   画在本层之后的舞台/氛围/铭牌/标题与全部按钮、卡片都不受这层影响 ⇒ 亮卡浮在深底上，一眼不同。
+  //   回退：删掉下面两行即可。
+  ctx.fillStyle = "rgba(12,18,12,0.58)";
+  ctx.fillRect(0, 0, CONFIG.viewW, CONFIG.viewH);
   drawHallAmbi(ctx);
   drawHallStageGround(ctx);
   ctx.lineWidth = 1;
