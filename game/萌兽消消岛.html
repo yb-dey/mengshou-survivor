@@ -27796,6 +27796,35 @@ function goldGlow() {
   GOLD_GLOW = cv;
   return cv;
 }
+// 【v1.213 批R】胜利标题的"爆发"光：中心亮核 + 12 条放射线（预渲染一次，逐帧 drawImage）
+var WIN_BURST = null;
+function winBurst() {
+  if (WIN_BURST) return WIN_BURST;
+  var cv = document.createElement("canvas");
+  cv.width = 520; cv.height = 280;
+  var c2 = cv.getContext("2d");
+  var rg = c2.createRadialGradient(260, 140, 10, 260, 140, 260);
+  rg.addColorStop(0, "rgba(255,203,76,0.85)");
+  rg.addColorStop(0.45, "rgba(255,124,31,0.35)");
+  rg.addColorStop(1, "rgba(255,124,31,0)");
+  c2.fillStyle = rg;
+  c2.fillRect(0, 0, 520, 280);
+  c2.save();
+  c2.translate(260, 140);
+  c2.strokeStyle = "rgba(255,224,138,0.35)";
+  c2.lineWidth = 3;
+  c2.lineCap = "round";
+  for (var k = 0; k < 12; k++) {
+    var a = k * Math.PI / 6;
+    c2.beginPath();
+    c2.moveTo(Math.cos(a) * 40, Math.sin(a) * 40);
+    c2.lineTo(Math.cos(a) * 130, Math.sin(a) * 130);
+    c2.stroke();
+  }
+  c2.restore();
+  WIN_BURST = cv;
+  return cv;
+}
 
 function fillRoundRect(ctx, x, y, w, h, r) {
   var rr = Math.min(r, w / 2, h / 2);
@@ -28967,10 +28996,12 @@ function makeButton(id, x, y, w, h, label, onTap) {
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, 16);
         ctx.fillStyle = "rgba(255,255,255,0.35)";
         fillRoundRect(ctx, r.x + 6, r.y + 5, r.w - 12, Math.max(12, r.h * 0.28), 10);
-        // 【v1.213 批P】主 Tab 选中强调：顶部绿亮条 + 图标区绿光晕（"眼睛"：选中态只有一根细绿条）
-        ctx.fillStyle = "#7ed957";
-        fillRoundRect(ctx, r.x + 8, r.y + 9, r.w - 16, 3, 1.5);
-        ctx.fillStyle = "rgba(126,217,87,0.20)";
+        // 【v1.213 批R】主 Tab 选中强调 v2：4px 绿顶条 + 绿底叠色 22%（"眼睛"：远看会糊，字重和底色差才是信号）
+        ctx.fillStyle = "rgba(62,142,46,0.22)";
+        fillRoundRect(ctx, r.x + 4, r.y + 4, r.w - 8, r.h - 8, 12);
+        ctx.fillStyle = "#8fe04a";
+        fillRoundRect(ctx, r.x + 8, r.y + 9, r.w - 16, 4, 2);
+        ctx.fillStyle = "rgba(143,224,74,0.20)";
         fillRoundRect(ctx, r.x + 8, r.y + 26, r.w - 16, 56, 12);
         ctx.strokeStyle = widgetPressed(this) ? "#2a3a18" : "rgba(42,58,24,0.85)";
         ctx.lineWidth = widgetPressed(this) ? 3 : 2;
@@ -29858,9 +29889,9 @@ function makeCard(idx, x, y, w, h) {
 // 【v1.153】三选一卡面专用 chrome: 一块柔盘影 + 苔纸底 + 2.5px 墨框(不再粗金框), 顶部 3px 稀有色细签。
 // 与 drawRarityFrame 分家(装备格/获得演出仍走旧框), 只服务升级三选一, 点卡锁定金圈语义保留。
 function drawLevelupCardFrame(ctx, x, y, w, h, rareColor, armed) {
-  // 【v1.213 批P】"厚板"硬投影：0 4px 实心深色垫底（"眼睛"：软影在浅卡压深底下看不出浮起）
-  ctx.fillStyle = "#231e38";
-  fillRoundRect(ctx, x, y + 4, w, h, 12);
+  // 【v1.213 批R】"厚板"硬投影 v2：影色比面板底再深两个色阶 + 上缘亮边（"眼睛"：在深底上加暗=把影子画在自己颜色里）
+  ctx.fillStyle = "#120b2a";
+  fillRoundRect(ctx, x, y + 6, w, h, 12);
   ctx.fillStyle = "rgba(0,0,0,0.30)";
   fillRoundRect(ctx, x + 3, y + 7, w, h, 12);
   ctx.fillStyle = "rgba(16,20,14,0.16)";
@@ -29870,7 +29901,7 @@ function drawLevelupCardFrame(ctx, x, y, w, h, rareColor, armed) {
   fillRoundRect(ctx, x + 1, y + h - 3, w - 2, 3, 6);
   ctx.fillStyle = armed ? "rgba(226,236,198,0.97)" : "rgba(220,232,194,0.95)";
   fillRoundRect(ctx, x, y, w, h, 12);
-  ctx.fillStyle = "rgba(255,255,255,0.30)";
+  ctx.fillStyle = "rgba(255,255,255,0.45)";
   fillRoundRect(ctx, x + 3, y + 2, w - 6, 2, 1);
   ctx.strokeStyle = rareColor || "#2a3a18";   // 品质色描边：三张卡一眼分档
   ctx.lineWidth = 3;
@@ -30386,7 +30417,7 @@ function drawRewardTrio(ctx, x, y, w, h, view, quiet) {
     ctx.globalAlpha = 1;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = hot ? col.color : "#9aa08c";
+    ctx.fillStyle = hot ? col.color : (col.key === "gift" ? "#b39a5e" : "#9aa08c");   // 【v1.213 批R】通关礼未热也留暖金（"眼睛"：灰字像漏了上色）
     ctx.font = "bold 14px " + FONT_STACK;
     ctx.fillText(col.title, cx0 + colW / 2, y + 16);
     if (col.key === "coin" && SPRITES.coin) {
@@ -31632,7 +31663,7 @@ function registerUi() {
   var gPy = (CONFIG.viewH - 1180) / 2;
   uiGearSlots = [];
   for (var gs = 0; gs < DATA_GEAR_SLOT.length; gs++) {
-    uiGearSlots.push(makeGearSlot(gs, 40 + (gs % 3) * 220, gPy + 140 + ((gs / 3) | 0) * 120, 200, 104));   // 【v1.213 批K】+130→+140：给标题区第三行说明让出 10px（"眼睛"：被第一排卡压掉一半）
+    uiGearSlots.push(makeGearSlot(gs, 40 + (gs % 3) * 220, gPy + 130 + ((gs / 3) | 0) * 120, 200, 104));   // 【v1.213 批R】回退批K的+10：真正的碰撞是"路径条 vs 第二排"，不是标题；改法见 drawPathSteps 上移
   }
   uiGearBag = [];
   for (var gb = 0; gb < 12; gb++) {
@@ -32630,7 +32661,7 @@ function drawResultPanel(ctx, m) {
   //   改法：① 画序反过来——**背景元素先画，文字后画**（结构性修法，防止以后再被别的东西压住）；
   //        ② 条子上移 2px、高度 26→22 ⇒ 占 py+2..py+24，与文字上沿 py+24 **恰好相接不重叠**。
   //   ⛔ 只动这两处画序/几何：文字内容、字号、颜色、其余行位置一律不动（不动任何数值）。
-  drawChapterMapStrip(ctx, ch, cx - 260, py + 2, 520, 22);
+  drawChapterMapStrip(ctx, ch, cx - 260, py - 12, 520, 22);   // 【v1.213 批R】上移 14px：给胜利标题留净空（"眼睛"：横条压标题 15px 太近）
   ctx.fillStyle = ink;
   ctx.font = "16px " + FONT_STACK;
   ctx.fillText(head, cx, py + 32);
@@ -32643,7 +32674,7 @@ function drawResultPanel(ctx, m) {
   //   负 = 浅红 `#ff9a86`（5.17:1）。原 `#8a2a2a` 压深盘只有 1.6:1（等于看不见）。
   // 【v1.213 批O】胜利标题上金（"眼睛"：全场情绪最高点反而最静）：金渐变+暗描边+外发光
   if (runSummary.win) {
-    ctx.drawImage(goldGlow(), cx - 190, py + 22, 380, 150);   // 【v1.213 批P】径向暖光垫底放大（"眼睛"：光有、爆发感没有）
+    ctx.drawImage(winBurst(), cx - 260, py - 16, 520, 280);   // 【v1.213 批R】中心亮核 + 12 条放射线（"眼睛"：只有金色字没有"爆"）
     ctx.strokeStyle = "#2a1b06";
     ctx.lineWidth = 5;
     ctx.font = "bold 54px " + FONT_STACK;
@@ -32669,7 +32700,7 @@ function drawResultPanel(ctx, m) {
     + " · " + CONFIG.gameName
     + " · " + mm + ":" + (ss < 10 ? "0" : "") + ss
     + " · 击杀 " + runSummary.kills
-    + (runSummary.roomClears ? (" · 挑战房" + runSummary.roomClears + "次") : ""), cx, py + 118);
+    + (runSummary.roomClears ? (" · 挑战房" + runSummary.roomClears + "次") : ""), cx, py + 128);   // 【v1.213 批R】+118→+128：与放大后的标题拉开（"眼睛"：间距不到 6px）
   ctx.font = "15px " + FONT_STACK;
   ctx.fillStyle = ink;   // 【v1.189】在 1.188 #555548 上再收一档深苔, 字号不放大
   if (runSummary.win && runSummary.prevBest) {
@@ -35249,10 +35280,10 @@ function drawGearPanel(ctx, m) {
   }
   // 【v1.175】入袋 / 现在 / 下一步。落在六部位与背包之间的空档, 不挪热区, 不改掉率/升品价。
   // 【v1.181】路径条略上移, 腾出一行短获取条(不被六部位/背包盖住)
-  drawPathSteps(ctx, 40, py + 340, 640, 32, gearPathSteps(sel, deal));
+  drawPathSteps(ctx, 40, py + 332, 640, 32, gearPathSteps(sel, deal));   // 【v1.213 批R】上移 8px：与第二排装备卡（250–354）拉开
   ctx.fillStyle = "#c9d6bb";
   ctx.font = "bold 13px " + FONT_STACK;
-  ctx.fillText(hudFitText(ctx, gearPathCrumbLine(sel, deal), 620), CONFIG.viewW / 2, py + 386);
+  ctx.fillText(hudFitText(ctx, gearPathCrumbLine(sel, deal), 620), CONFIG.viewW / 2, py + 380);
   if (GAME.hallForgeLastT > 0 && last && last.spent && last.ok && uiGearMsg.indexOf("升品!") >= 0) {
     drawSpendGainDuo(ctx, 40, py + 936, 640, 52, last);
   } else {
