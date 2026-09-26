@@ -1,0 +1,14 @@
+{
+  "name": "fox_v2",
+  "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+  "prompt": "a cute chibi orange fox with pointed ears and white chest and white tail tip, big dark eyes with white highlight, front view, full body in frame, pixel art, PixArFK, game enemy sprite, solid flat magenta background, no ground shadow, single character",
+  "negative": "",
+  "strength": 0.62,
+  "guidance": 7.5,
+  "steps": 20,
+  "size": 512,
+  "ref": "fox.png",
+  "lora": "artificialguybr/pixelartredmond-1-5v-pixel-art-loras-for-sd-1-5",
+  "lora_weight": "PixelArtRedmond15V-PixelArt-PIXARFK.safetensors",
+  "seconds": 146.4
+}
