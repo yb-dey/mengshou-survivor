@@ -15,7 +15,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.210">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.211">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -668,7 +668,8 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.211ab", // 【v1.211ab 美术·鲜亮精修】用户 09-26 点名"美术不够好看、质量低"后的三刀：
+  version: "1.211",  // 【v1.211(ab) 美术·鲜亮精修】⚠ 版本号必须**纯数字**——合规门禁按 /1\.\d+/ 解析，
+                                        //   带字母后缀会"抽不到 CONFIG.version"（09-26 云端 verify 红过一次，教训见复盘）。
                                         //   ① 13 个模态区域色带全部提饱和/提亮 + 色带/左轨柔光晕；② 模态盘双层伪软影 + 亮橄榄描边 + 顶光 + 上缘高光；
                                         //   ③ 三选一车道轨加光晕与白高光；④ 全部按钮皮肤提亮提精；⑤ 按钮副标 8 处 bold→常规重（字重层次）；
                                         //   ⑥ 大厅舞台加**预渲染主角柔光池** + 氛围浮标抬半档 + 苔墙横梁受光条 + 暗角 0.20→0.22；
