@@ -30394,7 +30394,8 @@ function drawRewardMiniRow(ctx, x, y, w, h, color, text, dim) {
   fillRoundRect(ctx, x + 3, y + 4, 5, h - 8, 2);
   ctx.globalAlpha = 1;
   ctx.fillStyle = dim ? "#8a8a76" : "#2e3c1c";
-  ctx.font = "bold 13px " + FONT_STACK;
+  // 【v1.214 批B9】回礼行三档分层：常态 13px / 已领·无房 11px+灰（审计 02：各行星号只差 2px 同色族，一片米糊）
+  ctx.font = "bold " + (dim ? 11 : 13) + "px " + FONT_STACK;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   ctx.fillText(text, x + 14, y + h / 2);
