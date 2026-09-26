@@ -15,7 +15,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.213">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.214">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -668,9 +668,9 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.213",  // 【v1.213 视觉系统·批A】按"眼睛"（Flash 看图评审）清单动工：
-                                        //   ① 修升级弹窗漏摇杆穿帮（只在 PLAYING 画摇杆）；② 模态盘加近底硬影 + 亮盘顶沿高光（面板物理）；
-                                        //   ③ 主 CTA 换**预渲染**渐变 #7BE86A→#2FB84A。⚠ 版本号必须**纯数字**。
+  version: "1.214",  // 【v1.214 全游戏美术·按 ART-SYSTEM.md 科学规范】用户当面纠正"美术=整个 HTML 的内容美术"。
+                                        //   批A2 战场接地：敌人/主角接地影抬一档 + 默认原野底降一档饱和（审计 B：单位全靠硬贴对比）。
+                                        //   ⚠ 版本号必须**纯数字**。
                                         //   ① 13 个模态区域色带全部提饱和/提亮 + 色带/左轨柔光晕；② 模态盘双层伪软影 + 亮橄榄描边 + 顶光 + 上缘高光；
                                         //   ③ 三选一车道轨加光晕与白高光；④ 全部按钮皮肤提亮提精；⑤ 按钮副标 8 处 bold→常规重（字重层次）；
                                         //   ⑥ 大厅舞台加**预渲染主角柔光池** + 氛围浮标抬半档 + 苔墙横梁受光条 + 暗角 0.20→0.22；
@@ -13401,12 +13401,13 @@ function refreshAudioToggleLabels() {
   var muteOn = masterMuted();
   var sfxOn = sfxEnabled();
   var bgmOn = bgmEnabled();
-  paintAudioToggle(uiSetMute, muteOn, "静音 开", "静音 关", "总闸", "poor", "done");
-  paintAudioToggle(uiBtnMute, muteOn, "静音 开", "静音 关", "总闸", "poor", "done");
-  paintAudioToggle(uiSetNodeSfx, sfxOn, "音效 开", "音效 关", "开火/节点", "ok", "locked");
-  paintAudioToggle(uiBtnNodeSfx, sfxOn, "音效 开", "音效 关", "开火/节点", "ok", "locked");
-  paintAudioToggle(uiSetBgmOn, bgmOn, "BGM 开", "BGM 关", "垫乐", "ok", "locked");
-  paintAudioToggle(uiBtnBgm, bgmOn, "BGM 开", "BGM 关", "垫乐", "ok", "locked");
+  // 【v1.214 批B3】开关三态按"开=亮、关=幽灵"：静音开=亮琥珀(警示)、静音关=亮绿(正常)；BGM/音效开=亮绿、关=幽灵
+  paintAudioToggle(uiSetMute, muteOn, "静音 开", "静音 关", "总闸", "onwarn", "on");
+  paintAudioToggle(uiBtnMute, muteOn, "静音 开", "静音 关", "总闸", "onwarn", "on");
+  paintAudioToggle(uiSetNodeSfx, sfxOn, "音效 开", "音效 关", "开火/节点", "on", "off");
+  paintAudioToggle(uiBtnNodeSfx, sfxOn, "音效 开", "音效 关", "开火/节点", "on", "off");
+  paintAudioToggle(uiSetBgmOn, bgmOn, "BGM 开", "BGM 关", "垫乐", "on", "off");
+  paintAudioToggle(uiBtnBgm, bgmOn, "BGM 开", "BGM 关", "垫乐", "on", "off");
 }
 function kickAudioToast(msg) {
   GAME.audioToast = msg || "";
@@ -25052,9 +25053,9 @@ function paintChapterGround(c2, w, h, mt) {
   var n, x, y, rw, rh;   // 【v1.161】decoN 退役: 各章装饰簇数按 kind 分档定死(石 5/花果雾苔 4), 不再读 mapDecoN
   var seed = ((mt.mapId || mt.name || "sprout").charCodeAt(0) * 131 + (mt.deco || "s").charCodeAt(0) * 17) | 0;
   function rnd() { seed = (seed * 1664525 + 1013904223) | 0; return ((seed >>> 8) & 0xffff) / 65536; }
-  var a = mt.tileA || mt.bgColor || "#8fc64a";
-  var b = mt.tileB || mt.wash || "#6fb83a";
-  var c = mt.tileC || "#a6d45a";
+  var a = mt.tileA || mt.bgColor || "#82b04a";   // 【v1.214 批A2】默认原野底降一档饱和/明度（审计B：亮黄绿平涂让单位全靠硬贴对比）
+  var b = mt.tileB || mt.wash || "#66a63a";
+  var c = mt.tileC || "#9cc854";
   var kind = mt.deco || "sprout";
   var pathH;
   c2.fillStyle = a;
@@ -25942,9 +25943,11 @@ function drawEarlyTrashContactShadow(ctx, e, uScale) {
   if (tid !== "rabbit" && tid !== "mouse" && tid !== "fox" && tid !== "leaptoad") return;
   if (fxTideQuiet() && juiceLevel() < 1) return;
   // 【v1.194】再软一档、更扁椭圆: alpha 0.42→0.32, 横 +8% / 纵 -14%
-  rx = (e.r || 12) * 1.68 * (uScale || 1);
-  ry = (e.r || 12) * 0.36 * (uScale || 1);
-  ctx.globalAlpha = 0.32;
+  // 【v1.214 批A2 战场接地】alpha 0.32→0.42、横 1.68→1.82、纵 0.36→0.42：审计 B"全是平贴在纯色绿上"，
+  //   同一套软椭圆口径不变，只把"接触"的存在感抬回一档（纯表现，碰撞不动）
+  rx = (e.r || 12) * 1.82 * (uScale || 1);
+  ry = (e.r || 12) * 0.42 * (uScale || 1);
+  ctx.globalAlpha = 0.42;
   fillDropShadow(ctx, e.x + rx * 0.04, e.y + (e.r || 12) * 0.55, rx, ry);
   ctx.globalAlpha = 1;
 }
@@ -26005,8 +26008,8 @@ function drawPlayerInRun(ctx, dpr, wtx, wty) {
   //   放在函数最前：避免与下面的无敌闪烁 globalAlpha 状态互相覆盖。
   if (!(fxTideQuiet() && juiceLevel() < 1)) {
     var _shR = (player.r || 14) * heroDrawScale();
-    ctx.globalAlpha = 0.30;
-    fillDropShadow(ctx, player.x, player.y + _shR * 0.62, _shR * 1.60, _shR * 0.38);
+    ctx.globalAlpha = 0.40;   // 【v1.214 批A2】0.30→0.40：与敌人同一档接地感
+    fillDropShadow(ctx, player.x, player.y + _shR * 0.62, _shR * 1.75, _shR * 0.42);
     ctx.globalAlpha = 1;
   }
   inv = GAME.time < player.invUntil;
@@ -27877,9 +27880,16 @@ function drawItemSpriteEx(ctx, key, x, y, size, state) {
     ctx.arc(x + size * 0.5, y + size * 0.38, size * 0.12, Math.PI, 0);
     ctx.stroke();
   } else if (state === "short") {
-    ctx.fillStyle = "rgba(192,57,43,0.28)";
+    // 【v1.214 批B2】"差金"态图标：原暗红底(0.28)+红字 1.3:1 读不出（审计 05b）→ 深蓝底 + 白字 + 金环 + 左上高光
+    ctx.fillStyle = "rgba(30,39,64,0.72)";
     fillRoundRect(ctx, x, y, size, size, 8);
-    ctx.fillStyle = "#c0392b";
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 2;
+    strokeRoundRect(ctx, x + 1, y + 1, size - 2, size - 2, 8);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = "rgba(255,243,208,0.35)";
+    fillRoundRect(ctx, x + 2, y + 2, size - 4, 2, 1);
+    ctx.fillStyle = "#fff3d0";
     ctx.font = "bold " + Math.max(12, (size * 0.42) | 0) + "px " + FONT_STACK;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -29152,6 +29162,10 @@ function makeButton(id, x, y, w, h, label, onTap) {
       // 【v1.157】done 档(满级/已入仓/静音关)去金盘: 苔纸+细墨缘+深墨字, 对齐仓库行卡状态签; 按下态仍走 widgetPressed 加粗
       else if (tone === "done") { fill = "#dde8c2"; stroke = "rgba(42,58,24,0.55)"; ink = "#3a4626"; }
       else if (tone === "poor") { /* 【v1.167g】tonePoorQuiet：“差N金”是**中性信息态**不是错误——原深红实心(#6a3030)+红缘把强化页铺成 11 个红签，整屏读作报错；改琥珀静默样式（本作价格语言本就是琥珀 #a06a10/#8a5a10）。回退：fill=#6a3030 / stroke=#c0392b / ink=#ffe0d4 */ fill = "rgba(138,90,16,0.12)"; stroke = "rgba(138,90,16,0.55)"; ink = "#7a5210"; }
+      // 【v1.214 批B3】开关三态（审计 08：最亮的竟然是"关"，状态色反用）：开=亮绿 / 开警示=亮琥珀 / 关=幽灵灰
+      else if (tone === "on") { fill = "#8fc63f"; stroke = "#5a8a28"; ink = "#1f3010"; }
+      else if (tone === "onwarn") { fill = "#e8a03c"; stroke = "#a06a10"; ink = "#2c1a06"; }
+      else if (tone === "off") { fill = "rgba(255,255,255,0.10)"; stroke = "rgba(220,228,204,0.35)"; ink = "#a8b098"; }
       else if (tone === "arm") { fill = "#b86a10"; stroke = "#ffe082"; ink = "#fff7e0"; }
       else if (tone === "idle") { fill = "#3a4a32"; stroke = "#8aaa70"; ink = "#fff7e0"; }
       ctx.fillStyle = fill;
@@ -29207,6 +29221,11 @@ function drawBuildChip(ctx, r, row, hot) {
   fillRoundRect(ctx, r.x + 1, r.y + 3, r.w, r.h, 8);
   ctx.fillStyle = hot ? rgbaHex(row.color || "#c9a24b", 0.26) : "rgba(222,232,198,0.94)";
   fillRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
+  // 【v1.214 批B8】非热点条目整体压暗一档（审计 B：暂停/结算的胶囊墙等权铺满；亮面只给"点开看"的那条）
+  if (!hot) {
+    ctx.fillStyle = "rgba(30,40,24,0.13)";
+    fillRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
+  }
   ctx.strokeStyle = hot ? rgbaHex(row.color || "#c9a24b", 0.9) : "rgba(42,58,24,0.80)";
   ctx.lineWidth = hot ? 2 : 1.5;
   strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
@@ -30616,9 +30635,15 @@ function makeChapterCard(i, x, y, w, h) {
       // 【v1.189】锁章改闷橄榄实填(仍透一点纸色), 右上软墨挂锁; 解锁条件/点击忽略不动
       ctx.fillStyle = locked ? "rgba(28,36,20,0.08)" : "rgba(16,20,14,0.12)";
       fillRoundRect(ctx, r.x + 1, r.y + 3, r.w, r.h, 12);
+      // 【v1.214 批B4】选中卡加硬影（"眼睛"审计 02：六张卡灰度一片米糊，选中只靠细边）
+      if (selected) {
+        ctx.fillStyle = "rgba(20,32,16,0.35)";
+        fillRoundRect(ctx, r.x + 2, r.y + 5, r.w, r.h, 12);
+      }
       ctx.fillStyle = locked ? "rgba(176, 186, 148, 0.90)" : (selected ? "rgba(226,236,198,0.97)" : CONFIG.colors.cardBg);
       fillRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
-      ctx.strokeStyle = selected ? "#142010" : (locked ? "rgba(58,74,40,0.62)" : (view.coinKind === "pending" ? "rgba(201,162,75,0.82)" : "rgba(28,40,18,0.72)"));
+      // 【v1.214 批B4】选中框改绿色（#2e9b4a）而不是近黑——"选中"一眼读作绿，不再靠边粗细猜
+      ctx.strokeStyle = selected ? "#2e9b4a" : (locked ? "rgba(58,74,40,0.62)" : (view.coinKind === "pending" ? "rgba(201,162,75,0.82)" : "rgba(28,40,18,0.72)"));
       ctx.lineWidth = selected ? 3.2 : (view.coinKind === "pending" && !locked ? 2.4 : 2.1);
       strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
       ctx.lineWidth = 1;
@@ -33093,7 +33118,9 @@ function drawUpgradePanel(ctx, m) {
     }
     ctx.fillStyle = plocked ? "#9aa08f" : (v.canBuy ? "#a8e0a0" : "#e6c24a");
     ctx.font = "bold 13px " + FONT_STACK;
-    if (!plocked && !v.maxed) ctx.fillText(v.goldLine, pcardX + 8, prowY + 64);
+    // 【v1.214 批B3】差金态不再在卡底重复价格（按钮已写"差N金"，再写就是两份；"眼睛"：绿残影）
+    //   可买态保留"要N金 · 现有M"（这是唯一写"现有"的地方）
+    if (v.canBuy && !plocked && !v.maxed) ctx.fillText(v.goldLine, pcardX + 8, prowY + 64);
     else if (v.maxed) ctx.fillText("已满级", pcardX + 8, prowY + 64);
     btn = uiUpBtns[UPGRADE_DEFS.length + i];
     if (btn) {
@@ -33860,6 +33887,11 @@ function drawVaultPanel(ctx, m) {
       ctx.lineWidth = chrome.lw;
       strokeRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
       ctx.lineWidth = 1;
+      // 【v1.214 批B7】未选/未待确认的行压暗一档（审计 A/C 共性：亮面铺满全屏⇒"亮"不再是信息；亮面只给焦点行）
+      if (!sel && !armed) {
+        ctx.fillStyle = "rgba(30,40,24,0.14)";
+        fillRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
+      }
       // 【v1.211z 美术方向 · 第六刀：仓库行也带车道色竖轨】
       //   【为什么】三选一卡（第五刀）已经用**武器金/道具红/被动蓝**给玩家建立了颜色语言；
       //     而仓库兑换这 6 行仍然只有"苔盘 + 小图标 + 小字" ⇒ 同一个语言在第二屏就断了。
@@ -33887,15 +33919,16 @@ function drawVaultPanel(ctx, m) {
       strokeRoundRect(ctx, lay.cardX + 10, rowY + 14, 52, 52, 10);
       ctx.lineWidth = 1;
       drawItemSpriteEx(ctx, vaultRowIcon(rec), lay.cardX + 14, rowY + 18, 44, v.locked ? "locked" : (v.maxed ? "maxed" : (v.ok ? "ok" : "short")));
-      ctx.fillStyle = c.cardTitle;
+      // 【v1.214 批B4】锁定行是"幽灵行"（透出深盘）⇒ 行内文字必须换浅色，否则深字压深盘 = 审计 05 的"未解锁水印"1.2:1
+      ctx.fillStyle = v.locked ? "#dfe8cc" : c.cardTitle;
       ctx.font = "bold 22px " + FONT_STACK;
       ctx.fillText(rec.name + " · " + hallKindLabel(rec.kind), lay.cardX + 70, rowY + 22);
       drawVaultStatusChip(ctx, lay.cardX + lay.cardW - 100, rowY + 10, chip);
-      ctx.fillStyle = v.locked ? "#a06a10" : (v.maxed ? "#2e8b47" : c.cardDesc);
+      ctx.fillStyle = v.locked ? "#e6c24a" : (v.maxed ? "#2e8b47" : c.cardDesc);
       ctx.font = "bold 14px " + FONT_STACK;
       ctx.fillText(v.locked ? ("条件 " + rec.condText) : (v.maxed ? ("已入仓 · " + rec.gainText) : ("解锁 " + rec.condText)),
         lay.cardX + 70, rowY + 50);
-      ctx.fillStyle = v.ok ? "#2e8b47" : (v.locked ? "#8a7a58" : (v.maxed ? "#6a5420" : "#c0392b"));
+      ctx.fillStyle = v.ok ? "#2e8b47" : (v.locked ? "#c9b890" : (v.maxed ? "#6a5420" : "#c0392b"));   // 【v1.214 批B4】locked 行底是深盘 ⇒ 浅沙色可读
       ctx.font = "bold 14px " + FONT_STACK;
       ctx.fillText(v.locked ? ("未解锁 · 要" + v.price + "金才可打造") : (v.maxed ? "下局开局带上 · 不再扣金" : (v.spendLine + " → " + v.gainLine)),
         lay.cardX + 70, rowY + 74);
@@ -33923,6 +33956,11 @@ function drawVaultPanel(ctx, m) {
       ctx.lineWidth = chrome.lw;
       strokeRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
       ctx.lineWidth = 1;
+      // 【v1.214 批B7】未选/未待确认的行压暗一档（审计 A/C 共性：亮面铺满全屏⇒"亮"不再是信息；亮面只给焦点行）
+      if (!sel && !armed) {
+        ctx.fillStyle = "rgba(30,40,24,0.14)";
+        fillRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
+      }
       // 【v1.211z 美术方向 · 第六刀：仓库行也带车道色竖轨】
       //   【为什么】三选一卡（第五刀）已经用**武器金/道具红/被动蓝**给玩家建立了颜色语言；
       //     而仓库兑换这 6 行仍然只有"苔盘 + 小图标 + 小字" ⇒ 同一个语言在第二屏就断了。
@@ -33969,23 +34007,29 @@ function drawVaultPanel(ctx, m) {
 function drawCodexFrame(ctx, x, y, w, h, selected, accent) {
   // 【v1.176】图鉴条目苔盘再净: 柔影+左上柔光+#2f5a3a 墨缘, 空洗区不显稀疏
   // 【v1.177】选中盘固定 #c8ecc8 / 墨缘 #2f5a3a, 未选仍苔纸, 一屏能分出正在查的那一条
+  // 【v1.214 批B5】焦点重建（审计 07：选中只靠 2px 细边）：
+  //   选中 = 暖奶油 #f2e7cb + 暖金描边/侧签 + 双级硬影；未选整体压暗一档 #dce7cf —— 亮面只发给"正在看的那条"
   ctx.fillStyle = "rgba(16,20,14,0.10)";
   fillRoundRect(ctx, x + 1, y + 3, w, h, 12);
-  ctx.fillStyle = selected ? "#c8ecc8" : "rgba(222,232,198,0.95)";
+  if (selected) {
+    ctx.fillStyle = "rgba(16,20,14,0.22)";
+    fillRoundRect(ctx, x + 2, y + 6, w, h, 12);
+  }
+  ctx.fillStyle = selected ? "#f2e7cb" : "rgba(220,231,207,0.95)";
   fillRoundRect(ctx, x, y, w, h, 12);
   try {
     var cg = ctx.createLinearGradient(x, y, x + w * 0.6, y + h * 0.5);
-    cg.addColorStop(0, selected ? "rgba(255,252,238,0.48)" : "rgba(255,252,238,0.38)");
+    cg.addColorStop(0, selected ? "rgba(255,252,238,0.52)" : "rgba(255,252,238,0.38)");
     cg.addColorStop(1, "rgba(255,252,238,0)");
     ctx.fillStyle = cg;
     fillRoundRect(ctx, x, y, w, h, 12);
   } catch (eCf) { /* keep flat */ }
-  ctx.strokeStyle = "#2f5a3a";
-  ctx.lineWidth = selected ? 3.2 : 1.6;
+  ctx.strokeStyle = selected ? "#c9a24b" : "#2f5a3a";
+  ctx.lineWidth = selected ? 3 : 1.6;
   strokeRoundRect(ctx, x, y, w, h, 12);
   ctx.lineWidth = 1;
-  ctx.fillStyle = selected ? "#2f5a3a" : (accent || "#5a7a32");
-  fillRoundRect(ctx, x + 4, y + 10, selected ? 7 : 5, h - 20, 2);
+  ctx.fillStyle = selected ? "#e6c24a" : (accent || "#5a7a32");
+  fillRoundRect(ctx, x + 4, y + 10, 5, h - 20, 2);
 }
 function drawCodexChip(ctx, x, y, w, h, text, fill, ink) {
   // 【v1.155】小签统一补细墨缘, 色块不再裸贴苔纸
@@ -34002,6 +34046,7 @@ function drawCodexChip(ctx, x, y, w, h, text, fill, ink) {
 }
 function drawCodexBeastPlate(ctx, x, y, w, h, tint) {
   // 【v1.155】图鉴条目生物底板: 苔纸柔光盘+左上柔光+细墨缘, 小尺寸剪影/贴图都能读; 组色只留极淡晕, 不再浓色圈盖怪
+  // 【v1.214 批B5】生物盘加"体积"：底部内阴影（角色踩在盘里）+ 顶内高光（审计 06：角色无体积、四只明度互相抵消）
   ctx.fillStyle = "rgba(16,20,14,0.10)";
   fillRoundRect(ctx, x + 1, y + 2, w, h, 12);
   ctx.fillStyle = "rgba(238,244,220,0.92)";
@@ -34017,6 +34062,10 @@ function drawCodexBeastPlate(ctx, x, y, w, h, tint) {
   g.addColorStop(0.6, "rgba(255,252,238,0)");
   ctx.fillStyle = g;
   fillRoundRect(ctx, x, y, w, h, 12);
+  ctx.fillStyle = "rgba(42,58,36,0.28)";   // 底部内阴
+  fillRoundRect(ctx, x + 2, y + h - 10, w - 4, 10, 10);
+  ctx.fillStyle = "rgba(255,255,255,0.40)";   // 顶内高光
+  fillRoundRect(ctx, x + 3, y + 2, w - 6, 2, 1);
   ctx.strokeStyle = "rgba(42,58,24,0.55)";
   ctx.lineWidth = 1.5;
   strokeRoundRect(ctx, x, y, w, h, 12);
@@ -35713,12 +35762,33 @@ function drawGuidePanel(ctx, m) {
   ctx.fillStyle = "#e6c24a";
   ctx.font = "bold 21px " + FONT_STACK;
   ctx.fillText("上手四步 · 入袋 → 现在 → 开战", CONFIG.viewW / 2, py + 172);
-  ctx.fillStyle = "#dfe8cc";
-  ctx.font = "21px " + FONT_STACK;   // 【v1.211ab】步骤行改常规重
-  ctx.fillText("① " + moveHintText() + ", 武器自己开火", CONFIG.viewW / 2, py + 218);   // 【v1.204】同源文案
-  ctx.fillText("② 走近宝石升级, 三选一强化(提示可跳过)", CONFIG.viewW / 2, py + 264);
-  ctx.fillText("③ 装备袋走近才开箱, 通关再得一件", CONFIG.viewW / 2, py + 310);
-  ctx.fillText("④ 倒下可复活再战, 放弃也会把金币入账", CONFIG.viewW / 2, py + 356);
+  // 【v1.214 批B6】七步改"绿圆徽标 + 左对齐"（审计 10b：七条全居中同字号，扫读找不到下一步）。
+  //   字号/行位一律不动（v1.210u 的 21px 裁决保留），只把"①…"换成左侧绿徽标 + 文字左对齐。
+  var gx = CONFIG.viewW / 2 - 292, tx = gx + 48;
+  var steps6 = [
+    [moveHintText() + ", 武器自己开火", 218],
+    ["走近宝石升级, 三选一强化(提示可跳过)", 264],
+    ["装备袋走近才开箱, 通关再得一件", 310],
+    ["倒下可复活再战, 放弃也会把金币入账", 356]
+  ];
+  for (var s6 = 0; s6 < steps6.length; s6++) {
+    ctx.fillStyle = "#2e9b4a";
+    ctx.beginPath();
+    ctx.arc(gx + 13, py + steps6[s6][1], 13, 0, CONFIG.TWO_PI);
+    ctx.fill();
+    ctx.strokeStyle = "#1c3a1c";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.fillStyle = "#fff7e0";
+    ctx.font = "bold 15px " + FONT_STACK;
+    ctx.textAlign = "center";
+    ctx.fillText(String(s6 + 1), gx + 13, py + steps6[s6][1] + 1);
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#dfe8cc";
+    ctx.font = "21px " + FONT_STACK;
+    ctx.fillText(steps6[s6][0], tx, py + steps6[s6][1]);
+  }
   ctx.fillStyle = "#a8e0a0";
   ctx.font = "bold 21px " + FONT_STACK;
   // ⚠ 【v1.210x】下面这句是**对玩家的承诺**，它成立的前提是"三选一刷新不接广告"：
@@ -35742,11 +35812,30 @@ function drawGuidePanel(ctx, m) {
   ctx.fillStyle = "#a8e0a0";
   ctx.font = "bold 21px " + FONT_STACK;
   ctx.fillText("出局之后", CONFIG.viewW / 2, py + 596);
-  ctx.fillStyle = "#dfe8cc";
-  ctx.font = "21px " + FONT_STACK;   // 【v1.211ab】出局三步改常规重
-  ctx.fillText("⑤ 回大厅花金币强化六部位, 装备好再出击", CONFIG.viewW / 2, py + 640);
-  ctx.fillText("⑥ 图鉴看进化配方与收集, 仓库兑换把素材换装备", CONFIG.viewW / 2, py + 682);
-  ctx.fillText("⑦ 想换口味点「后置加菜」, 短局 5～6 分钟不冲正片", CONFIG.viewW / 2, py + 724);
+  // 【v1.214 批B6】出局三步同样换绿徽标 + 左对齐
+  var steps7 = [
+    ["回大厅花金币强化六部位, 装备好再出击", 640],
+    ["图鉴看进化配方与收集, 仓库兑换把素材换装备", 682],
+    ["想换口味点「后置加菜」, 短局 5～6 分钟不冲正片", 724]
+  ];
+  for (var s7 = 0; s7 < steps7.length; s7++) {
+    ctx.fillStyle = "#2e9b4a";
+    ctx.beginPath();
+    ctx.arc(gx + 13, py + steps7[s7][1], 13, 0, CONFIG.TWO_PI);
+    ctx.fill();
+    ctx.strokeStyle = "#1c3a1c";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.fillStyle = "#fff7e0";
+    ctx.font = "bold 15px " + FONT_STACK;
+    ctx.textAlign = "center";
+    ctx.fillText(String(s7 + 5), gx + 13, py + steps7[s7][1] + 1);
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#dfe8cc";
+    ctx.font = "21px " + FONT_STACK;
+    ctx.fillText(steps7[s7][0], tx, py + steps7[s7][1]);
+  }
   if (uiGuideMsg) {
     ctx.fillStyle = "#a8e0a0";
     ctx.font = "20px " + FONT_STACK;   // 动态状态行（导入结果/提示状态），留一档层级差；【v1.211ab】改常规重
@@ -35823,7 +35912,7 @@ function drawAboutPanel(ctx, m) {
   ctx.lineWidth = 2;
   strokeRoundRect(ctx, px + 24, cardY, m.panelW - 48, cardH, 14);
   ctx.lineWidth = 1;
-  ctx.fillStyle = "#f4f8e6";
+  ctx.fillStyle = "#2c3a28";   // 【v1.214 批B2】设定卡是**浅奶油底** ⇒ 白字 1.2:1 读不出（审计 09）→ 深墨字 8.6:1
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.textAlign = "left";
   if (open) {
