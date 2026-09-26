@@ -28565,7 +28565,11 @@ function drawHomeBase(ctx) {
     drawHallMapGround(ctx, th.id, pvWinX, pvWinY, pvWinW, pvWinH);
   }
   ctx.restore();
-  // 【v1.194】窗下软唇: 同大厅中脊土唇+苔高光(drawHallStageAccent), 缩到铭牌带宽
+  // 【v1.214 批B11】预览块压暗：原来是全屏第二亮的亮绿块，和"正片出击"抢唯一焦点（中程复查 A1）
+  ctx.fillStyle = "rgba(20,28,16,0.30)";
+  fillRoundRect(ctx, pvWinX, pvWinY, pvWinW, pvWinH, 6);
+  ctx.fillStyle = "rgba(58,95,36,0.55)";
+  ctx.fillRect(pvWinX, pvWinY + pvWinH * 0.72, pvWinW, 2);   // 一条地平线，缩略图更有"地面"读法
   ctx.fillStyle = "rgba(168, 120, 78, 0.48)";
   ctx.beginPath();
   if (typeof ctx.ellipse === "function") ctx.ellipse(pvWinX + pvWinW / 2, pvWinY + pvWinH + 6, 78, 5.2, 0, 0, CONFIG.TWO_PI);
@@ -28590,10 +28594,17 @@ function drawHomeBase(ctx) {
   ctx.fillText("出战地面", pvX + pvW / 2, pvY + pvH - 34);
   ctx.font = "bold 16px " + FONT_STACK;
   ctx.fillText((rec && rec.name ? rec.name : "") + " · " + ((mapThemeOf(rec) && mapThemeOf(rec).name) || ""), pvX + pvW / 2, pvY + pvH - 14);
-  ctx.fillStyle = "#E8F0C8";
+  // 【v1.214 批B12】标题升级金色 LOGO（用户当面：只有主题色变化、没有明显变化 ⇒ 主视觉先动标题）：
+  //   34px 苔白字 → 42px 金色渐变 + 深墨描边 + 暖光晕。位置/文案不动。
+  ctx.drawImage(goldGlow(), 56, 14, 300, 130);
   ctx.textAlign = "left";
-  ctx.font = "bold 34px " + FONT_STACK;
-  ctx.fillText(CONFIG.gameName, 110, 96);
+  ctx.strokeStyle = "#2a1b06";
+  ctx.lineWidth = 4;
+  ctx.font = "bold 42px " + FONT_STACK;
+  ctx.strokeText(CONFIG.gameName, 100, 92);
+  ctx.fillStyle = ctx.createPattern(goldGrad(), "repeat");
+  ctx.fillText(CONFIG.gameName, 100, 92);
+  ctx.lineWidth = 1;
   // 【v1.157】大厅标题金条/金副标去金: 改苔白细划+苔白副标(对齐关于页墨绿字阶的安静档), 主标题不动
   ctx.fillStyle = "rgba(232,240,200,0.55)";
   fillRoundRect(ctx, 110, 114, 160, 3, 1.5);
@@ -33582,13 +33593,15 @@ function vaultTalentChip(v, armed) {
 function drawVaultStatusChip(ctx, x, y, chip) {
   var w = 92, h = 28;
   // 【v1.156】状态签改苔纸+细色缘+墨色字(对齐 drawCodexChip 墨重), 不再实色块压行卡; chip.fill 退作缘/字色
-  ctx.fillStyle = "rgba(222,232,198,0.94)";
+  // 【v1.214 批B10】chip.dim = 整行压暗时同步压暗（中程复查：压字不压行⇒行灰底上白签白字，对比保 4.5:1）
+  var dimChip = !!chip.dim;
+  ctx.fillStyle = dimChip ? "rgba(95,94,84,0.30)" : "rgba(222,232,198,0.94)";
   fillRoundRect(ctx, x, y, w, h, 8);
-  ctx.strokeStyle = chip.fill;
+  ctx.strokeStyle = dimChip ? "rgba(226,224,210,0.35)" : chip.fill;
   ctx.lineWidth = 1.5;
   strokeRoundRect(ctx, x, y, w, h, 8);
   ctx.lineWidth = 1;
-  ctx.fillStyle = chip.fill;
+  ctx.fillStyle = dimChip ? "#e2e0d2" : chip.fill;
   ctx.font = "bold 13px " + FONT_STACK;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -33871,6 +33884,8 @@ function drawVaultPanel(ctx, m) {
       sel = GAME.hallVaultSel === rec.id;
       armed = vaultIsArmed("craft", rec.id);
       chip = vaultCraftChip(v, armed);
+      var dimRow = !(sel || armed);   // 【v1.214 批B10】压行系统：整行灰底+浅字
+      chip.dim = dimRow;
       // 【v1.187】行卡: 锁定闷填, 可打造/焦点 2px 软墨; 奇偶奶油只差一档
       if (armed) rowMode = "armed";
       else if (sel && v.locked) rowMode = "focusLock";
@@ -33888,10 +33903,23 @@ function drawVaultPanel(ctx, m) {
       ctx.lineWidth = chrome.lw;
       strokeRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
       ctx.lineWidth = 1;
-      // 【v1.214 批B7】未选/未待确认的行压暗一档（审计 A/C 共性：亮面铺满全屏⇒"亮"不再是信息；亮面只给焦点行）
+      // 【v1.214 批B10】"压行不压字"（中程复查 B：明度差要 ≥12 L*）：
+      //   未选行 = 整行暖灰底 #5f5e54 + 浅字（#e2e0d2 主 / #dedccb 副，实测 4.5:1 达标）；
+      //   选中行 = 暖奶油 #f2e0bc + 金边 #e0a83c 2px。行明显退后、字依然清楚 = "一档"该有的样子。
       if (!sel && !armed) {
-        ctx.fillStyle = "rgba(30,40,24,0.14)";
+        ctx.fillStyle = "#5f5e54";
         fillRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
+        ctx.strokeStyle = "rgba(58,50,32,0.55)";
+        ctx.lineWidth = 1;
+        strokeRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
+        ctx.lineWidth = 1;
+      } else if (sel) {
+        ctx.fillStyle = "#f2e0bc";
+        fillRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
+        ctx.strokeStyle = "#e0a83c";
+        ctx.lineWidth = 2;
+        strokeRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
+        ctx.lineWidth = 1;
       }
       // 【v1.211z 美术方向 · 第六刀：仓库行也带车道色竖轨】
       //   【为什么】三选一卡（第五刀）已经用**武器金/道具红/被动蓝**给玩家建立了颜色语言；
@@ -33907,29 +33935,29 @@ function drawVaultPanel(ctx, m) {
         : (rec.kind === "passive" ? CONFIG.colors.cardLanePassive : null));
       if (laneColV) {
         ctx.save();
-        ctx.globalAlpha = 0.92;
+        ctx.globalAlpha = dimRow ? 0.45 : 0.92;
         ctx.fillStyle = laneColV;
         fillRoundRect(ctx, lay.cardX + 4, rowY + 12, 7, lay.cardH - 24, 3.5);
         ctx.restore();
       }
       // 【v1.156】图标井改苔纸+细墨框(对齐强化面板图标盘), 不再裸绿晕
-      ctx.fillStyle = "rgba(222,232,198,0.94)";
+      ctx.fillStyle = dimRow ? "rgba(222,232,198,0.30)" : "rgba(222,232,198,0.94)";
       fillRoundRect(ctx, lay.cardX + 10, rowY + 14, 52, 52, 10);
-      ctx.strokeStyle = "rgba(42,58,24,0.55)";
+      ctx.strokeStyle = dimRow ? "rgba(226,224,210,0.25)" : "rgba(42,58,24,0.55)";
       ctx.lineWidth = 1.5;
       strokeRoundRect(ctx, lay.cardX + 10, rowY + 14, 52, 52, 10);
       ctx.lineWidth = 1;
       drawItemSpriteEx(ctx, vaultRowIcon(rec), lay.cardX + 14, rowY + 18, 44, v.locked ? "locked" : (v.maxed ? "maxed" : (v.ok ? "ok" : "short")));
       // 【v1.214 批B4】锁定行是"幽灵行"（透出深盘）⇒ 行内文字必须换浅色，否则深字压深盘 = 审计 05 的"未解锁水印"1.2:1
-      ctx.fillStyle = v.locked ? "#dfe8cc" : c.cardTitle;
+      ctx.fillStyle = dimRow ? "#e2e0d2" : (v.locked ? "#dfe8cc" : c.cardTitle);
       ctx.font = "bold 22px " + FONT_STACK;
       ctx.fillText(rec.name + " · " + hallKindLabel(rec.kind), lay.cardX + 70, rowY + 22);
       drawVaultStatusChip(ctx, lay.cardX + lay.cardW - 100, rowY + 10, chip);
-      ctx.fillStyle = v.locked ? "#e6c24a" : (v.maxed ? "#2e8b47" : c.cardDesc);
+      ctx.fillStyle = dimRow ? "#dedccb" : (v.locked ? "#e6c24a" : (v.maxed ? "#2e8b47" : c.cardDesc));
       ctx.font = "bold 14px " + FONT_STACK;
       ctx.fillText(v.locked ? ("条件 " + rec.condText) : (v.maxed ? ("已入仓 · " + rec.gainText) : ("解锁 " + rec.condText)),
         lay.cardX + 70, rowY + 50);
-      ctx.fillStyle = v.ok ? "#2e8b47" : (v.locked ? "#c9b890" : (v.maxed ? "#6a5420" : "#c0392b"));   // 【v1.214 批B4】locked 行底是深盘 ⇒ 浅沙色可读
+      ctx.fillStyle = dimRow ? "#dedccb" : (v.ok ? "#2e8b47" : (v.locked ? "#c9b890" : (v.maxed ? "#6a5420" : "#c0392b")));   // 【v1.214 批B4】locked 行底是深盘 ⇒ 浅沙色可读
       ctx.font = "bold 14px " + FONT_STACK;
       ctx.fillText(v.locked ? ("未解锁 · 要" + v.price + "金才可打造") : (v.maxed ? "下局开局带上 · 不再扣金" : (v.spendLine + " → " + v.gainLine)),
         lay.cardX + 70, rowY + 74);
@@ -33942,6 +33970,8 @@ function drawVaultPanel(ctx, m) {
       sel = GAME.hallVaultSel === rec.id;
       armed = vaultIsArmed("talent", rec.id);
       chip = vaultTalentChip(v, armed);
+      var dimRowT = !(sel || armed);   // 【v1.214 批B10】天赋行同套压行系统
+      chip.dim = dimRowT;
       // 【v1.187】天赋行与打造行同一套卡墨
       if (armed) rowMode = "armed";
       else if (sel) rowMode = "focus";
@@ -33957,10 +33987,23 @@ function drawVaultPanel(ctx, m) {
       ctx.lineWidth = chrome.lw;
       strokeRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
       ctx.lineWidth = 1;
-      // 【v1.214 批B7】未选/未待确认的行压暗一档（审计 A/C 共性：亮面铺满全屏⇒"亮"不再是信息；亮面只给焦点行）
+      // 【v1.214 批B10】"压行不压字"（中程复查 B：明度差要 ≥12 L*）：
+      //   未选行 = 整行暖灰底 #5f5e54 + 浅字（#e2e0d2 主 / #dedccb 副，实测 4.5:1 达标）；
+      //   选中行 = 暖奶油 #f2e0bc + 金边 #e0a83c 2px。行明显退后、字依然清楚 = "一档"该有的样子。
       if (!sel && !armed) {
-        ctx.fillStyle = "rgba(30,40,24,0.14)";
+        ctx.fillStyle = "#5f5e54";
         fillRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
+        ctx.strokeStyle = "rgba(58,50,32,0.55)";
+        ctx.lineWidth = 1;
+        strokeRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
+        ctx.lineWidth = 1;
+      } else if (sel) {
+        ctx.fillStyle = "#f2e0bc";
+        fillRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
+        ctx.strokeStyle = "#e0a83c";
+        ctx.lineWidth = 2;
+        strokeRoundRect(ctx, lay.cardX, rowY, lay.cardW, lay.cardH, 12);
+        ctx.lineWidth = 1;
       }
       // 【v1.211z 美术方向 · 第六刀：仓库行也带车道色竖轨】
       //   【为什么】三选一卡（第五刀）已经用**武器金/道具红/被动蓝**给玩家建立了颜色语言；
@@ -33981,22 +34024,22 @@ function drawVaultPanel(ctx, m) {
         fillRoundRect(ctx, lay.cardX + 4, rowY + 12, 7, lay.cardH - 24, 3.5);
         ctx.restore();
       }
-      ctx.fillStyle = "rgba(222,232,198,0.94)";
+      ctx.fillStyle = dimRowT ? "rgba(222,232,198,0.30)" : "rgba(222,232,198,0.94)";
       fillRoundRect(ctx, lay.cardX + 10, rowY + 14, 52, 52, 10);
-      ctx.strokeStyle = "rgba(42,58,24,0.55)";
+      ctx.strokeStyle = dimRowT ? "rgba(226,224,210,0.25)" : "rgba(42,58,24,0.55)";
       ctx.lineWidth = 1.5;
       strokeRoundRect(ctx, lay.cardX + 10, rowY + 14, 52, 52, 10);
       ctx.lineWidth = 1;
       drawItemSpriteEx(ctx, "tal_" + rec.id, lay.cardX + 14, rowY + 18, 44, v.maxed ? "maxed" : (v.canBuy ? "ok" : "short"));
       drawUpgradeTicks(ctx, lay.cardX + 70, rowY + 8, v.lv, v.maxLv, v.canBuy);
-      ctx.fillStyle = c.cardTitle;
+      ctx.fillStyle = dimRowT ? "#e2e0d2" : c.cardTitle;
       ctx.font = "bold 22px " + FONT_STACK;
       ctx.fillText(rec.name + "  Lv." + v.lv + "/" + v.maxLv, lay.cardX + 70, rowY + 36);
       drawVaultStatusChip(ctx, lay.cardX + lay.cardW - 100, rowY + 10, chip);
-      ctx.fillStyle = v.canBuy ? "#2e8b47" : c.cardTitle;
+      ctx.fillStyle = dimRowT ? "#dedccb" : (v.canBuy ? "#2e8b47" : c.cardTitle);
       ctx.font = "bold 15px " + FONT_STACK;
       ctx.fillText(v.maxed ? (v.stat0 + " · 满") : (v.stat0 + " → " + v.stat1), lay.cardX + 70, rowY + 60);
-      ctx.fillStyle = v.canBuy ? "#2e8b47" : (v.maxed ? c.cardDesc : "#a06a10");
+      ctx.fillStyle = dimRowT ? "#dedccb" : (v.canBuy ? "#2e8b47" : (v.maxed ? c.cardDesc : "#a06a10"));
       ctx.font = "bold 14px " + FONT_STACK;
       ctx.fillText(v.goldLine, lay.cardX + 70, rowY + 82);
     }
