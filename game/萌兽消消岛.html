@@ -25452,8 +25452,8 @@ function hallStageGlow() {
   cv.width = 320; cv.height = 320;
   var c2 = cv.getContext("2d");
   var rg = c2.createRadialGradient(160, 160, 10, 160, 160, 160);
-  rg.addColorStop(0, "rgba(255,244,214,0.60)");
-  rg.addColorStop(0.55, "rgba(244,232,180,0.22)");
+  rg.addColorStop(0, "rgba(255,244,214,0.70)");
+  rg.addColorStop(0.55, "rgba(244,232,180,0.26)");
   rg.addColorStop(1, "rgba(244,232,180,0)");
   c2.fillStyle = rg;
   c2.fillRect(0, 0, 320, 320);
@@ -28967,6 +28967,11 @@ function makeButton(id, x, y, w, h, label, onTap) {
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, 16);
         ctx.fillStyle = "rgba(255,255,255,0.35)";
         fillRoundRect(ctx, r.x + 6, r.y + 5, r.w - 12, Math.max(12, r.h * 0.28), 10);
+        // 【v1.213 批P】主 Tab 选中强调：顶部绿亮条 + 图标区绿光晕（"眼睛"：选中态只有一根细绿条）
+        ctx.fillStyle = "#7ed957";
+        fillRoundRect(ctx, r.x + 8, r.y + 9, r.w - 16, 3, 1.5);
+        ctx.fillStyle = "rgba(126,217,87,0.20)";
+        fillRoundRect(ctx, r.x + 8, r.y + 26, r.w - 16, 56, 12);
         ctx.strokeStyle = widgetPressed(this) ? "#2a3a18" : "rgba(42,58,24,0.85)";
         ctx.lineWidth = widgetPressed(this) ? 3 : 2;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 16);
@@ -29853,7 +29858,9 @@ function makeCard(idx, x, y, w, h) {
 // 【v1.153】三选一卡面专用 chrome: 一块柔盘影 + 苔纸底 + 2.5px 墨框(不再粗金框), 顶部 3px 稀有色细签。
 // 与 drawRarityFrame 分家(装备格/获得演出仍走旧框), 只服务升级三选一, 点卡锁定金圈语义保留。
 function drawLevelupCardFrame(ctx, x, y, w, h, rareColor, armed) {
-  // 【v1.213 批O】外投影 + 品质色描边 3px（"眼睛"：三张卡像平级表单行，兴奋感全在框上）
+  // 【v1.213 批P】"厚板"硬投影：0 4px 实心深色垫底（"眼睛"：软影在浅卡压深底下看不出浮起）
+  ctx.fillStyle = "#231e38";
+  fillRoundRect(ctx, x, y + 4, w, h, 12);
   ctx.fillStyle = "rgba(0,0,0,0.30)";
   fillRoundRect(ctx, x + 3, y + 7, w, h, 12);
   ctx.fillStyle = "rgba(16,20,14,0.16)";
@@ -32636,10 +32643,10 @@ function drawResultPanel(ctx, m) {
   //   负 = 浅红 `#ff9a86`（5.17:1）。原 `#8a2a2a` 压深盘只有 1.6:1（等于看不见）。
   // 【v1.213 批O】胜利标题上金（"眼睛"：全场情绪最高点反而最静）：金渐变+暗描边+外发光
   if (runSummary.win) {
-    ctx.drawImage(goldGlow(), cx - 150, py + 30, 300, 130);
+    ctx.drawImage(goldGlow(), cx - 190, py + 22, 380, 150);   // 【v1.213 批P】径向暖光垫底放大（"眼睛"：光有、爆发感没有）
     ctx.strokeStyle = "#2a1b06";
     ctx.lineWidth = 5;
-    ctx.font = "bold 44px " + FONT_STACK;
+    ctx.font = "bold 54px " + FONT_STACK;
     ctx.strokeText("通关胜利!", cx, py + 84);
     ctx.fillStyle = ctx.createPattern(goldGrad(), "repeat");
     ctx.fillText("通关胜利!", cx, py + 84);
@@ -35357,14 +35364,14 @@ function makeGearBagCell(i, x, y, w, h) {
       ctx.fillStyle = rar.color;
       ctx.font = "bold 14px " + FONT_STACK;
       ctx.fillText(d ? d.name : "?", r.x + r.w / 2, r.y + 82);
-      // 【v1.213 批L】稀有度名改"实心角标"（色底 + 墨边白字），不再是一行灰绿小字（"眼睛"清单 C2）
-      var rw = Math.min(r.w - 24, ctx.measureText(rar.name).width + 16);
-      fillRoundRect(ctx, r.x + (r.w - rw) / 2, r.y + 96, rw, 20, 8);
+      // 【v1.213 批Q】角标压矮一档 20→18px、与下方文字拉开（"眼睛"：和"穿戴中"快贴上）
+      var rw = Math.min(r.w - 24, ctx.measureText(rar.name).width + 14);
+      fillRoundRect(ctx, r.x + (r.w - rw) / 2, r.y + 96, rw, 18, 7);
       ctx.strokeStyle = "rgba(26,20,8,0.75)";
-      ctx.lineWidth = 2.2;
-      ctx.strokeText(rar.name, r.x + r.w / 2, r.y + 106);
+      ctx.lineWidth = 2;
+      ctx.strokeText(rar.name, r.x + r.w / 2, r.y + 105);
       ctx.fillStyle = "#fff7e0";
-      ctx.fillText(rar.name, r.x + r.w / 2, r.y + 106);
+      ctx.fillText(rar.name, r.x + r.w / 2, r.y + 105);
       ctx.lineWidth = 1;
       var eq = false, sl;
       for (sl in saveData.gearEquip) if (saveData.gearEquip[sl] === uid) eq = true;
