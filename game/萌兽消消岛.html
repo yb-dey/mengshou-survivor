@@ -668,7 +668,13 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.210",   // 【v1.210 美术·质量】① 外墨去锯齿（bakeOuterInk 给剪影加约 1px 羽化再盖章，外沿不再是一级级台阶；粗细与填色不动，不推翻 v1.177/v1.179 的外墨裁决）② 补主角接地影（原先只有辉光+脚环 ⇒ 人物「浮」在草地上；口径对齐早波杂兵的 v1.194 软扁椭圆）· 【v1.209】「怎么玩」页补「出局之后」三步（原正文到 py+536 收尾、按钮锚 py+890 ⇒ 空 245 逻辑 px ≈ 面板 23%）· 【v1.208】结算构筑条目 34→81（= 44 CSS px 触控下限，提示行"点条目看怎么来的"才成立）· 【v1.207b】硬钳制（满载不溢出）                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
+  version: "1.211ab", // 【v1.211ab 美术·鲜亮精修】用户 09-26 点名"美术不够好看、质量低"后的三刀：
+                                        //   ① 13 个模态区域色带全部提饱和/提亮 + 色带/左轨柔光晕；② 模态盘双层伪软影 + 亮橄榄描边 + 顶光 + 上缘高光；
+                                        //   ③ 三选一车道轨加光晕与白高光；④ 全部按钮皮肤提亮提精；⑤ 按钮副标 8 处 bold→常规重（字重层次）；
+                                        //   ⑥ 大厅舞台加**预渲染主角柔光池** + 氛围浮标抬半档 + 苔墙横梁受光条 + 暗角 0.20→0.22；
+                                        //   ⑦ 排版层次第二刀：结算屏信息行 5 处、设置页提示/页脚 2 处 bold→常规重（标题保持粗体）；
+                                        //   ⑧ 排版层次第三刀：帮助页正文 4 组 + 关于页设定/特性行 3 处 bold→常规重。
+                                        //   【v1.210 美术·质量】① 外墨去锯齿（bakeOuterInk 给剪影加约 1px 羽化再盖章，外沿不再是一级级台阶；粗细与填色不动，不推翻 v1.177/v1.179 的外墨裁决）② 补主角接地影（原先只有辉光+脚环 ⇒ 人物「浮」在草地上；口径对齐早波杂兵的 v1.194 软扁椭圆）· 【v1.209】「怎么玩」页补「出局之后」三步（原正文到 py+536 收尾、按钮锚 py+890 ⇒ 空 245 逻辑 px ≈ 面板 23%）· 【v1.208】结算构筑条目 34→81（= 44 CSS px 触控下限，提示行"点条目看怎么来的"才成立）· 【v1.207b】硬钳制（满载不溢出）                   // 【v1.206】说明性文字抬档（设置帮助行/帮助页 15→17 · 16→18 · 18/19→21）；
                                        //   前版 v1.205：killEnemy 加已死守卫（修 enemyCount 计数穿负）；
                                        //   前版 v1.204：触屏宿主文案收敛（走位/跳过/过场副标签统一走宿主开关）；
                                        //   前版 v1.203：修符文成就 dim 拼错前缀（5 条成就永不可解锁）+ 加成就接线判据；
@@ -25435,11 +25441,29 @@ function paintHallGround(c2, w, h, th) {
   }
   c2.lineWidth = 1;
 }
+// 【v1.211ab】舞台主角柔光池：**预渲染**径向光（禁逐帧渐变的合规做法），
+//   把英雄从苔墙/木台里托出来 —— 大厅"第一印象"的中心就该有这一池光。
+var HALL_STAGE_GLOW = null;
+function hallStageGlow() {
+  if (HALL_STAGE_GLOW) return HALL_STAGE_GLOW;
+  var cv = document.createElement("canvas");
+  cv.width = 320; cv.height = 320;
+  var c2 = cv.getContext("2d");
+  var rg = c2.createRadialGradient(160, 160, 10, 160, 160, 160);
+  rg.addColorStop(0, "rgba(255,244,214,0.60)");
+  rg.addColorStop(0.55, "rgba(244,232,180,0.22)");
+  rg.addColorStop(1, "rgba(244,232,180,0)");
+  c2.fillStyle = rg;
+  c2.fillRect(0, 0, 320, 320);
+  HALL_STAGE_GLOW = cv;
+  return cv;
+}
 function drawHallStageGround(ctx) {
   // 【v1.176】舞台后景只画一次: 左上受光。草簇/路唇改在落地台绘制后走 drawHallStageAccent, 避免被台身盖住。
   var g;
   ctx.save();
   try {
+    ctx.drawImage(hallStageGlow(), 200, 102, 320, 320);
     g = ctx.createLinearGradient(90, 36, 580, 380);
     // 【v1.211z 第二十刀：**这一刀作废、已原样回退**（保留记录，免得下轮再走一遍）】
     //   我一度以为「报头三行读不清」是我把大厅纸改深造成的连带回归，于是把这道受光渐变加实
@@ -28185,13 +28209,13 @@ function drawHallAmbi(ctx) {
   var i, q, th = worldThemeOf(), col, cap;
   if (GAME.reduceMotion) return;
   col = (th.ambient && th.ambient.color) || th.accent || "#fff7e0";
-  cap = CONFIG.hallAmbiAlpha || 0.34;
+  cap = CONFIG.hallAmbiAlpha || 0.40;
   for (i = 0; i < hallAmbi.length; i++) {
     q = hallAmbi[i];
     if (!q.live) continue;
     if (!hallAmbiBandOk(q.y)) continue;
     ctx.save();
-    ctx.globalAlpha = Math.min(cap, 0.08 + 0.22 * q.a);   // 【v1.159】基底/增幅再淡一档(0.10/0.28→0.08/0.22)
+    ctx.globalAlpha = Math.min(cap, 0.10 + 0.26 * q.a);   // 【v1.211ab】基底/增幅抬半档（0.08/0.22→0.10/0.26），氛围更"活"
     ctx.translate(q.x, q.y);
     ctx.rotate(q.rot);
     drawThemeKind(ctx, q.kind, 0, 0, q.s, col);
@@ -28215,7 +28239,7 @@ function drawHallOverlays(ctx) {
   //   回退：删掉下面这个 if 块即可。
   if (SPRITES.vignette) {
     ctx.save();
-    ctx.globalAlpha = 0.20;
+    ctx.globalAlpha = 0.22;   // 【v1.211ab】0.20→0.22：与舞台柔光池互补，焦点再收一点
     ctx.drawImage(SPRITES.vignette, 0, 0, CONFIG.viewW, CONFIG.viewH);
     ctx.restore();
   }
@@ -28303,6 +28327,8 @@ function drawHomeBase(ctx) {
   ctx.fillRect(0, 0, CONFIG.viewW, 304);
   ctx.fillStyle = beam;
   ctx.fillRect(0, 56, CONFIG.viewW, 16);
+  ctx.fillStyle = "rgba(255,252,236,0.10)";   // 【v1.211ab】苔墙横梁受光条
+  ctx.fillRect(0, 56, CONFIG.viewW, 4);
   ctx.fillStyle = wood;
   ctx.fillRect(0, 300, CONFIG.viewW, CONFIG.viewH - 300);
   if (GAME.hallThemeSwap && GAME.hallThemePrev && uMix < 1 && !GAME.reduceMotion) {
@@ -28691,16 +28717,20 @@ function makeButton(id, x, y, w, h, label, onTap) {
       var fill = c.btnBg, stroke = "#fff7e0", ink = c.btnText, faceY;
       var pressed = beginWidgetPress(ctx, this);
       if (skin === "cta") {
-        // 【v1.157】主 CTA 去金晕: 淡金外晕+奶白粗框 → 柔影+细墨缘(对齐 v1.154 技能圆盘墨重), 薄荷绿面/白字层级不动,
-        //   左上补一片柔光(同技能盘), 大厅层级仍一眼压过符文/主题; 尺寸/热区/文案不动。
+        // 【v1.211ab 美术·鲜亮精修】主 CTA 提亮提精：双层柔影 + 亮一档的薄荷绿 + 更强的顶光 + 底部内阴，
+        //   副标改常规重（标题 38 粗 / 副标 18 常规 = 字重层次）。尺寸/热区/文案/字色（v1.210n 的 6.03:1 结论）不动。
+        ctx.fillStyle = "rgba(12,16,12,0.18)";
+        fillRoundRect(ctx, r.x, r.y + 9, r.w, r.h, rr);
         ctx.fillStyle = "rgba(12,16,12,0.32)";
         fillRoundRect(ctx, r.x, r.y + 5, r.w, r.h, rr);
-        ctx.fillStyle = "#14592a";
+        ctx.fillStyle = "#165e2e";
         fillRoundRect(ctx, r.x, r.y + 3, r.w, r.h, rr);
-        ctx.fillStyle = "#2fbf58";
+        ctx.fillStyle = "#37ce5f";
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
-        ctx.fillStyle = "rgba(255,247,224,0.10)";
-        fillRoundRect(ctx, r.x + 6, r.y + 5, r.w - 12, Math.max(14, r.h * 0.34), Math.min(rr, 12));
+        ctx.fillStyle = "rgba(255,247,224,0.16)";
+        fillRoundRect(ctx, r.x + 6, r.y + 5, r.w - 12, Math.max(16, r.h * 0.40), Math.min(rr, 12));
+        ctx.fillStyle = "rgba(0,0,0,0.12)";
+        fillRoundRect(ctx, r.x + 2, r.y + r.h * 0.78, r.w - 4, r.h * 0.20, Math.min(rr, 10));
         ctx.strokeStyle = "#262014";
         ctx.lineWidth = 2.5;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
@@ -28717,16 +28747,21 @@ function makeButton(id, x, y, w, h, label, onTap) {
         ctx.textBaseline = "middle";
         ctx.fillText(this.label, r.x + r.w / 2, this.sub ? r.y + r.h / 2 - 14 : r.y + r.h / 2);
         if (this.sub) {
-          ctx.font = "bold 18px " + FONT_STACK;
+          ctx.font = "18px " + FONT_STACK;
           ctx.fillText(this.sub, r.x + r.w / 2, r.y + r.h / 2 + 24);
         }
         endWidgetPress(ctx, pressed);
         return;
       }
       if (skin === "sec") {
-        ctx.fillStyle = "#2a3224";
+        // 【v1.211ab】选章钮提亮：深苔面亮一档 + 金缘更亮 + 顶光片；副标改常规重
+        ctx.fillStyle = "rgba(12,16,12,0.20)";
+        fillRoundRect(ctx, r.x, r.y + 4, r.w, r.h, rr);
+        ctx.fillStyle = "#2f3a28";
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
-        ctx.strokeStyle = "#c4a06a";
+        ctx.fillStyle = "rgba(255,247,224,0.07)";
+        fillRoundRect(ctx, r.x + 5, r.y + 3, r.w - 10, Math.max(12, r.h * 0.36), Math.min(rr, 10));
+        ctx.strokeStyle = "#d8b06a";
         ctx.lineWidth = 1.6;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
         ctx.lineWidth = 1;
@@ -28736,7 +28771,7 @@ function makeButton(id, x, y, w, h, label, onTap) {
         ctx.textBaseline = "middle";
         ctx.fillText(this.label, r.x + r.w / 2, this.sub ? r.y + r.h / 2 - 12 : r.y + r.h / 2);
         if (this.sub) {
-          ctx.font = "bold 15px " + FONT_STACK;
+          ctx.font = "15px " + FONT_STACK;
           ctx.fillStyle = "#ffe082";
           ctx.fillText(this.sub, r.x + r.w / 2, r.y + r.h / 2 + 18);
         }
@@ -28745,12 +28780,17 @@ function makeButton(id, x, y, w, h, label, onTap) {
       }
       if (skin === "quiet") {
         // 【v1.193】后置加菜条: 奶油填 + 2px 软苔缘, 标题深苔 #2c3a22, 副标奶油字压橄榄。悬停/按下软墨脉冲, 热区不动
+        // 【v1.211ab】缘亮一档 + 顶光片；副标改常规重
         var inkHot = widgetInkHot(this);
         var pulseA = inkHot ? (0.34 + 0.42 * (0.5 + 0.5 * Math.sin((typeof performance !== "undefined" ? performance.now() : Date.now()) * 0.006))) : 0;
         var subW, subH, subX, subY;
+        ctx.fillStyle = "rgba(16,20,14,0.10)";
+        fillRoundRect(ctx, r.x, r.y + 3, r.w, r.h, 12);
         ctx.fillStyle = "#f4efe2";
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
-        ctx.strokeStyle = "#5c7044";
+        ctx.fillStyle = "rgba(255,255,255,0.40)";
+        fillRoundRect(ctx, r.x + 4, r.y + 2, r.w - 8, Math.max(8, r.h * 0.30), 8);
+        ctx.strokeStyle = "#6d8353";
         ctx.lineWidth = 2;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
         if (pulseA > 0) {
@@ -28765,7 +28805,7 @@ function makeButton(id, x, y, w, h, label, onTap) {
         ctx.textBaseline = "middle";
         ctx.fillText(this.label, r.x + r.w / 2, this.sub ? r.y + 16 : r.y + r.h / 2);
         if (this.sub) {
-          ctx.font = "bold 12px " + FONT_STACK;
+          ctx.font = "12px " + FONT_STACK;
           subW = Math.min(r.w - 16, ctx.measureText(this.sub).width + 18);
           subH = 18;
           subX = r.x + (r.w - subW) / 2;
@@ -28796,6 +28836,8 @@ function makeButton(id, x, y, w, h, label, onTap) {
       if (skin === "pair") {
         ctx.fillStyle = this.accentFill || "#24301c";
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
+        ctx.fillStyle = "rgba(255,247,224,0.06)";
+        fillRoundRect(ctx, r.x + 5, r.y + 3, r.w - 10, Math.max(10, r.h * 0.34), Math.min(rr, 10));
         ctx.strokeStyle = this.accentStroke || "#8a7a4a";
         ctx.lineWidth = widgetPressed(this) ? 2.2 : 1.2;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
@@ -28806,7 +28848,7 @@ function makeButton(id, x, y, w, h, label, onTap) {
         ctx.textBaseline = "middle";
         ctx.fillText(this.label, r.x + r.w / 2, this.sub ? r.y + r.h / 2 - 10 : r.y + r.h / 2);
         if (this.sub) {
-          ctx.font = "bold 12px " + FONT_STACK;
+          ctx.font = "12px " + FONT_STACK;
           ctx.fillStyle = "#d8c898";
           ctx.fillText(this.sub, r.x + r.w / 2, r.y + r.h / 2 + 14);
         }
@@ -28814,10 +28856,13 @@ function makeButton(id, x, y, w, h, label, onTap) {
         return;
       }
       if (skin === "hud") {
+        // 【v1.211ab】战斗 HUD 钮：面亮一档 + 顶光片；副标改常规重
         ctx.fillStyle = "rgba(12,16,12,0.55)";
         fillRoundRect(ctx, r.x, r.y + 3, r.w, r.h, rr);
-        ctx.fillStyle = this.dim > 0 ? "#2a3228" : "#3a4a32";
+        ctx.fillStyle = this.dim > 0 ? "#2a3228" : "#41543a";
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
+        ctx.fillStyle = this.dim > 0 ? "rgba(255,247,224,0.03)" : "rgba(255,247,224,0.07)";
+        fillRoundRect(ctx, r.x + 3, r.y + 2, r.w - 6, Math.max(8, r.h * 0.30), Math.min(rr, 8));
         ctx.strokeStyle = this.dim > 0 ? "rgba(255,247,224,0.35)" : "#fff7e0";
         ctx.lineWidth = 2;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, rr);
@@ -28828,7 +28873,7 @@ function makeButton(id, x, y, w, h, label, onTap) {
         ctx.textBaseline = "middle";
         ctx.fillText(this.label, r.x + r.w / 2, this.sub ? r.y + r.h / 2 - 10 : r.y + r.h / 2);
         if (this.sub) {
-          ctx.font = "bold 11px " + FONT_STACK;
+          ctx.font = "11px " + FONT_STACK;
           ctx.fillStyle = this.dim > 0 ? "#c9c0a8" : "#ffe082";
           ctx.fillText(this.sub, r.x + r.w / 2, r.y + r.h / 2 + 16);
         }
@@ -28843,9 +28888,9 @@ function makeButton(id, x, y, w, h, label, onTap) {
         var skDim = this.dim > 0;
         ctx.fillStyle = "rgba(12,16,12,0.22)";
         ctx.beginPath(); ctx.arc(skCx, skCy + 3, skR, 0, CONFIG.TWO_PI); ctx.fill();
-        ctx.fillStyle = skDim ? "#343c30" : "#4a5a3e";
+        ctx.fillStyle = skDim ? "#343c30" : "#516344";
         ctx.beginPath(); ctx.arc(skCx, skCy, skR, 0, CONFIG.TWO_PI); ctx.fill();
-        ctx.fillStyle = skDim ? "rgba(255,247,224,0.04)" : "rgba(236,244,214,0.08)";
+        ctx.fillStyle = skDim ? "rgba(255,247,224,0.04)" : "rgba(236,244,214,0.11)";
         ctx.beginPath();
         if (typeof ctx.ellipse === "function") ctx.ellipse(skCx - skR * 0.28, skCy - skR * 0.32, skR * 0.46, skR * 0.30, -0.5, 0, CONFIG.TWO_PI);
         else ctx.arc(skCx - skR * 0.28, skCy - skR * 0.32, skR * 0.36, 0, CONFIG.TWO_PI);
@@ -28860,7 +28905,7 @@ function makeButton(id, x, y, w, h, label, onTap) {
         ctx.textBaseline = "middle";
         ctx.fillText(this.label, skCx, this.sub ? skCy - 10 : skCy);
         if (this.sub) {
-          ctx.font = "bold 11px " + FONT_STACK;
+          ctx.font = "11px " + FONT_STACK;
           ctx.fillStyle = skDim ? "#c9c0a8" : "#e8dcc0";
           ctx.fillText(hudFitText(ctx, this.sub, r.w - 22), skCx, skCy + 16);
         }
@@ -28870,15 +28915,20 @@ function makeButton(id, x, y, w, h, label, onTap) {
       if (skin === "dockGold") {
         // 【v1.156】装备养成钮去重金: 柔影+苔纸亮一档+细墨框+绿侧签(选中/高亮读法同选章卡), 不再 #d4a024 金块+奶白粗框;
         //   尺寸/热区/图标/文案不动, 仍是底栏主入口。
+        // 【v1.211ab】纸面再亮一档 + 双层柔影 + 顶光片 + 侧签提亮；副标改常规重
+        ctx.fillStyle = "rgba(16,20,14,0.10)";
+        fillRoundRect(ctx, r.x + 1, r.y + 7, r.w, r.h, 16);
         ctx.fillStyle = "rgba(16,20,14,0.18)";
         fillRoundRect(ctx, r.x + 1, r.y + 4, r.w, r.h, 16);
-        ctx.fillStyle = "rgba(226,236,198,0.97)";
+        ctx.fillStyle = "rgba(234,244,208,0.98)";
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, 16);
+        ctx.fillStyle = "rgba(255,255,255,0.35)";
+        fillRoundRect(ctx, r.x + 6, r.y + 5, r.w - 12, Math.max(12, r.h * 0.28), 10);
         ctx.strokeStyle = widgetPressed(this) ? "#2a3a18" : "rgba(42,58,24,0.85)";
         ctx.lineWidth = widgetPressed(this) ? 3 : 2;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 16);
         ctx.lineWidth = 1;
-        ctx.fillStyle = "#3faf5a";
+        ctx.fillStyle = "#48c566";
         fillRoundRect(ctx, r.x + 6, r.y + 12, 5, r.h - 24, 2);
         drawHallIcon(ctx, this.icon || "gear", r.x + r.w / 2, r.y + 42, 28, "#2a2418");
         ctx.fillStyle = "#24301c";
@@ -28886,7 +28936,7 @@ function makeButton(id, x, y, w, h, label, onTap) {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(this.label, r.x + r.w / 2, r.y + r.h - 46);
-        ctx.font = "bold 16px " + FONT_STACK;
+        ctx.font = "16px " + FONT_STACK;
         ctx.fillStyle = "#3a5a20";
         ctx.fillText(this.sub || ("战力 " + displayedHallPower()), r.x + r.w / 2, r.y + r.h - 22);
         endWidgetPress(ctx, pressed);
@@ -28895,10 +28945,15 @@ function makeButton(id, x, y, w, h, label, onTap) {
       if (skin === "dock") {
         // 【v1.156】底栏页签苔纸细墨化(对齐 drawBuildChip/选章卡): 柔影+苔纸底+细墨框+深墨字, 不再深绿盘+奶白描边;
         //   按下态墨框加粗一档(可读高亮), 尺寸/热区/图标不动。
+        // 【v1.211ab】纸面亮一档 + 双层柔影 + 顶光片；副标改常规重
+        ctx.fillStyle = "rgba(16,20,14,0.07)";
+        fillRoundRect(ctx, r.x + 1, r.y + 6, r.w, r.h, 16);
         ctx.fillStyle = "rgba(16,20,14,0.12)";
         fillRoundRect(ctx, r.x + 1, r.y + 3, r.w, r.h, 16);
-        ctx.fillStyle = "rgba(222,232,198,0.94)";
+        ctx.fillStyle = "rgba(230,240,208,0.95)";
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, 16);
+        ctx.fillStyle = "rgba(255,255,255,0.32)";
+        fillRoundRect(ctx, r.x + 6, r.y + 5, r.w - 12, Math.max(10, r.h * 0.26), 10);
         ctx.strokeStyle = widgetPressed(this) ? "#2a3a18" : "rgba(42,58,24,0.62)";
         ctx.lineWidth = widgetPressed(this) ? 2.5 : 1.5;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 16);
@@ -28910,7 +28965,7 @@ function makeButton(id, x, y, w, h, label, onTap) {
         ctx.textBaseline = "middle";
         ctx.fillText(this.label, r.x + r.w / 2, r.y + r.h - (this.sub ? 36 : 28));
         if (this.sub) {
-          ctx.font = "bold 14px " + FONT_STACK;
+          ctx.font = "14px " + FONT_STACK;
           ctx.fillStyle = "#3a4a28";
           ctx.fillText(this.sub, r.x + r.w / 2, r.y + r.h - 16);
         }
@@ -28918,9 +28973,10 @@ function makeButton(id, x, y, w, h, label, onTap) {
         return;
       }
       if (skin === "ghost") {
-        ctx.fillStyle = widgetPressed(this) ? "rgba(255,247,224,0.28)" : "rgba(255,247,224,0.14)";
+        // 【v1.211ab】幽灵钮提亮一档（更"亮卡"）
+        ctx.fillStyle = widgetPressed(this) ? "rgba(255,247,224,0.32)" : "rgba(255,247,224,0.18)";
         fillRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
-        ctx.strokeStyle = widgetPressed(this) ? "#fff7e0" : "rgba(255,247,224,0.45)";
+        ctx.strokeStyle = widgetPressed(this) ? "#fff7e0" : "rgba(255,247,224,0.55)";
         ctx.lineWidth = 1.5;
         strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
         ctx.lineWidth = 1;
@@ -29527,29 +29583,41 @@ function drawPausePanel(ctx, m) {
 //   【取色】低饱和、与苔绿家族共存（不引入霓虹），靠色相区分而不是靠亮度喊。
 //   回退：删掉本表与两处 `if (acc)` 绘制块即可。
 var MODAL_ACCENT = {
-  "levelup": "#d9a33a", "upgrademodal": "#c98a2e", "vaultmodal": "#a5713f",
-  "beastmodal": "#8b5cc7", "gearmodal": "#3f8fb0", "chaptermodal": "#4f9e4a",
-  "resultmodal": "#c9a227", "pausemenu": "#6b7a8f", "revivemodal": "#b8483c",
-  "settingsmodal": "#6b7a8f", "dailymodal": "#d07a3a", "guidemodal": "#7a8f5a",
-  "aboutmodal": "#8a8f7a"
+  // 【v1.211ab 美术·鲜亮精修】13 个区域色全面提饱和/提亮约 1.5 档（用户 09-26 点名"美术不够好看、
+  //   质量低"后定的方向：整体更鲜亮）。只换色相值，色带几何/文字/状态色一律不动 ⇒ 零对比度扰动。
+  //   回退：把本表换回上一版（见 git 或备份）即可。
+  "levelup": "#f5b83f", "upgrademodal": "#e8a02f", "vaultmodal": "#c2864a",
+  "beastmodal": "#a671dd", "gearmodal": "#4fa7cc", "chaptermodal": "#63c75a",
+  "resultmodal": "#eab52e", "pausemenu": "#8599b3", "revivemodal": "#d95a48",
+  "settingsmodal": "#8599b3", "dailymodal": "#f08d3e", "guidemodal": "#94ad68",
+  "aboutmodal": "#9fa381"
 };
 function drawModalAccent(ctx, px, py, panelW, id) {
   var acc = MODAL_ACCENT[id];
   if (!acc) return;
-  // 顶部色带（加厚到 20：14 时在真机上只有 7 CSS px，只算"看得出"，算不上"身份"）
+  // 【v1.211ab 美术·鲜亮精修】色带加一圈**柔光晕**（同色低透明、外扩 4px）——"精致感"的便宜来源：
+  //   只加光、不加任何几何与文字，柔光晕落在色带留白区，压不到面板内容。回退：删掉本段晕即可。
   var bx = px + 11, bw = panelW - 22, by = py + 10, bh = 20;
+  ctx.fillStyle = acc;
+  ctx.globalAlpha = 0.30;
+  fillRoundRect(ctx, bx - 4, by - 4, bw + 8, bh + 8, 12);
+  ctx.globalAlpha = 1;
   ctx.fillStyle = acc;
   fillRoundRect(ctx, bx, by, bw, bh, 8);
   // 色带上沿一道细高光、下沿一道淡墨 —— 与「苔纸 + 细墨框」的家族感对齐, 不引入金边
-  ctx.fillStyle = "rgba(255,255,255,0.22)";
+  ctx.fillStyle = "rgba(255,255,255,0.30)";
   fillRoundRect(ctx, bx + 2, by + 2, bw - 4, 4, 2);
   ctx.fillStyle = "rgba(47,90,58,0.30)";
   fillRoundRect(ctx, bx + 2, by + bh - 3, bw - 4, 2, 1);
   // 左缘竖轨：同色、贴边、**永远压不到文字** ⇒ 零对比度风险，却让"这是哪个区域"在余光里也能认出
   var railH = 96;
   ctx.fillStyle = acc;
+  ctx.globalAlpha = 0.30;
+  fillRoundRect(ctx, px + 3, py + 38, 12, railH + 4, 6);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = acc;
   fillRoundRect(ctx, px + 5, py + 40, 8, railH, 4);
-  ctx.fillStyle = "rgba(255,255,255,0.18)";
+  ctx.fillStyle = "rgba(255,255,255,0.28)";
   fillRoundRect(ctx, px + 6, py + 43, 2.5, railH - 6, 1.2);
 }
 function makeModal(id, panelW, panelH, drawPanel) {
@@ -29592,12 +29660,20 @@ function makeModal(id, panelW, panelH, drawPanel) {
       //   回退：把下面三行改回 `rgba(36,48,24,0.16)` / `#f4efe2` / `#5c7044` ——
       //     ⚠ **必须同时回退那 27 处字色**（浅底 + 浅字会变得不可读，比现在更糟）。
       if (this.id === "settingsmodal" || this.id === "aboutmodal" || this.id === "guidemodal" || this.id === "dailymodal") {
-        ctx.fillStyle = "rgba(16,20,14,0.18)";
+        // 【v1.211ab】双层柔影（远层淡而宽、近层深而窄 ⇒ 伪软阴影）+ 亮橄榄描边 + 面板顶光/上缘高光。
+        //   只动光与边，面板填色/文字全不动（v1.211z 第十一刀的翻字对比度结论原样成立）。
+        ctx.fillStyle = "rgba(16,20,14,0.10)";
+        fillRoundRect(ctx, px + 6, py + 12, this.panelW, this.panelH, 18);
+        ctx.fillStyle = "rgba(16,20,14,0.16)";
         fillRoundRect(ctx, px + 3, py + 6, this.panelW, this.panelH, 18);
         ctx.fillStyle = "#2f3a26";
         fillRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
-        ctx.strokeStyle = "#8fae6a";
-        ctx.lineWidth = 2;
+        ctx.fillStyle = "rgba(255,255,255,0.06)";
+        fillRoundRect(ctx, px, py, this.panelW, this.panelH * 0.46, 18);
+        ctx.fillStyle = "rgba(255,255,255,0.12)";
+        fillRoundRect(ctx, px + 1, py + 1, this.panelW - 2, 2, 2);
+        ctx.strokeStyle = "#a9cf7e";
+        ctx.lineWidth = 2.4;
         strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
         ctx.lineWidth = 1;
         drawModalAccent(ctx, px, py, this.panelW, this.id);   // 【v1.211z】区域色带
@@ -29606,7 +29682,10 @@ function makeModal(id, panelW, panelH, drawPanel) {
       }
       // 【v1.153】模态盘统一圆角+一块柔影, 不再是硬边纸块
       // 【v1.176】苔盘再净一档: 左上柔光 + #2f5a3a 墨缘, 强化/图鉴备案截图不显洗白
-      ctx.fillStyle = "rgba(16,20,14,0.18)";
+      // 【v1.211ab】柔影升级为**双层伪软影**（远层淡宽 + 近层深窄），亮盘分支不受影响
+      ctx.fillStyle = "rgba(16,20,14,0.10)";
+      fillRoundRect(ctx, px + 6, py + 12, this.panelW, this.panelH, 18);
+      ctx.fillStyle = "rgba(16,20,14,0.16)";
       fillRoundRect(ctx, px + 3, py + 6, this.panelW, this.panelH, 18);
       // 【v1.211z 美术方向 · 第七刀：升级三选一单独走**深盘**（全局 modalPanel 一字不动）】
       //   【为什么只给这一屏】它是全游戏看得最多的模态（每局 5~10 次），也是参考作品里对比最强的一屏。
@@ -29653,11 +29732,14 @@ function makeModal(id, panelW, panelH, drawPanel) {
         } catch (eMoss) { /* keep flat panel */ }
       } else {
         // 深盘上给一层极淡的顶光，避免整块死平（不创建逐帧渐变的替代：单色柔叠）
-        ctx.fillStyle = "rgba(255,255,255,0.045)";
-        fillRoundRect(ctx, px, py, this.panelW, this.panelH * 0.42, 18);
+        // 【v1.211ab】顶光 0.045→0.07 且上缘加一道 1px 高光线 —— 深盘"浮起来"的观感来源
+        ctx.fillStyle = "rgba(255,255,255,0.07)";
+        fillRoundRect(ctx, px, py, this.panelW, this.panelH * 0.46, 18);
+        ctx.fillStyle = "rgba(255,255,255,0.12)";
+        fillRoundRect(ctx, px + 1, py + 1, this.panelW - 2, 2, 2);
       }
-      ctx.strokeStyle = isDarkPanelLv ? "#8fae6a" : "#2f5a3a";
-      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = isDarkPanelLv ? "#a9cf7e" : "#2f5a3a";
+      ctx.lineWidth = isDarkPanelLv ? 2.4 : 2.2;
       strokeRoundRect(ctx, px, py, this.panelW, this.panelH, 18);
       ctx.lineWidth = 1;
       drawModalAccent(ctx, px, py, this.panelW, this.id);   // 【v1.211z】区域色带
@@ -29722,10 +29804,18 @@ function drawLevelupCardFrame(ctx, x, y, w, h, rareColor, armed) {
     //     往它里面掺色会改文字背景 ⇒ 触碰 v1.211n/o 那批**文字对比度裁决**。本刀刻意避开。
     //   【可量】车道色可见面积：原 3×(w-24)≈3×312=936 画布px² ⇒ 新 7×(w-16)+8×(h-32) ≈ 7×320+8×88 = 2944 ⇒ **约 3.1 倍**。
     //   回退：把下面两段换回 `fillRoundRect(ctx, x + 12, y + 5, w - 24, 3, 1.5);` 一行即可。
-    ctx.globalAlpha = 0.92;
+    // 【v1.211ab 美术·鲜亮精修】车道轨加柔光晕 + 全不透明 + 顶轨白高光：三选一的"亮卡"感。
+    //   光晕画在**框绘制期**（文字其后才画）⇒ 压不到文字；几何本体一字未动。
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = rareColor;
+    fillRoundRect(ctx, x + 5, y + 1, w - 10, 13, 6.5);
+    fillRoundRect(ctx, x + 1, y + 13, 14, h - 26, 7);
+    ctx.globalAlpha = 1;
     ctx.fillStyle = rareColor;
     fillRoundRect(ctx, x + 8, y + 4, w - 16, 7, 3.5);
     fillRoundRect(ctx, x + 4, y + 16, 8, h - 32, 4);
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    fillRoundRect(ctx, x + 8, y + 4.5, w - 16, 2, 1);
     ctx.globalAlpha = 1;
   }
 }
@@ -32414,7 +32504,7 @@ function drawResultPanel(ctx, m) {
   ctx.fillStyle = ink;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = "bold 16px " + FONT_STACK;
+  ctx.font = "16px " + FONT_STACK;   // 【v1.211ab】头行改常规重：标题 40 粗压全场，信息行走常规 ⇒ 层级一眼读完
   head = GAME.dailyMode
     ? ("加菜 · " + (dailyRuleNow() ? dailyRuleNow().name : "短局") +
       " · 约" + ((dailyRuleNow() && dailyRuleNow().durMin) || 6) + "分钟" +
@@ -32434,12 +32524,12 @@ function drawResultPanel(ctx, m) {
   //   ⛔ 只动这两处画序/几何：文字内容、字号、颜色、其余行位置一律不动（不动任何数值）。
   drawChapterMapStrip(ctx, ch, cx - 260, py + 2, 520, 22);
   ctx.fillStyle = ink;
-  ctx.font = "bold 16px " + FONT_STACK;
+  ctx.font = "16px " + FONT_STACK;
   ctx.fillText(head, cx, py + 32);
   // 【v1.211z 第八刀】深盘配套：地图行由浅盘专用的「深金」换「亮金」`#e6c24a`
   //   （压深盘 6.86:1；原深金 `#7a6220` 压深盘只有 2.03:1）。本盘恒深（名单里只有 levelup/resultmodal）。
   ctx.fillStyle = "#e6c24a";
-  ctx.font = "bold 14px " + FONT_STACK;
+  ctx.font = "14px " + FONT_STACK;
   ctx.fillText(mapThemeLine(ch), cx, py + 52);
   // 【v1.211z 第八刀】深盘配套：标题翻亮 —— 胜 = 暖白 `#f4f8e6`（压深盘 11.07:1）；
   //   负 = 浅红 `#ff9a86`（5.17:1）。原 `#8a2a2a` 压深盘只有 1.6:1（等于看不见）。
@@ -32453,14 +32543,14 @@ function drawResultPanel(ctx, m) {
   ctx.globalAlpha = 1;
   mm = (runSummary.survivedSec / 60) | 0;
   ss = (runSummary.survivedSec | 0) % 60;
-  ctx.font = "bold 16px " + FONT_STACK;
+  ctx.font = "16px " + FONT_STACK;
   ctx.fillStyle = ink;
   ctx.fillText((runSummary.win ? "已通关" : ("止步第 " + runSummary.stages + " 阶段"))
     + " · " + CONFIG.gameName
     + " · " + mm + ":" + (ss < 10 ? "0" : "") + ss
     + " · 击杀 " + runSummary.kills
     + (runSummary.roomClears ? (" · 挑战房" + runSummary.roomClears + "次") : ""), cx, py + 118);
-  ctx.font = "bold 15px " + FONT_STACK;
+  ctx.font = "15px " + FONT_STACK;
   ctx.fillStyle = ink;   // 【v1.189】在 1.188 #555548 上再收一档深苔, 字号不放大
   if (runSummary.win && runSummary.prevBest) {
     var pbm = (runSummary.prevBest.bestSec / 60) | 0, pbs = runSummary.prevBest.bestSec % 60;
@@ -35291,7 +35381,7 @@ function drawSettingsPanel(ctx, m) {
   //      撞的虽然是罕见分支，但"没存储时更糊"不可接受 ⇒ 本轮只做单行 18px，不动任何 y 坐标。
   //      另记：这句**没走 hudFitText**，超宽是直接裁掉、不会出"…" ⇒ 抬字号必须在真机上看一眼才算数。
   //   ② 「音频三档」分区小签 14→**18px**：只有 4 个字，横向余量充足（18px 也是本面板导出码在用的字号）。
-  ctx.font = "bold 18px " + FONT_STACK;
+  ctx.font = "18px " + FONT_STACK;   // 【v1.211ab】操作提示改常规重（标题 34 粗压场，说明走常规）
   // 【v1.201】触屏宿主（小游戏）没有键盘: 原句只讲键鼠 ⇒ 触屏玩家在设置页学不到任何操作（A5）
   ctx.fillText(touchOnlyHost()
     ? "拖动屏幕摇杆走位 · 右上角暂停 · 倒下可复活"
@@ -35321,7 +35411,7 @@ function drawSettingsPanel(ctx, m) {
     }
   }
   ctx.fillStyle = uiSettingsMsg !== "" ? "#ff9a86" : c.cardDesc;
-  ctx.font = FONT_UI_S;
+  ctx.font = "22px " + FONT_STACK;   // 【v1.211ab】页脚说明改常规重
   ctx.fillText(uiSettingsMsg !== "" ? uiSettingsMsg : "三档独立：BGM 只管垫乐 · 音效管开火/节点 · 静音关全部", CONFIG.viewW / 2, setFootY);
 }
 
@@ -35425,14 +35515,14 @@ function drawGuidePanel(ctx, m) {
   //   抬法有硬约束：**只抬到本面板已经用过的最大正文字号（21px），一像素都不上探** ⇒ 行宽/行距必然安全
   //   （本页现有行距 42–46 逻辑 px，21px 字只要 ~26px；最长一行 ~26 字 × 21px ≈ 546 < 720 面板宽）。
   //   面板高与所有 y 坐标一律不动（v1.209 填内容 / v1.167b 改面板高会撞控件的教训）。
-  ctx.font = "bold 21px " + FONT_STACK;
+  ctx.font = "21px " + FONT_STACK;   // 【v1.211ab】正文走常规重（标题/分区头保持粗体）
   ctx.fillStyle = "#dfe8cc";
   ctx.fillText("点出击就能玩 · 不必先看完本页", CONFIG.viewW / 2, py + 128);
   ctx.fillStyle = "#e6c24a";
   ctx.font = "bold 21px " + FONT_STACK;
   ctx.fillText("上手四步 · 入袋 → 现在 → 开战", CONFIG.viewW / 2, py + 172);
   ctx.fillStyle = "#dfe8cc";
-  ctx.font = "bold 21px " + FONT_STACK;
+  ctx.font = "21px " + FONT_STACK;   // 【v1.211ab】步骤行改常规重
   ctx.fillText("① " + moveHintText() + ", 武器自己开火", CONFIG.viewW / 2, py + 218);   // 【v1.204】同源文案
   ctx.fillText("② 走近宝石升级, 三选一强化(提示可跳过)", CONFIG.viewW / 2, py + 264);
   ctx.fillText("③ 装备袋走近才开箱, 通关再得一件", CONFIG.viewW / 2, py + 310);
@@ -35447,7 +35537,7 @@ function drawGuidePanel(ctx, m) {
   //   SDK 调用，接上就当场 FAIL。
   ctx.fillText("没有抽卡, 没有广告, 也不卡关逼你花金币", CONFIG.viewW / 2, py + 442);
   ctx.fillStyle = "#dfe8cc";
-  ctx.font = "bold 21px " + FONT_STACK;
+  ctx.font = "21px " + FONT_STACK;   // 【v1.211ab】两行说明改常规重
   ctx.fillText("局内短条不盖血条, 点「跳过」一次收全部提示", CONFIG.viewW / 2, py + 492);
   ctx.fillText(guideTipsPending() ? "进局后还会出 1～2 条短提示, 随时可跳过" : "局内短提示已关掉。想再看就点重看", CONFIG.viewW / 2, py + 536);
   // 【v1.209】补「出局之后」三步 —— 原文到 py+536 就收尾，而按钮锚在 py+890 / py+962，
@@ -35461,13 +35551,13 @@ function drawGuidePanel(ctx, m) {
   ctx.font = "bold 21px " + FONT_STACK;
   ctx.fillText("出局之后", CONFIG.viewW / 2, py + 596);
   ctx.fillStyle = "#dfe8cc";
-  ctx.font = "bold 21px " + FONT_STACK;
+  ctx.font = "21px " + FONT_STACK;   // 【v1.211ab】出局三步改常规重
   ctx.fillText("⑤ 回大厅花金币强化六部位, 装备好再出击", CONFIG.viewW / 2, py + 640);
   ctx.fillText("⑥ 图鉴看进化配方与收集, 仓库兑换把素材换装备", CONFIG.viewW / 2, py + 682);
   ctx.fillText("⑦ 想换口味点「后置加菜」, 短局 5～6 分钟不冲正片", CONFIG.viewW / 2, py + 724);
   if (uiGuideMsg) {
     ctx.fillStyle = "#a8e0a0";
-    ctx.font = "bold 20px " + FONT_STACK;   // 动态状态行（导入结果/提示状态），留一档层级差
+    ctx.font = "20px " + FONT_STACK;   // 动态状态行（导入结果/提示状态），留一档层级差；【v1.211ab】改常规重
     ctx.fillText(uiGuideMsg, CONFIG.viewW / 2, py + 774);
   }
 }
@@ -35546,7 +35636,7 @@ function drawAboutPanel(ctx, m) {
   ctx.textAlign = "left";
   if (open) {
     ly = cardY + 28;
-    ctx.font = "bold 17px " + FONT_STACK;
+    ctx.font = "17px " + FONT_STACK;   // 【v1.211ab】设定正文改常规重
     for (pi = 0; pi < paras.length; pi++) {
       lines = loreWrapLines(ctx, paras[pi], innerW);
       for (li = 0; li < lines.length; li++) {
@@ -35565,7 +35655,7 @@ function drawAboutPanel(ctx, m) {
     } : null;
   } else {
     GAME.loreSkipBtn = null;
-    ctx.font = "bold 17px " + FONT_STACK;
+    ctx.font = "17px " + FONT_STACK;   // 【v1.211ab】收起态正文改常规重
     lines = loreWrapLines(ctx, loreHallLine(), innerW);
     ly = cardY + 32;
     for (li = 0; li < lines.length; li++) {
@@ -35580,7 +35670,7 @@ function drawAboutPanel(ctx, m) {
   featY = cardY + cardH + 36;
   ctx.textAlign = "center";
   ctx.fillStyle = "#c9d6bb";
-  ctx.font = "bold 16px " + FONT_STACK;
+  ctx.font = "16px " + FONT_STACK;   // 【v1.211ab】特性行改常规重
   ctx.fillText(hudFitText(ctx, featureDeskLine(), m.panelW - 64), CONFIG.viewW / 2, featY);
   ctx.fillText(hudFitText(ctx, featureSideLine(), m.panelW - 64), CONFIG.viewW / 2, featY + 28);
   ctx.fillText(hudFitText(ctx, "后置加菜不抢正片主桌 · 掉落/炸弹/升级手感照旧。", m.panelW - 64), CONFIG.viewW / 2, featY + 56);
