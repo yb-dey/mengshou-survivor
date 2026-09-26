@@ -32677,10 +32677,10 @@ function drawResultPanel(ctx, m) {
     ctx.drawImage(winBurst(), cx - 260, py - 16, 520, 280);   // 【v1.213 批R】中心亮核 + 12 条放射线（"眼睛"：只有金色字没有"爆"）
     ctx.strokeStyle = "#2a1b06";
     ctx.lineWidth = 5;
-    ctx.font = "bold 54px " + FONT_STACK;
-    ctx.strokeText("通关胜利!", cx, py + 84);
+    ctx.font = "bold 50px " + FONT_STACK;   // 【v1.213 批S】54→50 且 y 下移 6px：给上方"章题地面"行让出净空（"眼睛"终检：字压字）
+    ctx.strokeText("通关胜利!", cx, py + 90);
     ctx.fillStyle = ctx.createPattern(goldGrad(), "repeat");
-    ctx.fillText("通关胜利!", cx, py + 84);
+    ctx.fillText("通关胜利!", cx, py + 90);
     ctx.lineWidth = 1;
   } else {
     ctx.fillStyle = "#ff9a86";
