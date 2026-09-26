@@ -3,26 +3,38 @@
 [transformers] `CLIPImageProcessor` requires torchvision (not installed); falling back to `CLIPImageProcessorPil` for backward compatibility. Install torchvision to use the default backend, or import `CLIPImageProcessorPil` directly to silence this warning.
 [transformers] `SiglipImageProcessor` requires torchvision (not installed); falling back to `SiglipImageProcessorPil` for backward compatibility. Install torchvision to use the default backend, or import `SiglipImageProcessorPil` directly to silence this warning.
 [transformers] `Siglip2ImageProcessorFast` is deprecated. The `Fast` suffix for image processors has been removed; use `Siglip2ImageProcessor` instead.
-任务数 15 · 模型 stable-diffusion-v1-5/stable-diffusion-v1-5 · steps 20 · size 512 · lora artificialguybr/pixelartredmond-1-5v-pixel-art-loras-for-sd-1-5
+任务数 6 · 模型 stable-diffusion-v1-5/stable-diffusion-v1-5 · steps 10 · size 512 · lora artificialguybr/pixelartredmond-1-5v-pixel-art-loras-for-sd-1-5
 /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.
   warnings.warn(
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.
   deprecate("torch_dtype", "1.0.0", _TORCH_DTYPE_DEPRECATION_MESSAGE)
-Fetching 13 files:   0%|          | 0/13 [00:00<?, ?it/s]Fetching 13 files:  15%|█▌        | 2/13 [00:00<00:01,  8.40it/s]Fetching 13 files:  23%|██▎       | 3/13 [00:00<00:01,  5.98it/s]Fetching 13 files:  77%|███████▋  | 10/13 [00:00<00:00, 16.11it/s]Fetching 13 files:  92%|█████████▏| 12/13 [00:10<00:01,  1.21s/it]Fetching 13 files: 100%|██████████| 13/13 [00:29<00:00,  3.94s/it]Fetching 13 files: 100%|██████████| 13/13 [00:29<00:00,  2.27s/it]
+Fetching 13 files:   0%|          | 0/13 [00:00<?, ?it/s]Fetching 13 files:  15%|█▌        | 2/13 [00:00<00:01,  8.86it/s]Fetching 13 files:  23%|██▎       | 3/13 [00:00<00:01,  5.59it/s]Fetching 13 files:  69%|██████▉   | 9/13 [00:00<00:00, 17.32it/s]Fetching 13 files:  92%|█████████▏| 12/13 [00:13<00:01,  1.57s/it]Fetching 13 files: 100%|██████████| 13/13 [00:28<00:00,  3.48s/it]Fetching 13 files: 100%|██████████| 13/13 [00:28<00:00,  2.17s/it]
 Loading pipeline components...:   0%|          | 0/6 [00:00<?, ?it/s]
-Loading weights:   0%|          | 0/196 [00:00<?, ?it/s][ALoading weights: 100%|██████████| 196/196 [00:00<00:00, 6084.82it/s]
-Loading pipeline components...:  33%|███▎      | 2/6 [00:00<00:00, 15.55it/s]Loading pipeline components...: 100%|██████████| 6/6 [00:00<00:00, 26.81it/s]
+Loading weights:   0%|          | 0/196 [00:00<?, ?it/s][ALoading weights: 100%|██████████| 196/196 [00:00<00:00, 6480.24it/s]
+Loading pipeline components...:  33%|███▎      | 2/6 [00:00<00:00, 15.81it/s]Loading pipeline components...: 100%|██████████| 6/6 [00:00<00:00, 27.33it/s]
 No LoRA keys associated to CLIPTextModel found with the prefix='text_encoder'. This is safe to ignore if LoRA state dict didn't originally have any CLIPTextModel related params. You can also try specifying `prefix=None` to resolve the warning. Otherwise, open an issue if you think it's unexpected: https://github.com/huggingface/diffusers/issues/new
 已挂 LoRA artificialguybr/pixelartredmond-1-5v-pixel-art-loras-for-sd-1-5 PixelArtRedmond15V-PixelArt-PIXARFK.safetensors
 已启用 enable_attention_slicing
 跳过 enable_vae_slicing: 'StableDiffusionImg2ImgPipeline' object has no attribute 'enable_vae_slicing'
 跳过 enable_vae_tiling: 'StableDiffusionImg2ImgPipeline' object has no attribute 'enable_vae_tiling'
-模型加载完成 33.7s
-  0%|          | 0/12 [00:00<?, ?it/s]  8%|▊         | 1/12 [00:20<03:40, 20.01s/it] 17%|█▋        | 2/12 [00:29<02:20, 14.10s/it] 25%|██▌       | 3/12 [00:39<01:49, 12.20s/it] 33%|███▎      | 4/12 [00:49<01:30, 11.31s/it] 42%|████▏     | 5/12 [00:59<01:15, 10.81s/it] 50%|█████     | 6/12 [01:09<01:03, 10.53s/it] 58%|█████▊    | 7/12 [01:19<00:51, 10.33s/it] 67%|██████▋   | 8/12 [01:29<00:40, 10.21s/it] 75%|███████▌  | 9/12 [01:39<00:30, 10.13s/it] 83%|████████▎ | 10/12 [01:49<00:20, 10.08s/it] 92%|█████████▏| 11/12 [01:59<00:10, 10.04s/it]100%|██████████| 12/12 [02:09<00:00, 10.02s/it]100%|██████████| 12/12 [02:09<00:00, 10.79s/it]
-✓ rabbit_v2 → rabbit_v2.png  146.5s
-  0%|          | 0/12 [00:00<?, ?it/s]  8%|▊         | 1/12 [00:20<03:40, 20.06s/it] 17%|█▋        | 2/12 [00:30<02:21, 14.16s/it] 25%|██▌       | 3/12 [00:40<01:50, 12.29s/it] 33%|███▎      | 4/12 [00:50<01:31, 11.39s/it] 42%|████▏     | 5/12 [01:00<01:16, 10.91s/it] 50%|█████     | 6/12 [01:10<01:03, 10.60s/it] 58%|█████▊    | 7/12 [01:20<00:52, 10.41s/it] 67%|██████▋   | 8/12 [01:30<00:41, 10.28s/it] 75%|███████▌  | 9/12 [01:40<00:30, 10.20s/it] 83%|████████▎ | 10/12 [01:50<00:20, 10.14s/it] 92%|█████████▏| 11/12 [02:00<00:10, 10.11s/it]100%|██████████| 12/12 [02:10<00:00, 10.08s/it]100%|██████████| 12/12 [02:10<00:00, 10.86s/it]
-✓ mouse_v2 → mouse_v2.png  147.4s
-  0%|          | 0/12 [00:00<?, ?it/s]  8%|▊         | 1/12 [00:19<03:39, 19.97s/it] 17%|█▋        | 2/12 [00:29<02:20, 14.07s/it] 25%|██▌       | 3/12 [00:39<01:49, 12.19s/it] 33%|███▎      | 4/12 [00:49<01:30, 11.30s/it] 42%|████▏     | 5/12 [00:59<01:15, 10.81s/it] 50%|█████     | 6/12 [01:09<01:03, 10.51s/it] 58%|█████▊    | 7/12 [01:19<00:51, 10.32s/it] 67%|██████▋   | 8/12 [01:29<00:40, 10.20s/it] 75%|███████▌  | 9/12 [01:39<00:30, 10.12s/it] 83%|████████▎ | 10/12 [01:49<00:20, 10.07s/it] 92%|█████████▏| 11/12 [01:59<00:10, 10.05s/it]100%|██████████| 12/12 [02:09<00:00, 10.02s/it]100%|██████████| 12/12 [02:09<00:00, 10.78s/it]
-✓ fox_v2 → fox_v2.png  146.4s
-  0%|          | 0/12 [00:00<?, ?it/s]  8%|▊         | 1/12 [00:19<03:39, 19.92s/it] 17%|█▋        | 2/12 [00:29<02:20, 14.07s/it] 25%|██▌       | 3/12 [00:39<01:49, 12.20s/it]
+模型加载完成 32.1s
+  0%|          | 0/6 [00:00<?, ?it/s] 17%|█▋        | 1/6 [00:19<01:38, 19.63s/it] 33%|███▎      | 2/6 [00:29<00:55, 13.84s/it] 50%|█████     | 3/6 [00:39<00:36, 12.00s/it] 67%|██████▋   | 4/6 [00:49<00:22, 11.13s/it] 83%|████████▎ | 5/6 [00:58<00:10, 10.65s/it]100%|██████████| 6/6 [01:08<00:00, 10.36s/it]100%|██████████| 6/6 [01:08<00:00, 11.44s/it]
+✓ rabbit_v2 → rabbit_v2.png  85.5s
+  0%|          | 0/6 [00:00<?, ?it/s] 17%|█▋        | 1/6 [00:19<01:37, 19.59s/it] 33%|███▎      | 2/6 [00:29<00:55, 13.82s/it] 50%|█████     | 3/6 [00:39<00:35, 11.98s/it] 67%|██████▋   | 4/6 [00:48<00:22, 11.11s/it] 83%|████████▎ | 5/6 [00:58<00:10, 10.64s/it]100%|██████████| 6/6 [01:08<00:00, 10.35s/it]100%|██████████| 6/6 [01:08<00:00, 11.42s/it]
+✓ mouse_v2 → mouse_v2.png  85.4s
+  0%|          | 0/6 [00:00<?, ?it/s] 17%|█▋        | 1/6 [00:19<01:37, 19.56s/it] 33%|███▎      | 2/6 [00:29<00:55, 13.83s/it] 50%|█████     | 3/6 [00:39<00:35, 11.97s/it] 67%|██████▋   | 4/6 [00:48<00:22, 11.10s/it] 83%|████████▎ | 5/6 [00:58<00:10, 10.63s/it]100%|██████████| 6/6 [01:08<00:00, 10.33s/it]100%|██████████| 6/6 [01:08<00:00, 11.41s/it]
+✓ fox_v2 → fox_v2.png  85.3s
+  0%|          | 0/6 [00:00<?, ?it/s] 17%|█▋        | 1/6 [00:19<01:37, 19.58s/it] 33%|███▎      | 2/6 [00:29<00:55, 13.83s/it] 50%|█████     | 3/6 [00:39<00:35, 11.99s/it] 67%|██████▋   | 4/6 [00:48<00:22, 11.12s/it] 83%|████████▎ | 5/6 [00:58<00:10, 10.64s/it]100%|██████████| 6/6 [01:08<00:00, 10.35s/it]100%|██████████| 6/6 [01:08<00:00, 11.42s/it]
+✓ leaptoad_v2 → leaptoad_v2.png  85.4s
+  0%|          | 0/6 [00:00<?, ?it/s] 17%|█▋        | 1/6 [00:19<01:37, 19.59s/it] 33%|███▎      | 2/6 [00:29<00:55, 13.83s/it] 50%|█████     | 3/6 [00:39<00:35, 11.99s/it] 67%|██████▋   | 4/6 [00:48<00:22, 11.12s/it] 83%|████████▎ | 5/6 [00:58<00:10, 10.64s/it]100%|██████████| 6/6 [01:08<00:00, 10.35s/it]100%|██████████| 6/6 [01:08<00:00, 11.42s/it]
+✓ badger_v2 → badger_v2.png  85.4s
+  0%|          | 0/6 [00:00<?, ?it/s] 17%|█▋        | 1/6 [00:19<01:38, 19.63s/it] 33%|███▎      | 2/6 [00:29<00:55, 13.86s/it] 50%|█████     | 3/6 [00:39<00:36, 12.02s/it] 67%|██████▋   | 4/6 [00:49<00:22, 11.15s/it] 83%|████████▎ | 5/6 [00:58<00:10, 10.67s/it]100%|██████████| 6/6 [01:08<00:00, 10.38s/it]100%|██████████| 6/6 [01:08<00:00, 11.45s/it]
+✓ boar_v2 → boar_v2.png  85.6s
+
+=== exit=0 ===
+---- 环境自述 ----
+python 3.11.16
+torch 2.14.0+cpu
+diffusers 0.40.0
+hf_endpoint https://hf-mirror.com

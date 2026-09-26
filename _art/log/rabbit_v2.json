@@ -5,10 +5,10 @@
   "negative": "",
   "strength": 0.62,
   "guidance": 7.5,
-  "steps": 20,
+  "steps": 10,
   "size": 512,
   "ref": "rabbit.png",
   "lora": "artificialguybr/pixelartredmond-1-5v-pixel-art-loras-for-sd-1-5",
   "lora_weight": "PixelArtRedmond15V-PixelArt-PIXARFK.safetensors",
-  "seconds": 146.5
+  "seconds": 85.5
 }

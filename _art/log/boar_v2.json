@@ -1,0 +1,14 @@
+{
+  "name": "boar_v2",
+  "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+  "prompt": "a cute chibi boar with tusks and bristly back, front view, full body in frame, pixel art, PixArFK, game enemy sprite, solid flat magenta background, no ground shadow, single character",
+  "negative": "",
+  "strength": 0.62,
+  "guidance": 7.5,
+  "steps": 10,
+  "size": 512,
+  "ref": "boar.png",
+  "lora": "artificialguybr/pixelartredmond-1-5v-pixel-art-loras-for-sd-1-5",
+  "lora_weight": "PixelArtRedmond15V-PixelArt-PIXARFK.safetensors",
+  "seconds": 85.6
+}
