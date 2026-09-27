@@ -1,0 +1,14 @@
+{
+  "name": "mouse_v4",
+  "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+  "prompt": "adorable cute chibi baby mouse monster, huge round eyes fully open, black dot eyes with white highlight, chubby round body, big head, big round ears, soft rounded shapes, happy open smile, bright saturated grey fur, pink cheeks, thick black outline, flat cel shading, high saturation, soul knight game art style, kawaii, front view, full body visible, centered, pure white background, no shadow, no props, no text",
+  "negative": "realistic, photorealistic, horror, scary, creepy, uncanny valley, human face, human body, gore, monster, zombie, dark, grim, ugly, dirty, text, watermark, multiple characters, half-closed eyes, sleepy eyes, doll eyes, gradient background, crown, extra limbs, extra animal, props",
+  "strength": 1.0,
+  "guidance": 7.5,
+  "steps": 20,
+  "size": 512,
+  "ref": "none(text2img)",
+  "lora": "artificialguybr/pixelartredmond-1-5v-pixel-art-loras-for-sd-1-5",
+  "lora_weight": "PixelArtRedmond15V-PixelArt-PIXARFK.safetensors",
+  "seconds": 225.5
+}
