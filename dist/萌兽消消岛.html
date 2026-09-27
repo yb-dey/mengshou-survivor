@@ -31437,9 +31437,12 @@ function registerUi() {
   uiReviveModal = makeModal("revivemodal", CONFIG.revivePanelW || 540, CONFIG.revivePanelH || 660, drawRevivePanel);
   uiBtnRevive = makeButton("btnrevive", CONFIG.viewW / 2 - 160, CONFIG.reviveBtnY || 720, 320, 70, "复活继续", onTapReviveBtn);
   uiBtnRevive.hitPadY = 6;   // 【v1.207】只扩纵向：命中高度 64→76 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
+  // 【v1.215 批B16a】主按钮语言统一（ART-SYSTEM「每屏只允许一个主按钮」）：
+  //   暂停页的「继续游戏」早就是绿色渐变主按钮（skin cta），而复活弹窗是全游戏最重的抉择时刻，
+  //   「复活继续」却还是 comfort 普通钮 ⇒ 姊妹屏语言不一致。改 skin 为 cta，热区/文案/音效不动。
   uiBtnGiveUp = makeButton("btngiveup", CONFIG.viewW / 2 - 160, CONFIG.reviveGiveY || 810, 320, 70, "放弃结算", onTapGiveUpBtn);
   uiBtnGiveUp.hitPadY = 6;   // 【v1.207】只扩纵向：命中高度 64→76 逻辑px（≥44 CSS px）；绘制像素不变 —— PM §18.11
-  uiBtnRevive.skin = "comfort";
+  uiBtnRevive.skin = "cta";
   uiBtnGiveUp.skin = "comfort";
   uiBtnGiveUp.tone = "quiet";
   // 首页=总部基地: 主 CTA / 选章 / 今日 / 四主题地图 / 六部位框 / 底栏养成
