@@ -1262,8 +1262,10 @@ if (!SELFTEST) {
     const missed = controls.filter(([, d, s]) => checkSubpackageWiring(d, s).length === 0).map(([n]) => n)
     if (missed.length) throw new Error('阴性对照没被抓到（判据恒绿）：' + missed.join(' / '))
     const n = existsSync(join(HERE, 'assets')) ? readdirSync(join(HERE, 'assets')).length : 0
-    if (n !== 178) throw new Error(`assets/ 里 ${n} 个文件，期望 178`)
-    console.log(`    真实接线 0 问题；3 条构造错误全部被抓到；assets/ 178 个文件在位`)
+    // 【v1.214 美术】素材会随新贴图增长（178→187+）：上界锁改成下界锁 —— 只能多不能少，
+    // 少了=打包丢文件（原判据），多了=合法新增（新像素画贴图）
+    if (n < 178) throw new Error(`assets/ 里 ${n} 个文件，期望 ≥178（只许增不许减）`)
+    console.log(`    真实接线 0 问题；3 条构造错误全部被抓到；assets/ ${n} 个文件在位（基线 178）`)
   })
   okSub = await stageAsync(`⑯b 真入口执行顺序（场景 ${SUBPKG_SCENARIO}）`, async () => {
     const { box, calls } = bootEntry(SUBPKG_SCENARIO)
