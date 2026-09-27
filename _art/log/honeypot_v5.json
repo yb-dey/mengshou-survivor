@@ -1,0 +1,14 @@
+{
+  "name": "honeypot_v5",
+  "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+  "prompt": "adorable chibi baby hedgehog monster, pink fur, golden tan belly, black lineart, coloring book style, bold thick dark outline around the whole character, flat cel shading, high saturation, soul knight game art style, big head, front view, full body centered, high contrast against background, plain solid pale blue background, no shadow, no props, no text",
+  "negative": "realistic, photorealistic, horror, scary, creepy, uncanny valley, human face, human body, gore, monster, zombie, dark, grim, ugly, dirty, text, watermark, multiple characters, half-closed eyes, sleepy eyes, doll eyes, gradient background, crown, extra limbs, extra animal, props",
+  "strength": 1.0,
+  "guidance": 7.5,
+  "steps": 20,
+  "size": 512,
+  "ref": "none(text2img)",
+  "lora": "artificialguybr/pixelartredmond-1-5v-pixel-art-loras-for-sd-1-5",
+  "lora_weight": "PixelArtRedmond15V-PixelArt-PIXARFK.safetensors",
+  "seconds": 225.0
+}
