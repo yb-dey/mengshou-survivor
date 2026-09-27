@@ -130,8 +130,13 @@ function assertParsers() {
 // 2. 像素级：贴图 → 归一化掩膜 + 12 桶色相直方图
 // ────────────────────────────────────────────────────────────
 async function measure(ids) {
+  // 【v1.214 美术】新像素画按 PNG 注入 ⇒ webp/png 都认
   const list = ids
-    .map((id) => ({ id, p: path.join(ASSETS, id + '.webp') }))
+    .map((id) => {
+      const pw = path.join(ASSETS, id + '.webp');
+      const pp = path.join(ASSETS, id + '.png');
+      return { id, p: fs.existsSync(pw) ? pw : pp };
+    })
     .filter((f) => fs.existsSync(f.p));
   if (!list.length) throw new Error(`assets 里找不到任何贴图（ASSETS=${ASSETS}，试了 ${ids.length} 个 id）`);
   const browser = await chromium.launch({ args: ['--no-sandbox'] });

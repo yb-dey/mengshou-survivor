@@ -50,10 +50,16 @@ if (notWired.length) {
 info.push('（本项为**接线级**检查：键在表内且值非空才算过；删任一键应立刻 FAIL）');
 
 // ── A. 文件级：alpha / 包围盒 ────────────────────────────────
-const files = IDS.map((id) => { const p = path.join(ASSETS, id + '.webp'); return { id, p, ok: fs.existsSync(p) }; });
+// 【v1.214 美术】贴图格式不再只有 webp（新像素画按 PNG 注入）⇒ 两扩展名都认
+const files = IDS.map((id) => {
+  const pw = path.join(ASSETS, id + '.webp');
+  const pp = path.join(ASSETS, id + '.png');
+  const p = fs.existsSync(pw) ? pw : (fs.existsSync(pp) ? pp : pw);
+  return { id, p, ok: fs.existsSync(p) };
+});
 const missingFiles = files.filter((f) => !f.ok).map((f) => f.id);
 if (missingFiles.length) fail.push(`assets 里缺文件 ${missingFiles.length} 个: ${missingFiles.join(', ')}`);
-else info.push('7/7 跟宠 webp 文件就位 ✅');
+else info.push('7/7 跟宠贴图文件就位 ✅');
 
 const hasBrowser = !process.env.TABLE_MODE;
 if (hasBrowser && !missingFiles.length) {
