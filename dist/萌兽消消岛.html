@@ -33104,45 +33104,62 @@ function drawUpgradePanel(ctx, m) {
     rowY = py + 180 + i * 104;
     hot = spend.cheapest && spend.cheapest.id === d.id;
     flash = GAME.hallUpFlash && GAME.hallUpFlash.id === d.id && GAME.hallUpFlash.t > 0;
+    // 【v1.215 批B14】「亮面只给焦点」（B10 系统 · 深底版）：五行此前全等亮、焦点行只靠 10% 透明淡块（几乎看不见）。
+    //   非焦点行 = 字/图标盘/按钮压暗一档（深盘本身就是"灰行底"）；焦点行 = 暖金薄填 + 金边 #e0a83c 2px。
+    //   字色 #aab3c6 压深盘 #323753 ≈ 5.0:1（AA 达标，量过再写）；闪光行保持原样（瞬时焦点）。
+    var dimRow = !(hot || flash);
     // 【v1.186】热区/闪光去金: 苔奶油薄填 + 软墨缘, 可升不再霓虹绿框
-    if (flash || hot) {
-      ctx.fillStyle = flash ? "rgba(120,138,88,0.12)" : (v.canBuy ? "rgba(90,112,68,0.10)" : "rgba(90,98,84,0.10)");
+    if (flash) {
+      ctx.fillStyle = "rgba(120,138,88,0.12)";
       fillRoundRect(ctx, 56, rowY - 4, 408, 96, 10);
-      ctx.strokeStyle = flash ? "rgba(70,88,48,0.55)" : (v.canBuy ? "rgba(70,96,52,0.62)" : "rgba(42,58,24,0.55)");
-      ctx.lineWidth = flash ? 1.5 : 1.5;
+      ctx.strokeStyle = "rgba(70,88,48,0.55)";
+      ctx.lineWidth = 1.5;
+      strokeRoundRect(ctx, 56, rowY - 4, 408, 96, 10);
+      ctx.lineWidth = 1;
+    } else if (hot) {
+      ctx.fillStyle = "rgba(224,168,60,0.14)";
+      fillRoundRect(ctx, 56, rowY - 4, 408, 96, 10);
+      ctx.strokeStyle = "#e0a83c";
+      ctx.lineWidth = 2;
       strokeRoundRect(ctx, 56, rowY - 4, 408, 96, 10);
       ctx.lineWidth = 1;
     }
+    ctx.save();
+    if (dimRow) ctx.globalAlpha = 0.55;
     drawUpgradeTicks(ctx, 122, rowY + 6, v.lv, v.maxLv, v.canBuy);
+    ctx.restore();
     // 【v1.155】图标盘改苔纸+柔影+细墨框(drawBuildChip 同款), 不再亮绿盘粗墨边
     ctx.fillStyle = "rgba(16,20,14,0.12)";
     fillRoundRect(ctx, 57, rowY + 14, 52, 52, 10);
-    ctx.fillStyle = "rgba(222,232,198,0.94)";
+    ctx.fillStyle = dimRow ? "rgba(222,232,198,0.30)" : "rgba(222,232,198,0.94)";
     fillRoundRect(ctx, 56, rowY + 12, 52, 52, 10);
-    ctx.strokeStyle = "rgba(42,58,24,0.80)";
+    ctx.strokeStyle = dimRow ? "rgba(226,224,210,0.30)" : "rgba(42,58,24,0.80)";
     ctx.lineWidth = 1.5;
     strokeRoundRect(ctx, 56, rowY + 12, 52, 52, 10);
     ctx.lineWidth = 1;
+    ctx.save();
+    if (dimRow) ctx.globalAlpha = 0.55;
     drawItemSprite(ctx, d.id === "hp" ? "tal_hp" : (d.id === "pickup" ? "tal_pickup" : (d.id === "move" ? "tal_move" : (d.id === "atk" ? "wpn_pinecone" : "wpn_bladeleaf"))), 60, rowY + 16, 44);
+    ctx.restore();
     // 【v1.190】行标题深苔, 攻击/生命/… Lv 对奶油盘更清楚; 花费钮仍走 upcost 闷橄榄
-    ctx.fillStyle = "#f4f8e6";
+    ctx.fillStyle = hot ? "#ffffff" : (dimRow ? "#aab3c6" : "#f4f8e6");
     ctx.font = "bold 26px " + FONT_STACK;
     ctx.fillText(d.name + "  Lv." + v.lv + "/" + v.maxLv, 118, rowY + 28);
-    ctx.fillStyle = v.canBuy ? "#a8e0a0" : "#e8f0d4";
+    ctx.fillStyle = dimRow ? "#8f99b0" : (v.canBuy ? "#a8e0a0" : "#e8f0d4");
     ctx.font = "bold 16px " + FONT_STACK;
     if (v.maxed) {
       ctx.fillText(v.stat0 + " · 战力 " + v.power0, 118, rowY + 52);
     } else {
       ctx.fillText(v.stat0 + " → " + v.stat1 + " · 战力 " + v.power0 + "→" + v.power1, 118, rowY + 52);
     }
-    ctx.fillStyle = v.canBuy ? "#a8e0a0" : (v.maxed ? "#c9d6bb" : "#e6c24a");
+    ctx.fillStyle = dimRow ? "#8f99b0" : (v.canBuy ? "#a8e0a0" : (v.maxed ? "#c9d6bb" : "#e6c24a"));
     ctx.font = "bold 15px " + FONT_STACK;
     ctx.fillText(v.goldLine, 118, rowY + 74);
     btn = uiUpBtns[i];
     if (btn) {
       btn.label = v.btn;
       btn.tone = v.maxed ? "done" : (v.canBuy ? "ok" : "poor");
-      btn.dim = 0;
+      btn.dim = dimRow ? 1 : 0;
     }
   }
   ctx.textAlign = "center";
