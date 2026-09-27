@@ -90,9 +90,11 @@ def main():
     print(f"模型加载完成 {time.time() - t0:.1f}s", flush=True)
 
     # 【萌兽改版】负面提示词：把"伪人/恐怖谷/惊悚"从源头堵死（用户 09-27 定调：萌兽=可爱，元气骑士=风格）
+    # 【批次A 质检追加】半闭眼/睡眼/人偶眼/渐变底/皇冠杂物是萌度杀手（Flash 实测逐条点名）
     NEG = os.environ.get("ART_NEG",
         "realistic, photorealistic, horror, scary, creepy, uncanny valley, human face, human body, "
-        "gore, monster, zombie, dark, grim, ugly, dirty, text, watermark, multiple characters")
+        "gore, monster, zombie, dark, grim, ugly, dirty, text, watermark, multiple characters, "
+        "half-closed eyes, sleepy eyes, doll eyes, gradient background, crown, extra limbs, extra animal, props")
 
     for t in tasks:
         if t["ref"] == "none":
