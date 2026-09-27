@@ -30696,6 +30696,7 @@ function makeChapterCard(i, x, y, w, h) {
       // 【v1.182】选中路唇对比再抬半档(侧签略宽略亮), 强化获取条之外的备案可读
       // 【v1.184】卡外墨再抬: 选中 ~3.2px / 普通 ~2.1px, 备案选章更清
       // 【v1.189】锁章改闷橄榄实填(仍透一点纸色), 右上软墨挂锁; 解锁条件/点击忽略不动
+      var dimCard = !selected && !locked;   // 【v1.215 批B15】中间调暖板（B10 同套）：未选卡整卡压暖灰+浅字，亮面只给唯一焦点
       ctx.fillStyle = locked ? "rgba(28,36,20,0.08)" : "rgba(16,20,14,0.12)";
       fillRoundRect(ctx, r.x + 1, r.y + 3, r.w, r.h, 12);
       // 【v1.214 批B4】选中卡加硬影（"眼睛"审计 02：六张卡灰度一片米糊，选中只靠细边）
@@ -30703,10 +30704,11 @@ function makeChapterCard(i, x, y, w, h) {
         ctx.fillStyle = "rgba(20,32,16,0.35)";
         fillRoundRect(ctx, r.x + 2, r.y + 5, r.w, r.h, 12);
       }
-      ctx.fillStyle = locked ? "rgba(176, 186, 148, 0.90)" : (selected ? "rgba(226,236,198,0.97)" : CONFIG.colors.cardBg);
+      ctx.fillStyle = locked ? "rgba(176, 186, 148, 0.90)" : (selected ? "rgba(226,236,198,0.97)" : "#5f5e54");
       fillRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
       // 【v1.214 批B4】选中框改绿色（#2e9b4a）而不是近黑——"选中"一眼读作绿，不再靠边粗细猜
-      ctx.strokeStyle = selected ? "#2e9b4a" : (locked ? "rgba(58,74,40,0.62)" : (view.coinKind === "pending" ? "rgba(201,162,75,0.82)" : "rgba(28,40,18,0.72)"));
+      // 【v1.215 批B15】未选卡描边随压暗（首通未领的金边保留 —— 那是"有礼可领"的信号层，不参与压暗）
+      ctx.strokeStyle = selected ? "#2e9b4a" : (locked ? "rgba(58,74,40,0.62)" : (view.coinKind === "pending" ? "rgba(201,162,75,0.82)" : (dimCard ? "rgba(58,50,32,0.55)" : "rgba(28,40,18,0.72)")));
       ctx.lineWidth = selected ? 3.2 : (view.coinKind === "pending" && !locked ? 2.4 : 2.1);
       strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
       ctx.lineWidth = 1;
@@ -30730,15 +30732,18 @@ function makeChapterCard(i, x, y, w, h) {
         drawSoftLockBadge(ctx, r.x + r.w - 30, r.y + 8, 12);
         return;
       }
-      ctx.fillStyle = CONFIG.colors.cardTitle;
+      ctx.fillStyle = dimCard ? "#e2e0d2" : CONFIG.colors.cardTitle;
       ctx.font = "bold 15px " + FONT_STACK;
       ctx.fillText("第" + (this.idx + 1) + "章", r.x + r.w / 2, r.y + 16);
       ctx.font = "bold 20px " + FONT_STACK;
       ctx.fillText(ch.name, r.x + r.w / 2, r.y + 38);
-      ctx.fillStyle = this.idx <= CONFIG.tutorialChapterMax ? "#8a7a40" : (this.idx === pickRecommendedChapter() ? "#2e8b47" : CONFIG.colors.cardDesc);
+      ctx.fillStyle = dimCard ? "#dedccb" : (this.idx <= CONFIG.tutorialChapterMax ? "#8a7a40" : (this.idx === pickRecommendedChapter() ? "#2e8b47" : CONFIG.colors.cardDesc));
       ctx.font = "bold 12px " + FONT_STACK;
       ctx.fillText((this.idx <= CONFIG.tutorialChapterMax ? "教程 " : (this.idx === pickRecommendedChapter() ? "推荐 " : "")) + ch.durMin + "分钟 · " + (ch.winMode === "survive" ? "存活" : "讨伐") + (ch.endless && saveData.chapterCleared[ch.chId] ? " · 无尽" : ""), r.x + r.w / 2, r.y + 58);
       chipY = r.y + 66;
+      // 【v1.215 批B15】压暗卡上的回礼小行整体降透明度（chip 与字同组，比值不变、仍可读）
+      ctx.save();
+      if (dimCard) ctx.globalAlpha = 0.72;
       drawRewardMiniRow(ctx, r.x + 8, chipY, r.w - 16, 24, "#e6c24a", rewardCoinLine(view), view.coinKind === "taken");
       drawRewardMiniRow(ctx, r.x + 8, chipY + 28, r.w - 16, 24, "#8a5ac2", rewardForgeLine(view), view.forgeKind === "taken");
       giftTxt = view.giftTitle || "通关礼";
@@ -30746,8 +30751,9 @@ function makeChapterCard(i, x, y, w, h) {
       drawRewardMiniRow(ctx, r.x + 8, chipY + 56, r.w - 16, 24, view.giftRarColor || "#c9a24b", giftTxt, false);
       roomTxt = roomChapterShort(ch) ? ("房 " + roomTierOf(0).name + "·" + roomRarityName(roomTierOf(0).rarMin) + "袋") : "无挑战房";
       drawRewardMiniRow(ctx, r.x + 8, chipY + 80, r.w - 16, 20, roomTierOf(0).color, roomTxt, !ch.rooms || !ch.rooms.length);
+      ctx.restore();
       ctx.textAlign = "center";
-      ctx.fillStyle = selected ? "#3faf5a" : (view.coinKind === "pending" ? "#c9a24b" : "#6a8a4a");
+      ctx.fillStyle = selected ? "#3faf5a" : (dimCard ? (view.coinKind === "pending" ? "#e6c24a" : "#b8b6a6") : (view.coinKind === "pending" ? "#c9a24b" : "#6a8a4a"));
       ctx.font = "bold 12px " + FONT_STACK;
       ctx.fillText(selected ? "已选 · 看下方回礼" : (view.coinKind === "pending" ? "首通未领" : "再通仍有礼"), r.x + r.w / 2, r.y + r.h - 10);
     }
