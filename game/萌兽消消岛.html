@@ -639,6 +639,7 @@ var CONFIG = {
   worldH: 2400,                     // 世界高 px
   camLerp: 8,                       // 摄像机指数平滑系数(1/s): cam+=(target-cam)*(1-exp(-dt*camLerp))
   groundTile: 512,                  // 地面预渲染瓦片逻辑边长 px(@2x 离屏 1024)
+  groundDepthBands: 1,              // 【v1.215 批B17】三层地表：远亮/中平/近暗横向带（烘焙进瓦片，运行期零成本）。0=关闭（回退开关）
   groundGrain: 12,                  // 【v1.167g3】地表纹理幅度(**亮度级** 0~255), 0=关闭。
                                     //   逐像素平滑噪声(粗/细倍频 26/104)：填方块会成棋盘、必须平滑；
                                     //   幅度离线定标: 6 看不见 / **12 刚好** / 18 起像云团(云团已被否四次)。
@@ -24678,6 +24679,26 @@ function applyTexture(tid, img) {
 // 运行期 renderGame 按 cam 视口取模平铺(世界坐标对齐), 禁逐帧拼贴/逐帧新渐变。
 // v2.0 R2【R2】tint 参数: 六档场景一次性叠色(source-atop)。选运行时叠色而非 Pillow 预渲染 6 变体:
 //   零新增资产体积(铁律12 1.5MB 红线不动)/免 6 张贴图预处理流水线/载入期一次性成本可忽略(64 次 drawImage+1 次 fillRect)。
+// 【v1.215 批B17】三层地表的深度带：1×512 预渲染（远亮/中平/近暗），烘焙期 drawImage 拉伸一次，运行期零成本。
+//   回退 = CONFIG.groundDepthBands = 0。
+var GROUND_DEPTH_STRIP = null;
+function groundDepthStrip() {
+  if (GROUND_DEPTH_STRIP) return GROUND_DEPTH_STRIP;
+  var cv = document.createElement("canvas");
+  cv.width = 1; cv.height = 512;
+  var c2 = cv.getContext("2d");
+  var g = c2.createLinearGradient(0, 0, 0, 512);
+  g.addColorStop(0.00, "rgba(255,252,235,0.12)");   // 远带：提亮（距离雾感）
+  g.addColorStop(0.30, "rgba(255,252,235,0.04)");
+  g.addColorStop(0.42, "rgba(0,0,0,0)");
+  g.addColorStop(0.62, "rgba(0,0,0,0)");            // 中带：原样
+  g.addColorStop(0.85, "rgba(20,30,14,0.10)");      // 近带：压暗（贴脚有重量）
+  g.addColorStop(1.00, "rgba(20,30,14,0.18)");
+  c2.fillStyle = g;
+  c2.fillRect(0, 0, 1, 512);
+  GROUND_DEPTH_STRIP = cv;
+  return cv;
+}
 function buildGroundTile(img, tint) {
   var cells = DATA_TEX["TEX-11"].cells;
   var TS = 128;                                        // 64 逻辑 tile @2x
@@ -24708,6 +24729,7 @@ function buildGroundTile(img, tint) {
     c2.globalAlpha = 1;
     c2.globalCompositeOperation = "source-over";
   }
+  if (CONFIG.groundDepthBands) c2.drawImage(groundDepthStrip(), 0, 0, cv.width, cv.height);   // 【v1.215 批B17】三层地表深度带
   SPRITES.groundTile = cv;
 }
 
@@ -25678,6 +25700,7 @@ function bakeChapterMapGround(ch) {
   quietChapterGround(c2, cv.width, cv.height, mt);
   stampChapterDecos(c2, cv.width, cv.height, mt);
   stampGroundGrain(c2, cv.width, cv.height, mt);   // 【v1.167】地表质感(烘焙期一次)
+  if (CONFIG.groundDepthBands) c2.drawImage(groundDepthStrip(), 0, 0, cv.width, cv.height);   // 【v1.215 批B17】三层地表深度带
   SPRITES.groundTile = cv;
   SPRITES.chapterMapId = mt.mapId || chId;
 }
