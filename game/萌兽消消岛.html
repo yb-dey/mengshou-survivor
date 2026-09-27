@@ -15,7 +15,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.214">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.215">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -668,7 +668,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.214",  // 【v1.214 全游戏美术·按 ART-SYSTEM.md 科学规范】用户当面纠正"美术=整个 HTML 的内容美术"。
+  version: "1.215",  // 【v1.215 批B13】「压行不压字」推广到 06 跟宠四卡 / 07 图鉴六行 / 13 暂停构筑 / 14 结算构筑（B10 系统）
                                         //   批A2 战场接地：敌人/主角接地影抬一档 + 默认原野底降一档饱和（审计 B：单位全靠硬贴对比）。
                                         //   ⚠ 版本号必须**纯数字**。
                                         //   ① 13 个模态区域色带全部提饱和/提亮 + 色带/左轨柔光晕；② 模态盘双层伪软影 + 亮橄榄描边 + 顶光 + 上缘高光；
@@ -29268,19 +29268,32 @@ function drawBuildChip(ctx, r, row, hot) {
   //   车道色退到左侧细签/右徽底色, 名/值改深墨字, 暂停(drawPausePanel)与结算(drawResultPanel)同一盘语言, 信息全保留。
   ctx.fillStyle = "rgba(16,20,14,0.14)";
   fillRoundRect(ctx, r.x + 1, r.y + 3, r.w, r.h, 8);
-  ctx.fillStyle = hot ? rgbaHex(row.color || "#c9a24b", 0.26) : "rgba(222,232,198,0.94)";
+  ctx.fillStyle = hot ? rgbaHex(row.color || "#c9a24b", 0.26) : "#5f5e54";
   fillRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
-  // 【v1.214 批B8】非热点条目整体压暗一档（审计 B：暂停/结算的胶囊墙等权铺满；亮面只给"点开看"的那条）
+  // 【v1.215 批B13】「压行不压字」全量版（B10 系统推广到暂停/结算共用构筑条目）：
+  //   中程复查结论：批B8 那层 rgba(30,40,24,0.13) 罩只给了"半档"、还把字压暗 ⇒
+  //   未点开条目 = 整行暖灰底 #5f5e54 + 浅字（#e2e0d2 主 / #dedccb 副，实测 4.5:1）；
+  //   点开的条目 = 暖奶油 #f2e0bc + 金边 #e0a83c 2px（与仓库/天赋行同一套语言）。
   if (!hot) {
-    ctx.fillStyle = "rgba(30,40,24,0.13)";
+    ctx.fillStyle = "#5f5e54";
     fillRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
+    ctx.strokeStyle = "rgba(58,50,32,0.55)";
+    ctx.lineWidth = 1;
+    strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
+    ctx.lineWidth = 1;
+  } else {
+    ctx.fillStyle = "#f2e0bc";
+    fillRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
+    ctx.strokeStyle = "#e0a83c";
+    ctx.lineWidth = 2;
+    strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
+    ctx.lineWidth = 1;
   }
-  ctx.strokeStyle = hot ? rgbaHex(row.color || "#c9a24b", 0.9) : "rgba(42,58,24,0.80)";
-  ctx.lineWidth = hot ? 2 : 1.5;
-  strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
-  ctx.lineWidth = 1;
+  ctx.save();
+  ctx.globalAlpha = hot ? 1 : 0.45;
   ctx.fillStyle = row.color || "#c9a24b";
   fillRoundRect(ctx, r.x, r.y + 6, 5, r.h - 12, 2);
+  ctx.restore();
   iconS = Math.min(28, r.h - 10);
   textX = r.x + 12;
   if (row.icon) {
@@ -29294,12 +29307,12 @@ function drawBuildChip(ctx, r, row, hot) {
     badgeW = Math.min(Math.max(40, markW), Math.max(52, r.w * 0.42));
     badgeH = Math.min(24, r.h - 10);
     markX = r.x + r.w - badgeW - 6;
-    ctx.fillStyle = rgbaHex(row.color || "#c9a24b", hot ? 0.30 : 0.16);
+    ctx.fillStyle = hot ? rgbaHex(row.color || "#c9a24b", 0.30) : "rgba(226,224,210,0.18)";
     fillRoundRect(ctx, markX, r.y + (r.h - badgeH) / 2, badgeW, badgeH, 8);
-    ctx.strokeStyle = rgbaHex(row.color || "#c9a24b", 0.55);
+    ctx.strokeStyle = hot ? rgbaHex(row.color || "#c9a24b", 0.55) : "rgba(226,224,210,0.35)";
     ctx.lineWidth = 1;
     strokeRoundRect(ctx, markX, r.y + (r.h - badgeH) / 2, badgeW, badgeH, 8);
-    ctx.fillStyle = "#3a4626";
+    ctx.fillStyle = hot ? "#3a4626" : "#dedccb";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = "bold 13px " + FONT_STACK;
@@ -29308,12 +29321,12 @@ function drawBuildChip(ctx, r, row, hot) {
   }
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.fillStyle = "#2e3c1c";
+  ctx.fillStyle = hot ? "#2e3c1c" : "#e2e0d2";
   ctx.font = "bold 12px " + FONT_STACK;
   // 【v1.208】条目高抬到 81（44 CSS px）后，两行字必须**居中成块** —— 否则会被拉开成上下两截（31→57px 间距）。
   var tyMid = (r.h >= 60) ? (r.y + r.h / 2) : 0;
   ctx.fillText(hudFitText(ctx, row.name || "", tw), textX, tyMid ? (tyMid - 9) : (r.y + 12));
-  ctx.fillStyle = "#55603c";
+  ctx.fillStyle = hot ? "#55603c" : "#dedccb";
   ctx.font = "bold 12px " + FONT_STACK;
   ctx.fillText(hudFitText(ctx, row.sub || "", tw), textX, tyMid ? (tyMid + 9) : (r.y + r.h - 12));
   ctx.globalAlpha = 1;
@@ -34506,12 +34519,28 @@ function makeBeastCell(idx, x, y, w, h) {
       var clash = petClashHint(d);
       var chip, chipFill, chipInk;
       // 【v1.155】协中框不再重金, 改墨绿; 生物下垫柔光苔纸盘, 小图可读
+      var dimRow = !(selected || isFollow);   // 【v1.215 批B13】压行不压字（B10 系统推广到跟宠四卡）
       drawCodexFrame(ctx, r.x, r.y, r.w, r.h, selected || isFollow, isFollow ? "#5a7a32" : "#6faf4f");
+      // 【v1.215 批B13】未选行 = 整行暖灰底 #5f5e54（亮面只给"正在看的那条"+协战中的那条）；选中 = 奶油+金边由 drawCodexFrame 画。
+      if (dimRow) {
+        ctx.fillStyle = "#5f5e54";
+        fillRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
+        ctx.strokeStyle = "rgba(58,50,32,0.55)";
+        ctx.lineWidth = 1;
+        strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
+        ctx.lineWidth = 1;
+      }
+      ctx.save();
+      if (dimRow) ctx.globalAlpha = 0.55;
       drawCodexBeastPlate(ctx, r.x + 14, r.y + 15, 160, 170, unlocked ? (d.color || null) : mixHex(d.color || "#8a9a6a", "#eef4dc", 0.35));
       if (spr && spr.width > 0) drawSpriteFit(ctx, spr, r.x + 24, r.y + 25, 140, 150);
+      ctx.restore();
       // 【v1.211w】perk 字签改为**叠在图盘右上角的徽章**（原挤在文字列左侧）—— 文字列因此整体左移到 x+174，
       //   名字行独占全宽（右侧价格签 y+26..74 只与名字行同高，名字最坏 8-9 字 ≈ 252px < 预算 320px ✓）
+      ctx.save();
+      if (dimRow) ctx.globalAlpha = 0.45;
       drawCodexChip(ctx, r.x + 126, r.y + 22, 44, 30, glyph, d.color || "#c9a24b", "#2a2418");
+      ctx.restore();
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
       // 【v1.211w O27 样板】字号与纵排（行高 200，墨迹中心对齐图盘中心 y+100）：
@@ -34520,10 +34549,10 @@ function makeBeastCell(idx, x, y, w, h) {
       //   说明最坏 14 字 ≈ 308px ✓、数值最坏 ≈390px ✓、手感最短 ✓ —— 三行全部放得下，无省略号。
       //   （v1.211s/t 的抬字与居中历史见 复盘 P17 前后批次 91c3b90 / 7da8e8c —— 本轮把那套"行内挤三行"
       //     改为"行高翻倍后的舒展排"。）
-      ctx.fillStyle = "#3a5a20";
+      ctx.fillStyle = dimRow ? "#e2e0d2" : "#3a5a20";
       ctx.font = "bold 28px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, d.name + " · " + d.tagline, 320), r.x + 174, r.y + 46);
-      ctx.fillStyle = "#5a6a40";
+      ctx.fillStyle = dimRow ? "#dedccb" : "#5a6a40";
       ctx.font = "bold 22px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, d.desc || "", 434), r.x + 174, r.y + 104);
       // 【v1.211z 第二十五刀】图鉴跟宠页那行数值：琥珀 `#8a5a10` 压在浅卡 `#d4ddbd` 上实测 **4.19:1**
@@ -34531,11 +34560,11 @@ function makeBeastCell(idx, x, y, w, h) {
       //   ⇒ 只把**这一处**压深到 `#7a4e0c`（同色相家族）。
       //   ⚠ **不能全局替换**：同一个 `#8a5a10` 在强化盘等处压在**深盘**上，那里它是对的（见 v1.211z 第九刀）。
       //   回退：把这行改回 `#8a5a10`。
-      ctx.fillStyle = "#7a4e0c";
+      ctx.fillStyle = dimRow ? "#dedccb" : "#7a4e0c";
       ctx.font = "bold 20px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, "伤" + d.petDmg + " / " + d.interval + "s · " + petCodexStars(d), 434), r.x + 174, r.y + 146);
       if (clash) {
-        ctx.fillStyle = "#8a8a72";
+        ctx.fillStyle = dimRow ? "#b8b6a6" : "#8a8a72";
         ctx.font = "bold 17px " + FONT_STACK;
         ctx.fillText(hudFitText(ctx, clash, 434), r.x + 174, r.y + 178);
       }
@@ -34551,7 +34580,10 @@ function makeBeastCell(idx, x, y, w, h) {
         else { chip = "差" + (d.price - (saveData.coins | 0)) + "金"; /* 【v1.167h】codexPoorAmber：同类清理——价格不足是中性信息态，红=错误；改琥珀静默小签（与价格语言 #8a5a10 同族）。回退：chipFill=#c0392b / chipInk=#fff7e0 */ chipFill = "rgba(138,90,16,0.14)"; chipInk = "#7a5210"; }
       } else if (isFollow) { chip = "协战中"; chipFill = "#5a7a32"; chipInk = "#f2f6e4"; }
       else { chip = "点击协战"; chipFill = "#3faf5a"; chipInk = "#fff7e0"; }
+      ctx.save();
+      if (dimRow) ctx.globalAlpha = 0.5;
       drawCodexChip(ctx, r.x + r.w - 130, r.y + 26, 114, 48, chip, chipFill, chipInk);
+      ctx.restore();
     }
   });
 }
@@ -34661,9 +34693,20 @@ function makeCodexEnemyCell(idx, x, y, w, h) {
       grp = codexGroupOf(entry.group);
       r = this.rect;
       selected = GAME.codexEnemySel === entry.id;
+      var dimRow = !selected;   // 【v1.215 批B13】压行不压字（B10 系统推广到图鉴六行）
       drawCodexFrame(ctx, r.x, r.y, r.w, r.h, selected, grp.tint);
+      if (dimRow) {
+        ctx.fillStyle = "#5f5e54";
+        fillRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
+        ctx.strokeStyle = "rgba(58,50,32,0.55)";
+        ctx.lineWidth = 1;
+        strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
+        ctx.lineWidth = 1;
+      }
       // 【v1.155】敌人条目改柔光苔纸盘托底(极淡组色晕), 不再浓色椭圆盖住贴图; 剪影/贴图本体保持 1.152 墨光
       // 【v1.178】缺贴图时盘内画本色软圆+墨缘兜底, 不留空黑格(不逐帧烘焙)
+      ctx.save();
+      if (dimRow) ctx.globalAlpha = 0.55;
       drawCodexBeastPlate(ctx, r.x + 10, r.y + 6, 96, 96, def && def.tint);
       // 【v1.211y O35】敌人图鉴直接显示彩色本体（战斗同款素材，零成本）—— 用户两轮否定黑影剪影墙
       //   （2026-09-25 截图：剪影滤镜让深色怪糊成泥团，且图鉴从未亮过彩色 = 失去"看到敌人"的价值）。
@@ -34694,20 +34737,24 @@ function makeCodexEnemyCell(idx, x, y, w, h) {
         ctx.stroke();
         ctx.lineWidth = 1;
       }
+      ctx.restore();
       glyph = enemyTellGlyph(def);
+      ctx.save();
+      if (dimRow) ctx.globalAlpha = 0.45;
       drawCodexChip(ctx, r.x + 112, r.y + 10, 36, 24, glyph, grp.tint, grp.chipInk || "#fff7e0");   // 【v1.210n】绿/橙组改深墨字
+      ctx.restore();
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = "#3a5a20";
+      ctx.fillStyle = dimRow ? "#e2e0d2" : "#3a5a20";
       ctx.font = "bold 22px " + FONT_STACK;
       ctx.fillText(def ? def.name : entry.id, r.x + 156, r.y + 22);
-      ctx.fillStyle = grp.text || grp.tint;   // 【v1.210n】「读招·」行同因：原 tint 压苔盘 2.06:1
+      ctx.fillStyle = dimRow ? "#dedccb" : (grp.text || grp.tint);   // 【v1.210n】「读招·」行同因：原 tint 压苔盘 2.06:1
       ctx.font = "bold 16px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, "读招·" + entry.tell, r.w - 140), r.x + 112, r.y + 52);
-      ctx.fillStyle = "#7a4e0c";
+      ctx.fillStyle = dimRow ? "#dedccb" : "#7a4e0c";
       ctx.font = "bold 14px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, "出处·" + entry.where + " → 击破入册" + (def ? (" · HP" + def.hp) : ""), r.w - 230), r.x + 112, r.y + 80);
-      drawCodexChip(ctx, r.x + r.w - 100, r.y + 32, 84, 40, grp.name, selected ? grp.tint : "rgba(222,232,198,0.90)", selected ? (grp.chipInk || "#fff7e0") : "#3a4626");   // 【v1.210n】选中态字色按组选（绿/橙→深墨 5.47/4.83）
+      drawCodexChip(ctx, r.x + r.w - 100, r.y + 32, 84, 40, grp.name, selected ? grp.tint : "rgba(226,224,210,0.30)", selected ? (grp.chipInk || "#fff7e0") : "#dedccb");   // 【v1.215 批B13】未选行组签压灰（B10 同套）
     }
   });
 }

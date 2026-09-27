@@ -15,7 +15,7 @@
 <meta name="ai-content-declaration" content="partial">
 <meta name="ai-content-types" content="image,text">
 <meta name="ai-content-provider" content="萌兽不好惹（独立制作）">
-<meta name="ai-content-id" content="MSBHR-1.214">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
+<meta name="ai-content-id" content="MSBHR-1.215">   <!-- ⚠ 改 CONFIG.version 时**必须同步这里**：
                                                                  ci/compliance-notice-check.mjs 会断言两者一致（第 60 轮加） -->
 <meta name="ai-content-notice" content="本游戏部分美术与文本内容由人工智能生成合成">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -668,7 +668,7 @@ var CONFIG = {
   spawnInvSec: 3.5,                 // 【v1.16】开局出生无敌(略长于复活窗): 近身角要把蜂转起来再接手走位
 
   // 版本(关于页/首页版本字与 SAVE_SCHEMA.schemaVersion 联动展示, 文案包约定)
-  version: "1.214",  // 【v1.214 全游戏美术·按 ART-SYSTEM.md 科学规范】用户当面纠正"美术=整个 HTML 的内容美术"。
+  version: "1.215",  // 【v1.215 批B13】「压行不压字」推广到 06 跟宠四卡 / 07 图鉴六行 / 13 暂停构筑 / 14 结算构筑（B10 系统）
                                         //   批A2 战场接地：敌人/主角接地影抬一档 + 默认原野底降一档饱和（审计 B：单位全靠硬贴对比）。
                                         //   ⚠ 版本号必须**纯数字**。
                                         //   ① 13 个模态区域色带全部提饱和/提亮 + 色带/左轨柔光晕；② 模态盘双层伪软影 + 亮橄榄描边 + 顶光 + 上缘高光；
@@ -16923,7 +16923,7 @@ function paintEnemySilhouette(c2, cx, cy, r, color, id) {
 }
 // 【v1.163】AI 美术贴图表 —— 由构建脚本注入 base64（见下方 AI_ART_INJECT 标记）。
 // 表为空时全部回退到原程序化绘制，所以可以安全地"增量替换 + 随时回退"。
-var AI_ART_TABLE = {"bear_hit":"assets/bear_hit.webp","raven_hit":"assets/raven_hit.webp","orbitcrab_hit":"assets/orbitcrab_hit.webp","boomfruit_hit":"assets/boomfruit_hit.webp","sporecap_hit":"assets/sporecap_hit.webp","burrowmole_hit":"assets/burrowmole_hit.webp","rabbit_dead":"assets/rabbit_dead.webp","mouse_dead":"assets/mouse_dead.webp","bear_dead":"assets/bear_dead.webp","fox_dead":"assets/fox_dead.webp","badger_dead":"assets/badger_dead.webp","boar_dead":"assets/boar_dead.webp","monkey_dead":"assets/monkey_dead.webp","boss1_dead":"assets/boss1_dead.webp","boss2_dead":"assets/boss2_dead.webp","boss3_dead":"assets/boss3_dead.webp","leaptoad_dead":"assets/leaptoad_dead.webp","raven_dead":"assets/raven_dead.webp","orbitcrab_dead":"assets/orbitcrab_dead.webp","boomfruit_dead":"assets/boomfruit_dead.webp","sporecap_dead":"assets/sporecap_dead.webp","burrowmole_dead":"assets/burrowmole_dead.webp","hedgehog_dead":"assets/hedgehog_dead.webp","chargerhino_dead":"assets/chargerhino_dead.webp","shieldbug_dead":"assets/shieldbug_dead.webp","honeypot_dead":"assets/honeypot_dead.webp","rollshell_dead":"assets/rollshell_dead.webp","leaptoad":"assets/leaptoad.png","rabbit":"assets/rabbit.png","bear":"assets/bear.webp","mouse":"assets/mouse.png","fox":"assets/fox.png","raven":"assets/raven.png","orbitcrab":"assets/orbitcrab.png","boomfruit":"assets/boomfruit.webp","sporecap":"assets/sporecap.png","burrowmole":"assets/burrowmole.webp","hedgehog":"assets/hedgehog.png","chargerhino":"assets/chargerhino.png","shieldbug":"assets/shieldbug.png","honeypot":"assets/honeypot.png","boss1":"assets/boss1.png","player":"assets/player.png","rollshell":"assets/rollshell.png","gem0":"assets/gem0.webp","gem1":"assets/gem1.webp","gem2":"assets/gem2.webp","coin":"assets/coin.webp","gear_pinebow":"assets/gear_pinebow.webp","gear_thornbow":"assets/gear_thornbow.webp","gear_leafmail":"assets/gear_leafmail.webp","gear_barkplate":"assets/gear_barkplate.webp","gear_dewdrop":"assets/gear_dewdrop.webp","gear_sunbead":"assets/gear_sunbead.webp","gear_vinebelt":"assets/gear_vinebelt.webp","gear_seedbelt":"assets/gear_seedbelt.webp","gear_paws":"assets/gear_paws.webp","gear_thornpaws":"assets/gear_thornpaws.webp","gear_softstep":"assets/gear_softstep.webp","tal_hp":"assets/tal_hp.webp","tal_pickup":"assets/tal_pickup.webp","tal_move":"assets/tal_move.webp","tal_magnet":"assets/tal_magnet.webp","field_magnet":"assets/field_magnet.webp","tal_roar":"assets/tal_roar.webp","tal_heal":"assets/tal_heal.webp","field_drumstick":"assets/field_drumstick.webp","field_bomb":"assets/field_bomb.webp","boss2":"assets/boss2.png","boss3":"assets/boss3.png","badger":"assets/badger.png","boar":"assets/boar.png","monkey":"assets/monkey.png","gear_windstep":"assets/gear_windstep.webp","wpn_pinecone":"assets/wpn_pinecone.webp","wpn_bombnut":"assets/wpn_bombnut.webp","wpn_beeswarm":"assets/wpn_beeswarm.webp","wpn_thunder":"assets/wpn_thunder.webp","wpn_laserflower":"assets/wpn_laserflower.webp","wpn_bladeleaf":"assets/wpn_bladeleaf.webp","wpn_mapledart":"assets/wpn_mapledart.webp","wpn_gurustone":"assets/wpn_gurustone.webp","wpn_acornstorm":"assets/wpn_acornstorm.webp","wpn_bladestorm":"assets/wpn_bladestorm.webp","wpn_megaboom":"assets/wpn_megaboom.webp","wpn_beesguard":"assets/wpn_beesguard.webp","wpn_thunderstorm":"assets/wpn_thunderstorm.webp","wpn_solarflare":"assets/wpn_solarflare.webp","wpn_mapletornado":"assets/wpn_mapletornado.webp","wpn_gurumeteor":"assets/wpn_gurumeteor.webp","wpn_seedvolley":"assets/wpn_seedvolley.webp","wpn_seedcannon":"assets/wpn_seedcannon.webp","wpn_needlespray":"assets/wpn_needlespray.webp","wpn_seedlance":"assets/wpn_seedlance.webp","wpn_dewpulse":"assets/wpn_dewpulse.webp","wpn_tideshield":"assets/wpn_tideshield.webp","wpn_rootwell":"assets/wpn_rootwell.webp","wpn_fluffguard":"assets/wpn_fluffguard.webp","wpn_leafdash":"assets/wpn_leafdash.webp","wpn_peppermine":"assets/wpn_peppermine.webp","wpn_pepperbolt":"assets/wpn_pepperbolt.webp","wpn_maplecross":"assets/wpn_maplecross.webp","wpn_nectarsnap":"assets/wpn_nectarsnap.webp","wpn_gurugravel":"assets/wpn_gurugravel.webp","pas_nectar":"assets/pas_nectar.webp","pas_windbell":"assets/pas_windbell.webp","pas_moss":"assets/pas_moss.webp","pas_magnet":"assets/pas_magnet.webp","pas_wisdom":"assets/pas_wisdom.webp","pas_dandelion":"assets/pas_dandelion.webp","pas_spinachseed":"assets/pas_spinachseed.webp","pas_dewcap":"assets/pas_dewcap.webp","pas_peppercorn":"assets/pas_peppercorn.webp","pas_rootmoss":"assets/pas_rootmoss.webp","pas_mistleaf":"assets/pas_mistleaf.webp","pas_warmfluff":"assets/pas_warmfluff.webp","pas_nesttwig":"assets/pas_nesttwig.webp","pas_nutshell":"assets/pas_nutshell.webp","evo_honeyleg":"assets/evo_honeyleg.webp","evo_chainbomb":"assets/evo_chainbomb.webp","evo_stormag":"assets/evo_stormag.webp","evo_nectardrum":"assets/evo_nectardrum.webp","evo_pepperbomb":"assets/evo_pepperbomb.webp","evo_starag":"assets/evo_starag.webp","evo_feastleg":"assets/evo_feastleg.webp","evo_nestboom":"assets/evo_nestboom.webp","evo_tidegem":"assets/evo_tidegem.webp","capybara":"assets/capybara.png","bunny":"assets/bunny.png","ursa":"assets/ursa.png","zapmouse":"assets/zapmouse.png","oinkpig":"assets/oinkpig.png","shellturtle":"assets/shellturtle.png","veloursheep":"assets/veloursheep.png","chest":"assets/chest.webp","bs_hedgehog":"assets/bs_hedgehog.webp","bs_monkey":"assets/bs_monkey.webp","bs_boss1":"assets/bs_boss1.webp","bs_boss2":"assets/bs_boss2.webp","bs_boss3":"assets/bs_boss3.webp","blt_pinecone":"assets/blt_pinecone.webp","blt_bladeleaf":"assets/blt_bladeleaf.webp","blt_bombnut":"assets/blt_bombnut.webp","blt_beeswarm":"assets/blt_beeswarm.webp","blt_mapledart":"assets/blt_mapledart.webp","blt_gurustone":"assets/blt_gurustone.webp","blt_seedvolley":"assets/blt_seedvolley.webp","blt_acornstorm":"assets/blt_acornstorm.webp","blt_megaboom":"assets/blt_megaboom.webp","blt_beesguard":"assets/blt_beesguard.webp","blt_bladestorm":"assets/blt_bladestorm.webp","blt_mapletornado":"assets/blt_mapletornado.webp","blt_gurumeteor":"assets/blt_gurumeteor.webp","blt_seedcannon":"assets/blt_seedcannon.webp","blt_needlespray":"assets/blt_needlespray.webp","blt_peppermine":"assets/blt_peppermine.webp","blt_fluffguard":"assets/blt_fluffguard.webp","blt_leafdash":"assets/blt_leafdash.webp","blt_maplecross":"assets/blt_maplecross.webp","blt_gurugravel":"assets/blt_gurugravel.webp","blt_seedlance":"assets/blt_seedlance.webp","blt_pethop":"assets/blt_pethop.webp","blt_petorb":"assets/blt_petorb.webp","leaptoad_hit":"assets/leaptoad_hit.webp","rabbit_hit":"assets/rabbit_hit.webp","mouse_hit":"assets/mouse_hit.webp","fox_hit":"assets/fox_hit.webp","hedgehog_hit":"assets/hedgehog_hit.webp","rollshell_hit":"assets/rollshell_hit.webp","badger_hit":"assets/badger_hit.webp","boar_hit":"assets/boar_hit.webp","monkey_hit":"assets/monkey_hit.webp","chargerhino_hit":"assets/chargerhino_hit.webp","shieldbug_hit":"assets/shieldbug_hit.webp","honeypot_hit":"assets/honeypot_hit.webp","boss1_hit":"assets/boss1_hit.webp","boss2_hit":"assets/boss2_hit.webp","boss3_hit":"assets/boss3_hit.webp","hero_shell":"assets/hero_shell.png","hero_grizz":"assets/hero_grizz.png"};   /* AI_ART_INJECT */
+var AI_ART_TABLE = {"bear_hit":"assets/bear_hit.webp","raven_hit":"assets/raven_hit.webp","orbitcrab_hit":"assets/orbitcrab_hit.webp","boomfruit_hit":"assets/boomfruit_hit.webp","sporecap_hit":"assets/sporecap_hit.webp","burrowmole_hit":"assets/burrowmole_hit.webp","rabbit_dead":"assets/rabbit_dead.webp","mouse_dead":"assets/mouse_dead.webp","bear_dead":"assets/bear_dead.webp","fox_dead":"assets/fox_dead.webp","badger_dead":"assets/badger_dead.webp","boar_dead":"assets/boar_dead.webp","monkey_dead":"assets/monkey_dead.webp","boss1_dead":"assets/boss1_dead.webp","boss2_dead":"assets/boss2_dead.webp","boss3_dead":"assets/boss3_dead.webp","leaptoad_dead":"assets/leaptoad_dead.webp","raven_dead":"assets/raven_dead.webp","orbitcrab_dead":"assets/orbitcrab_dead.webp","boomfruit_dead":"assets/boomfruit_dead.webp","sporecap_dead":"assets/sporecap_dead.webp","burrowmole_dead":"assets/burrowmole_dead.webp","hedgehog_dead":"assets/hedgehog_dead.webp","chargerhino_dead":"assets/chargerhino_dead.webp","shieldbug_dead":"assets/shieldbug_dead.webp","honeypot_dead":"assets/honeypot_dead.webp","rollshell_dead":"assets/rollshell_dead.webp","leaptoad":"assets/leaptoad.webp","rabbit":"assets/rabbit.webp","bear":"assets/bear.webp","mouse":"assets/mouse.webp","fox":"assets/fox.webp","raven":"assets/raven.webp","orbitcrab":"assets/orbitcrab.webp","boomfruit":"assets/boomfruit.webp","sporecap":"assets/sporecap.webp","burrowmole":"assets/burrowmole.webp","hedgehog":"assets/hedgehog.webp","chargerhino":"assets/chargerhino.webp","shieldbug":"assets/shieldbug.webp","honeypot":"assets/honeypot.webp","boss1":"assets/boss1.webp","player":"assets/player.webp","rollshell":"assets/rollshell.webp","gem0":"assets/gem0.webp","gem1":"assets/gem1.webp","gem2":"assets/gem2.webp","coin":"assets/coin.webp","gear_pinebow":"assets/gear_pinebow.webp","gear_thornbow":"assets/gear_thornbow.webp","gear_leafmail":"assets/gear_leafmail.webp","gear_barkplate":"assets/gear_barkplate.webp","gear_dewdrop":"assets/gear_dewdrop.webp","gear_sunbead":"assets/gear_sunbead.webp","gear_vinebelt":"assets/gear_vinebelt.webp","gear_seedbelt":"assets/gear_seedbelt.webp","gear_paws":"assets/gear_paws.webp","gear_thornpaws":"assets/gear_thornpaws.webp","gear_softstep":"assets/gear_softstep.webp","tal_hp":"assets/tal_hp.webp","tal_pickup":"assets/tal_pickup.webp","tal_move":"assets/tal_move.webp","tal_magnet":"assets/tal_magnet.webp","field_magnet":"assets/field_magnet.webp","tal_roar":"assets/tal_roar.webp","tal_heal":"assets/tal_heal.webp","field_drumstick":"assets/field_drumstick.webp","field_bomb":"assets/field_bomb.webp","boss2":"assets/boss2.webp","boss3":"assets/boss3.webp","badger":"assets/badger.webp","boar":"assets/boar.webp","monkey":"assets/monkey.webp","gear_windstep":"assets/gear_windstep.webp","wpn_pinecone":"assets/wpn_pinecone.webp","wpn_bombnut":"assets/wpn_bombnut.webp","wpn_beeswarm":"assets/wpn_beeswarm.webp","wpn_thunder":"assets/wpn_thunder.webp","wpn_laserflower":"assets/wpn_laserflower.webp","wpn_bladeleaf":"assets/wpn_bladeleaf.webp","wpn_mapledart":"assets/wpn_mapledart.webp","wpn_gurustone":"assets/wpn_gurustone.webp","wpn_acornstorm":"assets/wpn_acornstorm.webp","wpn_bladestorm":"assets/wpn_bladestorm.webp","wpn_megaboom":"assets/wpn_megaboom.webp","wpn_beesguard":"assets/wpn_beesguard.webp","wpn_thunderstorm":"assets/wpn_thunderstorm.webp","wpn_solarflare":"assets/wpn_solarflare.webp","wpn_mapletornado":"assets/wpn_mapletornado.webp","wpn_gurumeteor":"assets/wpn_gurumeteor.webp","wpn_seedvolley":"assets/wpn_seedvolley.webp","wpn_seedcannon":"assets/wpn_seedcannon.webp","wpn_needlespray":"assets/wpn_needlespray.webp","wpn_seedlance":"assets/wpn_seedlance.webp","wpn_dewpulse":"assets/wpn_dewpulse.webp","wpn_tideshield":"assets/wpn_tideshield.webp","wpn_rootwell":"assets/wpn_rootwell.webp","wpn_fluffguard":"assets/wpn_fluffguard.webp","wpn_leafdash":"assets/wpn_leafdash.webp","wpn_peppermine":"assets/wpn_peppermine.webp","wpn_pepperbolt":"assets/wpn_pepperbolt.webp","wpn_maplecross":"assets/wpn_maplecross.webp","wpn_nectarsnap":"assets/wpn_nectarsnap.webp","wpn_gurugravel":"assets/wpn_gurugravel.webp","pas_nectar":"assets/pas_nectar.webp","pas_windbell":"assets/pas_windbell.webp","pas_moss":"assets/pas_moss.webp","pas_magnet":"assets/pas_magnet.webp","pas_wisdom":"assets/pas_wisdom.webp","pas_dandelion":"assets/pas_dandelion.webp","pas_spinachseed":"assets/pas_spinachseed.webp","pas_dewcap":"assets/pas_dewcap.webp","pas_peppercorn":"assets/pas_peppercorn.webp","pas_rootmoss":"assets/pas_rootmoss.webp","pas_mistleaf":"assets/pas_mistleaf.webp","pas_warmfluff":"assets/pas_warmfluff.webp","pas_nesttwig":"assets/pas_nesttwig.webp","pas_nutshell":"assets/pas_nutshell.webp","evo_honeyleg":"assets/evo_honeyleg.webp","evo_chainbomb":"assets/evo_chainbomb.webp","evo_stormag":"assets/evo_stormag.webp","evo_nectardrum":"assets/evo_nectardrum.webp","evo_pepperbomb":"assets/evo_pepperbomb.webp","evo_starag":"assets/evo_starag.webp","evo_feastleg":"assets/evo_feastleg.webp","evo_nestboom":"assets/evo_nestboom.webp","evo_tidegem":"assets/evo_tidegem.webp","capybara":"assets/capybara.webp","bunny":"assets/bunny.webp","ursa":"assets/ursa.webp","zapmouse":"assets/zapmouse.webp","oinkpig":"assets/oinkpig.webp","shellturtle":"assets/shellturtle.webp","veloursheep":"assets/veloursheep.webp","chest":"assets/chest.webp","bs_hedgehog":"assets/bs_hedgehog.webp","bs_monkey":"assets/bs_monkey.webp","bs_boss1":"assets/bs_boss1.webp","bs_boss2":"assets/bs_boss2.webp","bs_boss3":"assets/bs_boss3.webp","blt_pinecone":"assets/blt_pinecone.webp","blt_bladeleaf":"assets/blt_bladeleaf.webp","blt_bombnut":"assets/blt_bombnut.webp","blt_beeswarm":"assets/blt_beeswarm.webp","blt_mapledart":"assets/blt_mapledart.webp","blt_gurustone":"assets/blt_gurustone.webp","blt_seedvolley":"assets/blt_seedvolley.webp","blt_acornstorm":"assets/blt_acornstorm.webp","blt_megaboom":"assets/blt_megaboom.webp","blt_beesguard":"assets/blt_beesguard.webp","blt_bladestorm":"assets/blt_bladestorm.webp","blt_mapletornado":"assets/blt_mapletornado.webp","blt_gurumeteor":"assets/blt_gurumeteor.webp","blt_seedcannon":"assets/blt_seedcannon.webp","blt_needlespray":"assets/blt_needlespray.webp","blt_peppermine":"assets/blt_peppermine.webp","blt_fluffguard":"assets/blt_fluffguard.webp","blt_leafdash":"assets/blt_leafdash.webp","blt_maplecross":"assets/blt_maplecross.webp","blt_gurugravel":"assets/blt_gurugravel.webp","blt_seedlance":"assets/blt_seedlance.webp","blt_pethop":"assets/blt_pethop.webp","blt_petorb":"assets/blt_petorb.webp","leaptoad_hit":"assets/leaptoad_hit.webp","rabbit_hit":"assets/rabbit_hit.webp","mouse_hit":"assets/mouse_hit.webp","fox_hit":"assets/fox_hit.webp","hedgehog_hit":"assets/hedgehog_hit.webp","rollshell_hit":"assets/rollshell_hit.webp","badger_hit":"assets/badger_hit.webp","boar_hit":"assets/boar_hit.webp","monkey_hit":"assets/monkey_hit.webp","chargerhino_hit":"assets/chargerhino_hit.webp","shieldbug_hit":"assets/shieldbug_hit.webp","honeypot_hit":"assets/honeypot_hit.webp","boss1_hit":"assets/boss1_hit.webp","boss2_hit":"assets/boss2_hit.webp","boss3_hit":"assets/boss3_hit.webp","hero_shell":"assets/hero_shell.webp","hero_grizz":"assets/hero_grizz.webp"};   /* AI_ART_INJECT */
 var AI_ART_READY = {};
 // 【v1.164】自适应分辨率（内存自动压缩）：贴图真正需要的物理像素
 //   = 显示逻辑直径(half*2) × 放大系数(BOSS1.34/精英1.22) × 设备像素比(封顶2)。
@@ -29267,19 +29267,32 @@ function drawBuildChip(ctx, r, row, hot) {
   //   车道色退到左侧细签/右徽底色, 名/值改深墨字, 暂停(drawPausePanel)与结算(drawResultPanel)同一盘语言, 信息全保留。
   ctx.fillStyle = "rgba(16,20,14,0.14)";
   fillRoundRect(ctx, r.x + 1, r.y + 3, r.w, r.h, 8);
-  ctx.fillStyle = hot ? rgbaHex(row.color || "#c9a24b", 0.26) : "rgba(222,232,198,0.94)";
+  ctx.fillStyle = hot ? rgbaHex(row.color || "#c9a24b", 0.26) : "#5f5e54";
   fillRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
-  // 【v1.214 批B8】非热点条目整体压暗一档（审计 B：暂停/结算的胶囊墙等权铺满；亮面只给"点开看"的那条）
+  // 【v1.215 批B13】「压行不压字」全量版（B10 系统推广到暂停/结算共用构筑条目）：
+  //   中程复查结论：批B8 那层 rgba(30,40,24,0.13) 罩只给了"半档"、还把字压暗 ⇒
+  //   未点开条目 = 整行暖灰底 #5f5e54 + 浅字（#e2e0d2 主 / #dedccb 副，实测 4.5:1）；
+  //   点开的条目 = 暖奶油 #f2e0bc + 金边 #e0a83c 2px（与仓库/天赋行同一套语言）。
   if (!hot) {
-    ctx.fillStyle = "rgba(30,40,24,0.13)";
+    ctx.fillStyle = "#5f5e54";
     fillRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
+    ctx.strokeStyle = "rgba(58,50,32,0.55)";
+    ctx.lineWidth = 1;
+    strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
+    ctx.lineWidth = 1;
+  } else {
+    ctx.fillStyle = "#f2e0bc";
+    fillRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
+    ctx.strokeStyle = "#e0a83c";
+    ctx.lineWidth = 2;
+    strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
+    ctx.lineWidth = 1;
   }
-  ctx.strokeStyle = hot ? rgbaHex(row.color || "#c9a24b", 0.9) : "rgba(42,58,24,0.80)";
-  ctx.lineWidth = hot ? 2 : 1.5;
-  strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 8);
-  ctx.lineWidth = 1;
+  ctx.save();
+  ctx.globalAlpha = hot ? 1 : 0.45;
   ctx.fillStyle = row.color || "#c9a24b";
   fillRoundRect(ctx, r.x, r.y + 6, 5, r.h - 12, 2);
+  ctx.restore();
   iconS = Math.min(28, r.h - 10);
   textX = r.x + 12;
   if (row.icon) {
@@ -29293,12 +29306,12 @@ function drawBuildChip(ctx, r, row, hot) {
     badgeW = Math.min(Math.max(40, markW), Math.max(52, r.w * 0.42));
     badgeH = Math.min(24, r.h - 10);
     markX = r.x + r.w - badgeW - 6;
-    ctx.fillStyle = rgbaHex(row.color || "#c9a24b", hot ? 0.30 : 0.16);
+    ctx.fillStyle = hot ? rgbaHex(row.color || "#c9a24b", 0.30) : "rgba(226,224,210,0.18)";
     fillRoundRect(ctx, markX, r.y + (r.h - badgeH) / 2, badgeW, badgeH, 8);
-    ctx.strokeStyle = rgbaHex(row.color || "#c9a24b", 0.55);
+    ctx.strokeStyle = hot ? rgbaHex(row.color || "#c9a24b", 0.55) : "rgba(226,224,210,0.35)";
     ctx.lineWidth = 1;
     strokeRoundRect(ctx, markX, r.y + (r.h - badgeH) / 2, badgeW, badgeH, 8);
-    ctx.fillStyle = "#3a4626";
+    ctx.fillStyle = hot ? "#3a4626" : "#dedccb";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = "bold 13px " + FONT_STACK;
@@ -29307,12 +29320,12 @@ function drawBuildChip(ctx, r, row, hot) {
   }
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.fillStyle = "#2e3c1c";
+  ctx.fillStyle = hot ? "#2e3c1c" : "#e2e0d2";
   ctx.font = "bold 12px " + FONT_STACK;
   // 【v1.208】条目高抬到 81（44 CSS px）后，两行字必须**居中成块** —— 否则会被拉开成上下两截（31→57px 间距）。
   var tyMid = (r.h >= 60) ? (r.y + r.h / 2) : 0;
   ctx.fillText(hudFitText(ctx, row.name || "", tw), textX, tyMid ? (tyMid - 9) : (r.y + 12));
-  ctx.fillStyle = "#55603c";
+  ctx.fillStyle = hot ? "#55603c" : "#dedccb";
   ctx.font = "bold 12px " + FONT_STACK;
   ctx.fillText(hudFitText(ctx, row.sub || "", tw), textX, tyMid ? (tyMid + 9) : (r.y + r.h - 12));
   ctx.globalAlpha = 1;
@@ -34505,12 +34518,28 @@ function makeBeastCell(idx, x, y, w, h) {
       var clash = petClashHint(d);
       var chip, chipFill, chipInk;
       // 【v1.155】协中框不再重金, 改墨绿; 生物下垫柔光苔纸盘, 小图可读
+      var dimRow = !(selected || isFollow);   // 【v1.215 批B13】压行不压字（B10 系统推广到跟宠四卡）
       drawCodexFrame(ctx, r.x, r.y, r.w, r.h, selected || isFollow, isFollow ? "#5a7a32" : "#6faf4f");
+      // 【v1.215 批B13】未选行 = 整行暖灰底 #5f5e54（亮面只给"正在看的那条"+协战中的那条）；选中 = 奶油+金边由 drawCodexFrame 画。
+      if (dimRow) {
+        ctx.fillStyle = "#5f5e54";
+        fillRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
+        ctx.strokeStyle = "rgba(58,50,32,0.55)";
+        ctx.lineWidth = 1;
+        strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
+        ctx.lineWidth = 1;
+      }
+      ctx.save();
+      if (dimRow) ctx.globalAlpha = 0.55;
       drawCodexBeastPlate(ctx, r.x + 14, r.y + 15, 160, 170, unlocked ? (d.color || null) : mixHex(d.color || "#8a9a6a", "#eef4dc", 0.35));
       if (spr && spr.width > 0) drawSpriteFit(ctx, spr, r.x + 24, r.y + 25, 140, 150);
+      ctx.restore();
       // 【v1.211w】perk 字签改为**叠在图盘右上角的徽章**（原挤在文字列左侧）—— 文字列因此整体左移到 x+174，
       //   名字行独占全宽（右侧价格签 y+26..74 只与名字行同高，名字最坏 8-9 字 ≈ 252px < 预算 320px ✓）
+      ctx.save();
+      if (dimRow) ctx.globalAlpha = 0.45;
       drawCodexChip(ctx, r.x + 126, r.y + 22, 44, 30, glyph, d.color || "#c9a24b", "#2a2418");
+      ctx.restore();
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
       // 【v1.211w O27 样板】字号与纵排（行高 200，墨迹中心对齐图盘中心 y+100）：
@@ -34519,10 +34548,10 @@ function makeBeastCell(idx, x, y, w, h) {
       //   说明最坏 14 字 ≈ 308px ✓、数值最坏 ≈390px ✓、手感最短 ✓ —— 三行全部放得下，无省略号。
       //   （v1.211s/t 的抬字与居中历史见 复盘 P17 前后批次 91c3b90 / 7da8e8c —— 本轮把那套"行内挤三行"
       //     改为"行高翻倍后的舒展排"。）
-      ctx.fillStyle = "#3a5a20";
+      ctx.fillStyle = dimRow ? "#e2e0d2" : "#3a5a20";
       ctx.font = "bold 28px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, d.name + " · " + d.tagline, 320), r.x + 174, r.y + 46);
-      ctx.fillStyle = "#5a6a40";
+      ctx.fillStyle = dimRow ? "#dedccb" : "#5a6a40";
       ctx.font = "bold 22px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, d.desc || "", 434), r.x + 174, r.y + 104);
       // 【v1.211z 第二十五刀】图鉴跟宠页那行数值：琥珀 `#8a5a10` 压在浅卡 `#d4ddbd` 上实测 **4.19:1**
@@ -34530,11 +34559,11 @@ function makeBeastCell(idx, x, y, w, h) {
       //   ⇒ 只把**这一处**压深到 `#7a4e0c`（同色相家族）。
       //   ⚠ **不能全局替换**：同一个 `#8a5a10` 在强化盘等处压在**深盘**上，那里它是对的（见 v1.211z 第九刀）。
       //   回退：把这行改回 `#8a5a10`。
-      ctx.fillStyle = "#7a4e0c";
+      ctx.fillStyle = dimRow ? "#dedccb" : "#7a4e0c";
       ctx.font = "bold 20px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, "伤" + d.petDmg + " / " + d.interval + "s · " + petCodexStars(d), 434), r.x + 174, r.y + 146);
       if (clash) {
-        ctx.fillStyle = "#8a8a72";
+        ctx.fillStyle = dimRow ? "#b8b6a6" : "#8a8a72";
         ctx.font = "bold 17px " + FONT_STACK;
         ctx.fillText(hudFitText(ctx, clash, 434), r.x + 174, r.y + 178);
       }
@@ -34550,7 +34579,10 @@ function makeBeastCell(idx, x, y, w, h) {
         else { chip = "差" + (d.price - (saveData.coins | 0)) + "金"; /* 【v1.167h】codexPoorAmber：同类清理——价格不足是中性信息态，红=错误；改琥珀静默小签（与价格语言 #8a5a10 同族）。回退：chipFill=#c0392b / chipInk=#fff7e0 */ chipFill = "rgba(138,90,16,0.14)"; chipInk = "#7a5210"; }
       } else if (isFollow) { chip = "协战中"; chipFill = "#5a7a32"; chipInk = "#f2f6e4"; }
       else { chip = "点击协战"; chipFill = "#3faf5a"; chipInk = "#fff7e0"; }
+      ctx.save();
+      if (dimRow) ctx.globalAlpha = 0.5;
       drawCodexChip(ctx, r.x + r.w - 130, r.y + 26, 114, 48, chip, chipFill, chipInk);
+      ctx.restore();
     }
   });
 }
@@ -34660,9 +34692,20 @@ function makeCodexEnemyCell(idx, x, y, w, h) {
       grp = codexGroupOf(entry.group);
       r = this.rect;
       selected = GAME.codexEnemySel === entry.id;
+      var dimRow = !selected;   // 【v1.215 批B13】压行不压字（B10 系统推广到图鉴六行）
       drawCodexFrame(ctx, r.x, r.y, r.w, r.h, selected, grp.tint);
+      if (dimRow) {
+        ctx.fillStyle = "#5f5e54";
+        fillRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
+        ctx.strokeStyle = "rgba(58,50,32,0.55)";
+        ctx.lineWidth = 1;
+        strokeRoundRect(ctx, r.x, r.y, r.w, r.h, 12);
+        ctx.lineWidth = 1;
+      }
       // 【v1.155】敌人条目改柔光苔纸盘托底(极淡组色晕), 不再浓色椭圆盖住贴图; 剪影/贴图本体保持 1.152 墨光
       // 【v1.178】缺贴图时盘内画本色软圆+墨缘兜底, 不留空黑格(不逐帧烘焙)
+      ctx.save();
+      if (dimRow) ctx.globalAlpha = 0.55;
       drawCodexBeastPlate(ctx, r.x + 10, r.y + 6, 96, 96, def && def.tint);
       // 【v1.211y O35】敌人图鉴直接显示彩色本体（战斗同款素材，零成本）—— 用户两轮否定黑影剪影墙
       //   （2026-09-25 截图：剪影滤镜让深色怪糊成泥团，且图鉴从未亮过彩色 = 失去"看到敌人"的价值）。
@@ -34693,20 +34736,24 @@ function makeCodexEnemyCell(idx, x, y, w, h) {
         ctx.stroke();
         ctx.lineWidth = 1;
       }
+      ctx.restore();
       glyph = enemyTellGlyph(def);
+      ctx.save();
+      if (dimRow) ctx.globalAlpha = 0.45;
       drawCodexChip(ctx, r.x + 112, r.y + 10, 36, 24, glyph, grp.tint, grp.chipInk || "#fff7e0");   // 【v1.210n】绿/橙组改深墨字
+      ctx.restore();
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = "#3a5a20";
+      ctx.fillStyle = dimRow ? "#e2e0d2" : "#3a5a20";
       ctx.font = "bold 22px " + FONT_STACK;
       ctx.fillText(def ? def.name : entry.id, r.x + 156, r.y + 22);
-      ctx.fillStyle = grp.text || grp.tint;   // 【v1.210n】「读招·」行同因：原 tint 压苔盘 2.06:1
+      ctx.fillStyle = dimRow ? "#dedccb" : (grp.text || grp.tint);   // 【v1.210n】「读招·」行同因：原 tint 压苔盘 2.06:1
       ctx.font = "bold 16px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, "读招·" + entry.tell, r.w - 140), r.x + 112, r.y + 52);
-      ctx.fillStyle = "#7a4e0c";
+      ctx.fillStyle = dimRow ? "#dedccb" : "#7a4e0c";
       ctx.font = "bold 14px " + FONT_STACK;
       ctx.fillText(hudFitText(ctx, "出处·" + entry.where + " → 击破入册" + (def ? (" · HP" + def.hp) : ""), r.w - 230), r.x + 112, r.y + 80);
-      drawCodexChip(ctx, r.x + r.w - 100, r.y + 32, 84, 40, grp.name, selected ? grp.tint : "rgba(222,232,198,0.90)", selected ? (grp.chipInk || "#fff7e0") : "#3a4626");   // 【v1.210n】选中态字色按组选（绿/橙→深墨 5.47/4.83）
+      drawCodexChip(ctx, r.x + r.w - 100, r.y + 32, 84, 40, grp.name, selected ? grp.tint : "rgba(226,224,210,0.30)", selected ? (grp.chipInk || "#fff7e0") : "#dedccb");   // 【v1.215 批B13】未选行组签压灰（B10 同套）
     }
   });
 }
