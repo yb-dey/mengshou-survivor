@@ -10989,15 +10989,15 @@ function setCodexEnemyGroup(group) {
 var DATA_HERO = [
   { id: "raccoon", name: "浣熊特工", startWeapon: "pinecone", sprite: "player",
     hpMul: 1, moveMul: 1, aspdMul: 1.06, armorPct: 0, regen: 0, roarNova: false, roarSlam: false,
-    aoeMul: 1, sizeMul: 1, drawScale: 0.95, accent: "#e6c24a",   // 【v1.214 批D2】1.82→0.95：真修复！此前三刀只改 heroDrawScale 缺省值，但三角色各自带 drawScale 字段⇒从未生效（复盘 P1×N）
+    aoeMul: 1, sizeMul: 1, drawScale: 1.25, accent: "#e6c24a",   // 【v1.214 终检】0.95→1.25：终检实测主角 60×90 与杂兵同尺寸（找不到自己）⇒ ≥1.5×杂兵，仍在前审计的 8–15% 屏高带内
     tagline: "风筝直射", trait: "开局松果连弩 · 攻速微加" },
   { id: "shell", name: "壳壳龟", startWeapon: "beeswarm", sprite: "hero_shell",
     hpMul: 1.24, moveMul: 0.84, aspdMul: 1, armorPct: 0.10, regen: 0.35, roarNova: true, roarSlam: false,
-    aoeMul: 1, sizeMul: 1, drawScale: 1.02, accent: "#5ec8e0",
+    aoeMul: 1, sizeMul: 1, drawScale: 1.32, accent: "#5ec8e0",
     tagline: "厚甲近身", trait: "开局蜂群环体 · 咆哮带伤" },
   { id: "grizz", name: "莽莽熊", startWeapon: "bombnut", sprite: "hero_grizz",
     hpMul: 1.14, moveMul: 0.90, aspdMul: 0.97, armorPct: 0.06, regen: 0.12, roarNova: false, roarSlam: true,
-    aoeMul: 1.16, sizeMul: 1.10, drawScale: 1.05, accent: "#e08a3a",
+    aoeMul: 1.16, sizeMul: 1.10, drawScale: 1.38, accent: "#e08a3a",
     tagline: "近身爆裂", trait: "开局爆爆橡果 · 咆哮砸地" }
 ];
 function heroDef(id) {
@@ -17041,7 +17041,25 @@ function preloadAiArt() {
       var S = aiNeed[key] || 128;
       var cv = document.createElement("canvas");
       cv.width = S; cv.height = S;
-      cv.getContext("2d").drawImage(img, 0, 0, S, S);
+      // 【v1.214 终检】像素画**最近邻放大**：smoothing 关掉，硬边像素不打糊
+      //   （终检：跟宠/大厅立绘"发灰发糊+白晕边"= 双线性放大把像素块磨成渐变）
+      var c2 = cv.getContext("2d");
+      c2.imageSmoothingEnabled = false;
+      if (c2.imageSmoothingQuality !== undefined) try { c2.imageSmoothingQuality = "low"; } catch (e) {}
+      c2.drawImage(img, 0, 0, S, S);
+      // 【v1.214 复检】1 比特 alpha + 轻对比：半透明边沿像素是"白霜/白晕"根源（复检：跟宠仍蒙灰雾）
+      //   alpha<128→0、否则→255；RGB 对比 ×1.10 去灰。全表 AI 贴图统一吃这一道。
+      try {
+        var d = c2.getImageData(0, 0, S, S);
+        var px = d.data, i, v;
+        for (i = 0; i < px.length; i += 4) {
+          px[i + 3] = px[i + 3] < 128 ? 0 : 255;
+          v = (px[i] - 128) * 1.10 + 128; px[i] = v < 0 ? 0 : (v > 255 ? 255 : v);
+          v = (px[i + 1] - 128) * 1.10 + 128; px[i + 1] = v < 0 ? 0 : (v > 255 ? 255 : v);
+          v = (px[i + 2] - 128) * 1.10 + 128; px[i + 2] = v < 0 ? 0 : (v > 255 ? 255 : v);
+        }
+        c2.putImageData(d, 0, 0);
+      } catch (e) { /* stub 环境无像素 API 时忽略 */ }
       cv.half = S / 2;
       AI_ART_READY[key] = cv;
       aiDone();
@@ -18588,7 +18606,7 @@ function strokeActorCanvas(src, ink, rim, offMul) {
     s.globalCompositeOperation = "source-in";
     s.fillStyle = rim;
     s.fillRect(0, 0, w, h);
-    c.globalAlpha = 0.42;
+    c.globalAlpha = 0.22;   // 【v1.214 终检】0.42→0.22：跟宠头像"白晕边"=受光边太亮（终检 06 页最明显）
     c.drawImage(shine, -Math.max(1, (off * 0.45) | 0), -Math.max(1, (off * 0.45) | 0));
     c.globalAlpha = 1;
   }
@@ -28014,7 +28032,8 @@ function cardRarityColor(opt) {
 }
 function loadoutTrayPos(slotIdx) {
   var p = hudChromeLayout().pause;
-  var x = p.x + 6;
+  // 【v1.214 终检】x 从 pause.x+6 改右缘内缩：48px 图标贴边被裁（终检：右上角绿色圆弧被切）
+  var x = CONFIG.viewW - CONFIG.loadoutIconS - 12;
   var y = p.y + p.s + 6 + slotIdx * (CONFIG.loadoutIconS + 8);
   return { x: x, y: y };
 }
