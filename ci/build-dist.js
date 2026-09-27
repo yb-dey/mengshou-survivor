@@ -46,6 +46,16 @@ keys.forEach(function (k) {
   totalBytes += buf.length;
 });
 
+// 【v1.214 美术】清理表里已无引用的陈旧素材：贴图从 webp 换 png（或键改名）后，
+//   旧文件会滞留在 assets/ ⇒ dist/assets 文件数 ≠ 表键数 ⇒ 下游 smoke ⑪
+//   "包内 N 张 ≠ 成功加载 M 张" 被误触（本轮实测：187 文件 vs 178 键 = 9 张陈旧 webp）。
+const referenced = new Set(Object.values(pathMap).map((p) => path.basename(p)));
+const staleRemoved = [];
+for (const f of fs.readdirSync(ASSETS)) {
+  if (!referenced.has(f)) { fs.unlinkSync(path.join(ASSETS, f)); staleRemoved.push(f); }
+}
+if (staleRemoved.length) console.log(`  清理陈旧素材 ${staleRemoved.length} 个: ${staleRemoved.slice(0, 6).join(', ')}${staleRemoved.length > 6 ? ' …' : ''}`);
+
 s = s.replace(re, 'var AI_ART_TABLE = ' + JSON.stringify(pathMap) + ';   /* AI_ART_INJECT */');
 
 const outHtml = path.join(OUT, '萌兽消消岛.html');
