@@ -89,23 +89,37 @@ def main():
     pipe.set_progress_bar_config(disable=False)
     print(f"模型加载完成 {time.time() - t0:.1f}s", flush=True)
 
+    # 【萌兽改版】负面提示词：把"伪人/恐怖谷/惊悚"从源头堵死（用户 09-27 定调：萌兽=可爱，元气骑士=风格）
+    NEG = os.environ.get("ART_NEG",
+        "realistic, photorealistic, horror, scary, creepy, uncanny valley, human face, human body, "
+        "gore, monster, zombie, dark, grim, ugly, dirty, text, watermark, multiple characters")
+
     for t in tasks:
-        ref_path = REF_DIR / t["ref"]
-        if not ref_path.exists():
-            cands = sorted(REF_DIR.glob("*.png"))
-            if not cands:
-                print(f"✗ 找不到参考图 {ref_path}，且 ref/ 为空 ⇒ 跳过 {t['name']}")
-                continue
-            ref_path = cands[0]
-        img = Image.open(ref_path).convert("RGB").resize((SIZE, SIZE), Image.LANCZOS)
+        if t["ref"] == "none":
+            # 纯文生图：白底 + strength=1.0（全量去噪）⇒ 不依赖任何旧立绘，杜绝"照着旧图画"
+            img = Image.new("RGB", (SIZE, SIZE), (255, 255, 255))
+            strength = 1.0
+            refname = "none(text2img)"
+        else:
+            ref_path = REF_DIR / t["ref"]
+            if not ref_path.exists():
+                cands = sorted(REF_DIR.glob("*.png"))
+                if not cands:
+                    print(f"✗ 找不到参考图 {ref_path}，且 ref/ 为空 ⇒ 跳过 {t['name']}")
+                    continue
+                ref_path = cands[0]
+            img = Image.open(ref_path).convert("RGB").resize((SIZE, SIZE), Image.LANCZOS)
+            strength = t["strength"]
+            refname = ref_path.name
         ts = time.time()
-        out = pipe(prompt=t["prompt"], image=img, strength=t["strength"],
+        out = pipe(prompt=t["prompt"], image=img, strength=strength,
+                   negative_prompt=NEG,
                    guidance_scale=t["guidance"], num_inference_steps=STEPS).images[0]
         out_path = OUT_DIR / f"{t['name']}.png"
         out.save(out_path)
         meta = {"name": t["name"], "model": MODEL, "prompt": t["prompt"],
-                "negative": "", "strength": t["strength"], "guidance": t["guidance"],
-                "steps": STEPS, "size": SIZE, "ref": ref_path.name,
+                "negative": NEG, "strength": strength, "guidance": t["guidance"],
+                "steps": STEPS, "size": SIZE, "ref": refname,
                 "lora": LORA, "lora_weight": LORA_WEIGHT,
                 "seconds": round(time.time() - ts, 1)}
         (LOG_DIR / f"{t['name']}.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
