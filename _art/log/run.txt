@@ -6,30 +6,30 @@
 任务数 6 · 模型 stabilityai/sd-turbo · steps 4 · size 512 · lora （无）
 /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.
   warnings.warn(
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.
   deprecate("torch_dtype", "1.0.0", _TORCH_DTYPE_DEPRECATION_MESSAGE)
-Fetching 12 files:   0%|          | 0/12 [00:00<?, ?it/s]Fetching 12 files:  17%|█▋        | 2/12 [00:00<00:02,  4.24it/s]Fetching 12 files:  75%|███████▌  | 9/12 [00:00<00:00, 15.53it/s]Fetching 12 files: 100%|██████████| 12/12 [00:17<00:00,  1.99s/it]Fetching 12 files: 100%|██████████| 12/12 [00:17<00:00,  1.49s/it]
-Loading pipeline components...:   0%|          | 0/5 [00:00<?, ?it/s]Loading pipeline components...:  40%|████      | 2/5 [00:00<00:00, 17.53it/s]
+Fetching 12 files:   0%|          | 0/12 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 12 files:  17%|█▋        | 2/12 [00:00<00:01,  9.24it/s]Fetching 12 files:  25%|██▌       | 3/12 [00:00<00:01,  4.94it/s]Fetching 12 files:  75%|███████▌  | 9/12 [00:00<00:00, 13.57it/s]Fetching 12 files:  92%|█████████▏| 11/12 [00:09<00:01,  1.30s/it]Fetching 12 files: 100%|██████████| 12/12 [00:17<00:00,  2.24s/it]Fetching 12 files: 100%|██████████| 12/12 [00:17<00:00,  1.42s/it]
+Loading pipeline components...:   0%|          | 0/5 [00:00<?, ?it/s]
 Loading weights:   0%|          | 0/372 [00:00<?, ?it/s][A
-Loading weights:  95%|█████████▌| 354/372 [00:00<00:00, 3512.77it/s][ALoading weights: 100%|██████████| 372/372 [00:00<00:00, 3538.87it/s]
-Loading pipeline components...:  80%|████████  | 4/5 [00:00<00:00,  9.39it/s]Loading pipeline components...: 100%|██████████| 5/5 [00:00<00:00, 11.48it/s]
+Loading weights:  88%|████████▊ | 329/372 [00:00<00:00, 3288.66it/s][ALoading weights: 100%|██████████| 372/372 [00:00<00:00, 3443.84it/s]
+Loading pipeline components...:  20%|██        | 1/5 [00:00<00:00,  4.01it/s]Loading pipeline components...:  60%|██████    | 3/5 [00:00<00:00,  8.69it/s]Loading pipeline components...: 100%|██████████| 5/5 [00:00<00:00, 11.88it/s]
 已启用 enable_attention_slicing
 跳过 enable_vae_slicing: 'StableDiffusionImg2ImgPipeline' object has no attribute 'enable_vae_slicing'
 跳过 enable_vae_tiling: 'StableDiffusionImg2ImgPipeline' object has no attribute 'enable_vae_tiling'
-模型加载完成 20.1s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.87s/it]100%|██████████| 2/2 [00:11<00:00,  5.86s/it]100%|██████████| 2/2 [00:11<00:00,  5.86s/it]
-✓ rabbit_v6 → rabbit_v6.png  32.6s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.78s/it]100%|██████████| 2/2 [00:11<00:00,  5.79s/it]100%|██████████| 2/2 [00:11<00:00,  5.79s/it]
-✓ mouse_v6 → mouse_v6.png  32.4s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.78s/it]100%|██████████| 2/2 [00:11<00:00,  5.76s/it]100%|██████████| 2/2 [00:11<00:00,  5.76s/it]
-✓ bear_v6 → bear_v6.png  32.3s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.80s/it]100%|██████████| 2/2 [00:11<00:00,  5.81s/it]100%|██████████| 2/2 [00:11<00:00,  5.81s/it]
-✓ fox_v6 → fox_v6.png  32.4s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.80s/it]100%|██████████| 2/2 [00:11<00:00,  5.82s/it]100%|██████████| 2/2 [00:11<00:00,  5.81s/it]
-✓ hedgehog_v6 → hedgehog_v6.png  32.4s
-  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.81s/it]100%|██████████| 2/2 [00:11<00:00,  5.84s/it]100%|██████████| 2/2 [00:11<00:00,  5.84s/it]
-✓ boar_v6 → boar_v6.png  32.6s
+模型加载完成 19.1s
+  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.56s/it]100%|██████████| 2/2 [00:11<00:00,  5.52s/it]100%|██████████| 2/2 [00:11<00:00,  5.53s/it]
+✓ rabbit_v6 → rabbit_v6.png  31.3s
+  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.51s/it]100%|██████████| 2/2 [00:11<00:00,  5.51s/it]100%|██████████| 2/2 [00:11<00:00,  5.51s/it]
+✓ mouse_v6 → mouse_v6.png  31.3s
+  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.49s/it]100%|██████████| 2/2 [00:11<00:00,  5.50s/it]100%|██████████| 2/2 [00:11<00:00,  5.50s/it]
+✓ bear_v6 → bear_v6.png  31.2s
+  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.54s/it]100%|██████████| 2/2 [00:11<00:00,  5.54s/it]100%|██████████| 2/2 [00:11<00:00,  5.54s/it]
+✓ fox_v6 → fox_v6.png  31.3s
+  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.52s/it]100%|██████████| 2/2 [00:11<00:00,  5.50s/it]100%|██████████| 2/2 [00:11<00:00,  5.51s/it]
+✓ hedgehog_v6 → hedgehog_v6.png  31.2s
+  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:05<00:05,  5.61s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]100%|██████████| 2/2 [00:11<00:00,  5.60s/it]
+✓ boar_v6 → boar_v6.png  31.5s
 
 === exit=0 ===
 ---- 环境自述 ----
