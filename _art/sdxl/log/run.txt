@@ -11,22 +11,34 @@
 [WARN   ] model_builders.cpp:606  - No valid VAE specified with --vae or --force-sdxl-vae-conv-scale flag set, using Conv2D scale 0.031
 [INFO   ] diffusion_engine.cpp:1327 - total params memory size = 2678.64MB (VRAM 0.00MB, RAM 2678.64MB): text_encoders 585.42MB(RAM), diffusion_model 1933.54MB(RAM), vae 159.68MB(RAM), controlnet 0.00MB(N/A), extensions 0.00MB(N/A)
 [INFO   ] diffusion_engine.cpp:1446 - running in eps-prediction mode
-[INFO   ] image.cpp:814  - generate_image 1024x1024
+[INFO   ] image.cpp:814  - generate_image 832x832
 [INFO   ] denoiser.hpp:1129 - get_sigmas with discrete scheduler
 [INFO   ] request.cpp:420  - sampling using DPM++ (2M) method
 [INFO   ] ggml_graph_cut.cpp:1032 - clip build cached graph cut plan done (taking 0 ms)
   |#                                                 | 2/178 - 0.00MB/s[K  |##################################################| 178/178 - 566.53MB/s[K
 [INFO   ] model_loader.cpp:1378 - loading tensors completed, taking 0.20s (read: 0.01s, memcpy: 0.00s, convert: 0.00s, copy_to_backend: 0.00s)
 [INFO   ] ggml_graph_cut.cpp:1032 - clip build cached graph cut plan done (taking 2 ms)
-  |#                                                 | 2/374 - 0.00MB/s[K  |##################################################| 374/374 - 2.15GB/s[K
+  |#                                                 | 2/374 - 0.00MB/s[K  |##################################################| 374/374 - 2.14GB/s[K
 [INFO   ] model_loader.cpp:1378 - loading tensors completed, taking 0.20s (read: 0.03s, memcpy: 0.00s, convert: 0.01s, copy_to_backend: 0.00s)
 [INFO   ] ggml_graph_cut.cpp:1032 - clip build cached graph cut plan done (taking 2 ms)
-  |##################################################| 15/15 - 1.86GB/s[K
-[INFO   ] model_loader.cpp:1378 - loading tensors completed, taking 0.01s (read: 0.00s, memcpy: 0.00s, convert: 0.00s, copy_to_backend: 0.00s)
-[INFO   ] ggml_graph_cut.cpp:1032 - clip build cached graph cut plan done (taking 1 ms)
-[INFO   ] image.cpp:529  - get_learned_condition completed, taking 4.11s
+  |############################################      | 13/15 - 707.86MB/s[K  |##################################################| 15/15 - 55.86MB/s[K
+[INFO   ] model_loader.cpp:1378 - loading tensors completed, taking 0.20s (read: 0.00s, memcpy: 0.00s, convert: 0.00s, copy_to_backend: 0.00s)
+[INFO   ] ggml_graph_cut.cpp:1032 - clip build cached graph cut plan done (taking 2 ms)
+[INFO   ] image.cpp:529  - get_learned_condition completed, taking 4.37s
 [INFO   ] image.cpp:866  - generating image: 1/1 - seed 42
-[INFO   ] ggml_graph_cut.cpp:1032 - unet build cached graph cut plan done (taking 7 ms)
-  |#                                                 | 24/1680 - 797.36MB/s[K  |##################################################| 1680/1680 - 9.15GB/s[K
-[INFO   ] model_loader.cpp:1378 - loading tensors completed, taking 0.21s (read: 0.15s, memcpy: 0.00s, convert: 0.01s, copy_to_backend: 0.00s)
-  |==>                                               | 1/24 - 161.54s/it[K  |====>                                             | 2/24 - 160.93s/it[K  |======>                                           | 3/24 - 160.96s/it[K  |========>                                         | 4/24 - 160.99s/it[K  |==========>                                       | 5/24 - 160.87s/it[K  |============>                                     | 6/24 - 160.90s/it[K  |==============>                                   | 7/24 - 160.90s/it[K  |================>                                 | 8/24 - 160.45s/it[K  |==================>                               | 9/24 - 160.44s/it[K  |====================>                             | 10/24 - 160.58s/it[K  |======================>                           | 11/24 - 160.45s/it[K
+[INFO   ] ggml_graph_cut.cpp:1032 - unet build cached graph cut plan done (taking 8 ms)
+  |#                                                 | 4/1680 - 7.53MB/s[K  |##################################################| 1680/1680 - 9.29GB/s[K
+[INFO   ] model_loader.cpp:1378 - loading tensors completed, taking 0.20s (read: 0.16s, memcpy: 0.00s, convert: 0.01s, copy_to_backend: 0.00s)
+  |==>                                               | 1/20 - 98.50s/it[K  |=====>                                            | 2/20 - 97.47s/it[K  |=======>                                          | 3/20 - 97.62s/it[K  |==========>                                       | 4/20 - 97.62s/it[K  |============>                                     | 5/20 - 97.61s/it[K  |===============>                                  | 6/20 - 97.48s/it[K  |=================>                                | 7/20 - 97.47s/it[K  |====================>                             | 8/20 - 97.60s/it[K  |======================>                           | 9/20 - 97.59s/it[K  |=========================>                        | 10/20 - 97.65s/it[K  |===========================>                      | 11/20 - 97.60s/it[K  |==============================>                   | 12/20 - 97.55s/it[K  |================================>                 | 13/20 - 97.60s/it[K  |===================================>              | 14/20 - 97.69s/it[K  |=====================================>            | 15/20 - 97.71s/it[K  |========================================>         | 16/20 - 97.55s/it[K  |==========================================>       | 17/20 - 97.71s/it[K  |=============================================>    | 18/20 - 97.68s/it[K  |===============================================>  | 19/20 - 97.53s/it[K  |==================================================| 20/20 - 97.46s/it[K
+[INFO   ] image.cpp:899  - sampling completed, taking 1952.69s
+[INFO   ] image.cpp:911  - generating 1 latent images completed, taking 1952.69s
+[INFO   ] image.cpp:554  - decoding 1 latents
+[INFO   ] ggml_graph_cut.cpp:1032 - vae build cached graph cut plan done (taking 0 ms)
+  |#                                                 | 2/140 - 0.00MB/s[K  |##################################################| 140/140 - 464.93MB/s[K
+[INFO   ] model_loader.cpp:1378 - loading tensors completed, taking 0.20s (read: 0.01s, memcpy: 0.00s, convert: 0.00s, copy_to_backend: 0.00s)
+[INFO   ] image.cpp:620  - latent 1 decoded, taking 105.38s
+[INFO   ] image.cpp:624  - decode_first_stage completed, taking 105.38s
+[INFO   ] image.cpp:1050 - generate_image completed in 2062.46s
+[INFO   ] main.cpp:497  - save result image 0 to '_art/sdxl/out/shieldbug_cloud.png' (success)
+[INFO   ] main.cpp:573  - 1/1 images saved
+exit=0
