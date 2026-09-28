@@ -17,7 +17,8 @@ permissions:
 jobs:
   gen:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 55
+    # 第 1 跑实测：4 核 runner 上 1024/24 步 ≈ 30 分钟+（被 35 分超时杀）⇒ 降 832/20 步（~0.66x像素）求首图证据
     env:
       GGUF: ${{ github.event.inputs.gguf || 'animagine-xl-4.0-Q4_K.gguf' }}
     steps:
@@ -46,8 +47,8 @@ jobs:
           PROMPT=$(sed -n '1p' _art/sdxl/prompt.txt)
           NEG=$(sed -n '2p' _art/sdxl/prompt.txt)
           "$BIN" -M img_gen -m model.gguf -p "$PROMPT" -n "$NEG" \
-            -o _art/sdxl/out/shieldbug_cloud.png -W 1024 -H 1024 \
-            --steps 24 --cfg-scale 5.0 --sampling-method dpm++2m -s 42 \
+            -o _art/sdxl/out/shieldbug_cloud.png -W 832 -H 832 \
+            --steps 20 --cfg-scale 5.0 --sampling-method dpm++2m -s 42 \
             > _art/sdxl/log/run.txt 2>&1
           echo "exit=$?" >> _art/sdxl/log/run.txt
           head -c 2000 _art/sdxl/log/run.txt
