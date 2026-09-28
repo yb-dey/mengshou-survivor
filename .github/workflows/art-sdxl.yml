@@ -25,7 +25,7 @@ jobs:
 
       - name: 构建 stable-diffusion.cpp（官方源码）
         run: |
-          git clone --depth 1 https://github.com/leejet/stable-diffusion.cpp sdcpp
+          git clone --depth 1 --recursive https://github.com/leejet/stable-diffusion.cpp sdcpp
           cmake -S sdcpp -B sdcpp/build -DCMAKE_BUILD_TYPE=Release > /tmp/cmake.log 2>&1 || { tail -20 /tmp/cmake.log; exit 1; }
           cmake --build sdcpp/build -j 4 --target sd-cli > /tmp/build.log 2>&1 || cmake --build sdcpp/build -j 4 > /tmp/build.log 2>&1
           BIN=$(find sdcpp/build -type f -name "sd-cli" | head -1)
