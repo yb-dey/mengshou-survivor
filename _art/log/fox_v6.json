@@ -1,0 +1,14 @@
+{
+  "name": "fox_v6",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "slim orange fox creature on all fours with raised bushy tail, small sharp focused eyes, thick dark outline, vivid saturated colors, cute simple mobile game enemy sprite, full body, plain white background",
+  "negative": "realistic, photorealistic, horror, scary, creepy, uncanny valley, human face, human body, gore, monster, zombie, dark, grim, ugly, dirty, text, watermark, multiple characters, half-closed eyes, sleepy eyes, doll eyes, gradient background, crown, extra limbs, extra animal, props",
+  "strength": 0.55,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "fox.png",
+  "lora": "",
+  "lora_weight": "",
+  "seconds": 32.4
+}

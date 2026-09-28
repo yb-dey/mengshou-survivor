@@ -1,0 +1,14 @@
+{
+  "name": "mouse_v6",
+  "model": "stabilityai/sd-turbo",
+  "prompt": "small grey mouse creature crouching on all fours, small beady focused eyes, long thin tail, holding a tiny seed, thick dark outline, vivid saturated colors, cute simple mobile game enemy sprite, full body, plain white background",
+  "negative": "realistic, photorealistic, horror, scary, creepy, uncanny valley, human face, human body, gore, monster, zombie, dark, grim, ugly, dirty, text, watermark, multiple characters, half-closed eyes, sleepy eyes, doll eyes, gradient background, crown, extra limbs, extra animal, props",
+  "strength": 0.55,
+  "guidance": 0.0,
+  "steps": 4,
+  "size": 512,
+  "ref": "mouse.png",
+  "lora": "",
+  "lora_weight": "",
+  "seconds": 32.4
+}
