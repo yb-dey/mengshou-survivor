@@ -1,0 +1,61 @@
+name: art-sdxl
+# 云端 SDXL 质量试验（用户问"云端质量好用吗"→ 当场给证据）：
+#   引擎 = stable-diffusion.cpp 官方源码现构建（leejet/stable-diffusion.cpp，当日活跃仓库）
+#   权重 = animagine-xl-4.0-GGUF Q4_K（与本地 fp16 同一模型；转换器自述导出正确、单包含全部组件）
+#   runner 只有 16GB/4核 ⇒ 这正是当年"SDXL 档两败"最可能的死因（diffusers 全精度放不下、fp16-CPU 慢死）；
+#   sd.cpp 的 Q4 量化 + 原生 C++ AVX-512 就是为这种机器设计的。
+# 产物与日志（含二进制 -h 输出，防参数名漂移无据可对）无论成败都提交回 _art/sdxl/。
+on:
+  workflow_dispatch:
+    inputs:
+      gguf:
+        description: 'GGUF 文件名'
+        required: false
+        default: 'animagine-xl-4.0-Q4_K.gguf'
+permissions:
+  contents: write
+jobs:
+  gen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GGUF: ${{ github.event.inputs.gguf || 'animagine-xl-4.0-Q4_K.gguf' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 构建 stable-diffusion.cpp（官方源码）
+        run: |
+          git clone --depth 1 https://github.com/leejet/stable-diffusion.cpp sdcpp
+          cmake -S sdcpp -B sdcpp/build -DCMAKE_BUILD_TYPE=Release > /tmp/cmake.log 2>&1 || { tail -20 /tmp/cmake.log; exit 1; }
+          cmake --build sdcpp/build -j 4 --target sd-cli > /tmp/build.log 2>&1 || cmake --build sdcpp/build -j 4 > /tmp/build.log 2>&1
+          BIN=$(find sdcpp/build -type f -name "sd-cli" | head -1)
+          [ -z "$BIN" ] && BIN=$(find sdcpp/build -type f -name "sd" | head -1)
+          echo "BIN=$BIN" >> "$GITHUB_ENV"
+          echo "使用二进制: $BIN"
+
+      - name: 下载量化权重（hf-mirror）
+        run: |
+          curl -sL -o model.gguf "https://hf-mirror.com/offgrid-ai/animagine-xl-4.0-GGUF/resolve/main/$GGUF"
+          ls -la model.gguf
+
+      - name: 渲染测试图（盾甲虫）
+        run: |
+          mkdir -p _art/sdxl/out _art/sdxl/log
+          set +e
+          "$BIN" -h > _art/sdxl/log/help.txt 2>&1
+          PROMPT=$(sed -n '1p' _art/sdxl/prompt.txt)
+          NEG=$(sed -n '2p' _art/sdxl/prompt.txt)
+          "$BIN" -M img_gen -m model.gguf -p "$PROMPT" -n "$NEG" \
+            -o _art/sdxl/out/shieldbug_cloud.png -W 1024 -H 1024 \
+            --steps 24 --cfg-scale 5.0 --sampling-method dpm++2m -s 42 \
+            > _art/sdxl/log/run.txt 2>&1
+          echo "exit=$?" >> _art/sdxl/log/run.txt
+          head -c 2000 _art/sdxl/log/run.txt
+
+      - name: 产物与日志回仓（无论成败）
+        if: always()
+        run: |
+          git config user.name "art-bot"
+          git config user.email "art-bot@users.noreply.github.com"
+          git add -A _art/sdxl
+          git diff --cached --quiet && echo "无变化" || { git commit -m "art-sdxl: 云端SDXL试验产物/日志"; git push; }
