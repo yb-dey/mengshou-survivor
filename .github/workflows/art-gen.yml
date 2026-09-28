@@ -32,11 +32,11 @@ jobs:
       #   LoRA 是社区专门拿像素画微调的（触发词 "pixel art, PixArFK"），base=SD1.5 且未设 gated。
       #   ⚠ 换 LoRA 后 guidance 必须给（SD1.5 要 ~7.5；sd-turbo 那套 guidance=0 不适用）⇒ 写在 prompt.txt 第 4 列。
       #   回退：把 ART_MODEL/ART_STEPS 改回 sd-turbo/4 并清空 ART_LORA 即可（gen.py 未设 LORA 时行为不变）。
-      ART_MODEL: stable-diffusion-v1-5/stable-diffusion-v1-5
-      ART_STEPS: '20'   # 【批次1b】回 20 步：10 步背景噪点太重，flood-fill 抠不净
+      # 【第 152 轮】**换回 sd-turbo** = 用户认可的那套软萌画风的引擎（SD1.5+像素 LoRA 那套已被他否掉）。
+      #   本轮目标不是换风格，而是修"同一张脸"病：四脚着地 · 小眼聚神 · 手里有道具。
+      ART_MODEL: stabilityai/sd-turbo
+      ART_STEPS: '4'
       ART_SIZE: '512'
-      ART_LORA: artificialguybr/pixelartredmond-1-5v-pixel-art-loras-for-sd-1-5
-      ART_LORA_WEIGHT: PixelArtRedmond15V-PixelArt-PIXARFK.safetensors
     steps:
       - uses: actions/checkout@v4
 
