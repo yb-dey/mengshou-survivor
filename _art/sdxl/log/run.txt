@@ -1,0 +1,32 @@
+[INFO   ] diffusion_engine.cpp:725  - loading model from 'model.gguf'
+[INFO   ] model_loader.cpp:215  - load model.gguf using gguf format
+[INFO   ] diffusion_engine.cpp:995  - Version: SDXL 
+[WARN   ] backend_fit.cpp:444  - auto-fit: no GPU devices; using the default backend
+[INFO   ] diffusion_engine.cpp:1522 - Weight type stat:                      f16: 1291 |    q4_K: 1222 
+[INFO   ] diffusion_engine.cpp:1523 - Conditioner weight type stat:          f16: 262  |    q4_K: 323  
+[INFO   ] diffusion_engine.cpp:1524 - Diffusion model weight type stat:      f16: 822  |    q4_K: 858  
+[INFO   ] diffusion_engine.cpp:1525 - VAE weight type stat:                  f16: 207  |    q4_K: 41   
+[INFO   ] model_builders.cpp:625  - using VAE for encoding / decoding
+[INFO   ] auto_encoder_kl.hpp:529  - vae decoder: ch = 128
+[WARN   ] model_builders.cpp:606  - No valid VAE specified with --vae or --force-sdxl-vae-conv-scale flag set, using Conv2D scale 0.031
+[INFO   ] diffusion_engine.cpp:1327 - total params memory size = 2678.64MB (VRAM 0.00MB, RAM 2678.64MB): text_encoders 585.42MB(RAM), diffusion_model 1933.54MB(RAM), vae 159.68MB(RAM), controlnet 0.00MB(N/A), extensions 0.00MB(N/A)
+[INFO   ] diffusion_engine.cpp:1446 - running in eps-prediction mode
+[INFO   ] image.cpp:814  - generate_image 1024x1024
+[INFO   ] denoiser.hpp:1129 - get_sigmas with discrete scheduler
+[INFO   ] request.cpp:420  - sampling using DPM++ (2M) method
+[INFO   ] ggml_graph_cut.cpp:1032 - clip build cached graph cut plan done (taking 0 ms)
+  |#                                                 | 2/178 - 0.00MB/s[K  |##################################################| 178/178 - 566.53MB/s[K
+[INFO   ] model_loader.cpp:1378 - loading tensors completed, taking 0.20s (read: 0.01s, memcpy: 0.00s, convert: 0.00s, copy_to_backend: 0.00s)
+[INFO   ] ggml_graph_cut.cpp:1032 - clip build cached graph cut plan done (taking 2 ms)
+  |#                                                 | 2/374 - 0.00MB/s[K  |##################################################| 374/374 - 2.15GB/s[K
+[INFO   ] model_loader.cpp:1378 - loading tensors completed, taking 0.20s (read: 0.03s, memcpy: 0.00s, convert: 0.01s, copy_to_backend: 0.00s)
+[INFO   ] ggml_graph_cut.cpp:1032 - clip build cached graph cut plan done (taking 2 ms)
+  |##################################################| 15/15 - 1.86GB/s[K
+[INFO   ] model_loader.cpp:1378 - loading tensors completed, taking 0.01s (read: 0.00s, memcpy: 0.00s, convert: 0.00s, copy_to_backend: 0.00s)
+[INFO   ] ggml_graph_cut.cpp:1032 - clip build cached graph cut plan done (taking 1 ms)
+[INFO   ] image.cpp:529  - get_learned_condition completed, taking 4.11s
+[INFO   ] image.cpp:866  - generating image: 1/1 - seed 42
+[INFO   ] ggml_graph_cut.cpp:1032 - unet build cached graph cut plan done (taking 7 ms)
+  |#                                                 | 24/1680 - 797.36MB/s[K  |##################################################| 1680/1680 - 9.15GB/s[K
+[INFO   ] model_loader.cpp:1378 - loading tensors completed, taking 0.21s (read: 0.15s, memcpy: 0.00s, convert: 0.01s, copy_to_backend: 0.00s)
+  |==>                                               | 1/24 - 161.54s/it[K  |====>                                             | 2/24 - 160.93s/it[K  |======>                                           | 3/24 - 160.96s/it[K  |========>                                         | 4/24 - 160.99s/it[K  |==========>                                       | 5/24 - 160.87s/it[K  |============>                                     | 6/24 - 160.90s/it[K  |==============>                                   | 7/24 - 160.90s/it[K  |================>                                 | 8/24 - 160.45s/it[K  |==================>                               | 9/24 - 160.44s/it[K  |====================>                             | 10/24 - 160.58s/it[K  |======================>                           | 11/24 - 160.45s/it[K
